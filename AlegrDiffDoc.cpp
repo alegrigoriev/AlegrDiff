@@ -134,7 +134,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 		AfxMessageBox(s);
 		return false;
 	}
-	return BuildFilePairList(FileList1, FileList1);
+	return BuildFilePairList(FileList1, FileList2);
 }
 
 bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2)

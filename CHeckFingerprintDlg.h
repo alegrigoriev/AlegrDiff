@@ -26,4 +26,8 @@ public:
 	CString m_sDirectory;
 	CComboBox m_cbFilename;
 	CString m_sFilename;
+	virtual BOOL OnInitDialog();
+	CString m_sFingerprintFilenameHistory[10];
+
+	CApplicationProfile m_Profile;
 };

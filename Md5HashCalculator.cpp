@@ -56,7 +56,7 @@ BOOL CMd5HashCalculator::CalculateFileMd5Hash(LPCTSTR Filename,
 			}
 			CryptHashData(hash, m_HashBuf, BytesRead, 0);
 		}
-		DWORD HashLen = sizeof MD5Hash;
+		DWORD HashLen = 16;
 		CryptGetHashParam(hash, HP_HASHVAL, MD5Hash, & HashLen, 0);
 		CryptDestroyHash(hash);
 	}

@@ -20,6 +20,8 @@ public:
 	enum {
 		CaretPositionChanged = 1,
 		InvalidateRange,
+		UpdateMakeCaretCentered,
+		UpdateMakeCaretVisible,
 	};
 
 	TCHAR m_ComparisonResult[MAX_PATH];

@@ -292,11 +292,11 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 			ULONGLONG Length2 = pPair->pSecondFile->GetFileLength();
 			if (Length1 < Length2)
 			{
-				pPair->m_ComparisionResult = FilePair::SecondFileLonger;
+				pPair->m_ComparisonResult = FilePair::SecondFileLonger;
 			}
 			else if (Length1 > Length2)
 			{
-				pPair->m_ComparisionResult = FilePair::FirstFileLonger;
+				pPair->m_ComparisonResult = FilePair::FirstFileLonger;
 			}
 			else
 			{
@@ -325,11 +325,11 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 					if (0 == memcmp(pPair->pFirstFile->GetDigest(),
 									pPair->pSecondFile->GetDigest(), pPair->pFirstFile->GetDigestLength()))
 					{
-						pPair->m_ComparisionResult = FilePair::FilesIdentical;
+						pPair->m_ComparisonResult = FilePair::FilesIdentical;
 					}
 					else
 					{
-						pPair->m_ComparisionResult = FilePair::FilesDifferent;
+						pPair->m_ComparisonResult = FilePair::FilesDifferent;
 					}
 				}
 

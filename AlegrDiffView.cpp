@@ -806,8 +806,7 @@ void CAlegrDiffView::OnUpdateListviewOpen(CCmdUI* pCmdUI)
 			break;
 		}
 		FilePair * pPair = m_PairArray[nItem];
-		if (pPair->m_ComparisionResult == pPair->ResultUnknown
-			|| (pPair->pFirstFile != NULL && pPair->pFirstFile->IsFolder())
+		if ((pPair->pFirstFile != NULL && pPair->pFirstFile->IsFolder())
 			|| (pPair->pSecondFile != NULL && pPair->pSecondFile->IsFolder())
 			|| (pPair->pSecondFile == NULL && pPair->pFirstFile != NULL && pPair->pFirstFile->m_bIsPhantomFile))
 		{
@@ -1037,7 +1036,7 @@ void CAlegrDiffView::OnFileSaveList()
 			}
 			else if (2 == dlg.m_IncludeFilesSelect) // include groups
 			{
-				switch (pFilePair->m_ComparisionResult)
+				switch (pFilePair->m_ComparisonResult)
 				{
 				case pFilePair->FilesIdentical:
 					if ( ! dlg.m_bIncludeIdenticalFiles)

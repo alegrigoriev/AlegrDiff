@@ -408,12 +408,11 @@ void CAlegrDiffApp::OnFileComparedirectories()
 
 CDocument * CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 {
-	if (pPair->m_ComparisionResult == pPair->ResultUnknown
-		|| (pPair->pFirstFile != NULL && pPair->pFirstFile->IsFolder())
+	if ((pPair->pFirstFile != NULL && pPair->pFirstFile->IsFolder())
 		|| (pPair->pSecondFile != NULL && pPair->pSecondFile->IsFolder())
 		|| (pPair->pSecondFile == NULL && pPair->pFirstFile != NULL && pPair->pFirstFile->m_bIsPhantomFile))
 	{
-		// the file not compared yet or not a real file, can't open
+		// the file is not a real file, can't open
 		return NULL;
 	}
 	// check if there is already a CFilePairDoc

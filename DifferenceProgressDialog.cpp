@@ -44,8 +44,8 @@ BOOL CDifferenceProgressDialog::OnInitDialog()
 
 unsigned CDifferenceProgressDialog::ThreadProc()
 {
-	m_pDoc->FindDataProc(this);
-	SignalDialogEnd(IDOK);
+	UINT result = m_pDoc->FindDataProc(this);
+	SignalDialogEnd(result);
 	return 0;
 }
 

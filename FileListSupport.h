@@ -343,7 +343,7 @@ private:
 	vector<FileLine *> m_NormalizedHashSortedLineGroups;   // non-blank only
 	//vector<TextToken> m_Tokens;
 	friend class FilePair;
-	//static CSimpleCriticalSection m_Cs;
+	static CSimpleCriticalSection m_Cs;
 };
 
 enum PairCheckResult { FilesDeleted, FilesUnchanged, FilesTimeChanged, };
@@ -366,7 +366,7 @@ public:
 	void SetMemoryFile()
 	{
 		m_LoadedCount = 1;
-		m_ComparisionResult = MemoryFile;
+		m_ComparisonResult = MemoryFile;
 	}
 
 	bool LoadFiles();
@@ -443,8 +443,7 @@ public:
 	eFileComparisionResult PreCompareTextFiles(class CProgressDialog * pProgressDialog);
 	eFileComparisionResult PreCompareBinaryFiles(CMd5HashCalculator * pMd5Calc, class CProgressDialog * pProgressDialog);
 
-	int m_CompletedPercent;
-	eFileComparisionResult m_ComparisionResult;
+	eFileComparisionResult m_ComparisonResult;
 	bool m_bChanged;
 	bool m_bHideFromListView;
 	bool m_bSelected;

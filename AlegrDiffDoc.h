@@ -210,6 +210,7 @@ public:
 	afx_msg void OnUpdateMergeInclude(CCmdUI* pCmdUI);
 	afx_msg void OnMergeExclude();
 	afx_msg void OnUpdateMergeExclude(CCmdUI* pCmdUI);
+	afx_msg void OnViewAsBinary();
 	//}}AFX_MSG
 protected:
 	DECLARE_MESSAGE_MAP()

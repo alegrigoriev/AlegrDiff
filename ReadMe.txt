@@ -1,15 +1,14 @@
 TODO:
 
-When the binary file is open and its comparison result is unknown, start difference search from the beginning
-make word by word comparison in MatchStrings
+Switch from binary view to text view
 Find full word only
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
 Add Copy 1st file text, copy 2nd file text
 show version of file1, file2 of the line
 Show Left-only, right-only, merged line (single line only)
 Copy binary dump as text
-Switch from text view to binary view
 Add folder picture under the fingerprint picture
+make word by word comparison in MatchStrings
 Make HTML help
 
 Import font settings from Visual C/VisualStudio
@@ -24,12 +23,12 @@ Compare EXE version info for DLL, EXE, SYS
 Show file version (add handler code)
 Make progress dialog for binary comparision
 Add Save differences
+process linux-style MD5 signature files
 // for text editor:
 Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-Last folder is not selected automatically in FileDialogWithHistory save
 Blank line immediately following difference block is considered separate 
    for "Next Difference" command
 Blank lines prevent from proper line matching inside difference blocks
@@ -38,6 +37,9 @@ Directory dialog allows to select network host. It won't return anything then.
 screen move in two directions may corrupt the image (??)
 
 Fixed:
+Selection lost when the list view is rebuilt
+Last folder is not selected automatically in FileDialogWithHistory save
+OK doesn't close the directory dialog, if a directory not found
 During binary comparison, alternate "Calculating fingerprint" and "Comparing" messages shown
 Subdirectory check fails when checking the fingerprint (???).
 "   if()" and "  if ()" shows non-whitespace difference	- need full word mode
@@ -72,6 +74,8 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+Switch from text view to binary view
+When the binary file is open and its comparison result is unknown, start difference search from the beginning
 Make Ctrl+A - select all in the list view
 If no files found, show message box and close the view
 replace edit box with a combobox in FolderDialog

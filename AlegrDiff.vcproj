@@ -253,7 +253,10 @@
 				ProgramDatabaseFile=".\Release/AlegrDiff.pdb"
 				GenerateMapFile="TRUE"
 				MapFileName=".\Release/AlegrDiff.map"
-				SubSystem="2"/>
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				OptimizeForWindows98="1"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"

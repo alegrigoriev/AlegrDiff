@@ -61,6 +61,7 @@ void CBinaryCompareDoc::OnUpdateAllViews(CView* pSender,
 
 BEGIN_MESSAGE_MAP(CBinaryCompareDoc, CAlegrDiffBaseDoc)
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
+	ON_COMMAND(ID_VIEW_VIEWASTEXTFILES, OnViewViewastextfiles)
 END_MESSAGE_MAP()
 
 
@@ -128,9 +129,6 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 	}
 	m_CaretPos = 0;
 
-	FilePairChangedArg arg;
-	arg.pPair = pPair;
-	UpdateAllViews(NULL, UpdateViewsFilePairChanged, & arg);
 
 	SetCaretPosition(0, SetPositionCancelSelection | SetPositionMakeVisible);
 
@@ -145,14 +143,30 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 
 		if (IDOK == result)
 		{
+			if (dlg.BeginAddr == dlg.EndAddr)
+			{
+				dlg.BeginAddr = 0;
+				pPair->m_ComparisonResult = pPair->FilesIdentical;
+			}
+			else
+			{
+				pPair->m_ComparisonResult = pPair->FilesDifferent;
+			}
 			SetCaretPosition(dlg.BeginAddr,
 							SetPositionCancelSelection | SetPositionMakeVisible);
+
 		}
 		else
 		{
 			SetCaretPosition(0, SetPositionCancelSelection | SetPositionMakeVisible);
 		}
 	}
+	_tcsncpy(m_ComparisonResult, pPair->GetComparisonResult(),
+			countof(m_ComparisonResult));
+	m_ComparisonResult[countof(m_ComparisonResult) - 1] = 0;
+	((CFrameWnd*)AfxGetMainWnd())->PostMessage(WM_SETMESSAGESTRING_POST, 0, (LPARAM)m_ComparisonResult);
+
+	GetApp()->NotifyFilePairChanged(pPair);
 }
 
 LONGLONG CBinaryCompareDoc::GetFileSize() const
@@ -374,3 +388,25 @@ unsigned CBinaryCompareDoc::FindDataProc(CDifferenceProgressDialog * pDlg)
 	return IDOK;
 }
 
+void CBinaryCompareDoc::OnViewViewastextfiles()
+{
+	FilePair * pPair = GetFilePair();
+
+	pPair->Reference();
+	OnCloseDocument();
+
+	pPair->m_ComparisonResult = pPair->ResultUnknown;
+	pPair->UnloadFiles(true);
+
+	if (NULL != pPair->pFirstFile)
+	{
+		pPair->pFirstFile->m_IsBinary = false;
+	}
+	if (NULL != pPair->pSecondFile)
+	{
+		pPair->pSecondFile->m_IsBinary = false;
+	}
+
+	GetApp()->OpenFilePairView(pPair);
+	pPair->Dereference();
+}

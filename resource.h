@@ -70,6 +70,7 @@
 #define ID_LISTVIEW_SORTBY_DESCENDINGORDER 173
 #define ID_VIEW_RESETCOLUMNS            176
 #define ID_DOC_UPDATEALLVIEWS           177
+#define ID_VIEW_VIEWASTEXTFILES         178
 #define IDC_COMBO_FIRST_DIR             1000
 #define IDC_COMBO_SECOND_DIR            1001
 #define IDC_COMBO_SAVE_FILENAME         1001
@@ -269,7 +270,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        178
+#define _APS_NEXT_RESOURCE_VALUE        179
 #define _APS_NEXT_COMMAND_VALUE         32888
 #define _APS_NEXT_CONTROL_VALUE         1081
 #define _APS_NEXT_SYMED_VALUE           104

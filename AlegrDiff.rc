@@ -199,10 +199,11 @@ BEGIN
         MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
         MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
         MENUITEM SEPARATOR
-        MENUITEM "Refresh\tF5",                 ID_VIEW_REFRESH
-        MENUITEM "Show Line Numbers",           ID_VIEW_SHOW_LINE_NUMBERS
+        MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH
+        MENUITEM "Show Line &Numbers",          ID_VIEW_SHOW_LINE_NUMBERS
         MENUITEM "Ignore &Whitespaces\tCtrl+W", ID_VIEW_IGNORE_WHITESPACES
-        MENUITEM "View as binary files",        32887
+        MENUITEM SEPARATOR
+        MENUITEM "View As &Binary Files",       ID_VIEW_AS_BINARY
     END
     POPUP "&Window"
     BEGIN
@@ -301,7 +302,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "R&escan Files\tF5",           ID_VIEW_REFRESH
         MENUITEM "&Reset Columns",              ID_VIEW_RESETCOLUMNS
-        MENUITEM "Select &All\tCtrl+A",         57642
+        MENUITEM "Select &All\tCtrl+A",         ID_EDIT_SELECT_ALL
     END
     POPUP "&Window"
     BEGIN
@@ -414,16 +415,17 @@ BEGIN
         MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
         MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
         MENUITEM SEPARATOR
-        MENUITEM "Refresh\tF5",                 ID_VIEW_REFRESH
-        POPUP "Word size"
+        MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH
+        POPUP "&Word Size"
         BEGIN
             MENUITEM "&1 Byte",                     ID_WORDSIZE_1BYTE
             MENUITEM "&2 Bytes",                    ID_WORDSIZE_2BYTES
             MENUITEM "&4 Bytes",                    ID_WORDSIZE_4BYTES
             MENUITEM "&8 Bytes",                    ID_WORDSIZE_8BYTES
         END
-        MENUITEM "Show 1&st File",              ID_BINDIFF_SHOWFIRSTFILE
-        MENUITEM "Show 2&nd File",              ID_BINDIFF_SHOW2NDFILE
+        MENUITEM "Show &1st File",              ID_BINDIFF_SHOWFIRSTFILE
+        MENUITEM "Show &2nd File",              ID_BINDIFF_SHOW2NDFILE
+        MENUITEM "View As Text Files",          ID_VIEW_VIEWASTEXTFILES
     END
     POPUP "&Window"
     BEGIN
@@ -1029,8 +1031,8 @@ VS_VERSION_INFO$(RETAIL_VERSION) VERSIONINFO
 #else
 VS_VERSION_INFO VERSIONINFO
 #endif
- FILEVERSION 1,0,21,0
- PRODUCTVERSION 1,0,21,0
+ FILEVERSION 1,0,22,0
+ PRODUCTVERSION 1,0,22,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -1047,13 +1049,13 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "AleGr Software"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application"
-            VALUE "FileVersion", "1, 0, 21, 0"
+            VALUE "FileVersion", "1, 0, 22, 0"
             VALUE "InternalName", "AlegrDiff"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001-2002"
             VALUE "OriginalFilename", "AlegrDiff.EXE"
-            VALUE "PrivateBuild", "Beta 1.21"
+            VALUE "PrivateBuild", "Beta 1.22"
             VALUE "ProductName", "AlegrDiff Application"
-            VALUE "ProductVersion", "1, 0, 21, 0"
+            VALUE "ProductVersion", "1, 0, 22, 0"
         END
     END
     BLOCK "VarFileInfo"

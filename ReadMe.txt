@@ -1,17 +1,11 @@
 TODO:
 
-Unicode file starts with 0xFEFF
-Place marker when writing UNICODE file
-For binary comparison: show file size
-UNICODE file support
-Choose format to save a merged file
-Compare directory structure
+Add extensions from the recent files to the browse for file dialog
+Open Binary file difference
 Support comparison of BIG lists
 Add Copy 1st file text, copy 2nd file text
+For binary comparison: show file size
 Add 1st file size, 2nd file size (with exact size tooltips?)
-Add extensions from the recent files to the browse for file dialog
-Remove "Use Binary filter", "Use Ignore Filter" etc checkboxes,
-  replace those edit controls with comboboxes
 Refresh list view
 make word by word comparison in MatchStrings
 show version of file1, file2 of the line
@@ -31,14 +25,21 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-"*." filter doesn't work
 screen move in two directions may corrupt the image (??)
 
 Fixed:
+"*." filter doesn't work
 insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+Remove "Use Binary filter", "Use Ignore Filter" etc checkboxes,
+  replace those edit controls with comboboxes
+Compare directory structure
+UNICODE file support
+Choose format to save a merged file
+Place marker when writing UNICODE file
+Unicode file starts with 0xFEFF
 Save all strings to history lists
 Make binary comparision
 Add save file list

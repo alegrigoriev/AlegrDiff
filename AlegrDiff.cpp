@@ -326,7 +326,9 @@ void CAlegrDiffApp::OnFileComparedirectories()
 
 CDocument * CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 {
-	if (pPair->m_ComparisionResult == pPair->ResultUnknown)
+	if (pPair->m_ComparisionResult == pPair->ResultUnknown
+		|| (pPair->pFirstFile != NULL && pPair->pFirstFile->IsFolder())
+		|| (pPair->pSecondFile != NULL && pPair->pSecondFile->IsFolder()))
 	{
 		// the file not compared yet, can't open
 		return NULL;
@@ -1492,26 +1494,28 @@ void COpenDiffDialog::OnInitDone()
 	}
 }
 
-int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder)
+int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
+				CString const * pHistory, int HistorySize)
 {
 	CThisApp * pApp = GetApp();
 
 	// Filter string provided by the program (AllFiles (*.*))
+	CString AllFilesFilter;
+	AllFilesFilter.LoadString(IDS_FILENAME_FILTER);
+
+	vector<CString> Filters;
 	CString Filter;
-	Filter.LoadString(IDS_FILENAME_FILTER);
 	// Filter string generated from the current file name
 	// it will then be stored to pApp->m_CustomFileOpenFilter
-	CString CurrentCustomFilter;
 	CString CurrentCustomFilterString;
 	// Filter string used from the previous time
 	CString PrevCustomFilterString;
 	if ( ! pApp->m_CustomFileOpenFilter.IsEmpty())
 	{
-		PrevCustomFilterString = CreateCustomFilter(pApp->m_CustomFileOpenFilter);
+		Filters.push_back(CreateCustomFilter(pApp->m_CustomFileOpenFilter));
 	}
 	// get file name extension
 	// create custom filter
-	// check if it's the same as previous filter
 
 	CString title;
 	title.LoadString(TitleID);
@@ -1521,28 +1525,60 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder)
 	TCHAR OfnCustomFilter[MAX_PATH] = {0, 0};
 	CString LastFileName;
 
-	if ( ! Name.IsEmpty())
+	if ( ! Name.IsEmpty()
+		&& GetFullPathName(Name, MAX_PATH, FullPath, & FileNamePart))
 	{
-		if (GetFullPathName(Name, MAX_PATH, FullPath, & FileNamePart))
+		LastFileName = FileNamePart;
+		// find extension
+		LPCTSTR pExt = _tcsrchr(FileNamePart, '.');
+		if (pExt)
 		{
-			LastFileName = FileNamePart;
-			// find extension
-			LPCTSTR pExt = _tcsrchr(FileNamePart, '.');
-			if (pExt)
+			CurrentCustomFilterString = CreateCustomFilter(pExt);
+			if ( ! Filters.empty()
+				&& 0 != Filters[0].CompareNoCase(CurrentCustomFilterString))
 			{
-				CurrentCustomFilter += pExt;
-				CurrentCustomFilterString = CreateCustomFilter(CurrentCustomFilter);
+				Filters.push_back(CurrentCustomFilterString);
 			}
-			*FileNamePart = 0;
 		}
-	}
-	if ( ! CurrentCustomFilterString.CompareNoCase(PrevCustomFilterString))
-	{
-		// if both filters are the same, reset one of them
-		CurrentCustomFilterString.Empty();
+		*FileNamePart = 0;
 	}
 
-	Filter = CurrentCustomFilterString + PrevCustomFilterString + Filter;
+	if (0 != pHistory)
+	{
+		for (int i = 0; i < HistorySize; i++)
+		{
+			TCHAR FullPath[MAX_PATH];
+			LPTSTR FileNamePart;
+			if ( ! pHistory[i].IsEmpty()
+				&& GetFullPathName(pHistory[i], MAX_PATH, FullPath, & FileNamePart))
+			{
+				// find extension
+				LPCTSTR pExt = _tcsrchr(FileNamePart, '.');
+				if (pExt)
+				{
+					CurrentCustomFilterString = CreateCustomFilter(pExt);
+					unsigned j;
+					for (j = 0; j < Filters.size(); j++)
+					{
+						if (0 == Filters[0].CompareNoCase(CurrentCustomFilterString))
+						{
+							break;
+						}
+					}
+					if (j == Filters.size())
+					{
+						Filters.push_back(CurrentCustomFilterString);
+					}
+				}
+			}
+
+		}
+	}
+
+	for (unsigned j = 0; j < Filters.size(); j++)
+	{
+		Filter += Filters[j];
+	}
 
 	COpenDiffDialog dlg(TRUE, NULL, NULL,
 						OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLETEMPLATE,

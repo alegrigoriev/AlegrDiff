@@ -67,6 +67,7 @@ protected:
 	//{{AFX_MSG(CAlegrDiffDoc)
 	afx_msg void OnFileSave();
 	afx_msg void OnViewRefresh();
+	afx_msg void OnFileCancel();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

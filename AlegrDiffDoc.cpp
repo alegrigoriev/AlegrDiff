@@ -26,6 +26,7 @@ BEGIN_MESSAGE_MAP(CAlegrDiffDoc, CDocument)
 	//{{AFX_MSG_MAP(CAlegrDiffDoc)
 	ON_COMMAND(ID_FILE_SAVE, OnFileSave)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
+	ON_COMMAND(ID_FILE_CANCEL, OnFileCancel)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -1762,4 +1763,10 @@ void CAlegrDiffDoc::OnIdle()
 		m_hThread = NULL;
 		UpdateAllViews(NULL);
 	}
+}
+
+void CAlegrDiffDoc::OnFileCancel()
+{
+	m_bStopThread = true;
+
 }

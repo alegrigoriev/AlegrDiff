@@ -289,7 +289,7 @@ BEGIN
     "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
     VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
     VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
-    VK_ESCAPE,      ID_WINDOW_CLOSE_DIFF,   VIRTKEY, NOINVERT
+    VK_ESCAPE,      ID_FILE_CANCEL,         VIRTKEY, NOINVERT
     VK_F3,          ID_EDIT_FIND_NEXT,      VIRTKEY, NOINVERT
     VK_F3,          ID_EDIT_FIND_WORD_NEXT, VIRTKEY, CONTROL, NOINVERT
     VK_F3,          ID_EDIT_FIND_PREV,      VIRTKEY, SHIFT, NOINVERT
@@ -321,7 +321,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 0.90 beta",IDC_STATIC,35,14,128,8,
+    CTEXT           "AlegrDiff Version 0.91 beta",IDC_STATIC,35,14,128,8,
                     SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001\nalegr@earthlink.net",
                     IDC_STATIC,35,34,128,21

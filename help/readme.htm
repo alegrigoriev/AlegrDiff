@@ -11,10 +11,11 @@
 <body>
 
 <p align="center"><font size="5">AlegrDiff Version 1.0</font></p>
-<p align="left"><b>AlegrDiff </b>compares text and binary files. It allows also
-to merge the text differences.</p>
-<p align="left">The program allows to compare single files as well as the whole
-directory with subdirectories. The differences are shown with different font and
+<p align="left"><b>AlegrDiff </b>application compares text and binary files. It also allows
+to merge the text differences from two files.</p>
+<p align="left">The program allows to compare contents of a directory against
+another directory, optionally with the subdirectories, or just one file against
+another file. The differences are shown with different font and
 color.</p>
 <p align="left">The files are compared either as text or binary.</p>
 <p align="left">To compare just two files, select <font face="Microsoft Sans Serif">File/Compare
@@ -31,13 +32,14 @@ toolbar button. In the following dialog you can type in the directory names, or,
 by clicking on the [<b>...] </b>buttons, select them from the directory tree, or
 select from recently used folders.</p>
 <p align="left"><img border="0" src="CompareDirsDlg.png" width="420" height="368"></p>
-<p align="left">You can specify pattern for the filenames to be included in
-comparison, in the <b>Filename filter</b> edit box. You can specify one or a
-number of patterns, separated by comma or by semicolon.</p>
-<p align="left">By clicking <b>Advanced &gt;&gt; </b>button, you can also
-specify some options, normally available in <b>Preferences</b> dialog. These are
+<p align="left">In the <b>Filename filter</b> edit box you can specify pattern for the filenames to be included in
+comparison. You can specify one or a
+number of patterns, separated by comma or by semicolon, for example *.c<b> </b>or
+<b>ms*a.h;w*.c</b>.</p>
+<p align="left">By clicking <b>More options &gt;&gt; </b>button, you can also
+modify some additional options, normally available in <b>Preferences</b> dialog. These are
 filename patterns which are recognized as C/C++ files, filename patterns which
-are&nbsp; recognized as binary files, and filename patterns which will be
+are&nbsp; recognized as binary files, filename patterns which will be
 excluded from compare, and tab indent.</p>
 <p align="left">As you click OK, the program compares all the files in the first
 directory against the corresponding files in the second directory, and then
@@ -51,20 +53,21 @@ the selected files in the default application registered for the file extension
 selected files to any folder:</p>
 <p align="left"><img border="0" src="ContextMenu.png" width="413" height="133"></p>
 <p align="left">To see the detailed differences between two files, double click
-on the difference report line. The program allows to keep several files open.
-The file window can be closed by pressing <b>Esc</b> key.</p>
+on the difference report line. You can select multiple lines and open them at
+one, by pressing <b>Enter</b> key. The program allows to keep several files open.&nbsp;</p>
 <p align="left">The files will be shown just like in the text editor. The text
 which is only in the first or second file is shown with different style and
-color. Default for erased text is <font color="#FF0000"><strike>strikethrough,
-red</strike></font>, for added text is <font color="#0000FF"><u>underlined, blue</u></font>.
+color. Default for file 1 text is <font color="#FF0000"><strike>strikethrough,
+red</strike></font>, for file 2 text is <font color="#0000FF"><u>underlined, blue</u></font>.
 You can change this in the <b>Preferences</b> dialog. You can move to the next
 difference by clicking <img border="0" src="NextDiff.png" width="18" height="18">
 button, or by pressing <b>F7</b> key. You can move to the previous difference by
 clicking <img border="0" src="PrevDifference.png" width="18" height="18">
-button, or by pressing <b>Shift+F7</b> key.</p>
+button, or by pressing <b>Shift+F7</b> key. The file view window can be closed by pressing <b>Esc</b> key.</p>
 <p align="left"><img border="1" src="TextDiff.png" width="584" height="203"></p>
 <p align="left">You can use most of standard keyboard and mouse navigation
-commands. Mouse wheel is also supported. You can find a selected text or word
+commands. Mouse wheel is also supported. To search for arbitrary text, press <b>Ctrl+F</b>;
+<b>Find </b>dialog will be invoked. You can also find a selected text or word
 under caret by pressing <b>Ctrl+F3</b>, then find the next or previous
 occurrence by pressing <b>F3 </b>or <b>Shift+F3</b>. You can select the text and
 copy it to the system clipboard.</p>
@@ -86,17 +89,18 @@ don't change the text syntax and meaning. See, for example, the original text:</
 extra spaces which are added to the second file are shown, but not marked as
 added. Spaces that break some reserved character sequences (+=, -=, and other
 C/C++ operators, and also spaces inside character and string constants are not
-extraneous, and are shown in the both cases. Of course, the reserved sequences
+extraneous, and are shown in the both cases. The reserved sequences
 and constants are recognized only in the files which bear some specific file
-name extensions.</p>
-<p align="left">The differences can be marked as <b>accepted</b> or <b>declined</b>.
+name extensions: C, CPP, H, HPP, RC.</p>
+<p align="left">The differences can be marked as <b>accepted</b> or <b>discarded</b>.
 These attributes are used for merging the files. This feature allows to select
 only those changes that you like, and create a new file containing only selected
 changes. When the difference is marked, it is shown with different background
 color. The text that won't go to the merged file is shown with gray background;
 the text which goes to the merged file is shown with green background:</p>
 <p align="left"><img border="1" src="MergedText.png" width="436" height="133"></p>
-<p align="left">These colors can be customized in <b>Preferences </b>dialog.</p>
+<p align="left">You can change these colors, by <b>File/Preferences </b>dialog, <b>View</b>
+tab.</p>
 <p align="left">To <b>accept </b>the difference, set the caret on it and select <b>Merge/Accept</b>
 menu command, or click <img border="0" src="AcceptButton.png" width="17" height="17">
 toolbar button, or press <b>Shift+F6</b>. To <b>decline</b> the difference, set
@@ -106,12 +110,11 @@ differences in the selected text area. Text selection is done by the standard
 keyboard and mouse means. Accept/Decline commands are also available in the
 right-click context menu.</p>
 <p align="left">You don't need to mark all changes. The program will ask you
-what to do with unmarked ones - either accept or decline them. For example, if
-you want to base the merged file on the second one, you just need to decline
-some changes, and accept all others, when asked.</p>
+what to do with unmarked ones - either use file 1 version or file 2. For example, if
+you want to base the merged file on the second one, you just need to discard some changes, and accept all others, when asked.</p>
 <p align="left">To save the merged file, select <b>File/Merge Files And Save...</b>
 menu command, or click <img border="0" src="SaveMergedButton.png" width="16" height="16">
-toolbar button. You may be asked whether you wish to accept or decline all
+toolbar button. You may be asked what do you want to do with all
 unmarked changes. You will then be asked for the file name. The saved resulting
 file will be open in the separate window in the program. You can then open it in
 the default editor, by selecting <b>File/Open first file </b>command.</p>
@@ -119,7 +122,7 @@ the default editor, by selecting <b>File/Open first file </b>command.</p>
 selecting the corresponding command from <b>File </b>menu. If you change the
 file and save it, you can reload it by pressing <b>F5</b>, to see the most
 current differences. You can enable automatic reload in <b>Preferences</b>
-dialog.</p>
+ dialog, <b>Files</b> tab.</p>
 <p align="left">&nbsp;</p>
 <p align="left">&nbsp;</p>
 

@@ -1,5 +1,4 @@
 TODO:
-update main frame during long comparision. Process Esc key. Pump commands.
 
 show version of file1, file2 of the line
 Show Left-only, right-only, merged line (single line only)
@@ -11,7 +10,6 @@ Import font settings from Visual C/VisualStudio
 Make binary comparision
 Compare EXE version info for DLL, EXE, SYS
 Make progress dialog for binary comparision
-Make background thread for comparision
 Cancel selection on Accept/Decline commands (to see the result immediately). ???
 Maybe different color for selected accepted/declined
 UNICODE file support
@@ -24,6 +22,8 @@ Problems:
 Fixed:
 
 Done:
+Make background thread for comparision
+update main frame during long comparision. Process Esc key. Pump commands.
 
 check if whitespace difference is attached to more spaces. Try to rearrange
     segments to avoid misreading. Glue the whitespace to more space.

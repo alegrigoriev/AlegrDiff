@@ -130,7 +130,7 @@ BEGIN
     BEGIN
         MENUITEM "Compare &Directories...",     ID_FILE_COMPAREDIRECTORIES
         MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
-        MENUITEM "&Create Directory Fingerprint...", 146
+        MENUITEM "&Create Directory Fingerprint...", ID_FILE_CREATEDIRECTORYFINGERPRINT
         MENUITEM "C&heck Directory Fingerprint...", 
                                                 ID_FILE_CHECK_DIRECTORY_FINGERPRINT
 
@@ -209,7 +209,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "Using AlegrDiff...",          ID_HELP_USING
+        MENUITEM "&Using AlegrDiff...",         ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
     END
 END
@@ -225,7 +225,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Copy files from 1st dir...",  ID_FILE_COPY_FIRST_DIR
         MENUITEM "Copy files from 2nd dir...",  ID_FILE_COPY_SECOND_DIR
-        MENUITEM "Hide",                        32818
+        MENUITEM "Hide",                        ID_VIEW_HIDESELECTEDFILES
     END
 END
 
@@ -247,12 +247,13 @@ BEGIN
     BEGIN
         MENUITEM "Compare &Directories...",     ID_FILE_COMPAREDIRECTORIES
         MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
-        MENUITEM "&Create Directory Fingerprint...", 146
-        MENUITEM "C&heck Directory Fingerprint...", 147
+        MENUITEM "&Create Directory Fingerprint...", ID_FILE_CREATEDIRECTORYFINGERPRINT
+        MENUITEM "C&heck Directory Fingerprint...", ID_FILE_CHECK_DIRECTORY_FINGERPRINT
         MENUITEM SEPARATOR
         MENUITEM "&View differences\tEnter",    ID_LISTVIEW_OPEN1
         MENUITEM "Edit &1st File",              ID_FILE_EDIT_FIRST
         MENUITEM "Edit &2nd File",              ID_FILE_EDIT_SECOND
+        MENUITEM "Properties...\tAlt+Enter",    ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "Copy Files From 1st Folder",  ID_FILE_COPY_FIRST_DIR
         MENUITEM "Copy Files From 2nd Folder",  ID_FILE_COPY_SECOND_DIR
@@ -266,23 +267,23 @@ BEGIN
     BEGIN
         MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
         MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
-        MENUITEM "File &Length",                163
-        MENUITEM "Modification &Time",          164
+        MENUITEM "Show File &Length",           ID_LISTVIEW_FILELENGTH
+        MENUITEM "Show &Modification Time",     ID_LISTVIEW_MODIFICATIONTIME
         MENUITEM SEPARATOR
         POPUP "Sort &By"
         BEGIN
-            MENUITEM "Name",                        166
-            MENUITEM "Folder",                      167
-            MENUITEM "1st Modification Date",       168
-            MENUITEM "2nd Modification Date",       169
-            MENUITEM "1st Length",                  170
-            MENUITEM "2nd Length",                  171
-            MENUITEM "Comparison Result",           172
+            MENUITEM "Name",                        ID_LISTVIEW_SORTBY_NAME
+            MENUITEM "Folder",                      ID_LISTVIEW_SORTBY_FOLDER
+            MENUITEM "1st Modification Date",       ID_LISTVIEW_SORTBY_1STMODIFICATIONDATE
+            MENUITEM "2nd Modification Date",       ID_LISTVIEW_SORTBY_2NDMODIFICATIONDATE
+            MENUITEM "1st Length",                  ID_LISTVIEW_SORTBY_1STLENGTH
+            MENUITEM "2nd Length",                  ID_LISTVIEW_SORTBY_2NDLENGTH
+            MENUITEM "Comparison Result",           ID_LISTVIEW_SORTBY_COMPARISONRESULT
             MENUITEM SEPARATOR
-            MENUITEM "Descending Order",            173
+            MENUITEM "Descending Order",            ID_LISTVIEW_SORTBY_DESCENDINGORDER
         END
         MENUITEM "&Hide Selected Files",        ID_VIEW_HIDESELECTEDFILES
-        MENUITEM "Show &All Files",             ID_VIEW_SHOWALLFILES
+        MENUITEM "Unhide &All Files",           ID_VIEW_SHOWALLFILES
         MENUITEM SEPARATOR
         MENUITEM "R&escan Files\tF5",           ID_VIEW_REFRESH
         MENUITEM "&Reset Columns",              ID_VIEW_RESETCOLUMNS
@@ -294,7 +295,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "Using AlegrDiff...",          ID_HELP_USING
+        MENUITEM "&Using AlegrDiff...",         ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
     END
 END
@@ -355,7 +356,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "Using AlegrDiff...",          ID_HELP_USING
+        MENUITEM "&Using AlegrDiff...",         ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
     END
 END
@@ -406,8 +407,8 @@ BEGIN
             MENUITEM "&4 Bytes",                    ID_WORDSIZE_4BYTES
             MENUITEM "&8 Bytes",                    ID_WORDSIZE_8BYTES
         END
-        MENUITEM "Show 1&st File",              158
-        MENUITEM "Show 2&nd File",              159
+        MENUITEM "Show 1&st File",              ID_BINDIFF_SHOWFIRSTFILE
+        MENUITEM "Show 2&nd File",              ID_BINDIFF_SHOW2NDFILE
     END
     POPUP "&Window"
     BEGIN
@@ -417,7 +418,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "Using AlegrDiff...",          ID_HELP_USING
+        MENUITEM "&Using AlegrDiff...",         ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
     END
 END
@@ -426,10 +427,10 @@ IDR_BINARYDIFF_CONTEXT MENU
 BEGIN
     POPUP " "
     BEGIN
-        MENUITEM "&1 Byte",                     153
-        MENUITEM "&2 Bytes",                    154
-        MENUITEM "&4 Bytes",                    155
-        MENUITEM "&8 Bytes",                    156
+        MENUITEM "&1 Byte",                     ID_WORDSIZE_1BYTE
+        MENUITEM "&2 Bytes",                    ID_WORDSIZE_2BYTES
+        MENUITEM "&4 Bytes",                    ID_WORDSIZE_4BYTES
+        MENUITEM "&8 Bytes",                    ID_WORDSIZE_8BYTES
         MENUITEM SEPARATOR
         MENUITEM "Show 1&st File",              ID_BINDIFF_SHOWFIRSTFILE
         MENUITEM "Show 2&nd File",              ID_BINDIFF_SHOW2NDFILE
@@ -442,8 +443,8 @@ IDR_MENU_LISTVIEW_HEADER MENU
 BEGIN
     POPUP " "
     BEGIN
-        MENUITEM "File Length",                 ID_LISTVIEW_FILELENGTH
-        MENUITEM "Modification Time",           ID_LISTVIEW_MODIFICATIONTIME
+        MENUITEM "Show &File Length",           ID_LISTVIEW_FILELENGTH
+        MENUITEM "Show &Modification Time",     ID_LISTVIEW_MODIFICATIONTIME
         MENUITEM SEPARATOR
         POPUP "Sort By"
         BEGIN
@@ -475,36 +476,31 @@ END
 
 IDR_MAINFRAME ACCELERATORS 
 BEGIN
-    "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
+    VK_F6,          ID_EDIT_ACCEPT,         VIRTKEY, SHIFT, NOINVERT
     "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_F6,          ID_EDIT_DECLINE,        VIRTKEY, NOINVERT
     "F",            ID_EDIT_FIND,           VIRTKEY, CONTROL, NOINVERT
-    "G",            ID_EDIT_GOTOLINE,       VIRTKEY, CONTROL, NOINVERT
-    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
-    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
-    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
-    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
-    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
-    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
-    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
-    VK_ESCAPE,      ID_FILE_CANCEL,         VIRTKEY, NOINVERT
     VK_F3,          ID_EDIT_FIND_NEXT,      VIRTKEY, NOINVERT
-    VK_F3,          ID_EDIT_FIND_WORD_NEXT, VIRTKEY, CONTROL, NOINVERT
     VK_F3,          ID_EDIT_FIND_PREV,      VIRTKEY, SHIFT, NOINVERT
+    VK_F3,          ID_EDIT_FIND_WORD_NEXT, VIRTKEY, CONTROL, NOINVERT
     VK_F3,          ID_EDIT_FIND_WORD_PREV, VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
-    VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
-    VK_F6,          ID_EDIT_DECLINE,        VIRTKEY, NOINVERT
-    VK_F6,          ID_EDIT_ACCEPT,         VIRTKEY, SHIFT, NOINVERT
+    "G",            ID_EDIT_GOTOLINE,       VIRTKEY, CONTROL, NOINVERT
     VK_F7,          ID_EDIT_GOTONEXTDIFF,   VIRTKEY, NOINVERT
     VK_F7,          ID_EDIT_GOTOPREVDIFF,   VIRTKEY, SHIFT, NOINVERT
+    "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+    VK_ESCAPE,      ID_FILE_CANCEL,         VIRTKEY, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    VK_RETURN,      ID_FILE_PROPERTIES,     VIRTKEY, ALT, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
     VK_F8,          ID_VIEW_FILE1_VERSION,  VIRTKEY, NOINVERT
     VK_F8,          ID_VIEW_FILE_2_VERSION, VIRTKEY, SHIFT, NOINVERT
-    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
-    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
-    VK_RETURN,      ID_FILE_PROPERTIES,     VIRTKEY, ALT, NOINVERT
     "W",            ID_VIEW_IGNORE_WHITESPACES, VIRTKEY, CONTROL, NOINVERT
-    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
-    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+    VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
 END
 
 
@@ -769,24 +765,28 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,206,24,50,14
 END
 
-IDD_DIALOG_PROPERTIES DIALOGEX 0, 0, 265, 188
+IDD_DIALOG_PROPERTIES DIALOGEX 0, 0, 270, 220
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
     WS_SYSMENU
 CAPTION "Properties"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "First file:",IDC_STATIC,7,14,43,8
-    EDITTEXT        IDC_EDIT_FIRST_FILENAME,7,27,251,28,ES_MULTILINE | 
+    LTEXT           "First file:",IDC_STATIC,7,7,43,8
+    EDITTEXT        IDC_EDIT_FIRST_FILENAME,7,20,251,28,ES_MULTILINE | 
                     ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "Last modified:",IDC_STATIC,7,60,53,8
-    LTEXT           "",IDC_EDIT_FIRST_LAST_MODIFIED,63,60,83,8
-    LTEXT           "Second file:",IDC_STATIC,7,76,58,8
-    EDITTEXT        IDC_EDIT_SECOND_FILENAME,7,89,251,28,ES_MULTILINE | 
+    LTEXT           "Last modified:",IDC_STATIC,7,53,53,8
+    LTEXT           "",IDC_EDIT_FIRST_LAST_MODIFIED,63,53,83,8
+    LTEXT           "Length:",IDC_STATIC,6,72,53,8
+    LTEXT           "",IDC_EDIT_FIRST_LENGTH,62,72,156,8
+    LTEXT           "Second file:",IDC_STATIC,6,90,58,8
+    EDITTEXT        IDC_EDIT_SECOND_FILENAME,6,103,251,28,ES_MULTILINE | 
                     ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "Last modified:",IDC_STATIC,7,123,53,8
-    LTEXT           "",IDC_EDIT_SECOND_LAST_MODIFIED,63,123,83,8
-    LTEXT           "",IDC_STATIC_COMPARISON_RESULT,7,141,251,20
-    DEFPUSHBUTTON   "OK",IDOK,107,167,50,14
+    LTEXT           "Last modified:",IDC_STATIC,6,137,53,8
+    LTEXT           "",IDC_EDIT_SECOND_LAST_MODIFIED,62,137,183,8
+    LTEXT           "Length:",IDC_STATIC,6,152,53,8
+    LTEXT           "",IDC_EDIT_SECOND_LENGTH,62,152,156,8
+    LTEXT           "",IDC_STATIC_COMPARISON_RESULT,6,170,251,20
+    DEFPUSHBUTTON   "OK",IDOK,106,199,50,14
 END
 
 IDD_DIALOG_COMPARE_FILES DIALOGEX 0, 0, 249, 113
@@ -1148,9 +1148,9 @@ BEGIN
     IDD_DIALOG_PROPERTIES, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 258
+        RIGHTMARGIN, 263
         TOPMARGIN, 7
-        BOTTOMMARGIN, 181
+        BOTTOMMARGIN, 213
     END
 
     IDD_DIALOG_COMPARE_FILES, DIALOG
@@ -1513,6 +1513,14 @@ STRINGTABLE
 BEGIN
     ID_VIEW_MOREBYTESINLINE "Show twice as many bytes in the line\nShow more bytes"
     ID_VIEW_LESSBYTESINLINE "Show less bytes per line\nShow less bytes"
+    ID_LISTVIEW_FILELENGTH  "Toggle view of file length columns\nShow length"
+    ID_LISTVIEW_MODIFICATIONTIME 
+                            "Toggle view of file modification time columns\nShow timestamp"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_VIEW_RESETCOLUMNS    "Reset all column order and width to the default\nReset columns"
 END
 
 #endif    // English (U.S.) resources

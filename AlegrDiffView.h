@@ -133,6 +133,9 @@ public:
 	afx_msg void OnHdnEnddrag(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnHdnEndtrack(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnViewResetcolumns();
+	afx_msg void OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnFileProperties();
+	afx_msg void OnUpdateFileProperties(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp

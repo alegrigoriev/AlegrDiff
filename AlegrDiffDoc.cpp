@@ -323,6 +323,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 			//UpdateAllViews(NULL, 0);    // erase the views
 			BOOL StopOp = FALSE;
 			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(_T("Loading and comparing files..."));
+
 			pPair->m_ComparisionResult = pPair->CompareFiles(StopOp);
 		}
 
@@ -2036,23 +2037,9 @@ void CAlegrDiffDoc::OnFileCancel()
 
 void CFilePairDoc::OnFileProperties()
 {
-	CFilesPropertiesDialog dlg;
-	if (m_pFilePair != NULL)
+	if (NULL != m_pFilePair)
 	{
-		if (NULL != m_pFilePair->pFirstFile)
-		{
-			dlg.m_FirstFileName = m_pFilePair->pFirstFile->GetFullName();
-			dlg.m_FirstTime = FileTimeToStr(m_pFilePair->pFirstFile->GetLastWriteTime());
-		}
-
-		if (NULL != m_pFilePair->pSecondFile)
-		{
-			dlg.m_SecondFileName = m_pFilePair->pSecondFile->GetFullName();
-			dlg.m_SecondTime = FileTimeToStr(m_pFilePair->pSecondFile->GetLastWriteTime());
-		}
-
-		dlg.m_ComparisonResult = m_pFilePair->GetComparisionResult();
-
+		CFilesPropertiesDialog dlg(m_pFilePair);
 		dlg.DoModal();
 	}
 }

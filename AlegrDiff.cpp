@@ -1809,7 +1809,26 @@ void CAlegrDiffApp::OnFileCheckDirectoryFingerprint()
 	pDoc->UpdateAllViews(NULL);
 }
 
-CString FileLengthToStr(ULONGLONG Length)
+CString UlonglongToStr(ULONGLONG Num, LCID locale)
+{
+	int const NumBufSize = 50;
+	TCHAR str1[NumBufSize] = {0};
+	TCHAR str2[NumBufSize] = {0};
+
+	_stprintf(str1, _T("%I64u"), Num);
+
+	GetNumberFormat(locale, 0, str1, NULL, str2, NumBufSize);
+
+	GetLocaleInfo(locale, LOCALE_SDECIMAL, str1, NumBufSize);
+	TCHAR * pDot = _tcsstr(str2, str1);
+	if (pDot)
+	{
+		* pDot = 0;
+	}
+	return str2;
+}
+
+CString FileLengthToStrKb(ULONGLONG Length)
 {
 	TCHAR buf[32]={0};
 	StrFormatByteSize(Length, buf, countof(buf));

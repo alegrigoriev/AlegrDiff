@@ -14,7 +14,7 @@ class CFilesPropertiesDialog : public CDialog
 {
 // Construction
 public:
-	CFilesPropertiesDialog(CWnd* pParent = NULL);   // standard constructor
+	CFilesPropertiesDialog(class FilePair * pPair, CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
 	//{{AFX_DATA(CFilesPropertiesDialog)
@@ -26,7 +26,10 @@ public:
 	CString	m_ComparisonResult;
 	//}}AFX_DATA
 
+	CString m_FirstLength;  // 10KB (10,987)
+	CString m_SecondLength;
 
+	class FilePair * m_pPair;
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CFilesPropertiesDialog)
@@ -42,6 +45,7 @@ protected:
 	// NOTE: the ClassWizard will add member functions here
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+public:
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -1,11 +1,7 @@
 TODO:
 
-Save columns width and order
-Make "Show columns" menu with "reset Columns"
-Add 1st file size, 2nd file size (with exact size tooltips?)
 Add "CStringHistory" class
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
-In Properties dialog: show file size
 Refresh list view
 Add Copy 1st file text, copy 2nd file text
 Copy binary dump as text
@@ -37,9 +33,10 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+Status line for single file shows "Files DIFFERENT"
 Directory share name cannot be selected if no '\' appended
 Blank lines prevent from proper line matching inside difference blocks
-"   if()" and "  if ()" shows non-whitespace difference
+"   if()" and "  if ()" shows non-whitespace difference	- need full word mode
 Subdirectory check fails when checking the fingerprint.
 During binary comparison, alternate "Calculating fingerprint" and "Comparing" messages shown
 screen move in two directions may corrupt the image (??)
@@ -65,6 +62,10 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+In Properties dialog: show file size
+Add 1st file size, 2nd file size (with exact size tooltips?)
+Make "Show columns" menu with "reset Columns"
+Save columns width and order
 Sort all result codes separately
 For binary comparison: show file size
 Check that the correct OleInitialize succeeded. If not, don't call OleUninitialize.

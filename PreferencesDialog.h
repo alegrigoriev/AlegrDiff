@@ -107,6 +107,7 @@ public:
 	enum { IDD = IDD_PROPPAGE_VIEW_PREFERENCES };
 	CSpinButtonCtrl	m_Spin;
 	UINT	m_nTabIndent;
+	BOOL	m_bCancelSelectionOnMerge;
 	//}}AFX_DATA
 
 	LOGFONT m_NormalLogFont;

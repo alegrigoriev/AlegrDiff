@@ -246,9 +246,12 @@ public:
 	FileItem(const WIN32_FIND_DATA * pWfd,
 			const CString & BaseDir, const CString & Dir,
 			bool c_cpp);
+	FileItem(LPCTSTR name);
 	~FileItem();
 	bool Load();
 	void Unload();
+	// add line from memory. Assuming the file created dynamically by the program
+	void AddLine(LPCTSTR pLine);
 	const char * GetLineString(int LineNum) const;
 	const FileLine * GetLine(int LineNum) const { return m_Lines[LineNum]; }
 	int GetNumLines() const { return m_Lines.GetSize(); }
@@ -320,6 +323,11 @@ public:
 	FileItem * pFirstFile;
 	FileItem * pSecondFile;
 	CString GetComparisionResult() const;
+	void SetMemoryFile()
+	{
+		m_LoadedCount = 1;
+		m_ComparisionResult = MemoryFile;
+	}
 	enum CompareSubitem
 	{
 		CompareSubitemName,
@@ -378,6 +386,7 @@ public:
 		FilesDifferent,
 		OnlyFirstFile,
 		OnlySecondFile,
+		MemoryFile,
 	};
 
 	int ComparisionResultPriority() const;

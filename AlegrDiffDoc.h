@@ -112,6 +112,7 @@ public:
 	TextPos m_OriginalSelectionAnchor;
 	bool m_WordSelectionMode;
 	bool m_bIgnoreWhitespaces;
+	bool m_CopyDisabled;
 	TCHAR m_ComparisonResult[MAX_PATH];
 
 // Operations

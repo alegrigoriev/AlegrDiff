@@ -259,6 +259,7 @@ IMPLEMENT_DYNCREATE(CFilePairDoc, CDocument)
 CFilePairDoc::CFilePairDoc()
 	: m_TotalLines(0),
 	m_pFilePair(NULL),
+	m_CopyDisabled(false),
 	m_CaretPos(0, 0)
 {
 	m_ComparisonResult[0] = 0;
@@ -548,7 +549,7 @@ void CFilePairDoc::OnUpdateEditGotoprevdiff(CCmdUI* pCmdUI)
 
 void CFilePairDoc::OnUpdateEditCopy(CCmdUI* pCmdUI)
 {
-	pCmdUI->Enable(m_CaretPos != m_SelectionAnchor);
+	pCmdUI->Enable(m_CaretPos != m_SelectionAnchor && ! m_CopyDisabled);
 }
 
 ULONG CFilePairDoc::CopyTextToMemory(PUCHAR pBuf, ULONG BufLen, TextPos pFrom, TextPos pTo)
@@ -653,6 +654,10 @@ ULONG CFilePairDoc::CopyTextToMemory(PUCHAR pBuf, ULONG BufLen, TextPos pFrom, T
 
 void CFilePairDoc::OnEditCopy()
 {
+	if(m_CopyDisabled)
+	{
+		return;
+	}
 	// calculate length of the selection
 	ULONG Len = CopyTextToMemory(NULL, 0, m_SelectionAnchor, m_CaretPos);
 	if (0 == Len)
@@ -1371,6 +1376,10 @@ void CFilePairDoc::OnEditAccept()
 			UpdateAllViews(NULL, InvalidateRange, & ir);
 			SetModifiedFlag(TRUE);
 		}
+		if (GetApp()->m_bCancelSelectionOnMerge)
+		{
+			SetSelection(m_CaretPos, m_CaretPos, 0);
+		}
 	}
 }
 
@@ -1408,6 +1417,10 @@ void CFilePairDoc::OnEditDecline()
 			ir.end = LinePosToDisplayPos(end);
 			UpdateAllViews(NULL, InvalidateRange, & ir);
 			SetModifiedFlag(TRUE);
+		}
+		if (GetApp()->m_bCancelSelectionOnMerge)
+		{
+			SetSelection(m_CaretPos, m_CaretPos, 0);
 		}
 	}
 }
@@ -1533,8 +1546,11 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 			return FALSE;
 		}
 		SetModifiedFlag(FALSE);
+#ifndef DEMO_VERSION
 		pApp->OpenSingleFile(FileName);
-
+#else
+		AfxMessageBox("DEMO version doesn't save the merged file. You can only view it\n", MB_OK);
+#endif
 		return TRUE;
 	}
 	else
@@ -1545,14 +1561,23 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 
 BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags)
 {
+#ifndef DEMO_VERSION
 	FILE * file = fopen(Name, "wt");
 	if (NULL == file)
 	{
 		return FALSE;
 	}
+#else
+	FilePair * pNewFilePair = new FilePair;
+	pNewFilePair->pFirstFile = new FileItem(Name);
+	pNewFilePair->SetMemoryFile();
+#endif
 	BOOL result = TRUE;
 	for (int LineNum = 0; LineNum < GetTotalLines(); LineNum++)
 	{
+#ifdef DEMO_VERSION
+		CString OutputLine;
+#endif
 		LinePair * pPair = m_pFilePair->m_LinePairs[LineNum];
 		if (NULL == pPair)
 		{
@@ -1583,7 +1608,6 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags)
 				continue;
 			}
 		}
-
 		for ( ; NULL != pSection; pSection = pSection->pNext)
 		{
 
@@ -1599,31 +1623,52 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags)
 			}
 			else if ((pSection->Attr & pSection->Inserted)
 					&& (pSection->IsDeclined()
-						|| ( ! pSection->IsAccepted()
-							|| pSection->IsDiscarded() && ! pSection->IsIncluded()
+						|| pSection->IsDiscarded()
+						|| ( ! pSection->IsAccepted() && ! pSection->IsIncluded()
 							&& (DefaultFlags & StringSection::Declined))))
 			{
 				continue;
 			}
 
+#ifndef DEMO_VERSION
 			if (pSection->Length != 0
 				&& 1 != fwrite(pSection->pBegin, pSection->Length, 1, file))
 			{
 				fclose(file);
 				return FALSE;
 			}
+#else
+			if (pSection->Length != 0)
+			{
+				OutputLine += CString(pSection->pBegin, pSection->Length);
+			}
+#endif
 		}
+#ifndef DEMO_VERSION
 		if (EOF == fputc('\n', file))
 		{
 			fclose(file);
 			return FALSE;
 		}
+#else
+		pNewFilePair->pFirstFile->AddLine(OutputLine);
+#endif
 	}
+#ifndef DEMO_VERSION
 	if (fflush(file))
 	{
 		result = FALSE;
 	}
 	fclose(file);
+#else
+	CFilePairDoc * pDoc = GetApp()->OpenFilePairView(pNewFilePair);
+	if (NULL != pDoc)
+	{
+		pDoc->m_CopyDisabled = true;
+	}
+	// remove extra reference and forget about it
+	pNewFilePair->Dereference();
+#endif
 	return result;
 }
 
@@ -1878,6 +1923,10 @@ void CFilePairDoc::OnMergeInclude()
 			UpdateAllViews(NULL, InvalidateRange, & ir);
 			SetModifiedFlag(TRUE);
 		}
+		if (GetApp()->m_bCancelSelectionOnMerge)
+		{
+			SetSelection(m_CaretPos, m_CaretPos, 0);
+		}
 	}
 }
 
@@ -1917,6 +1966,10 @@ void CFilePairDoc::OnMergeExclude()
 			ir.end = LinePosToDisplayPos(end);
 			UpdateAllViews(NULL, InvalidateRange, & ir);
 			SetModifiedFlag(TRUE);
+		}
+		if (GetApp()->m_bCancelSelectionOnMerge)
+		{
+			SetSelection(m_CaretPos, m_CaretPos, 0);
 		}
 	}
 }

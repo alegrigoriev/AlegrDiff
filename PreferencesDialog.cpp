@@ -196,6 +196,7 @@ CViewPreferencesPage::CViewPreferencesPage() : CPropertyPage(CViewPreferencesPag
 {
 	//{{AFX_DATA_INIT(CViewPreferencesPage)
 	m_nTabIndent = 0;
+	m_bCancelSelectionOnMerge = FALSE;
 	//}}AFX_DATA_INIT
 	m_FontPointSize = 100;
 	m_bFontChanged = false;
@@ -213,6 +214,7 @@ void CViewPreferencesPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_SPIN1, m_Spin);
 	DDX_Text(pDX, IDC_EDIT_TAB_INDENT, m_nTabIndent);
 	DDV_MinMaxUInt(pDX, m_nTabIndent, 0, 32);
+	DDX_Check(pDX, IDC_CHECK_CANCEL_SELECTION_ON_MERGE, m_bCancelSelectionOnMerge);
 	//}}AFX_DATA_MAP
 }
 

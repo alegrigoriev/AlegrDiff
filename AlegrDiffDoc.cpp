@@ -524,9 +524,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 		((CFrameWnd*)AfxGetMainWnd())->PostMessage(WM_SETMESSAGESTRING_POST, 0, (LPARAM)m_ComparisonResult);
 	}
 
-	FilePairChangedArg arg;
-	arg.pPair = pPair;
-	UpdateAllViews(NULL, UpdateViewsFilePairChanged, & arg);
+	GetApp()->NotifyFilePairChanged(pPair);
 
 	SetCaretPosition(0, 0, SetPositionCancelSelection);
 }
@@ -968,6 +966,7 @@ void CAlegrDiffDoc::OnViewRefresh()
 		return;
 	}
 
+	CThisApp * pApp = GetApp();
 	// rescan the directories again
 	m_bNeedUpdateViews = false;
 
@@ -975,7 +974,7 @@ void CAlegrDiffDoc::OnViewRefresh()
 	dlg.m_pDoc = this;
 
 	// TODO release all open files
-	GetApp()->UpdateAllViews(UpdateViewsCloseOpenFiles);
+	pApp->UpdateAllViews(UpdateViewsCloseOpenFiles);
 
 	dlg.DoModalDelay();
 
@@ -992,7 +991,7 @@ void CAlegrDiffDoc::OnViewRefresh()
 
 			FilePairChangedArg arg;
 			arg.pPair = pTmp;
-			GetApp()->UpdateAllViews(UpdateViewsFilePairDeleteView, & arg);
+			pApp->UpdateAllViews(UpdateViewsFilePairDeleteView, & arg);
 
 			pTmp->Dereference();
 			m_bNeedUpdateViews = true;
@@ -1007,10 +1006,8 @@ void CAlegrDiffDoc::OnViewRefresh()
 
 			if (pPair->m_bChanged)
 			{
-				FilePairChangedArg arg;
-				arg.pPair = pPair;
-				GetApp()->UpdateAllViews(UpdateViewsFilePairChanged, & arg);
 				pPair->m_bChanged = false;
+				pApp->NotifyFilePairChanged(pPair);
 			}
 			pPair = pPair->Next();
 		}
@@ -1085,9 +1082,8 @@ void CFilePairDoc::OnViewRefresh()
 	m_pFilePair->Dereference();
 
 	SetCaretPosition(caretpos.pos, caretpos.line, SetPositionCancelSelection);
-	FilePairChangedArg arg;
-	arg.pPair = m_pFilePair;
-	GetApp()->UpdateAllViews(UpdateViewsFilePairChanged, & arg);
+
+	GetApp()->NotifyFilePairChanged(m_pFilePair);
 }
 
 void CFilePairDoc::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
@@ -2371,6 +2367,7 @@ void CFilePairDoc::OnViewAsBinary()
 	OnCloseDocument();
 
 	pPair->m_ComparisonResult = pPair->ResultUnknown;
+	pPair->UnloadFiles(true);
 
 	if (NULL != pPair->pFirstFile)
 	{

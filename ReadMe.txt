@@ -1,6 +1,6 @@
 TODO:
 
-Switch from binary view to text view
+Remove file result (change to "Ready" when the file window is deactivated)
 Find full word only
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
 Add Copy 1st file text, copy 2nd file text
@@ -74,6 +74,8 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+
+Switch from binary view to text view
 Switch from text view to binary view
 When the binary file is open and its comparison result is unknown, start difference search from the beginning
 Make Ctrl+A - select all in the list view

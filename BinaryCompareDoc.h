@@ -52,4 +52,5 @@ protected:
 public:
 	virtual void OnUpdateAllViews(CView* pSender,
 								LPARAM lHint = 0L, CObject* pHint = NULL);
+	afx_msg void OnViewViewastextfiles();
 };

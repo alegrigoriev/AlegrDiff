@@ -851,6 +851,31 @@ void CAlegrDiffDoc::OnViewRefresh()
 {
 	// TODO: Add your command handler code here
 	// rescan the directories again
+	FileList FileList1;
+	FileList FileList2;
+
+	if (! FileList1.LoadFolder(m_sFirstDir, m_bRecurseSubdirs,
+								m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern,
+								m_sBinaryFilesPattern))
+	{
+		DWORD error = GetLastError();
+		FreeFilePairList();
+		CString s;
+		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sFirstDir));
+		AfxMessageBox(s);
+		return;
+	}
+	if (! FileList2.LoadFolder(m_sSecondDir, m_bRecurseSubdirs,
+								m_sInclusionPattern, m_sExclusionPattern,
+								m_sCFilesPattern, m_sBinaryFilesPattern))
+	{
+		FreeFilePairList();
+		CString s;
+		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sSecondDir));
+		AfxMessageBox(s);
+		return;
+	}
+	BuildFilePairList(FileList1, FileList2);
 }
 
 void CFilePairDoc::OnViewRefresh()

@@ -136,6 +136,7 @@ public:
 	afx_msg void OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnFileProperties();
 	afx_msg void OnUpdateFileProperties(CCmdUI *pCmdUI);
+	afx_msg void OnLvnItemchanged(NMHDR *pNMHDR, LRESULT *pResult);
 };
 
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp

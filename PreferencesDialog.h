@@ -44,6 +44,7 @@ protected:
 	afx_msg void OnCheckBinaryFiles();
 	afx_msg void OnCheckCCpp();
 	afx_msg void OnCheckIgnore();
+	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

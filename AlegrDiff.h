@@ -35,12 +35,23 @@ public:
 	DWORD m_NormalTextColor;
 	DWORD m_ErasedTextColor;
 	DWORD m_AddedTextColor;
-	BOOL m_bRecurseSubdirs;
+	DWORD m_TextBackgroundColor;
+	DWORD m_SelectedTextColor;
+
+	bool m_bRecurseSubdirs;
+	bool m_bUseBinaryFilesFilter;
+	bool m_bUseCppFilter;
+	bool m_bUseIgnoreFilter;
+	bool m_bAdvancedCompareDialog;
+	bool m_BinaryComparision;
 
 	CString m_FileDir1;
 	CString m_FileDir2;
 
 	CString m_sFilenameFilter;
+	CString m_sBinaryFilesFilter;
+	CString m_sCppFilesFilter;
+	CString m_sIgnoreFilesFilter;
 
 	void OpenFilePairView(FilePair * pPair);
 	// Overrides
@@ -58,6 +69,7 @@ public:
 	afx_msg void OnAppAbout();
 	afx_msg void OnFileComparedirectories();
 	afx_msg void OnFileComparefiles();
+	afx_msg void OnFilePreferences();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

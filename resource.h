@@ -9,6 +9,7 @@
 #define IDR_FILEDIFFTYPE                131
 #define IDS_FILENAME_FILTER             132
 #define IDD_DIALOG_PREFERENCES          132
+#define IDD_DIALOG_COMPARE_DIRS_ADVANCED 133
 #define IDC_CURSOR_BEAM                 150
 #define IDC_COMBO_FIRST_DIR             1000
 #define IDC_COMBO_SECOND_DIR            1001
@@ -23,6 +24,8 @@
 #define IDC_EDIT_IGNORE                 1010
 #define IDC_EDIT_TAB_INDENT             1011
 #define IDC_EDITFILENAME_FILTER         1012
+#define IDC_BUTTON_ADVANCED             1013
+#define IDC_CHECK_BINARY                1014
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -37,7 +40,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32783
-#define _APS_NEXT_CONTROL_VALUE         1013
+#define _APS_NEXT_CONTROL_VALUE         1015
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -10,6 +10,7 @@
 #include "AlegrDiffView.h"
 #include "DiffFileView.h"
 #include "CompareDirsDialog.h"
+#include "PreferencesDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -25,6 +26,7 @@ BEGIN_MESSAGE_MAP(CAlegrDiffApp, CWinApp)
 	ON_COMMAND(ID_APP_ABOUT, OnAppAbout)
 	ON_COMMAND(ID_FILE_COMPAREDIRECTORIES, OnFileComparedirectories)
 	ON_COMMAND(ID_FILE_COMPAREFILES, OnFileComparefiles)
+	ON_COMMAND(ID_FILE_PREFERENCES, OnFilePreferences)
 	//}}AFX_MSG_MAP
 	// Standard file based document commands
 //	ON_COMMAND(ID_FILE_OPEN, CWinApp::OnFileOpen)
@@ -87,6 +89,21 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("InitialDir1"), m_FileDir1, _T(""));
 	Profile.AddItem(_T("Settings"), _T("InitialDir2"), m_FileDir2, _T(""));
 	Profile.AddItem(_T("Settings"), _T("FilenameFilter"), m_sFilenameFilter, _T("*"));
+	Profile.AddItem(_T("Settings"), _T("UseBinaryFilesFilter"), m_bUseBinaryFilesFilter, true);
+	Profile.AddItem(_T("Settings"), _T("UseCppFilter"), m_bUseCppFilter, true);
+	Profile.AddItem(_T("Settings"), _T("UseIgnoreFilter"), m_bUseIgnoreFilter, true);
+	Profile.AddItem(_T("Settings"), _T("AdvancedCompareDialog"), m_bAdvancedCompareDialog, false);
+	Profile.AddItem(_T("Settings"), _T("BinaryComparision"), m_BinaryComparision, false);
+
+	Profile.AddItem(_T("Settings"), _T("BinaryFiles"), m_sBinaryFilesFilter,
+					_T("*.exe;*.dll;*.sys;*.obj;*.pdb;*.zip"));
+	Profile.AddItem(_T("Settings"), _T("CppFiles"), m_sCppFilesFilter,
+					_T("*.c;*.cpp;*.h;*.hpp;*.inl;*.rc;*.h++"));
+	Profile.AddItem(_T("Settings"), _T("IgnoreFiles"), m_sIgnoreFilesFilter,
+					_T("*.ncb"));
+
+	m_TextBackgroundColor = GetSysColor(COLOR_WINDOW);
+	m_SelectedTextColor = 0xFFFFFF;
 	// Register the application's document templates.  Document templates
 	//  serve as the connection between documents, frame windows and views.
 
@@ -194,10 +211,40 @@ void CAlegrDiffApp::OnFileComparedirectories()
 	dlg.m_bIncludeSubdirs = m_bRecurseSubdirs;
 	dlg.m_FilenameFilter = m_sFilenameFilter;
 
+	dlg.m_bUseBinaryFilesFilter = m_bUseBinaryFilesFilter;
+	dlg.m_sBinaryFilesFilter = m_sBinaryFilesFilter;
+
+	dlg.m_bUseCppFilter = m_bUseCppFilter;
+	dlg.m_sCppFilesFilter = m_sCppFilesFilter;
+
+	dlg.m_bUseIgnoreFilter = m_bUseIgnoreFilter;
+	dlg.m_sIgnoreFilesFilter = m_sIgnoreFilesFilter;
+
+	dlg.m_nTabIndent = m_TabIndent;
+
+	dlg.m_BinaryComparision = m_BinaryComparision;
+
+	dlg.m_bAdvanced = m_bAdvancedCompareDialog;
+
 	if (IDOK == dlg.DoModal())
 	{
 		m_sFilenameFilter = dlg.m_FilenameFilter;
 		m_bRecurseSubdirs = (1 == dlg.m_bIncludeSubdirs);
+
+		m_bUseBinaryFilesFilter = (0 != dlg.m_bUseBinaryFilesFilter);
+		m_sBinaryFilesFilter = dlg.m_sBinaryFilesFilter;
+
+		m_bUseCppFilter = (0 != dlg.m_bUseCppFilter);
+		m_sCppFilesFilter = dlg.m_sCppFilesFilter;
+
+		m_bUseIgnoreFilter = (0 != dlg.m_bUseIgnoreFilter);
+		m_sIgnoreFilesFilter = dlg.m_sIgnoreFilesFilter;
+
+		m_TabIndent = dlg.m_nTabIndent;
+
+		m_BinaryComparision = dlg.m_BinaryComparision;
+
+		m_bAdvancedCompareDialog = dlg.m_bAdvanced;
 
 		CAlegrDiffDoc * pDoc = (CAlegrDiffDoc *)
 								m_pListDiffTemplate->OpenDocumentFile(NULL);
@@ -227,8 +274,6 @@ void CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 		pDoc->SetFilePair(pPair);
 	}
 }
-
-
 
 void CAlegrDiffApp::OnFileComparefiles()
 {
@@ -306,10 +351,40 @@ void CAlegrDiffApp::OnFileComparefiles()
 		FilePair * pPair = new FilePair;
 		pPair->pFirstFile = new FileItem( & wfd1, FileDir1, "");
 		pPair->pSecondFile = new FileItem( & wfd2, FileDir2, "");
+		CString title = Name1 + _T(" - ") + Name2;
 
 		pDoc->SetFilePair(pPair);
 		// SetFilePair references the pair, we need to compensate it
 		pPair->Dereference();
 	}
 
+}
+
+void CAlegrDiffApp::OnFilePreferences()
+{
+	CPreferencesDialog dlg;
+	dlg.m_bUseBinaryFilesFilter = m_bUseBinaryFilesFilter;
+	dlg.m_sBinaryFilesFilter = m_sBinaryFilesFilter;
+
+	dlg.m_bUseCppFilter = m_bUseCppFilter;
+	dlg.m_sCppFilesFilter = m_sCppFilesFilter;
+
+	dlg.m_bUseIgnoreFilter = m_bUseIgnoreFilter;
+	dlg.m_sIgnoreFilesFilter = m_sIgnoreFilesFilter;
+
+	dlg.m_nTabIndent = m_TabIndent;
+
+	if (IDOK == dlg.DoModal())
+	{
+		m_bUseBinaryFilesFilter = (0 != dlg.m_bUseBinaryFilesFilter);
+		m_sBinaryFilesFilter = dlg.m_sBinaryFilesFilter;
+
+		m_bUseCppFilter = (0 != dlg.m_bUseCppFilter);
+		m_sCppFilesFilter = dlg.m_sCppFilesFilter;
+
+		m_bUseIgnoreFilter = (0 != dlg.m_bUseIgnoreFilter);
+		m_sIgnoreFilesFilter = dlg.m_sIgnoreFilesFilter;
+
+		m_TabIndent = dlg.m_nTabIndent;
+	}
 }

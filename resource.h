@@ -73,6 +73,7 @@
 #define ID_LISTVIEW_OPEN                32800
 #define ID_FILE_COPY_FIRST_DIR          32801
 #define ID_FILE_COPY_SECOND_DIR         32802
+#define ID_VIEW_IGNORE_WHITESPACES      32803
 #define IDS_DIRECTORY_ACCESS_DENIED     32848
 #define IDS_DIRECTORY_NOT_FOUND         32849
 #define IDS_PREFERENCES                 32850
@@ -84,7 +85,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        138
-#define _APS_NEXT_COMMAND_VALUE         32803
+#define _APS_NEXT_COMMAND_VALUE         32805
 #define _APS_NEXT_CONTROL_VALUE         1032
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

@@ -67,7 +67,10 @@ public:
 	TextPos m_Begin;
 	TextPos m_End;
 	ULONG m_Flags;
-	enum { FlagAccept = 1, FlagDecline = 2, FlagNoDifference = 4};
+	enum { FlagAccept = 1,
+		FlagDecline = 2,
+		FlagNoDifference = 4,
+		FlagWhitespace = 8, };
 
 	void AcceptChange() { m_Flags &= ~FlagDecline; m_Flags |= FlagAccept; }
 	void DeclineChange() { m_Flags &= ~FlagAccept; m_Flags |= FlagDecline; }
@@ -93,7 +96,7 @@ class FileLine
 {
 public:
 
-	FileLine(const char * src, bool MakeNormalizedString);
+	FileLine(const char * src, bool MakeNormalizedString, bool c_cpp_file);
 	~FileLine();
 
 	static void * operator new(size_t size)
@@ -181,11 +184,17 @@ struct StringSection
 		m_Allocator.Free(ptr);
 	}
 	StringSection * pNext;
+	const class FileDiffSection * pDiffSection;
 	LPCTSTR pBegin;
 	USHORT Length;
 	enum
 	{
-		Identical = 0, Inserted = 1, Erased = 2, Accepted = 4, Declined = 8,
+		Identical = 0,
+		Inserted = 1,
+		Erased = 2,
+		Accepted = 4,
+		Declined = 8,
+		Whitespace = 0x10,
 	};
 	DWORD Attr;
 private:
@@ -217,8 +226,9 @@ enum FileCheckResult { FileDeleted, FileUnchanged, FileTimeChanged, };
 class FileItem
 {
 public:
-	FileItem(const CString & Name, const CString & BaseDir, const CString & Dir);
-	FileItem(const WIN32_FIND_DATA * pWfd, const CString & BaseDir, const CString & Dir);
+	FileItem(const WIN32_FIND_DATA * pWfd,
+			const CString & BaseDir, const CString & Dir,
+			bool c_cpp);
 	~FileItem();
 	bool Load();
 	void Unload();
@@ -257,6 +267,7 @@ private:
 	CString m_Subdir;
 	CString m_BaseDir;
 	FILETIME m_LastWriteTime;
+	bool m_C_Cpp;
 	CArray<FileLine *, FileLine *> m_Lines;
 	CArray<FileLine *, FileLine *> m_NonBlankLines;
 	CArray<FileLine *, FileLine *> m_HashSortedLines;   // non-blank only
@@ -312,7 +323,7 @@ public:
 
 	int GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo);
 	void ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, int Set, int Reset,
-								int * pFirstSectionIdx, int * pNumSections);
+								FileDiffSection *const ** ppFirstSection, int * pNumSections);
 
 	enum eFileComparisionResult
 	{
@@ -361,9 +372,9 @@ public:
 		m_NumFiles = 0;
 	}
 	bool LoadFolder(const CString & BaseDir, bool bRecurseSubdirs,
-					LPCTSTR sInclusionMask, LPCTSTR sExclusionMask);
+					LPCTSTR sInclusionMask, LPCTSTR sExclusionMask, LPCTSTR sC_CPPMask);
 	bool LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
-						LPCTSTR sInclusionMask, LPCTSTR sExclusionMask);
+						LPCTSTR sInclusionMask, LPCTSTR sExclusionMask, LPCTSTR sC_CPPMask);
 	void FreeFileList();
 	enum { SortNameFirst = 1, SortDirFirst = 2, SortDataModified = 4, SortBackwards = 8};
 	void GetSortedList(CArray<FileItem *, FileItem *> & ItemArray, DWORD SortFlags);

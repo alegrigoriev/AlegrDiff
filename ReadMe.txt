@@ -1,5 +1,8 @@
 TODO:
 Add Merge function
+Ignore whitespace-only differences
+show subdir-only names in the status bar during comparision
+If a file reloaded and some changes are marked, ask confirmation.
 Make Word Left, Word Right, Word selection.
 Make search dialog
 Make Go To Line to first or second file line number
@@ -17,8 +20,10 @@ Make background thread for comparision
 UNICODE file support
 
 Problems:
+Blank lines are ignored during comparision, but may not be inored when line pair list built
 
 Fixed:
+invalidates too much when cursor moved after scroll
 Identical lines in the beginning of the file may be shown different
 doesn't erase line ends after scrolling
 If two files are completely different, only first file is shown
@@ -27,6 +32,7 @@ File with differences: last lines not drawn
 Wrong status for inserted and removed parts of strings
 
 Done:
+Paint accepted and declined changes with color
 Add "Number of lines to match", "Min string length to match", "percents of look-like difference"
 Check difference area of the file for identical lines
 Make Binary compare checkbox for file compare dialog

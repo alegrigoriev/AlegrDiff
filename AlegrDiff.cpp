@@ -47,14 +47,15 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_NormalTextColor(0),
 	m_ErasedTextColor(0x000000FF),  // red
 	m_AddedTextColor(0x00FF0000),   // blue
-	m_AcceptedTextBackgroundColor(0x0000C0C0),  // yellow
-	m_DiscardedTextBackgroundColor(0x00404040),  // dark gray
+	m_AcceptedTextBackgroundColor(0x0000FFFF),  // yellow
+	m_DiscardedTextBackgroundColor(0x00C0C0C0),  // dark gray
 	m_TextBackgroundColor(0xFFFFFF),
 	m_bRecurseSubdirs(false),
 	m_FontPointSize(100),
 	m_UsedFilenameFilter(0),
 	m_AutoReloadChangedFiles(false),
 	m_bCaseSensitive(true),
+	m_bIgnoreWhitespaces(false),
 	m_MinimalLineLength(2),
 	m_NumberOfIdenticalLines(5),
 	m_PercentsOfLookLikeDifference(30),
@@ -297,8 +298,8 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("NormalTextColor"), m_NormalTextColor, 0, 0, 0xFFFFFF);
 	Profile.AddItem(_T("Settings"), _T("AddedTextColor"), m_AddedTextColor, 0x00FF0000, 0, 0xFFFFFF);
 	Profile.AddItem(_T("Settings"), _T("ErasedTextColor"), m_ErasedTextColor, 0x000000FF, 0, 0xFFFFFF);
-	Profile.AddItem(_T("Settings"), _T("AcceptedTextBackgroundColor"), m_AcceptedTextBackgroundColor, 0x0000C0C0, 0, 0xFFFFFF);
-	Profile.AddItem(_T("Settings"), _T("DiscardedTextBackgroundColor"), m_DiscardedTextBackgroundColor, 0x00404040, 0, 0xFFFFFF);
+	Profile.AddItem(_T("Settings"), _T("AcceptedTextBackgroundColor"), m_AcceptedTextBackgroundColor, 0x0000FFFF, 0, 0xFFFFFF);
+	Profile.AddItem(_T("Settings"), _T("DiscardedTextBackgroundColor"), m_DiscardedTextBackgroundColor, 0x00C0C0C0, 0, 0xFFFFFF);
 
 	Profile.AddItem(_T("Settings"), _T("NormalFont"), m_NormalLogFont, m_NormalLogFont);
 	Profile.AddItem(_T("Settings"), _T("AddedFont"), m_AddedLogFont, m_AddedLogFont);
@@ -318,6 +319,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("AdvancedCompareDialog"), m_bAdvancedCompareDialog, false);
 	Profile.AddItem(_T("Settings"), _T("BinaryComparision"), m_BinaryComparision, false);
 	Profile.AddItem(_T("Settings"), _T("AutoReloadChangedFiles"), m_AutoReloadChangedFiles, false);
+	Profile.AddItem(_T("Settings"), _T("IgnoreWhitespaces"), m_bIgnoreWhitespaces, false);
 
 	Profile.AddItem(_T("Settings"), _T("MinimalLineLength"), m_MinimalLineLength, 2, 1, 2048);
 	Profile.AddItem(_T("Settings"), _T("NumberOfIdenticalLines"), m_NumberOfIdenticalLines, 5, 1, 50);
@@ -602,8 +604,18 @@ void CAlegrDiffApp::OnFileComparefiles()
 	if (NULL != pDoc)
 	{
 		FilePair * pPair = new FilePair;
-		pPair->pFirstFile = new FileItem( & wfd1, FileDir1, "");
-		pPair->pSecondFile = new FileItem( & wfd2, FileDir2, "");
+
+		CString sCFilesPattern;
+		if (m_bUseCppFilter)
+		{
+			sCFilesPattern = PatternToMultiCString(m_sCppFilesFilter);
+		}
+		pPair->pFirstFile = new FileItem( & wfd1, FileDir1, "",
+										MultiPatternMatches(wfd1.cFileName, sCFilesPattern));
+
+		pPair->pSecondFile = new FileItem( & wfd2, FileDir2, "",
+											MultiPatternMatches(wfd2.cFileName, sCFilesPattern));
+
 		CString title = Name1 + _T(" - ") + Name2;
 
 		pDoc->SetFilePair(pPair);

@@ -170,20 +170,13 @@ FileList::FileList()
 {
 }
 
-FileItem::FileItem(const CString & Name, const CString & BaseDir, const CString & Dir)
-	:m_Name(Name),
-	m_BaseDir(BaseDir),
-	m_Subdir(Dir),
-	m_pNext(NULL)
-{
-	m_LastWriteTime.dwHighDateTime = 0;
-	m_LastWriteTime.dwLowDateTime = 0;
-}
-
-FileItem::FileItem(const WIN32_FIND_DATA * pWfd, const CString & BaseDir, const CString & Dir)
+FileItem::FileItem(const WIN32_FIND_DATA * pWfd,
+					const CString & BaseDir, const CString & Dir,
+					bool c_cpp)
 	:m_Name(pWfd->cFileName),
 	m_BaseDir(BaseDir),
 	m_Subdir(Dir),
+	m_C_Cpp(c_cpp),
 	m_pNext(NULL)
 {
 	m_LastWriteTime = pWfd->ftLastWriteTime;
@@ -323,6 +316,7 @@ int _cdecl FileLine::NormalizedGroupHashAndLineNumberCompareFunc(const void * p1
 bool FileItem::Load()
 {
 	CThisApp * pApp = GetApp();
+	// check if it is C or CPP file
 	FILE * file = fopen(LPCTSTR(GetFullName()), "r");
 	if (NULL == file)
 	{
@@ -362,7 +356,7 @@ bool FileItem::Load()
 			}
 		}
 		TabExpandedLine[pos] = 0;
-		FileLine * pLine = new FileLine(TabExpandedLine, true);
+		FileLine * pLine = new FileLine(TabExpandedLine, true, m_C_Cpp);
 		if (pLine)
 		{
 			pLine->SetNext(pLineList);
@@ -1156,7 +1150,7 @@ const FileLine * FileItem::FindMatchingLineGroupLine(const FileLine * pLine, int
 }
 
 bool FileList::LoadFolder(const CString & BaseDir, bool bRecurseSubdirs,
-						LPCTSTR sInclusionMask, LPCTSTR sExclusionMask)
+						LPCTSTR sInclusionMask, LPCTSTR sExclusionMask, LPCTSTR sC_CPPMask)
 {
 	// make sure the directory is appended with '\', or ends with ':'
 	m_BaseDir = BaseDir;
@@ -1171,13 +1165,15 @@ bool FileList::LoadFolder(const CString & BaseDir, bool bRecurseSubdirs,
 			m_BaseDir += _T("\\");
 		}
 	}
-	return LoadSubFolder(CString(), bRecurseSubdirs, sInclusionMask, sExclusionMask);
+	return LoadSubFolder(CString(), bRecurseSubdirs, sInclusionMask, sExclusionMask, sC_CPPMask);
 }
 
 bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
-							LPCTSTR sInclusionMask, LPCTSTR sExclusionMask)
+							LPCTSTR sInclusionMask, LPCTSTR sExclusionMask, LPCTSTR sC_CPPMask)
 {
 	TRACE("LoadSubFolder: scanning %s\n", LPCTSTR(Subdir));
+	CThisApp * pApp = GetApp();
+
 	WIN32_FIND_DATA wfd;
 	CString SubDirectory(Subdir);
 	// make sure the name contains '\'.
@@ -1205,7 +1201,7 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 				// scan the subdirectory
 				CString NewDir = SubDirectory + wfd.cFileName;
 				LoadSubFolder(NewDir, true,
-							sInclusionMask, sExclusionMask);
+							sInclusionMask, sExclusionMask, sC_CPPMask);
 			}
 		}
 		else
@@ -1220,7 +1216,9 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 			}
 			if (0) TRACE("New file item: Name=\"%s\", base dir=%s, subdir=%s\n",
 						wfd.cFileName, m_BaseDir, SubDirectory);
-			FileItem * pFile = new FileItem( & wfd, m_BaseDir, SubDirectory);
+
+			FileItem * pFile = new FileItem( & wfd, m_BaseDir, SubDirectory,
+											MultiPatternMatches(wfd.cFileName, sC_CPPMask));
 			if (NULL == pFile)
 			{
 				continue;
@@ -1333,7 +1331,7 @@ static DWORD CalculateHash(const char * data, int len)
 }
 // remove the unnecessary whitespaces from the line (based on C, C++ syntax)
 // return string length
-static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen)
+static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen, bool c_cpp_file)
 {
 	// pDst buffer size must be greater or equal strlen(pSrc)
 	int SrcIdx = 0;
@@ -1358,7 +1356,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen)
 		// strings also must be kept intact.
 		// Can remove extra spaces between alpha and non-alpha
 		c = Src[SrcIdx];
-		bool c_IsAlpha = (0 != isalpha(c));
+		bool c_IsAlpha = (0 != _istalnum(c));
 		if(c_IsAlpha)
 		{
 			if (PrevCharAlpha)
@@ -1382,7 +1380,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen)
 				SrcIdx++;
 				DstIdx++;
 				c = Src[SrcIdx];
-			} while (isalpha(c));
+			} while (_istalnum(c));
 
 			PrevCharAlpha = true;
 			CanRemoveWhitespace = true;
@@ -1526,7 +1524,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen)
 			} while (c != 0
 					&& c != ' '
 					&& c != '\t'
-					&& ! isalpha(c));
+					&& ! _istalnum(c));
 			PrevCharAlpha = false;
 		}
 		// remove whitespaces
@@ -1538,174 +1536,6 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen)
 	}
 	pDst[DstIdx] = 0;
 	return DstIdx;
-}
-
-static void RemoveExtraWhitespaces(CString & Dst, const CString & Src)
-{
-	// pDst buffer size must be grater or equal strlen(pSrc)
-	int SrcIdx = 0;
-	int DstIdx = 0;
-	bool CanRemoveWhitespace = true;
-	TCHAR cPrevChar = 0;
-	bool PrevCharAlpha = false;
-	LPTSTR pDst = Dst.GetBuffer(Src.GetLength());
-
-	TCHAR c;
-	// remove whitespaces at the begin
-	while ((c = Src[SrcIdx]) == ' '
-			|| '\t' == c)
-	{
-		SrcIdx++;
-	}
-	while (Src[SrcIdx])
-	{
-		// it's OK to remove extra spaces between non-alpha bytes,
-		// unless these are the following pairs:
-		// /*, */, //, ++, --, &&, ||, ##, ->*, ->, >>, << >=, <=, ==, ::
-		// that is most two-char operators
-		// strings also must be kept intact.
-		// Can remove extra spaces between alpha and non-alpha
-		c = Src[SrcIdx];
-		bool c_IsAlpha = (_istalnum(c) || '_' == c);
-		if(c_IsAlpha)
-		{
-			if (PrevCharAlpha)
-			{
-				// insert one whitespace to the output string
-				pDst[DstIdx] = ' ';
-				DstIdx++;
-			}
-			// move all alpha chars till non-alpha
-			do
-			{
-				pDst[DstIdx] = c;
-				SrcIdx++;
-				DstIdx++;
-				c = Src[SrcIdx];
-			} while (_istalnum(c) || '_' == c);
-
-			PrevCharAlpha = true;
-			CanRemoveWhitespace = true;
-		}
-		else
-		{
-			if( ! PrevCharAlpha)
-			{
-				// TODO: need to check for a space between #define name and (arguments)
-
-				// check if we need to insert a whitespace
-				static int ReservedPairs[] =
-				{
-					// /*, */, //, ++, --, &&, ||, ##, ->*, ->, >>, << >=, <=, ==, ::
-					// TODO: process L' and L"
-					'//', '/*', '*/', '++', '--', '!=', '##', '%=',
-					'^=', '&=', '&&', '-=', '==', '::', '<<',
-					'>>', '||', '|=', '<=', '>=', '/=', '\'\'', '""',
-				};
-				// may be non-portable to big-endian
-				int pair = ((cPrevChar & 0xFF) << 8) | (c & 0xFF);
-				for (int i = 0; i < sizeof ReservedPairs / sizeof ReservedPairs[0]; i++)
-				{
-					if (pair == ReservedPairs[i])
-					{
-						pDst[DstIdx] = ' ';
-						DstIdx++;
-						break;
-					}
-				}
-			}
-			// move all non-alpha non whitespace chars
-			// check for a string or character constant
-			if ('\'' == c)
-			{
-				// character constant
-				// skip everything till the next '. Process \'
-				cPrevChar = c;
-				do
-				{
-					pDst[DstIdx] = c;
-					SrcIdx++;
-					DstIdx++;
-					c = Src[SrcIdx];
-					if ('\'' == c)
-					{
-						// if the next char is double quote,
-						// skip both
-						pDst[DstIdx] = c;
-						SrcIdx++;
-						DstIdx++;
-						c = Src[SrcIdx];
-						if ('\'' == c)
-						{
-							continue;
-						}
-						break;
-					}
-					else if ('\\' ==c)
-					{
-						// skip the next char
-						pDst[DstIdx] = c;
-						SrcIdx++;
-						DstIdx++;
-						c = Src[SrcIdx];
-					}
-				} while (c != 0);
-			}
-			else if ('"' == c)
-			{
-				// char string
-				cPrevChar = c;
-				do
-				{
-					pDst[DstIdx] = c;
-					SrcIdx++;
-					DstIdx++;
-					c = Src[SrcIdx];
-					if ('"' == c)
-					{
-						// if the next char is double quote,
-						// skip both
-						pDst[DstIdx] = c;
-						SrcIdx++;
-						DstIdx++;
-						c = Src[SrcIdx];
-						if ('"' == c)
-						{
-							continue;
-						}
-						break;
-					}
-					else if ('\\' ==c)
-					{
-						// skip the next char
-						pDst[DstIdx] = c;
-						SrcIdx++;
-						DstIdx++;
-						c = Src[SrcIdx];
-					}
-				} while (c != 0);
-			}
-			else do
-			{
-				cPrevChar = c;
-				pDst[DstIdx] = c;
-				SrcIdx++;
-				DstIdx++;
-				c = Src[SrcIdx];
-			} while (c != 0
-					&& c != ' '
-					&& c != '\t'
-					&& ! (_istalnum(c) || '_' == c));
-			PrevCharAlpha = false;
-		}
-		// remove whitespaces
-		while ((c = Src[SrcIdx]) == ' '
-				|| '\t' == c)
-		{
-			SrcIdx++;
-		}
-	}
-	Dst.ReleaseBuffer(DstIdx);
 }
 
 // find difference in the strings, and build the array of inserts and
@@ -1856,6 +1686,23 @@ int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int 
 				pSection->Length = idx1;
 				pSection->Attr = StringSection::Erased;
 				pSection->pNext = NULL;
+
+				// mark it as whitespace, if it consists of spaces only
+				// and there is a whitespace along it
+				for (int i = 0; i < idx1 && ' ' == str1[i]; i++)
+				{ } // empty
+				if (i == idx1
+					&& (str1[idx1] == 0
+						|| str1[idx1] == ' '
+						|| str1 == pStr1 || *(str1 - 1) == ' '
+						// check if the space is between alphanum and non-alphanum
+						// there as at least one character before it
+						|| (0 != _istalnum(*(str1 - 1))) != (0 != _istalnum(str1[idx1]))
+					))
+				{
+					pSection->Attr |= pSection->Whitespace;
+				}
+
 				if (NULL != pLastSection)
 				{
 					pLastSection->pNext = pSection;
@@ -1878,6 +1725,23 @@ int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int 
 				pSection->Length = idx2;
 				pSection->Attr = StringSection::Inserted;
 				pSection->pNext = NULL;
+
+				// mark it as whitespace, if it consists of spaces only
+				// and there is a whitespace along it
+				for (int i = 0; i < idx2 && ' ' == str2[i]; i++)
+				{ } // empty
+				if (i == idx2
+					&& (str2[idx2] == 0
+						|| str2[idx2] == ' '
+						|| str2 == pStr2 || *(str2 - 1) == ' '
+						// check if the space is between alphanum and non-alphanum
+						// there as at least one character before it
+						|| (0 != _istalnum(*(str2 - 1))) != (0 != _istalnum(str2[idx2]))
+					))
+				{
+					pSection->Attr |= pSection->Whitespace;
+				}
+
 				if (NULL != pLastSection)
 				{
 					pLastSection->pNext = pSection;
@@ -1907,7 +1771,7 @@ int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int 
 	return nDifferentChars;
 }
 
-FileLine::FileLine(const char * src, bool MakeNormalizedString)
+FileLine::FileLine(const char * src, bool MakeNormalizedString, bool c_cpp_file)
 	: //m_Flags(0),
 	m_pNext(NULL),
 	m_Number(-1),
@@ -1920,7 +1784,7 @@ FileLine::FileLine(const char * src, bool MakeNormalizedString)
 {
 	m_Length = strlen(src);
 	char TmpBuf[2050];
-	m_NormalizedStringLength = RemoveExtraWhitespaces(TmpBuf, src, sizeof TmpBuf);
+	m_NormalizedStringLength = RemoveExtraWhitespaces(TmpBuf, src, sizeof TmpBuf, c_cpp_file);
 
 	m_pAllocatedBuf = ::new char[m_Length + m_NormalizedStringLength + 2];
 	if (NULL != m_pAllocatedBuf)
@@ -2376,6 +2240,7 @@ FilePair::eFileComparisionResult FilePair::CompareFiles()
 					pSection->pBegin = pPair->pFirstLine->GetText();
 					pSection->Length = pPair->pFirstLine->GetLength();
 					pPair->pFirstSection = pSection;
+					pSection->pDiffSection = NULL;
 				}
 				else
 				{
@@ -2797,28 +2662,29 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 				pDiffSection->m_End.pos = 0;
 				m_DiffSections.Add(pDiffSection);
 			}
-		}
-		for (i = nPrevSectionEnd1; i < pSection->File1LineBegin; i++, nLineIndex++)
-		{
-			pPair = new LinePair;
-			if (NULL == pPair)
+			for (i = nPrevSectionEnd1; i < pSection->File1LineBegin; i++, nLineIndex++)
 			{
-				break;
-			}
-			m_LinePairs[nLineIndex] = pPair;
+				pPair = new LinePair;
+				if (NULL == pPair)
+				{
+					break;
+				}
+				m_LinePairs[nLineIndex] = pPair;
 
-			pPair->pFirstLine = pFirstFile->GetLine(i);
-			pPair->pSecondLine = NULL;
+				pPair->pFirstLine = pFirstFile->GetLine(i);
+				pPair->pSecondLine = NULL;
 
-			pPair->pFirstSection = new StringSection;
-			if (NULL == pPair->pFirstSection)
-			{
-				break;
+				pPair->pFirstSection = new StringSection;
+				if (NULL == pPair->pFirstSection)
+				{
+					break;
+				}
+				pPair->pFirstSection->pNext = NULL;
+				pPair->pFirstSection->Attr = StringSection::Erased;
+				pPair->pFirstSection->pBegin = pPair->pFirstLine->GetText();
+				pPair->pFirstSection->Length = pPair->pFirstLine->GetLength();
+				pPair->pFirstSection->pDiffSection = pDiffSection;
 			}
-			pPair->pFirstSection->pNext = NULL;
-			pPair->pFirstSection->Attr = StringSection::Erased;
-			pPair->pFirstSection->pBegin = pPair->pFirstLine->GetText();
-			pPair->pFirstSection->Length = pPair->pFirstLine->GetLength();
 		}
 		if (pSection->File2LineBegin > nPrevSectionEnd2)
 		{
@@ -2831,31 +2697,32 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 				pDiffSection->m_End.pos = 0;
 				m_DiffSections.Add(pDiffSection);
 			}
-		}
-		// add lines from second file (mark as added)
-		for (i = nPrevSectionEnd2; i < pSection->File2LineBegin; i++, nLineIndex++)
-		{
-			pPair = new LinePair;
-			if (NULL == pPair)
+			// add lines from second file (mark as added)
+			for (i = nPrevSectionEnd2; i < pSection->File2LineBegin; i++, nLineIndex++)
 			{
-				break;
-			}
-			m_LinePairs[nLineIndex] = pPair;
+				pPair = new LinePair;
+				if (NULL == pPair)
+				{
+					break;
+				}
+				m_LinePairs[nLineIndex] = pPair;
 
-			pPair->pFirstLine = NULL;
-			pPair->pSecondLine = pSecondFile->GetLine(i);
+				pPair->pFirstLine = NULL;
+				pPair->pSecondLine = pSecondFile->GetLine(i);
 
-			pPair->pFirstSection = new StringSection;
-			if (NULL == pPair->pFirstSection)
-			{
-				break;
+				pPair->pFirstSection = new StringSection;
+				if (NULL == pPair->pFirstSection)
+				{
+					break;
+				}
+				pPair->pFirstSection->pNext = NULL;
+				pPair->pFirstSection->Attr = StringSection::Inserted;
+				pPair->pFirstSection->pBegin = pPair->pSecondLine->GetText();
+				pPair->pFirstSection->Length = pPair->pSecondLine->GetLength();
+				pPair->pFirstSection->pDiffSection = pDiffSection;
 			}
-			pPair->pFirstSection->pNext = NULL;
-			pPair->pFirstSection->Attr = StringSection::Inserted;
-			pPair->pFirstSection->pBegin = pPair->pSecondLine->GetText();
-			pPair->pFirstSection->Length = pPair->pSecondLine->GetLength();
+
 		}
-
 		for (i = 0; i < pSection->File1LineEnd - pSection->File1LineBegin; i++, nLineIndex++)
 		{
 			pPair = new LinePair;
@@ -2877,6 +2744,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 				if (pSection->Identical != pSection->Attr)
 				{
 					FileDiffSection * pDiffSection = new FileDiffSection;
+					pSection->pDiffSection = pDiffSection;
 					if (NULL != pDiffSection)
 					{
 						pDiffSection->m_Begin.line = nLineIndex;
@@ -2884,10 +2752,28 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 						pDiffSection->m_End.line = nLineIndex;
 						pos += pSection->Length;
 						pDiffSection->m_End.pos = pos;
+						if (pSection->Attr & pSection->Whitespace)
+						{
+							pDiffSection->m_Flags |= FileDiffSection::FlagWhitespace;
+						}
 						if (pSection->pNext != NULL
 							&& pSection->pNext->Attr != pSection->Identical)
 						{
+							if (pSection->pNext->Attr & pSection->Whitespace)
+							{
+								if (0 == (pSection->Attr & pSection->Whitespace))
+								{
+									pSection->pNext->Attr &= ~pSection->Whitespace;
+								}
+							}
+							else
+							{
+								pSection->Attr &= ~pSection->Whitespace;
+								pDiffSection->m_Flags &= ~FileDiffSection::FlagWhitespace;
+							}
+
 							pSection = pSection->pNext;
+							pSection->pDiffSection = pDiffSection;
 							pos += pSection->Length;
 							pDiffSection->m_End.pos = pos;
 						}
@@ -2896,6 +2782,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 				}
 				else
 				{
+					pSection->pDiffSection = NULL;
 					pos += pSection->Length;
 				}
 			}
@@ -3019,7 +2906,7 @@ int FilePair::GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo)
 	{
 		// if the range is of zero length, then PosTo inclusive.
 		if (PosFrom < pSection->m_Begin
-			&& PosFrom >= pSection->m_End)
+			|| PosFrom >= pSection->m_End)
 		{
 			return FileDiffSection::FlagNoDifference;
 		}
@@ -3029,7 +2916,7 @@ int FilePair::GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo)
 		}
 	}
 	if (PosTo < pSection->m_Begin
-		&& PosFrom >= pSection->m_End)
+		|| PosFrom >= pSection->m_End)
 	{
 		return FileDiffSection::FlagNoDifference;
 	}
@@ -3048,12 +2935,11 @@ int FilePair::GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo)
 
 void FilePair::ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo,
 										int Set, int Reset,
-										int * pFirstSectionIdx, int * pNumSections)
+										FileDiffSection *const ** ppFirstSection, int * pNumSections)
 {
-	int flags = 0;
-	if (NULL != pFirstSectionIdx)
+	if (NULL != ppFirstSection)
 	{
-		* pFirstSectionIdx = 0;
+		* ppFirstSection = NULL;
 		* pNumSections = 0;
 	}
 	if (0 == m_DiffSections.GetSize())
@@ -3083,9 +2969,9 @@ void FilePair::ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo,
 		if (PosFrom >= pSection->m_Begin
 			&& PosFrom < pSection->m_End)
 		{
-			if (NULL != pFirstSectionIdx)
+			if (NULL != ppFirstSection)
 			{
-				* pFirstSectionIdx = SectionIdx;
+				* ppFirstSection = ppSection;
 				* pNumSections = 1;
 			}
 			pSection->m_Flags &= ~Reset;
@@ -3093,9 +2979,9 @@ void FilePair::ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo,
 		}
 		return;
 	}
-	if (NULL != pFirstSectionIdx)
+	if (NULL != ppFirstSection)
 	{
-		* pFirstSectionIdx = SectionIdx;
+		* ppFirstSection = ppSection;
 		* pNumSections = 0;
 	}
 	// if the range is not of zero length, then PosTo not inclusize
@@ -3106,10 +2992,11 @@ void FilePair::ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo,
 		{
 			break;
 		}
-		flags |= pSection->m_Flags;
-		if (NULL != pFirstSectionIdx)
+		pSection->m_Flags &= ~Reset;
+		pSection->m_Flags |= Set;
+		if (NULL != ppFirstSection)
 		{
-			* pNumSections++;
+			(* pNumSections)++;
 		}
 	}
 

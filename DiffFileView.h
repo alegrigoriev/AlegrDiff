@@ -40,6 +40,7 @@ public:
 	int m_FirstLineSeen;
 	int m_FirstPosSeen;
 	int m_NumberMarginWidth;
+	bool m_bIgnoreWhitespaces;
 	// visible rectangle (0-relative)
 	CRect m_VisibleRect;
 	// rectangle for BringCaretToBounds.
@@ -137,6 +138,9 @@ protected:
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnEditGotoline();
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnEditSelectAll();
+	afx_msg void OnViewIgnoreWhitespaces();
+	afx_msg void OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

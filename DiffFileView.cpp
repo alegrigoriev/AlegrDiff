@@ -30,6 +30,7 @@ CDiffFileView::CDiffFileView()
 	m_LineNumberMarginWidth(0),
 	m_DrawnSelEnd(0, 0)
 {
+	m_bIgnoreWhitespaces = GetApp()->m_bIgnoreWhitespaces;
 	// init font size, to avoid zero divide
 	m_FontMetric.tmAveCharWidth = 1;
 	m_FontMetric.tmExternalLeading = 1;
@@ -70,6 +71,9 @@ BEGIN_MESSAGE_MAP(CDiffFileView, CView)
 	ON_WM_CONTEXTMENU()
 	ON_COMMAND(ID_EDIT_GOTOLINE, OnEditGotoline)
 	ON_WM_RBUTTONDOWN()
+	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
+	ON_COMMAND(ID_VIEW_IGNORE_WHITESPACES, OnViewIgnoreWhitespaces)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_IGNORE_WHITESPACES, OnUpdateViewIgnoreWhitespaces)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -154,11 +158,33 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 			{
 				Color = pApp->m_AddedTextColor;
 				pFont = & pApp->m_AddedFont;
+				if (pSection->pDiffSection != NULL)
+				{
+					if (pSection->pDiffSection->IsAccepted())
+					{
+						BackgroundColor = pApp->m_AcceptedTextBackgroundColor;
+					}
+					else if (pSection->pDiffSection->IsDeclined())
+					{
+						BackgroundColor = pApp->m_DiscardedTextBackgroundColor;
+					}
+				}
 			}
 			else if (pSection->Attr & pSection->Erased)
 			{
 				Color = pApp->m_ErasedTextColor;
 				pFont = & pApp->m_ErasedFont;
+				if (pSection->pDiffSection != NULL)
+				{
+					if (pSection->pDiffSection->IsAccepted())
+					{
+						BackgroundColor = pApp->m_DiscardedTextBackgroundColor;
+					}
+					else if (pSection->pDiffSection->IsDeclined())
+					{
+						BackgroundColor = pApp->m_AcceptedTextBackgroundColor;
+					}
+				}
 			}
 			else
 			{
@@ -793,6 +819,7 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 {
 	ASSERT(end >= begin);
 	CRect r;
+	if (0) TRACE("InvalidateRange((%d, %d), (%d, %d))\n", begin, end);
 	int nLinesInView = LinesInView();
 	int nCharsInView = CharsInView();
 	if (begin == end
@@ -1147,6 +1174,9 @@ void CDiffFileView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		// invalidate where the selection changed
 		// first we make sorted array of old and new selection boundaries
 		// then we invalidate between 0, 1 and 2, 3
+		if (0) TRACE("Caret: (%d, %d), sel anchor: (%d, %d), prev: (%d, %d), (%d, %d)\n",
+					pDoc->m_CaretPos, pDoc->m_SelectionAnchor,
+					m_DrawnSelBegin, m_DrawnSelEnd);
 		TextPos Sel[4];
 		if (pDoc->m_CaretPos < pDoc->m_SelectionAnchor)
 		{
@@ -1181,9 +1211,35 @@ void CDiffFileView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 			Sel[3] = m_DrawnSelEnd;
 			m_DrawnSelEnd = Sel[2];
 		}
+		if (Sel[1] > Sel[2])
+		{
+			TextPos tmp = Sel[1];
+			Sel[1] = Sel[2];
+			Sel[2] = tmp;
+		}
 		// array is sorted
 		InvalidateRange(Sel[0], Sel[1]);
 		InvalidateRange(Sel[2], Sel[3]);
+	}
+	else if (lHint == CFilePairDoc::InvalidateRange)
+	{
+		InvalidatedRange * pRange = dynamic_cast<InvalidatedRange *>(pHint);
+		if (NULL != pRange)
+		{
+			TextPos begin, end;
+			if (pRange->begin <= pRange->end)
+			{
+				begin = pRange->begin;
+				end = pRange->end;
+			}
+			else
+			{
+				end = pRange->begin;
+				begin = pRange->end;
+			}
+
+			InvalidateRange(begin, end);
+		}
 	}
 	else if (lHint == CFilePairDoc::FileLoaded)
 	{
@@ -1365,4 +1421,22 @@ void CDiffFileView::OnRButtonDown(UINT nFlags, CPoint point)
 	}
 
 	CView::OnRButtonDown(nFlags, point);
+}
+
+void CDiffFileView::OnEditSelectAll()
+{
+	GetDocument()->SetSelection(TextPos(0, 0), TextPos(GetDocument()->GetTotalLines(), 0));
+	CreateAndShowCaret();
+}
+
+void CDiffFileView::OnViewIgnoreWhitespaces()
+{
+	m_bIgnoreWhitespaces = ! m_bIgnoreWhitespaces;
+	GetApp()->m_bIgnoreWhitespaces = m_bIgnoreWhitespaces;
+	Invalidate();
+}
+
+void CDiffFileView::OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(m_bIgnoreWhitespaces);
 }

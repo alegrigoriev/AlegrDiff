@@ -424,7 +424,8 @@ void CAlegrDiffDoc::OnUpdateAllViews(CView* pSender,
 		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
 		if (NULL != pArg)
 		{
-			FilePair * const pPairToDelete = pArg->pPair;
+			FilePair * const pPairToDelete = pArg->m_pPair;
+
 			CSimpleCriticalSectionLock lock(m_FileListCs);
 			// find if it is in the list and remove from the list
 			for (FilePair * pPair = m_PairList.First(); m_PairList.NotEnd(pPair); pPair = pPair->Next())
@@ -492,7 +493,7 @@ void CFilePairDoc::OnUpdateAllViews(CView* pSender,
 	{
 		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
 		if (NULL != pArg
-			&& pArg->pPair == m_pFilePair)
+			&& pArg->m_pPair == m_pFilePair)
 		{
 			OnCloseDocument();
 			return;
@@ -1044,8 +1045,8 @@ void CAlegrDiffDoc::OnViewRefresh()
 			pPair = m_PairList.Next(pPair);
 			pTmp->RemoveFromList();
 
-			FilePairChangedArg arg;
-			arg.pPair = pTmp;
+			FilePairChangedArg arg(pTmp);
+
 			pApp->UpdateAllViews(UpdateViewsFilePairDeleteView, & arg);
 
 			pTmp->Dereference();
@@ -1119,8 +1120,7 @@ void CFilePairDoc::OnViewRefresh()
 	if (FilesDeleted == res1)
 	{
 		// close this document
-		FilePairChangedArg arg;
-		arg.pPair = m_pFilePair;
+		FilePairChangedArg arg(m_pFilePair);
 		GetApp()->UpdateAllViews(UpdateViewsFilePairDeleteFromList, & arg);
 		return;
 	}

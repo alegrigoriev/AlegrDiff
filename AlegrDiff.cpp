@@ -584,8 +584,7 @@ void CAlegrDiffApp::OnFontChanged()
 
 void CAlegrDiffApp::NotifyFilePairChanged(FilePair *pPair)
 {
-	FilePairChangedArg arg;
-	arg.pPair = pPair;
+	FilePairChangedArg arg(pPair);
 	UpdateAllViews(UpdateViewsFilePairChanged, & arg);
 }
 

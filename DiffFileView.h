@@ -41,7 +41,7 @@ protected:
 public:
 
 	int m_FirstLineSeen;
-	int m_FirstPosSeen;
+	short m_FirstPosSeen;
 	int m_NumberMarginWidth;
 	int m_NumberOfPanes;
 	int m_PaneWithFocus;
@@ -109,8 +109,8 @@ public:
 	void CaretToHome(int flags);
 	void CaretToEnd(int flags);
 
-	int PointToPaneNumber(int x);
-	int PointToPaneOffset(int x, int nPane = -1);
+	short PointToPaneNumber(int x);
+	int PointToPaneOffset(int x, short nPane = -1);
 	int GetPaneWidth();
 	bool OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvokeDialog);
 

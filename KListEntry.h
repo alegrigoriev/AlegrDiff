@@ -60,7 +60,7 @@ struct ListItem : ListEntry<T>
 		pPrev->pNext = pNext;
 		Init();
 	}
-	void InsertNextItem(Item * entry)
+	void InsertAsNextItem(Item * entry)
 	{
 		__assume(NULL != entry);
 		// make sure the item is not in any list
@@ -72,7 +72,7 @@ struct ListItem : ListEntry<T>
 		pNext = entry;
 	}
 
-	void InsertPrevItem(Item * entry)
+	void InsertAsPrevItem(Item * entry)
 	{
 		__assume(NULL != entry);
 		// make sure the item is not in any list

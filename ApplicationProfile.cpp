@@ -395,7 +395,7 @@ CApplicationProfile::~CApplicationProfile()
 }
 
 void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, CString & str,
-								LPCTSTR szDefault,int MaxLen)
+								LPCTSTR szDefault,int /*MaxLen*/)
 {
 	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);

@@ -452,7 +452,7 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 		{
 			return;
 		}
-		FilePair * const pFindPair = pArg->pPair;
+		FilePair * const pFindPair = pArg->m_pPair;
 
 		for (unsigned item = 0; item < m_PairArray.size(); item++)
 		{
@@ -460,6 +460,7 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 			{
 				pListCtrl->DeleteItem(item);
 				m_PairArray.erase(m_PairArray.begin() + item);
+				break;
 			}
 		}
 		return;
@@ -471,7 +472,7 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 		{
 			return;
 		}
-		FilePair * const pFindPair = pArg->pPair;
+		FilePair * const pFindPair = pArg->m_pPair;
 
 		for (unsigned item = 0; item < m_PairArray.size(); item++)
 		{

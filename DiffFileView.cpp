@@ -1619,13 +1619,9 @@ void CDiffFileView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 	{
 		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
 		if (NULL != pArg
-			&& pArg->pPair == pDoc->GetFilePair())
+			&& pArg->m_pPair == pDoc->GetFilePair())
 		{
 			OnMetricsChange();
-			Invalidate(TRUE);
-			UpdateHScrollBar();
-			UpdateVScrollBar();
-			CreateAndShowCaret();
 		}
 	}
 	else if (lHint == UpdateViewsMetricsChanged)

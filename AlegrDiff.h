@@ -45,7 +45,11 @@ enum {
 class FilePairChangedArg : public CObject
 {
 public:
-	class FilePair * pPair;
+	class FilePair * m_pPair;
+	FilePairChangedArg(FilePair * pPair)
+		: m_pPair(pPair)
+	{
+	}
 };
 
 class CAlegrDiffApp : public CWinApp

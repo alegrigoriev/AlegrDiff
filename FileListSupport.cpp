@@ -2741,21 +2741,38 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 											nPrevSectionEnd2, pSection->File2LineBegin, false);
 			if (NULL != pMoreSection)
 			{
-				// insert to the list
-				if (pPrevSection != NULL)
+				// check that there is enough equal lines
+				int nTotalLines = pSection->File1LineBegin - nPrevSectionEnd1
+								+ pSection->File2LineBegin - nPrevSectionEnd2;
+				int nTotalEqualLines = 0;
+				for (FileSection * pTmpSection = pMoreSection; pTmpSection != NULL; pTmpSection = pTmpSection->pNext)
 				{
-					pPrevSection->pNext = pMoreSection;
+					nTotalEqualLines += pTmpSection->File1LineEnd - pTmpSection->File1LineBegin
+										+ pTmpSection->File2LineEnd - pTmpSection->File2LineBegin;
+				}
+
+				if (nTotalEqualLines >= nTotalLines * pApp->m_MinPercentWeakIdenticalLines / 100)
+				{
+					// insert to the list
+					if (pPrevSection != NULL)
+					{
+						pPrevSection->pNext = pMoreSection;
+					}
+					else
+					{
+						pFirstSection = pMoreSection;
+					}
+					// find the last item
+					while (NULL != pMoreSection->pNext)
+					{
+						pMoreSection = pMoreSection->pNext;
+					}
+					pMoreSection->pNext = pSection;
 				}
 				else
 				{
-					pFirstSection = pMoreSection;
+					// free them
 				}
-				// find the last item
-				while (NULL != pMoreSection->pNext)
-				{
-					pMoreSection = pMoreSection->pNext;
-				}
-				pMoreSection->pNext = pSection;
 			}
 		}
 
@@ -2801,6 +2818,22 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 		nPrevSectionEnd1 = pSection->File1LineEnd;
 		nPrevSectionEnd2 = pSection->File2LineEnd;
 	}
+	// concatenate adjacent sections
+	for (pSection = pFirstSection; pSection != NULL && pSection->pNext != NULL; )
+	{
+		FileSection * pNext = pSection->pNext;
+		if (pSection->File1LineEnd != pNext->File1LineBegin
+			|| pSection->File2LineEnd != pNext->File2LineBegin)
+		{
+			pSection = pNext;
+			continue;
+		}
+		pSection->File1LineEnd = pNext->File1LineEnd;
+		pSection->File2LineEnd = pNext->File2LineEnd;
+		pSection->pNext = pNext->pNext;
+		delete pNext;
+	}
+
 	// scan list of sections and try to expand them upwards with looking like lines
 	for (pSection = pFirstSection; pSection != NULL && pSection->pNext != NULL; pSection = pSection->pNext)
 	{
@@ -3380,6 +3413,10 @@ BOOL FilePair::EnumStringDiffSections(TextPos & PosFrom, TextPos & PosTo,
 		{
 			Func(pSection, pParam);
 			ChangeEnd.pos = pos + pSection->Length;
+			if (0 == pSection->Length)
+			{
+				ChangeEnd.pos++;
+			}
 		}
 	}
 	int line;
@@ -3399,6 +3436,10 @@ BOOL FilePair::EnumStringDiffSections(TextPos & PosFrom, TextPos & PosTo,
 				Func(pSection, pParam);
 				ChangeEnd.line = line;
 				ChangeEnd.pos = pos;
+				if (0 == pSection->Length)
+				{
+					ChangeEnd.pos++;
+				}
 			}
 		}
 	}

@@ -69,6 +69,7 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_MinimalLineLength(2),
 	m_MinMatchingChars(3),
 	m_NumberOfIdenticalLines(5),
+	m_MinPercentWeakIdenticalLines(10),
 	m_PercentsOfLookLikeDifference(30),
 	m_FileListSort(CAlegrDiffView::ColumnSubdir),
 	m_MinIdenticalLines(5)
@@ -169,6 +170,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("NumberOfIdenticalLines"), m_NumberOfIdenticalLines, 5, 1, 50);
 	Profile.AddItem(_T("Settings"), _T("PercentsOfLookLikeDifference"), m_PercentsOfLookLikeDifference, 30, 0, 99);
 	Profile.AddItem(_T("Settings"), _T("MinMatchingChars"), m_MinMatchingChars, 3, 1, 32);
+	Profile.AddItem(_T("Settings"), _T("MinPercentWeakIdenticalLines"), m_MinPercentWeakIdenticalLines, 10, 0, 99);
 	Profile.AddItem(_T("Settings"), _T("GoToLineFileSelection"), m_GoToLineFileSelection, 0, 0, 2);
 
 	Profile.AddItem(_T("Settings"), _T("BinaryFiles"), m_sBinaryFilesFilter,

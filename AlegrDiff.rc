@@ -152,7 +152,7 @@ BEGIN
     BEGIN
         MENUITEM "Using AlegrDiff...",          ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
-        MENUITEM "&Help Topics",                57667
+        MENUITEM "&Help Topics",                ID_HELP_INDEX
     END
 END
 
@@ -220,7 +220,7 @@ BEGIN
     BEGIN
         MENUITEM "&Using AlegrDiff...",         ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
-        MENUITEM "&Help Topics",                57667
+        MENUITEM "&Help Topics",                ID_HELP_INDEX
     END
 END
 
@@ -319,7 +319,7 @@ BEGIN
     BEGIN
         MENUITEM "&Using AlegrDiff...",         ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
-        MENUITEM "&Help Topics",                57667
+        MENUITEM "&Help Topics",                ID_HELP_INDEX
     END
 END
 
@@ -444,7 +444,7 @@ BEGIN
     BEGIN
         MENUITEM "&Using AlegrDiff...",         ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
-        MENUITEM "&Help Topics",                57667
+        MENUITEM "&Help Topics",                ID_HELP_INDEX
     END
 END
 
@@ -488,6 +488,31 @@ BEGIN
 
             MENUITEM SEPARATOR
             MENUITEM "Descending Order",            ID_LISTVIEW_SORTBY_DESCENDINGORDER
+
+        END
+        POPUP "Show"
+        BEGIN
+            MENUITEM "DIFFERENT files",             ID_SHOW_DIFFERENTFILES
+            MENUITEM "Identical Files",             ID_SHOW_IDENTICALFILES
+            MENUITEM "Different in version info",   ID_SHOW_DIFFERENTINVERSIONINFO
+
+            MENUITEM "Different in spaces only",    ID_SHOW_DIFFERENTINSPACESONLY
+
+            MENUITEM "Files not in 2nd Directory",  ID_SHOW_FILESIN1STDIRECTORYONLY
+
+            MENUITEM "Files not in 1st Directory",  ID_SHOW_FILESIN2NDDIRECTORYONLY
+
+            MENUITEM "Subdirectories in 1st Dir Only", 
+                                                    ID_SHOW_SUBDIRECTORIESIN1STDIRONLY
+
+            MENUITEM "Subdirectories in 2nd Dir Only", 
+                                                    ID_SHOW_SUBDIRECTORIESIN2NDDIR
+
+            MENUITEM "Longer files in 1st directory", 
+                                                    ID_SHOW_LONGERFILESIN1STDIRECTORY
+
+            MENUITEM "Longer files in 2nd directory", 
+                                                    ID_SHOW_LONGERFILESIN2NDDIRECTORY
 
         END
     END
@@ -1707,6 +1732,28 @@ BEGIN
     IDS_STRING_PERCENTS_DONE "%d%% done"
     ID_VIEW_AS_BINARY       "Compare the files as non-text (binary) files\nBinary comparison"
     IDC_VIEW_SIDE_BY_SIDE   "Show two files side by side\nShow side by side"
+    ID_SHOW_IDENTICALFILES  "Show or hide identical files"
+    ID_SHOW_DIFFERENTFILES  "Show or hide different files"
+    ID_SHOW_DIFFERENTINVERSIONINFO 
+                            "Show or hide files different in version control information"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_SHOW_FILESIN2NDDIRECTORYONLY 
+                            "Show or hide files present in second directory only"
+    ID_SHOW_SUBDIRECTORIESIN1STDIRONLY 
+                            "Show or hide subdirectories present in first directory only"
+    ID_SHOW_SUBDIRECTORIESIN2NDDIR 
+                            "Show or hide subdirectories present in second directory only"
+    ID_SHOW_FILESIN1STDIRECTORYONLY 
+                            "Show or hide files present in first directory only"
+    ID_SHOW_DIFFERENTINSPACESONLY 
+                            "Show or hide files different in white spaces"
+    ID_SHOW_LONGERFILESIN1STDIRECTORY 
+                            "Show or hide longer files in first directory"
+    ID_SHOW_LONGERFILESIN2NDDIRECTORY 
+                            "Show or hide longer files in second directory"
 END
 
 #endif    // English (U.S.) resources

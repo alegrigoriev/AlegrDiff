@@ -17,14 +17,10 @@ static char THIS_FILE[] = __FILE__;
 IMPLEMENT_DYNCREATE(CDiffFileView, CView)
 
 CDiffFileView::CDiffFileView()
-	: m_pFilePair(NULL),
-	m_FirstLineSeen(0),
+	: m_FirstLineSeen(0),
 	m_FirstPosSeen(0),
 	m_CaretLine(0),
-	m_CaretPos(0),
-	m_TotalLines(0),
-	m_UseLinePairArray(false),
-	m_BaseOnFirstFile(true)
+	m_CaretPos(0)
 {
 	// init font size, to avoid zero divide
 	m_FontMetric.tmAveCharWidth = 0;
@@ -34,11 +30,6 @@ CDiffFileView::CDiffFileView()
 
 CDiffFileView::~CDiffFileView()
 {
-	if (NULL != m_pFilePair)
-	{
-		m_pFilePair->Dereference();
-		m_pFilePair = NULL;
-	}
 }
 
 
@@ -135,16 +126,21 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 
 void CDiffFileView::OnDraw(CDC* pDC)
 {
-	CDocument* pDoc = GetDocument();
-	if (NULL == m_pFilePair)
+	CFilePairDoc* pDoc = GetDocument();
+	if (NULL == pDoc)
 	{
 		return;
 	}
-	FileItem * pFile = m_pFilePair->pFirstFile;
-	if (NULL == pFile
-		|| (! m_BaseOnFirstFile && NULL != m_pFilePair->pSecondFile))
+	FilePair * pFilePair = pDoc->GetFilePair();
+	if (NULL == pFilePair)
 	{
-		pFile = m_pFilePair->pSecondFile;
+		return;
+	}
+	FileItem * pFile = pFilePair->pFirstFile;
+	if (NULL == pFile
+		|| (! pDoc->BaseOnFirstFile() && NULL != pFilePair->pSecondFile))
+	{
+		pFile = pFilePair->pSecondFile;
 	}
 	if (NULL == pFile)
 	{
@@ -176,7 +172,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 	//pDC->SetTextAlign
 	int nLineHeight = LineHeight();
 
-	if (m_UseLinePairArray)
+	if (pDoc->UseLinePairArray())
 	{
 		int nTabIndent = GetApp()->m_TabIndent;
 		int nCharsInView = CharsInView() + 1;
@@ -185,10 +181,10 @@ void CDiffFileView::OnDraw(CDC* pDC)
 
 		for (int nLine = m_FirstLineSeen,
 			PosY = cr.top;
-			nLine < m_pFilePair->m_LinePairs.GetSize() && PosY < cr.bottom;
+			nLine < pFilePair->m_LinePairs.GetSize() && PosY < cr.bottom;
 			nLine++, PosY += nLineHeight)
 		{
-			const LinePair * pPair = m_pFilePair->m_LinePairs[nLine];
+			const LinePair * pPair = pFilePair->m_LinePairs[nLine];
 			ASSERT(NULL != pPair);
 			if (NULL != pPair)
 			{
@@ -231,10 +227,10 @@ void CDiffFileView::Dump(CDumpContext& dc) const
 {
 	CView::Dump(dc);
 }
-CAlegrDiffDoc* CDiffFileView::GetDocument() // non-debug version is inline
+CFilePairDoc* CDiffFileView::GetDocument() // non-debug version is inline
 {
-	ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CAlegrDiffDoc)));
-	return (CAlegrDiffDoc*)m_pDocument;
+	ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CFilePairDoc)));
+	return (CFilePairDoc*)m_pDocument;
 }
 #endif //_DEBUG
 
@@ -272,24 +268,6 @@ void CDiffFileView::OnInitialUpdate()
 		wdc.GetTextMetrics( & m_FontMetric);
 		wdc.SelectObject(pOldFont);
 	}
-	// build the line pair array
-	if (m_pFilePair->m_LinePairs.GetSize() != 0)
-	{
-		m_UseLinePairArray = true;
-		m_TotalLines = m_pFilePair->m_LinePairs.GetSize();
-	}
-	else
-	{
-		m_UseLinePairArray = false;
-		FileItem * pFile = m_pFilePair->pFirstFile;
-		if (NULL == pFile
-			|| (! m_BaseOnFirstFile && NULL != m_pFilePair->pSecondFile))
-		{
-			pFile = m_pFilePair->pSecondFile;
-		}
-
-		m_TotalLines = pFile->GetNumLines();
-	}
 	CView::OnInitialUpdate();
 	UpdateVScrollBar();
 	UpdateHScrollBar();
@@ -298,12 +276,6 @@ void CDiffFileView::OnInitialUpdate()
 
 void CDiffFileView::OnDestroy()
 {
-	if (m_pFilePair)
-	{
-		m_pFilePair->UnloadFiles();
-		m_pFilePair->Dereference();
-		m_pFilePair = NULL;
-	}
 	CView::OnDestroy();
 }
 
@@ -373,7 +345,7 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		TRACE("VK_END\n");
 		if (CtrlPressed)
 		{
-			SetCaretPosition(0, m_TotalLines, bCancelSelection);
+			SetCaretPosition(0, GetDocument()->GetTotalLines(), bCancelSelection);
 		}
 		else
 		{
@@ -499,9 +471,9 @@ void CDiffFileView::VScrollToTheLine(int nLine)
 		nLine = 0;
 	}
 
-	if (nLine > m_TotalLines - nLinesInView)
+	if (nLine > GetDocument()->GetTotalLines() - nLinesInView)
 	{
-		nLine = m_TotalLines - nLinesInView;
+		nLine = GetDocument()->GetTotalLines() - nLinesInView;
 	}
 
 	if (nLine == m_FirstLineSeen)
@@ -537,7 +509,7 @@ void CDiffFileView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 	case SB_BOTTOM:
 		TRACE("OnVScroll SB_BOTTOM, nPos=%d\n", nPos);
-		VScrollToTheLine(m_TotalLines - nLinesInView);
+		VScrollToTheLine(GetDocument()->GetTotalLines() - nLinesInView);
 		break;
 
 	case SB_LINEUP:
@@ -580,7 +552,7 @@ void CDiffFileView::UpdateVScrollBar()
 	SCROLLINFO sci;
 	sci.cbSize = sizeof sci;
 	sci.nMin = 0;
-	sci.nMax = m_TotalLines;
+	sci.nMax = GetDocument()->GetTotalLines();
 	sci.nPage = nLinesInView;
 	sci.nPos = m_FirstLineSeen;
 	sci.nTrackPos = 0;
@@ -656,9 +628,9 @@ void CDiffFileView::MakePositionVisible(int line, int pos)
 
 void CDiffFileView::SetCaretPosition(int pos, int line, bool bCancelSelection)
 {
-	if (line > m_TotalLines)
+	if (line > GetDocument()->GetTotalLines())
 	{
-		line = m_TotalLines;
+		line = GetDocument()->GetTotalLines();
 	}
 	if (line < 0)
 	{
@@ -687,7 +659,7 @@ void CDiffFileView::CreateAndShowCaret()
 		TRACE("CDiffFileView::CreateAndShowCaret - No Focus\n");
 		return;
 	}
-	if (0 == m_TotalLines)
+	if (0 == GetDocument()->GetTotalLines())
 	{
 		return;
 	}

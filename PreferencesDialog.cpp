@@ -19,7 +19,13 @@ CPreferencesDialog::CPreferencesDialog(CWnd* pParent /*=NULL*/)
 	: CDialog(CPreferencesDialog::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CPreferencesDialog)
-	// NOTE: the ClassWizard will add member initialization here
+	m_bUseBinaryFilesFilter = FALSE;
+	m_bUseCppFilter = FALSE;
+	m_bUseIgnoreFilter = FALSE;
+	m_sBinaryFilesFilter = _T("");
+	m_sCppFilesFilter = _T("");
+	m_sIgnoreFilesFilter = _T("");
+	m_nTabIndent = 0;
 	//}}AFX_DATA_INIT
 }
 
@@ -28,16 +34,43 @@ void CPreferencesDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CPreferencesDialog)
-	// NOTE: the ClassWizard will add DDX and DDV calls here
+	DDX_Check(pDX, IDC_CHECK_BINARY_FILES, m_bUseBinaryFilesFilter);
+	DDX_Check(pDX, IDC_CHECK_C_CPP, m_bUseCppFilter);
+	DDX_Check(pDX, IDC_CHECK_IGNORE, m_bUseIgnoreFilter);
+	DDX_Text(pDX, IDC_EDIT_BINARY_FILES, m_sBinaryFilesFilter);
+	DDX_Text(pDX, IDC_EDIT_C_CPP, m_sCppFilesFilter);
+	DDX_Text(pDX, IDC_EDIT_IGNORE, m_sIgnoreFilesFilter);
+	DDX_Text(pDX, IDC_EDIT_TAB_INDENT, m_nTabIndent);
+	DDV_MinMaxUInt(pDX, m_nTabIndent, 0, 32);
 	//}}AFX_DATA_MAP
 }
 
 
 BEGIN_MESSAGE_MAP(CPreferencesDialog, CDialog)
 	//{{AFX_MSG_MAP(CPreferencesDialog)
-		// NOTE: the ClassWizard will add message map macros here
+	ON_BN_CLICKED(IDC_CHECK_BINARY_FILES, OnCheckBinaryFiles)
+	ON_BN_CLICKED(IDC_CHECK_C_CPP, OnCheckCCpp)
+	ON_BN_CLICKED(IDC_CHECK_IGNORE, OnCheckIgnore)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CPreferencesDialog message handlers
+
+void CPreferencesDialog::OnCheckBinaryFiles()
+{
+	// TODO: Add your control notification handler code here
+
+}
+
+void CPreferencesDialog::OnCheckCCpp()
+{
+	// TODO: Add your control notification handler code here
+
+}
+
+void CPreferencesDialog::OnCheckIgnore()
+{
+	// TODO: Add your control notification handler code here
+
+}

@@ -235,6 +235,11 @@ class FileList
 public:
 	FileList();
 	~FileList() { FreeFileList(); }
+	void Detach()
+	{
+		m_pList = NULL;
+		m_NumFiles = 0;
+	}
 	bool LoadFolder(const CString & BaseDir, bool bRecurseSubdirs,
 					LPCTSTR sInclusionMask, LPCTSTR sExclusionMask);
 	bool LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
@@ -249,6 +254,7 @@ public:
 
 bool MatchWildcard(LPCTSTR name, LPCTSTR pattern);
 bool MultiPatternMatches(LPCTSTR name, LPCTSTR sPattern);
-void MiltiSzToCString(CString & str, LPCTSTR pMsz);
+CString MiltiSzToCString(LPCTSTR pMsz);
+CString PatternToMultiCString(LPCTSTR src);
 int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int nMinMatchingChars);
 #endif

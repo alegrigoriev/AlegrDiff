@@ -14,6 +14,7 @@
 
 #include "resource.h"       // main symbols
 #include "ApplicationProfile.h"
+#include "FileListSupport.h"
 /////////////////////////////////////////////////////////////////////////////
 // CAlegrDiffApp:
 // See AlegrDiff.cpp for the implementation of this class
@@ -34,17 +35,29 @@ public:
 	DWORD m_NormalTextColor;
 	DWORD m_ErasedTextColor;
 	DWORD m_AddedTextColor;
-// Overrides
+	BOOL m_bRecurseSubdirs;
+
+	CString m_FileDir1;
+	CString m_FileDir2;
+
+	CString m_sFilenameFilter;
+
+	void OpenFilePairView(FilePair * pPair);
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CAlegrDiffApp)
 public:
 	virtual BOOL InitInstance();
+	virtual int ExitInstance();
 	//}}AFX_VIRTUAL
 // Implementation
 	CMultiDocTemplate * m_pFileDiffTemplate;
+	CMultiDocTemplate * m_pListDiffTemplate;
 
 	//{{AFX_MSG(CAlegrDiffApp)
 	afx_msg void OnAppAbout();
+	afx_msg void OnFileComparedirectories();
+	afx_msg void OnFileComparefiles();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

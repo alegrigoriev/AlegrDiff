@@ -129,7 +129,7 @@ void CMainFrame::OnWindowNew()
 	CDiffFileView * pView = dynamic_cast<CDiffFileView *>(pActiveChild->GetWindow(GW_CHILD));
 	if (NULL != pView)
 	{
-		pView->GetDocument()->OpenFilePairView(pView->m_pFilePair);
+		GetApp()->OpenFilePairView(pView->GetDocument()->GetFilePair());
 	}
 }
 

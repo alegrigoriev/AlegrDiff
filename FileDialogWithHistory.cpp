@@ -598,7 +598,7 @@ BOOL CFileDialogWithHistory::OnFileNameOK()
 	GetParent()->SendMessage(CDM_GETFOLDERPATH, MAX_PATH, LPARAM(m_LastFolder.GetBuffer(MAX_PATH)));
 	m_LastFolder.ReleaseBuffer();
 
-	TRACE("CFileDialogWithHistory::OnFileNameOK Folder Path=%s\n", m_LastFolder);
+	TRACE(_T("CFileDialogWithHistory::OnFileNameOK Folder Path=%s\n"), m_LastFolder);
 
 	m_RecentFolders.AddString(m_LastFolder);
 

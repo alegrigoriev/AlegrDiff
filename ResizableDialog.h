@@ -198,7 +198,8 @@ void CResizableDialogT<Base>::OnSize(UINT nType, int cx, int cy)
 				r.top += dy;
 			}
 
-			if (flags & ThisIsDropCombobox)
+			if ((flags & ThisIsDropCombobox)
+				&& dx != 0)
 			{
 				// special processing for CComboBox
 				CComboBox * pCombo = static_cast<CComboBox *>(pWnd);

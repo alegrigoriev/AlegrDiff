@@ -104,6 +104,7 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_bShowLineNumbers = true;
 	m_bCancelSelectionOnMerge = false;
 	m_bUseMd5 = true;
+	m_bFindWholeWord = false;
 
 	m_StatusFlags = 0;
 	// then init subfields:
@@ -611,7 +612,8 @@ void CAlegrDiffApp::UpdateAllViews(LPARAM lHint, CObject* pHint)
 }
 
 UINT AFXAPI AfxGetFileName(LPCTSTR lpszPathName, LPTSTR lpszTitle, UINT nMax);
-static void AFXAPI _AfxAbbreviateName(LPTSTR lpszCanon, int cchMax, BOOL bAtLeastName)
+// from _AfxAbbreviateName
+void AFXAPI AbbreviateName(LPTSTR lpszCanon, int cchMax, BOOL bAtLeastName)
 {
 	int cchFullPath, cchFileName, cchVolName;
 	const TCHAR* lpszCur;
@@ -711,7 +713,7 @@ void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, UINT FormatID, U
 		return;
 	}
 	CString name(pFile->GetFullName());
-	_AfxAbbreviateName(name.GetBuffer(MAX_PATH * 2), 50, true);
+	AbbreviateName(name.GetBuffer(MAX_PATH * 2), 50, true);
 	// duplicate all '&' in name
 	for (int i = 0; i < name.GetLength(); i++)
 	{

@@ -89,6 +89,7 @@ public:
 			bool m_bCaseSensitive:1;
 			bool m_bCancelSelectionOnMerge:1;
 			bool m_bUseMd5:1;
+			bool m_bFindWholeWord:1;
 		};
 	};
 	union
@@ -204,6 +205,7 @@ void CopyFilesToFolder(FileItem ** ppFiles, int nCount, bool bAddSubdirToTarget)
 CString FileTimeToStr(FILETIME FileTime, LCID locale = LOCALE_USER_DEFAULT);
 CString UlonglongToStr(ULONGLONG Length, LCID locale = LOCALE_USER_DEFAULT);
 CString FileLengthToStrKb(ULONGLONG Length);
+void AFXAPI AbbreviateName(LPTSTR lpszCanon, int cchMax, BOOL bAtLeastName);
 
 CString CreateCustomFilter(LPCTSTR Extension);
 int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,

@@ -1611,3 +1611,24 @@ void CBinaryCompareView::OnUpdateViewMorebytesinline(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable(m_BytesPerLine < 64);
 }
+
+void CBinaryCompareView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* pDeactiveView)
+{
+	CView::OnActivateView(bActivate, pActivateView, pDeactiveView);
+	CFrameWnd * pMainFrm = dynamic_cast<CFrameWnd *>(AfxGetMainWnd());
+	if (NULL != pMainFrm)
+	{
+		if (bActivate && this == pActivateView)
+		{
+			FilePair * pPair = GetDocument()->GetFilePair();
+			if (NULL != pPair)
+			{
+				pMainFrm->SetMessageText(pPair->GetComparisonResult());
+			}
+		}
+		else
+		{
+			pMainFrm->SetMessageText(AFX_IDS_IDLEMESSAGE);
+		}
+	}
+}

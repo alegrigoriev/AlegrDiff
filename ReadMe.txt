@@ -1,7 +1,9 @@
 TODO:
 
-Remove file result (change to "Ready" when the file window is deactivated)
 Find full word only
+Use OnActivateApp to refresh the files
+Use dotted filenames in the progress dialog
+Make radio buttons in file compare dialog: Binary Text Default
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
 Add Copy 1st file text, copy 2nd file text
 show version of file1, file2 of the line
@@ -29,6 +31,7 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+After double click on listview item, the focus moves to the next item
 Blank line immediately following difference block is considered separate 
    for "Next Difference" command
 Blank lines prevent from proper line matching inside difference blocks
@@ -75,6 +78,7 @@ insufficient space allocated for copying files
 
 Done:
 
+Remove file result (change to "Ready" when the file window is deactivated)
 Switch from binary view to text view
 Switch from text view to binary view
 When the binary file is open and its comparison result is unknown, start difference search from the beginning

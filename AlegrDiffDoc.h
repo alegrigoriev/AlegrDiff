@@ -173,7 +173,7 @@ public:
 	void CaretLeftToWord(int SelectionFlags);
 	void CaretRightToWord(int SelectionFlags);
 
-	bool FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive);
+	bool FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive, bool WholeWord);
 	bool OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvokeDialog);
 	bool OnEditFind();
 	bool OnEditFindNext();

@@ -1477,6 +1477,23 @@ void CDiffFileView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* 
 		}
 	}
 	m_OnActivateViewEntered = false;
+	CFrameWnd * pMainFrm = dynamic_cast<CFrameWnd *>(AfxGetMainWnd());
+	if (NULL != pMainFrm)
+	{
+		if (bActivate && this == pActivateView)
+		{
+			FilePair * pPair = GetDocument()->GetFilePair();
+			if (NULL != pPair)
+			{
+				pMainFrm->SetMessageText(pPair->GetComparisonResult());
+			}
+		}
+		else
+		{
+			pMainFrm->SetMessageText(AFX_IDS_IDLEMESSAGE);
+		}
+	}
+
 }
 
 void CDiffFileView::OnEditFind()
@@ -1768,3 +1785,26 @@ void CDiffFileView::OnTimer(UINT nIDEvent)
 	CView::OnTimer(nIDEvent);
 }
 
+
+void CDiffFileView::OnActivateFrame(UINT nState, CFrameWnd* pDeactivateFrame)
+{
+	CView::OnActivateFrame(nState, pDeactivateFrame);
+
+	CFrameWnd * pMainFrm = dynamic_cast<CFrameWnd *>(AfxGetMainWnd());
+	if (NULL != pMainFrm)
+	{
+		if (WA_INACTIVE == nState)
+		{
+			pMainFrm->SetMessageText(AFX_IDS_IDLEMESSAGE);
+		}
+		else if (WA_ACTIVE == nState
+				|| WA_CLICKACTIVE == nState)
+		{
+			FilePair * pPair = GetDocument()->GetFilePair();
+			if (NULL != pPair)
+			{
+				pMainFrm->SetMessageText(pPair->GetComparisonResult());
+			}
+		}
+	}
+}

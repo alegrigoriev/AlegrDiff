@@ -122,6 +122,8 @@ public:
 	afx_msg void OnUpdateViewLessbytesinline(CCmdUI *pCmdUI);
 	afx_msg void OnViewMorebytesinline();
 	afx_msg void OnUpdateViewMorebytesinline(CCmdUI *pCmdUI);
+protected:
+	virtual void OnActivateView(BOOL bActivate, CView* pActivateView, CView* pDeactiveView);
 };
 
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp

@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #include "FileListSupport.h"
 #include "AlegrDiff.h"
+#include <io.h>
+#include <fcntl.h>
 
 #ifdef _DEBUG
 #include <mmsystem.h>
@@ -306,7 +308,7 @@ bool FileItem::Load()
 {
 	CThisApp * pApp = GetApp();
 	// check if it is C or CPP file
-	FILE * file = _tfopen(LPCTSTR(GetFullName()), _T("r"));
+	FILE * file = _tfopen(LPCTSTR(GetFullName()), _T("rb"));
 	if (NULL == file)
 	{
 		return false;
@@ -330,17 +332,21 @@ bool FileItem::Load()
 	// peek two first bytes, to see if it is UNICODE file
 	wchar_t FirstChar = fgetwc(file);
 
-	rewind(file);
 	clearerr(file);
 
-	if ((FirstChar & 0xFFFF) == 0xFFFE)
+	if ((FirstChar & 0xFFFF) == 0xFEFF)
 	{
 		m_IsUnicode = true;
 	}
-	else if ((FirstChar & 0xFFFF) == 0xFEFF)
+	else if ((FirstChar & 0xFFFF) == 0xFFFE)
 	{
 		m_IsUnicode = true;
 		m_IsUnicodeBigEndian = true;
+	}
+	else
+	{
+		rewind(file);
+		_setmode(_fileno(file), _O_TEXT);
 	}
 
 	for (unsigned LinNum =0; ; LinNum++)
@@ -349,6 +355,7 @@ bool FileItem::Load()
 		{
 			if (m_IsUnicodeBigEndian)
 			{
+				break;
 			}
 			else
 			{
@@ -382,7 +389,7 @@ bool FileItem::Load()
 					i++;
 				}
 			}
-			else if (line[i] == '\n')
+			else if (line[i] == '\n' || line[i] == '\r')
 			{
 				i++;
 				pos--;

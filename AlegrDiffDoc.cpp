@@ -1459,6 +1459,42 @@ BOOL CFilePairDoc::SaveModified()
 	return TRUE;
 }
 
+class CMergedFilesSaveDlg : public CFileDialog
+{
+public:
+	CMergedFilesSaveDlg(BOOL bOpenFileDialog, // TRUE for FileOpen, FALSE for FileSaveAs
+						LPCTSTR lpszDefExt = NULL,
+						LPCTSTR lpszFileName = NULL,
+						DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+						LPCTSTR lpszFilter = NULL,
+						CWnd* pParentWnd = NULL,
+						DWORD dwSize = sizeof(OPENFILENAME))
+		: CFileDialog(bOpenFileDialog, lpszDefExt, lpszFileName,
+					dwFlags, lpszFilter, pParentWnd, dwSize),
+		m_bUnicode(FALSE)
+	{
+		m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_SAVE_MERGED_TEMPLATE);
+		m_ofn.Flags |= OFN_ENABLETEMPLATE;
+	}
+	BOOL m_bUnicode;
+	virtual void OnInitDone( )
+	{
+		CheckDlgButton(IDC_CHECK_UNICODE, m_bUnicode);
+	}
+
+	void OnCheckUnicode()
+	{
+		m_bUnicode = IsDlgButtonChecked(IDC_CHECK_UNICODE);
+	}
+	DECLARE_MESSAGE_MAP()
+};
+
+BEGIN_MESSAGE_MAP(CMergedFilesSaveDlg, CFileDialog)
+	//{{AFX_MSG_MAP(CMergedFilesSaveDlg)
+	ON_BN_CLICKED(IDC_CHECK_UNICODE, OnCheckUnicode)
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
 BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 {
 	// check if there are unmarked differences
@@ -1489,14 +1525,18 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 	}
 	CString FileExt;
 	CString FileName;
+	BOOL bUnicode;
 	if (DefaultFlags == StringSection::Declined)
 	{
 		FileName = m_pFilePair->pFirstFile->GetName();
+		bUnicode = m_pFilePair->pFirstFile->m_IsUnicode;
 	}
 	else
 	{
 		FileName = m_pFilePair->pSecondFile->GetName();
+		bUnicode = m_pFilePair->pSecondFile->m_IsUnicode;
 	}
+
 	for (int pos = FileName.GetLength(); pos > 0; pos--)
 	{
 		if ('.' == FileName[pos - 1])
@@ -1515,20 +1555,21 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 	AllFilter.LoadString(IDS_ALL_FILES);
 	filter += AllFilter;
 
-	CFileDialog dlg(FALSE,
-					FileExt,
-					FileName,
-					OFN_HIDEREADONLY
-					| OFN_EXPLORER
-					| OFN_ENABLESIZING
-					| OFN_NONETWORKBUTTON
-					| OFN_OVERWRITEPROMPT,
-					filter,
-					NULL);
+	CMergedFilesSaveDlg dlg(FALSE,
+							FileExt,
+							FileName,
+							OFN_HIDEREADONLY
+							| OFN_EXPLORER
+							| OFN_ENABLESIZING
+							| OFN_NONETWORKBUTTON
+							| OFN_OVERWRITEPROMPT,
+							filter,
+							NULL);
 	dlg.m_ofn.lpstrInitialDir = pApp->m_LastSaveMergedDir;
 	CString DlgTitle;
 	DlgTitle.LoadString(IDS_SAVE_MERGED_DIALOG_TITLE);
 	dlg.m_ofn.lpstrTitle = DlgTitle;
+	dlg.m_bUnicode = bUnicode;
 
 	if (IDOK == dlg.DoModal())
 	{
@@ -1539,7 +1580,7 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 			pApp->m_LastSaveMergedDir.ReleaseBuffer();
 		}
 		CString FileName = dlg.GetPathName();
-		if (! SaveMergedFile(FileName, DefaultFlags))
+		if (! SaveMergedFile(FileName, DefaultFlags, dlg.m_bUnicode))
 		{
 			AfxMessageBox(IDS_STRING_COULDNT_SAVE_MERGED);
 			return FALSE;
@@ -1558,11 +1599,18 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 	}
 }
 
-BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags)
+BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 {
 	// TODO: save ANSI or UNICODE
 #ifndef DEMO_VERSION
-	FILE * file = _tfopen(Name, _T("wt"));
+	LPCTSTR FileMode = _T("wt");
+#ifdef _UNICODE
+	if (bUnicode)
+	{
+		FileMode = _T("wb");
+	}
+#endif
+	FILE * file = _tfopen(Name, FileMode);
 	if (NULL == file)
 	{
 		return FALSE;
@@ -1572,12 +1620,17 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags)
 	pNewFilePair->pFirstFile = new FileItem(Name);
 	pNewFilePair->SetMemoryFile();
 #endif
+
+	if (bUnicode)
+	{
+		fputwc(0xFEFF, file);
+	}
 	BOOL result = TRUE;
 	for (int LineNum = 0; LineNum < GetTotalLines(); LineNum++)
 	{
-#ifdef DEMO_VERSION
-		CString OutputLine;
-#endif
+		TCHAR LineBuf[2048 + 3];
+		int nUsedChars = 0;
+
 		LinePair * pPair = m_pFilePair->m_LinePairs[LineNum];
 		if (NULL == pPair)
 		{
@@ -1630,28 +1683,33 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags)
 				continue;
 			}
 
-#ifndef DEMO_VERSION
-			if (pSection->Length != 0
-				&& 1 != fwrite(pSection->pBegin, pSection->Length, 1, file))
+			if (2048 - nUsedChars >= pSection->Length)
 			{
-				fclose(file);
-				return FALSE;
+				memcpy(LineBuf + nUsedChars, pSection->pBegin,
+						pSection->Length * sizeof (TCHAR));
+				nUsedChars += pSection->Length;
 			}
-#else
-			if (pSection->Length != 0)
+			else
 			{
-				OutputLine += CString(pSection->pBegin, pSection->Length);
+				break;
 			}
-#endif
 		}
 #ifndef DEMO_VERSION
-		if (EOF == fputc('\n', file))
+#ifdef _UNICODE
+		if (bUnicode)
+		{
+			LineBuf[nUsedChars++] = '\r';
+		}
+#endif
+		LineBuf[nUsedChars ++] = '\n';
+		LineBuf[nUsedChars ++] = 0;
+		if (EOF == _fputts(LineBuf, file))
 		{
 			fclose(file);
 			return FALSE;
 		}
 #else
-		pNewFilePair->pFirstFile->AddLine(OutputLine);
+		pNewFilePair->pFirstFile->AddLine(LineBuf);
 #endif
 	}
 #ifndef DEMO_VERSION

@@ -107,8 +107,9 @@
 #define IDC_CHECK_INCLUDE_DIRECTORY_STRUCTURE 1069
 #define IDC_CHECK_IGNORE_FILES          1070
 #define IDC_COMBO_IGNORE_FILES          1071
-#define IDC_CHECK1                      1073
 #define IDC_CHECK_USE_MD5               1073
+#define IDC_CHECK1                      1074
+#define IDC_CHECK_UNICODE               1074
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -200,9 +201,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        150
+#define _APS_NEXT_RESOURCE_VALUE        151
 #define _APS_NEXT_COMMAND_VALUE         32820
-#define _APS_NEXT_CONTROL_VALUE         1074
+#define _APS_NEXT_CONTROL_VALUE         1075
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

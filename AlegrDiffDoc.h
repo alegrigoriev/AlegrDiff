@@ -143,7 +143,7 @@ protected:
 public:
 	int GetAcceptDeclineFlags(TextPos begin, TextPos end);
 	BOOL DoSaveMerged(BOOL bOpenResultFile);
-	BOOL SaveMergedFile(LPCTSTR Name, int DefaultFlags);
+	BOOL SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode);
 
 	LPCTSTR GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int * pStrLen);
 	// recalculates offset in the raw line to offset in the line with or without whitespaces shown

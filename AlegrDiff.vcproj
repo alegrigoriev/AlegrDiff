@@ -422,6 +422,9 @@
 				RelativePath=".\PreferencesDialog.cpp">
 			</File>
 			<File
+				RelativePath="ProgressDialog.cpp">
+			</File>
+			<File
 				RelativePath=".\SaveFileListDlg.cpp">
 			</File>
 			<File
@@ -544,6 +547,9 @@
 			</File>
 			<File
 				RelativePath=".\PreferencesDialog.h">
+			</File>
+			<File
+				RelativePath="ProgressDialog.h">
 			</File>
 			<File
 				RelativePath=".\Resource.h">

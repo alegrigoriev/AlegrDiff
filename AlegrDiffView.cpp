@@ -371,7 +371,7 @@ void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, KListE
 
 	FilePair * pPair = pPairList->Next();
 
-	for (int i = 0; i < nCount && pPair != pPairList->Head(); i++, pPair = pPair->Next())
+	for (int i = 0; i < nCount && pPairList->NotEnd(pPair); i++, pPair = pPair->Next())
 	{
 		if (NULL != pPair->pFirstFile
 			&& NULL != pPair->pSecondFile
@@ -1185,13 +1185,13 @@ void CAlegrDiffView::OnViewShowallfiles()
 {
 	CAlegrDiffDoc * pDoc = GetDocument();
 	FilePair * pPair;
-	for (pPair = pDoc->m_PairList.Next(); pPair != pDoc->m_PairList.Head(); pPair = pPair->Next())
+	for (pPair = pDoc->m_PairList.First(); pDoc->m_PairList.NotEnd(pPair); pPair = pPair->Next())
 	{
 		pPair->m_bHideFromListView = false;
 		pPair->m_bSelected = true;
 	}
 	pDoc->UpdateAllViews(NULL);
-	for (pPair = pDoc->m_PairList.Next(); pPair != pDoc->m_PairList.Head(); pPair = pPair->Next())
+	for (pPair = pDoc->m_PairList.First(); pDoc->m_PairList.NotEnd(pPair); pPair = pPair->Next())
 	{
 		pPair->m_bSelected = false;
 	}
@@ -1200,7 +1200,7 @@ void CAlegrDiffView::OnViewShowallfiles()
 void CAlegrDiffView::OnUpdateViewShowallfiles(CCmdUI* pCmdUI)
 {
 	CAlegrDiffDoc * pDoc = GetDocument();
-	for (FilePair * pPair = pDoc->m_PairList.Next(); pPair != pDoc->m_PairList.Head(); pPair = pPair->Next())
+	for (FilePair * pPair = pDoc->m_PairList.First(); pDoc->m_PairList.NotEnd(pPair); pPair = pPair->Next())
 	{
 		if (pPair->m_bHideFromListView)
 		{

@@ -1,7 +1,7 @@
 TODO:
 
 make word by word comparison in MatchStrings
-replace edit box with a combobox in FolderDialog
+Do message box, if the search pattern was not found at all
 Find full word only
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
 Add Copy 1st file text, copy 2nd file text
@@ -9,6 +9,7 @@ show version of file1, file2 of the line
 Show Left-only, right-only, merged line (single line only)
 Copy binary dump as text
 Switch from text view to binary view
+Make Ctrl+A - select all in the list view
 Add folder picture under the fingerprint picture
 
 Import font settings from Visual C/VisualStudio
@@ -26,6 +27,7 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+Last folder is not selected automatically in FileDialogWithHistory save
 Directory share name cannot be selected if no '\' appended
 Blank lines prevent from proper line matching inside difference blocks
 "   if()" and "  if ()" shows non-whitespace difference	- need full word mode
@@ -35,6 +37,7 @@ screen move in two directions may corrupt the image (??)
 Directory dialog allows to select network host. It won't return anything then.
 
 Fixed:
+Title of the file diff includes extra '\'
 Crash in the release build
 When checking fingerprint, always showed "files identical"
 Windows ME: old style file open dialog
@@ -65,6 +68,7 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+replace edit box with a combobox in FolderDialog
 Version stamp keywords: $Archive: $Revision: $Date:	and others
 Add history to SaveListOf Files
 When checking the fingerprint, use "Original" and "Current" instead of "1st and 2nd

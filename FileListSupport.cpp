@@ -10,6 +10,7 @@
 #endif
 #include <algorithm>
 #include "ProgressDialog.h"
+#include "LastError.h"
 
 #undef tolower
 #undef toupper
@@ -839,6 +840,9 @@ CSimpleCriticalSection FileItem::m_Cs;
 
 size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 {
+	CLastError err;
+	err.Set(0);
+
 	CSimpleCriticalSectionLock lock(m_Cs);
 
 	if (NULL == m_hFile)
@@ -858,10 +862,10 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 			|| INVALID_HANDLE_VALUE == m_hFile)
 		{
 			m_hFile = NULL;
+			err.Get();
 			return 0;
 		}
 		DWORD nFileSizeLow, nFileSizeHigh;
-		SetLastError(0);
 		nFileSizeLow = GetFileSize(m_hFile, & nFileSizeHigh);
 
 		if (nFileSizeLow != INVALID_FILE_SIZE
@@ -870,6 +874,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 			m_Length = nFileSizeLow | (ULONGLONG(nFileSizeHigh) << 32);
 		}
 	}
+
 	if (FileOffset >= m_Length)
 	{
 		return 0;
@@ -879,6 +884,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 		m_pFileReadBuf = (BYTE *) VirtualAlloc(NULL, 0x10000, MEM_COMMIT, PAGE_READWRITE);
 		if (NULL == m_pFileReadBuf)
 		{
+			err.Get();
 			return 0;
 		}
 		m_FileReadBufSize = 0x10000;
@@ -932,6 +938,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 				TRACE("Reading %d bytes at %X\n", MoveBy, NeedBeginLow);
 				if ( ! ReadFile(m_hFile, m_pFileReadBuf, MoveBy, & BytesRead, NULL))
 				{
+					err.Get();
 					m_FileReadFilled = 0;
 					return 0;
 				}
@@ -945,6 +952,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 			TRACE("Reading %d bytes at %X\n", m_FileReadBufSize, NeedBeginLow);
 			if ( ! ReadFile(m_hFile, m_pFileReadBuf, m_FileReadBufSize, & BytesRead, NULL))
 			{
+				err.Get();
 				m_FileReadFilled = 0;
 				return 0;
 			}
@@ -987,6 +995,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 			TRACE("Reading %d bytes at %X\n", m_FileReadBufSize - m_FileReadFilled, NeedBeginLow);
 			if ( ! ReadFile(m_hFile, m_pFileReadBuf, m_FileReadBufSize - m_FileReadFilled, & BytesRead, NULL))
 			{
+				err.Get();
 				m_FileReadFilled = 0;
 				return 0;
 			}
@@ -999,6 +1008,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 		TRACE("Reading %d bytes at %X\n", m_FileReadBufSize, NeedBeginLow);
 		if ( ! ReadFile(m_hFile, m_pFileReadBuf, m_FileReadBufSize, & BytesRead, NULL))
 		{
+			err.Get();
 			m_FileReadFilled = 0;
 			return 0;
 		}
@@ -4346,11 +4356,11 @@ TextPosDisplay FilePair::LinePosToDisplayPos(TextPosLine position, BOOL IgnoreWh
 {
 	if (unsigned(position.line) >= m_LinePairs.size())
 	{
-		return TextPosDisplay(position.line, (short)position.pos, (short)FileScope);
+		return TextPosDisplay(position.line, position.pos, FileScope);
 	}
 	return TextPosDisplay(position.line,
-						(short)(m_LinePairs[position.line]->LinePosToDisplayPos(position.pos, IgnoreWhitespaces, FileScope)),
-						(short)FileScope);
+						(m_LinePairs[position.line]->LinePosToDisplayPos(position.pos, IgnoreWhitespaces, FileScope)),
+						FileScope);
 }
 
 struct ModifyFlagsStruct

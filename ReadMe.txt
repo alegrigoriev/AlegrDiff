@@ -24,26 +24,5 @@ Problems:
 screen move in two directions may corrupt the image (??)
 
 Fixed:
-Use File1 as base didn't work
-Compare as binary is not disabled in extended "Compare Directories" dialog 
-Single file opened, loses its comparision result in the list
-If two completely different files, second is shorter, it would split the first file
-When there are much different areas, they may be randomly interlaced.
-   Solution: if there is little common, just ignore it.
-
+"First file as base" button didn't work
 Done:
-Added file names to "Accept or decline" dialog
-Remember last custom filter for comparing the files. Create a filter from the current file extension. Get file type from the registry
-Cancel selection on Accept/Decline commands (to see the result immediately). ???
-Use GetFileAttributes rather than FindFirst to check whether it's file or directory
-make DEMO version (merged file not saved, open for viewing only, Copy disabled)
-Hide selected files function (and UnHide Files)
-Save File list
-drop directories to folder compare dialog
-Select the current folder in Recent Dirs in open dialog
-When merging two files, get the default name from the base file
-Uncheck "Compare files as binary" as default
-eradicate phantom directory column, when subdirs are disabled
-Empty lines shown as one-space lines
-when comparing the files during open, update comparison result
-Put dropped files to history

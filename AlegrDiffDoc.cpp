@@ -1404,8 +1404,8 @@ BOOL CFilePairDoc::SaveModified()
 	{
 		return TRUE;
 	}
-	int flags = GetAcceptDeclineFlags(TextPos(0, 0),
-									TextPos(GetTotalLines(), 0));
+	int flags = m_pFilePair->GetAcceptDeclineFlags(TextPos(0, 0),
+													TextPos(GetTotalLines(), 0), false);
 	if (0 != (flags & (FileDiffSection::FlagDecline | FileDiffSection::FlagAccept)))
 	{
 		CString s;

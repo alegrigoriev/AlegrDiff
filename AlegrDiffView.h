@@ -52,12 +52,14 @@ protected:
 	CArray<FilePair *,FilePair *> m_PairArray;
 
 	void BuildSortedPairArray(CArray<FilePair *,FilePair *> & PairArray, FilePair * pPairs, int nCount);
+	void OpenFilePairView(FilePair * pPair);
 
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CAlegrDiffView)
 	afx_msg void OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnDblclk(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnReturn(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

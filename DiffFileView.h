@@ -7,6 +7,7 @@
 // DiffFileView.h : header file
 //
 #include "FileListSupport.h"
+#include "AlegrDiffDoc.h"
 /////////////////////////////////////////////////////////////////////////////
 // CDiffFileView view
 
@@ -18,6 +19,7 @@ protected:
 
 // Attributes
 public:
+	CAlegrDiffDoc* GetDocument();
 
 // Operations
 public:
@@ -99,6 +101,10 @@ protected:
 };
 
 /////////////////////////////////////////////////////////////////////////////
+#ifndef _DEBUG  // debug version in AlegrDiffView.cpp
+inline CAlegrDiffDoc* CDiffFileView::GetDocument()
+{ return (CAlegrDiffDoc*)m_pDocument; }
+#endif
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

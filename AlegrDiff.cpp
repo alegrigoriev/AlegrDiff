@@ -115,25 +115,33 @@ BOOL CAlegrDiffApp::InitInstance()
 
 CString FilePair::GetComparisionResult()
 {
-	if (NULL == pFirstFile)
+	CString s;
+	switch(ComparisionResult)
 	{
-		if (NULL == pSecondFile)
-		{
-			return CString();
-		}
-		CString s;
-		s.Format("File exists only in \"%s%s\"",
-				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
-		return s;
-	}
-	if (NULL == pSecondFile)
-	{
-		CString s;
+	case ResultUnknown:
+		break;
+	case FilesIdentical:
+		s = "Files are identical";
+		break;
+	case VersionInfoDifferent:
+		s = "Different only in version stamp";
+		break;
+	case DifferentInSpaces:
+		s = "Different in spaces only";
+		break;
+	case FilesDifferent:
+		s = "Files are different";
+		break;
+	case OnlyFirstFile:
 		s.Format("File exists only in \"%s%s\"",
 				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
-		return s;
+		break;
+	case OnlySecondFile:
+		s.Format("File exists only in \"%s%s\"",
+				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
+		break;
 	}
-	return CString();
+	return s;
 }
 
 /////////////////////////////////////////////////////////////////////////////

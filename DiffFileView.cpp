@@ -27,13 +27,18 @@ CDiffFileView::CDiffFileView()
 	m_BaseOnFirstFile(true)
 {
 	// init font size, to avoid zero divide
-	m_FontMetric.tmAveCharWidth = 1;
-	m_FontMetric.tmExternalLeading = 1;
-	m_FontMetric.tmHeight = 1;
+	m_FontMetric.tmAveCharWidth = 0;
+	m_FontMetric.tmExternalLeading = 0;
+	m_FontMetric.tmHeight = 0;
 }
 
 CDiffFileView::~CDiffFileView()
 {
+	if (NULL != m_pFilePair)
+	{
+		m_pFilePair->Dereference();
+		m_pFilePair = NULL;
+	}
 }
 
 
@@ -180,17 +185,15 @@ void CDiffFileView::OnDraw(CDC* pDC)
 
 		for (int nLine = m_FirstLineSeen,
 			PosY = cr.top;
-			nLine < pFile->GetNumLines() && PosY < cr.bottom;
+			nLine < m_pFilePair->m_LinePairs.GetSize() && PosY < cr.bottom;
 			nLine++, PosY += nLineHeight)
 		{
-			if (nLine < m_pFilePair->m_LinePairs.GetSize())
+			const LinePair * pPair = m_pFilePair->m_LinePairs[nLine];
+			ASSERT(NULL != pPair);
+			if (NULL != pPair)
 			{
-				const LinePair * pPair = m_pFilePair->m_LinePairs[nLine];
-				if (NULL != pPair)
-				{
-					DrawStringSections(pDC, CPoint(0, PosY),
-										pPair->pFirstSection, m_FirstPosSeen, nCharsInView, nTabIndent);
-				}
+				DrawStringSections(pDC, CPoint(0, PosY),
+									pPair->pFirstSection, m_FirstPosSeen, nCharsInView, nTabIndent);
 			}
 		}
 	}
@@ -227,6 +230,11 @@ void CDiffFileView::AssertValid() const
 void CDiffFileView::Dump(CDumpContext& dc) const
 {
 	CView::Dump(dc);
+}
+CAlegrDiffDoc* CDiffFileView::GetDocument() // non-debug version is inline
+{
+	ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CAlegrDiffDoc)));
+	return (CAlegrDiffDoc*)m_pDocument;
 }
 #endif //_DEBUG
 
@@ -293,6 +301,7 @@ void CDiffFileView::OnDestroy()
 	if (m_pFilePair)
 	{
 		m_pFilePair->UnloadFiles();
+		m_pFilePair->Dereference();
 		m_pFilePair = NULL;
 	}
 	CView::OnDestroy();
@@ -562,6 +571,10 @@ void CDiffFileView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 void CDiffFileView::UpdateVScrollBar()
 {
+	if (0 == LineHeight())
+	{
+		return;
+	}
 	int nLinesInView = LinesInView();
 
 	SCROLLINFO sci;
@@ -578,6 +591,10 @@ void CDiffFileView::UpdateVScrollBar()
 
 void CDiffFileView::UpdateHScrollBar()
 {
+	if (0 == CharWidth())
+	{
+		return;
+	}
 	int nCharsInView = CharsInView();
 
 	SCROLLINFO sci;
@@ -742,8 +759,11 @@ void CDiffFileView::OnSize(UINT nType, int cx, int cy)
 
 BOOL CDiffFileView::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 {
-	SetCursor(GetApp()->LoadCursor(IDC_CURSOR_BEAM));
-	return TRUE;
+	if (HTCLIENT == nHitTest)
+	{
+		SetCursor(GetApp()->LoadCursor(IDC_CURSOR_BEAM));
+		return TRUE;
+	}
 
 	return CView::OnSetCursor(pWnd, nHitTest, message);
 }

@@ -82,6 +82,7 @@ enum {
 	SetPositionMakeCentered = 2,
 	SetPositionCancelSelection = 4,
 	MoveCaretPositionAlways = 8,
+	SetWordSelectionMode = 0x10,
 	OnUpdateListViewItem = 0x100,
 };
 
@@ -108,6 +109,8 @@ protected:
 public:
 	TextPos m_CaretPos;
 	TextPos m_SelectionAnchor;
+	TextPos m_OriginalSelectionAnchor;
+	bool m_WordSelectionMode;
 	bool m_bIgnoreWhitespaces;
 	TCHAR m_ComparisonResult[MAX_PATH];
 
@@ -127,8 +130,6 @@ public:
 	};
 
 	void SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags = SetPositionMakeCentered);
-	void OnEditGotonextdiff();
-	void OnEditGotoprevdiff();
 	void CaretToHome(int flags);
 	void CaretToEnd(int flags);
 	ULONG CopyTextToMemory(PUCHAR pBuf, ULONG BufLen, TextPos pFrom, TextPos pTo);

@@ -41,6 +41,7 @@ public:
 protected:
 	//{{AFX_MSG(CChildFrame)
 	afx_msg void OnUpdateWindowNew(CCmdUI* pCmdUI);
+	afx_msg void OnDestroy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

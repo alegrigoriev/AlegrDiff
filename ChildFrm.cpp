@@ -21,6 +21,7 @@ IMPLEMENT_DYNCREATE(CChildFrame, CMDIChildWnd)
 BEGIN_MESSAGE_MAP(CChildFrame, CMDIChildWnd)
 	//{{AFX_MSG_MAP(CChildFrame)
 	ON_UPDATE_COMMAND_UI(ID_WINDOW_NEW, OnUpdateWindowNew)
+	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -46,7 +47,9 @@ BOOL CChildFrame::PreCreateWindow(CREATESTRUCT& cs)
 				| FWS_ADDTOTITLE | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 
 	CMDIChildWnd * pActive = ((CMDIFrameWnd *)AfxGetMainWnd())->MDIGetActive();
-	if (pActive == NULL || (WS_MAXIMIZE & pActive->GetStyle()))
+
+	if ((pActive == NULL && GetApp()->m_bOpenChildMaximized)
+		|| (pActive != NULL && (WS_MAXIMIZE & pActive->GetStyle())))
 	{
 		cs.style |= WS_MAXIMIZE;
 	}
@@ -78,3 +81,9 @@ void CChildFrame::OnUpdateWindowNew(CCmdUI* pCmdUI)
 	pCmdUI->Enable(pChild->IsKindOf(RUNTIME_CLASS(CDiffFileView)));
 }
 
+
+void CChildFrame::OnDestroy()
+{
+	GetApp()->m_bOpenChildMaximized = (0 != (GetStyle() & WS_MAXIMIZE));
+	CMDIChildWnd::OnDestroy();
+}

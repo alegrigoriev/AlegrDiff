@@ -25,6 +25,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_COMMAND_EX(ID_VIEW_STATUS_BAR, OnBarCheckStatusBar)
 	ON_COMMAND_EX(ID_VIEW_TOOLBAR, OnBarCheckToolbar)
 	ON_COMMAND_EX(ID_VIEW_REBAR, OnBarCheckRebar)
+	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
 END_MESSAGE_MAP()
@@ -297,4 +298,10 @@ BOOL CMainFrame::OnBarCheckRebar(UINT nID)
 		return TRUE;
 	}
 	return FALSE;
+}
+
+void CMainFrame::OnDestroy()
+{
+	GetApp()->m_bOpenMaximized = (0 != (GetStyle() & WS_MAXIMIZE));
+	CMDIFrameWnd::OnDestroy();
 }

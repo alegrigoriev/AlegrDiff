@@ -55,6 +55,8 @@ public:
 
 	bool m_bShowToolbar;
 	bool m_bShowStatusBar;
+	bool m_bOpenMaximized;
+	bool m_bOpenChildMaximized;
 
 	CString m_FileDir1;
 	CString m_FileDir2;
@@ -85,6 +87,7 @@ public:
 	int m_MaxSearchDistance;
 	int m_MinIdenticalLines;
 	int m_TabIndent;
+	int m_GoToLineFileSelection;
 
 	LOGFONT m_NormalLogFont;
 	CFont m_NormalFont;

@@ -354,30 +354,37 @@ void CFilePairDoc::SetCaretPosition(int pos, int line, int flags)
 	if (0 != (flags & SetPositionCancelSelection))
 	{
 		m_SelectionAnchor = m_CaretPos;
+		m_OriginalSelectionAnchor = m_CaretPos;  // for word mode selection
+		// if canceling selection, check for word mode reset
+		m_WordSelectionMode = (0 != (flags & SetWordSelectionMode));
+	}
+	// keep selection, but check for word selection mode
+	else if (flags & SetWordSelectionMode)
+	{
+		m_WordSelectionMode = true;
+	}
+	if (m_WordSelectionMode)
+	{
+		TextPos AnchorBegin = m_OriginalSelectionAnchor;
+		TextPos AnchorEnd = m_OriginalSelectionAnchor;
+		GetWordOnPos(m_OriginalSelectionAnchor, AnchorBegin, AnchorEnd);
+
+		TextPos Begin = m_CaretPos;
+		TextPos End = m_CaretPos;
+		GetWordOnPos(m_CaretPos, Begin, End);
+
+		if (m_CaretPos < m_OriginalSelectionAnchor)
+		{
+			m_CaretPos = Begin;
+			m_SelectionAnchor = AnchorEnd;
+		}
+		else
+		{
+			m_CaretPos = End;
+			m_SelectionAnchor = AnchorBegin;
+		}
 	}
 	UpdateAllViews(NULL, CaretPositionChanged, NULL);
-}
-
-void CFilePairDoc::OnEditGotonextdiff()
-{
-	TextPos NewPos = m_pFilePair->NextDifference(DisplayPosToLinePos(m_CaretPos), m_bIgnoreWhitespaces);
-	if (NewPos == TextPos(-1, -1))
-	{
-		return;
-	}
-	NewPos = LinePosToDisplayPos(NewPos);
-	SetCaretPosition(NewPos.pos, NewPos.line, SetPositionCancelSelection);
-}
-
-void CFilePairDoc::OnEditGotoprevdiff()
-{
-	TextPos NewPos = m_pFilePair->PrevDifference(DisplayPosToLinePos(m_CaretPos), m_bIgnoreWhitespaces);
-	if (NewPos == TextPos(-1, -1))
-	{
-		return;
-	}
-	NewPos = LinePosToDisplayPos(NewPos);
-	SetCaretPosition(NewPos.pos, NewPos.line, SetPositionCancelSelection);
 }
 
 void CFilePairDoc::CaretToHome(int flags)
@@ -526,12 +533,12 @@ void CFilePairDoc::Dump(CDumpContext& dc) const
 
 void CFilePairDoc::OnUpdateEditGotonextdiff(CCmdUI* pCmdUI)
 {
-	pCmdUI->Enable(m_pFilePair->NextDifference(m_CaretPos, m_bIgnoreWhitespaces) != TextPos(-1, -1));
+	pCmdUI->Enable(m_pFilePair->NextDifference(m_CaretPos, m_bIgnoreWhitespaces, NULL, NULL));
 }
 
 void CFilePairDoc::OnUpdateEditGotoprevdiff(CCmdUI* pCmdUI)
 {
-	pCmdUI->Enable(m_pFilePair->PrevDifference(m_CaretPos, m_bIgnoreWhitespaces) != TextPos(-1, -1));
+	pCmdUI->Enable(m_pFilePair->PrevDifference(m_CaretPos, m_bIgnoreWhitespaces, NULL, NULL));
 }
 
 void CFilePairDoc::OnUpdateEditCopy(CCmdUI* pCmdUI)
@@ -688,7 +695,7 @@ void CAlegrDiffDoc::OnFileSave()
 void CFilePairDoc::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
 {
 	CString s;
-	s.Format("Ln %d, Col %d", m_CaretPos.line, m_CaretPos.pos);
+	s.Format("Ln %d, Col %d", m_CaretPos.line + 1, m_CaretPos.pos + 1);
 	pCmdUI->SetText(s);
 }
 
@@ -972,10 +979,40 @@ bool CFilePairDoc::GetWordOnPos(TextPos OnPos, TextPos &Start, TextPos &End)
 		{
 			continue;   // don't show the section
 		}
-		if (CaretPos < nPos + pSection->Length)
+		// if position is on the endo of line or on space, and the previous char is alpha, get the word to the left
+		if (CaretPos < nPos + pSection->Length
+			|| (NULL == pSection->pNext && CaretPos == nPos + pSection->Length))
 		{
-			// get a word under the caret and to the right, or take a single non-alpha char
-			TCHAR c = pSection->pBegin[CaretPos - nPos];
+			// get a word under the position and to the right, or take a single non-alpha char
+			TCHAR c;
+			if (CaretPos < nPos + pSection->Length)
+			{
+				c = pSection->pBegin[CaretPos - nPos];
+			}
+			else
+			{
+				c = ' ';
+			}
+			if (' ' == c)
+			{
+				// if position is on the endo of line or on space, and the previous char is alpha, get the word to the left
+				if (CaretPos > nPos)
+				{
+					c = pSection->pBegin[CaretPos - nPos - 1];
+					if (_istalnum(TCHAR_MASK & c) || '_' == c)
+					{
+						CaretPos --;
+					}
+					else
+					{
+						return false;
+					}
+				}
+				else
+				{
+					return false;
+				}
+			}
 			if (_istalnum(TCHAR_MASK & c) || '_' == c)
 			{
 				for (Start.pos = CaretPos; Start.pos > nPos; Start.pos--)

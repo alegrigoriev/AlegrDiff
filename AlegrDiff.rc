@@ -323,7 +323,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 0.92 beta",IDC_STATIC_VERSION,35,14,
+    CTEXT           "AlegrDiff Version 0.95 beta",IDC_STATIC_VERSION,35,14,
                     128,8,SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001",IDC_STATIC,35,
                     29,128,8
@@ -406,16 +406,22 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_DIALOG_GOTO_LINE DIALOG DISCARDABLE  0, 0, 154, 80
+IDD_DIALOG_GOTO_LINE DIALOG DISCARDABLE  0, 0, 142, 98
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Go To Line"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Line:",IDC_STATIC,34,22,29,8
-    EDITTEXT        IDC_EDIT_LINE_NUMBER,68,19,40,14,ES_AUTOHSCROLL | 
+    LTEXT           "Line:",IDC_STATIC,8,22,29,8
+    EDITTEXT        IDC_EDIT_LINE_NUMBER,42,19,40,14,ES_AUTOHSCROLL | 
                     ES_NUMBER
-    DEFPUSHBUTTON   "OK",IDOK,21,59,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,85,59,50,14
+    CONTROL         "In the file &1",IDC_RADIO_FIRST_FILE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,37,89,10
+    CONTROL         "In the file &2",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,
+                    7,49,89,10
+    CONTROL         "In the combined file",IDC_RADIO3,"Button",
+                    BS_AUTORADIOBUTTON,7,61,89,10
+    DEFPUSHBUTTON   "OK",IDOK,16,77,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,76,77,50,14
 END
 
 IDD_DIALOG_OPEN_TEMPLATE DIALOG DISCARDABLE  0, 0, 281, 37
@@ -575,10 +581,10 @@ BEGIN
     PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SECOND_FILE,225,54,17,14
     CONTROL         "&Binary comparison",IDC_CHECK_BINARY,"Button",
                     BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,77,126,10
-    DEFPUSHBUTTON   "OK",IDOK,66,110,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,133,110,50,14
     CONTROL         "Compare as C/C++ files",IDC_CHECK_COMPARE_C_CPP,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,92,99,10
+    DEFPUSHBUTTON   "OK",IDOK,66,110,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,133,110,50,14
 END
 
 
@@ -589,8 +595,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,9,0,0
- PRODUCTVERSION 0,9,0,1
+ FILEVERSION 0,9,5,0
+ PRODUCTVERSION 0,9,5,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -608,14 +614,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "AleGr Software\0"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application\0"
-            VALUE "FileVersion", "0, 9, 0, 0\0"
+            VALUE "FileVersion", "0, 9, 5, 0\0"
             VALUE "InternalName", "AlegrDiff\0"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "AlegrDiff.EXE\0"
-            VALUE "PrivateBuild", "Beta 0.90\0"
+            VALUE "PrivateBuild", "Beta 0.95\0"
             VALUE "ProductName", "AlegrDiff Application\0"
-            VALUE "ProductVersion", "0, 9, 0, 1\0"
+            VALUE "ProductVersion", "0, 9, 5, 0\0"
             VALUE "SpecialBuild", "\0"
         END
     END
@@ -663,9 +669,9 @@ BEGIN
     IDD_DIALOG_GOTO_LINE, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 147
+        RIGHTMARGIN, 135
         TOPMARGIN, 7
-        BOTTOMMARGIN, 73
+        BOTTOMMARGIN, 91
     END
 
     IDD_DIALOG_OPEN_TEMPLATE, DIALOG
@@ -890,7 +896,7 @@ BEGIN
     ID_FILE_COMPAREFILES    "Compare two files\nCompare files"
     ID_FILE_PREFERENCES     "Change program preferences\nPreferences"
     ID_EDIT_ACCEPT          "Merge File 2 text\nFile 2 text"
-    ID_EDIT_DECLINE         "Merge File 1 text\nDiscard"
+    ID_EDIT_DECLINE         "Merge File 1 text\nFile 2 text"
     ID_EDIT_GOTONEXTDIFF    "Go to the next difference\nNext difference"
 END
 

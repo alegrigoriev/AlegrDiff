@@ -3146,11 +3146,12 @@ inline int CompareTextPosEnd(const TextPos * pos,  FileDiffSection * const *sec,
 	return 1;
 }
 
-TextPos FilePair::NextDifference(TextPos PosFrom, BOOL IgnoreWhitespaces)
+bool FilePair::NextDifference(TextPos PosFrom, BOOL IgnoreWhitespaces,
+							TextPos * DiffPos, TextPos * EndPos)
 {
 	if (0 == m_DiffSections.GetSize())
 	{
-		return TextPos(-1, -1);
+		return FALSE;
 	}
 	FileDiffSection const *const * ppSection =
 		BinLookupAbout<FileDiffSection *, TextPos, int>
@@ -3160,14 +3161,14 @@ TextPos FilePair::NextDifference(TextPos PosFrom, BOOL IgnoreWhitespaces)
 	int SectionIdx = ppSection - m_DiffSections.GetData();
 	if (SectionIdx > m_DiffSections.GetUpperBound())
 	{
-		return TextPos(-1, -1);
+		return FALSE;
 	}
 	const FileDiffSection * pSection = *ppSection;
 	if (PosFrom >= pSection->m_Begin)
 	{
 		if (SectionIdx == m_DiffSections.GetUpperBound())
 		{
-			return TextPos(-1, -1);
+			return FALSE;
 		}
 		ppSection++;
 		SectionIdx++;
@@ -3179,21 +3180,30 @@ TextPos FilePair::NextDifference(TextPos PosFrom, BOOL IgnoreWhitespaces)
 		{
 			if (SectionIdx == m_DiffSections.GetUpperBound())
 			{
-				return TextPos(-1, -1);
+				return FALSE;
 			}
 			ppSection++;
 			SectionIdx++;
 			pSection = *ppSection;
 		}
 	}
-	return pSection->m_Begin;
+	if (NULL != DiffPos)
+	{
+		*DiffPos = pSection->m_Begin;
+	}
+	if (NULL != EndPos)
+	{
+		*EndPos = pSection->m_End;
+	}
+	return TRUE;
 }
 
-TextPos FilePair::PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces)
+bool FilePair::PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces,
+							TextPos * DiffPos, TextPos * EndPos)
 {
 	if (0 == m_DiffSections.GetSize())
 	{
-		return TextPos(-1, -1);
+		return FALSE;
 	}
 	FileDiffSection const *const * ppSection =
 		BinLookupAbout<FileDiffSection *, TextPos, int>
@@ -3203,7 +3213,7 @@ TextPos FilePair::PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces)
 	int SectionIdx = ppSection - m_DiffSections.GetData();
 	if (0 == SectionIdx)
 	{
-		return TextPos(-1, -1);
+		return FALSE;
 	}
 	ppSection--;
 	SectionIdx--;
@@ -3214,14 +3224,22 @@ TextPos FilePair::PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces)
 		{
 			if (0 == SectionIdx)
 			{
-				return TextPos(-1, -1);
+				return FALSE;
 			}
 			ppSection--;
 			SectionIdx--;
 			pSection = *ppSection;
 		}
 	}
-	return pSection->m_Begin;
+	if (NULL != DiffPos)
+	{
+		*DiffPos = pSection->m_Begin;
+	}
+	if (NULL != EndPos)
+	{
+		*EndPos = pSection->m_End;
+	}
+	return TRUE;
 }
 
 struct ModifyFlagsStruct

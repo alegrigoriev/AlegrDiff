@@ -3280,20 +3280,141 @@ void FilePair::ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo,
 	}
 }
 #else
-void FilePair::ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo,
-										int Set, int Reset,
-										FileDiffSection *const ** ppFirstSection, int * pNumSections)
+BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int Set, int Reset)
 {
-	if (PosFrom == PosTo)
+	TextPos begin = PosFrom, end = PosFrom;
+	if (begin == end)
 	{
-		if (PosFrom.line >= m_LinePairs.GetSize())
-		{
-			return;
-		}
 		// if the range is of zero length, then modify all neighbor sections
-		LinePair * pLinePair = m_LinePairs[PosFrom.line];
+		if (begin.line >= m_LinePairs.GetSize())
+		{
+			return FALSE;
+		}
+		LinePair * pPair = m_LinePairs[begin.line];
+		// find first inclusive section
+
+		int pos = 0;
+		for  (StringSection * pSection = pPair->pFirstSection
+			; pSection != NULL; pos += pSection->Length, pSection = pSection->pNext)
+		{
+			if (pos > begin.pos)
+			{
+				pSection = NULL;
+				break;
+			}
+			if (0 == (pSection->Attr & (pSection->Inserted | pSection->Erased)))
+			{
+				continue;
+			}
+			if (pos + pSection->Length > begin.pos
+				|| (NULL != pSection->pNext
+					&& 0 != (pSection->pNext->Attr & (pSection->Inserted | pSection->Erased))
+					&& pos + pSection->Length + pSection->pNext->Length > begin.pos))
+			{
+				// section found
+				break;
+			}
+		}
+		if (NULL == pSection)
+		{
+			return FALSE;
+		}
+		// if the found section is the only section of the line, check if the previous lines are same way
+		if (pSection == pPair->pFirstSection
+			&& NULL == pSection->pNext)
+		{
+			begin.pos = 0;
+			end.pos = 0;
+			end.line = begin.line + 1;
+
+			pSection->Attr &= Reset;
+			pSection->Attr |= Set;
+
+			while (begin.line > 0)
+			{
+				pSection = m_LinePairs[begin.line - 1]->pFirstSection;
+				if (NULL == pSection
+					|| NULL != pSection->pNext
+					|| 0 == (pSection->Attr & (pSection->Inserted | pSection->Erased)))
+				{
+					break;
+				}
+				pSection->Attr &= Reset;
+				pSection->Attr |= Set;
+
+				begin.line--;
+			}
+			// check if it can be expanded down
+			while (end.line < m_LinePairs.GetSize())
+			{
+				pSection = m_LinePairs[end.line]->pFirstSection;
+				if (NULL == pSection
+					|| NULL != pSection->pNext
+					|| 0 == (pSection->Attr & (pSection->Inserted | pSection->Erased)))
+				{
+					break;
+				}
+				pSection->Attr &= Reset;
+				pSection->Attr |= Set;
+
+				end.line++;
+			}
+		}
+		else
+		{
+			begin.pos = pos;
+			end.pos = pos + pSection->Length;
+
+			pSection->Attr &= Reset;
+			pSection->Attr |= Set;
+
+			pSection = pSection->pNext;
+			if (NULL != pSection
+				&& (pSection->Attr & (pSection->Inserted | pSection->Erased)))
+			{
+				PosTo.pos += pSection->Length;
+
+				pSection->Attr &= Reset;
+				pSection->Attr |= Set;
+			}
+		}
+		PosFrom = begin;
+		PosTo = end;
+		return TRUE;
 	}
 	// if the range is not of zero length, then modify all included
+	if (begin < end)
+	{
+		TextPos tmp = end;
+		end = begin;
+		begin = tmp;
+	}
+	if (begin.line >= m_LinePairs.GetSize())
+	{
+		return FALSE;
+	}
+	LinePair * pPair = m_LinePairs[begin.line];
+	// find first inclusive section
+
+	int pos = 0;
+	for  (StringSection * pSection = pPair->pFirstSection
+		; pSection != NULL; pos += pSection->Length, pSection = pSection->pNext)
+	{
+		if (0 == (pSection->Attr & (pSection->Inserted | pSection->Erased)) )
+		{
+			continue;
+		}
+		if (pos <= begin.pos
+			&& (pos + pSection->Length > begin.pos
+				|| (NULL != pSection->pNext
+					&& 0 != (pSection->pNext->Attr & (pSection->Inserted | pSection->Erased))
+					&& pos + pSection->Length + pSection->pNext->Length > begin.pos)))
+		{
+			// section found
+			break;
+		}
+	}
+	return TRUE;
 }
 #endif
 

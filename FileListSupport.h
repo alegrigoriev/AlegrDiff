@@ -196,12 +196,15 @@ struct StringSection
 		Erased = 2,
 		File1Only = 2,
 		Accepted = 4,
+		UseFile2Only = 4,
 		Declined = 8,
+		UseFile1Only = 8,
 		Undefined = 0x10,
 		Whitespace = 0x100,
 	};
 	USHORT Attr;
 	bool IsAccepted() const { return 0 != (Attr & Accepted); }
+	bool IsFile1Only() const { return 0 != (Attr & File1Only); }
 	bool IsDeclined() const { return 0 != (Attr & Declined); }
 	bool IsWhitespace() const { return 0 != (Attr & Whitespace); }
 private:

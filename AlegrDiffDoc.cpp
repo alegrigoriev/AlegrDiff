@@ -1489,7 +1489,7 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags)
 		return FALSE;
 	}
 	BOOL result = TRUE;
-	for (int LineNum = 0, DiffSectionIdx = 0; LineNum < GetTotalLines(); LineNum++)
+	for (int LineNum = 0; LineNum < GetTotalLines(); LineNum++)
 	{
 		LinePair * pPair = m_pFilePair->m_LinePairs[LineNum];
 		if (NULL == pPair)
@@ -1497,82 +1497,27 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags)
 			continue;
 		}
 
-		FileDiffSection * pDiffSection = NULL;
-		while (DiffSectionIdx < m_pFilePair->m_DiffSections.GetSize())
+		for (StringSection * pSection = pPair->pFirstSection
+			; NULL != pSection; pSection = pSection->pNext)
 		{
-			pDiffSection = m_pFilePair->m_DiffSections[DiffSectionIdx];
-			if (pDiffSection->m_End > TextPos(LineNum, 0))
-			{
-				break;
-			}
-			pDiffSection = NULL;
-			DiffSectionIdx++;
-		}
-
-		StringSection * pSection = pPair->pFirstSection;
-
-		// check if the line is all removed
-		if (NULL != pDiffSection
-			&& pDiffSection->m_Begin <= TextPos(LineNum, 0)
-			&& pDiffSection->m_End >= TextPos(LineNum + 1, 0))
-		{
-			// check if the block is accepted
-			if ((pDiffSection->IsAccepted()
-					|| ! pDiffSection->IsDeclined()
-					&& (DefaultFlags & FileDiffSection::FlagAccept))
-				&& (pSection->Attr & pSection->Erased))
-			{
-				// skip the line
-				continue;
-			}
-			if ((pDiffSection->IsDeclined()
-					|| ! pDiffSection->IsAccepted()
-					&& (DefaultFlags & FileDiffSection::FlagDecline))
-				&& (pSection->Attr & pSection->Inserted))
-			{
-				// skip the line
-				continue;
-			}
-		}
-
-
-		for (int LinePos = 0; NULL != pSection; LinePos += pSection->Length, pSection = pSection->pNext)
-		{
-			pDiffSection = NULL;
-			while (DiffSectionIdx < m_pFilePair->m_DiffSections.GetSize())
-			{
-				pDiffSection = m_pFilePair->m_DiffSections[DiffSectionIdx];
-				if (pDiffSection->m_End > TextPos(LineNum, LinePos))
-				{
-					break;
-				}
-				pDiffSection = NULL;
-				DiffSectionIdx++;
-			}
 
 			// check if the string section is all removed
-			if (NULL != pDiffSection
-				&& pDiffSection->m_Begin <= TextPos(LineNum, LinePos)
-				&& pDiffSection->m_End >= TextPos(LineNum, LinePos + pSection->Length))
+			// check if the block is accepted
+			if ((pSection->Attr & pSection->Erased)
+				&& (pSection->IsAccepted()
+					|| ( ! pSection->IsDeclined()
+						&& (DefaultFlags & FileDiffSection::FlagAccept))))
 			{
-				// check if the block is accepted
-				if ((pDiffSection->IsAccepted()
-						|| ! pDiffSection->IsDeclined()
-						&& (DefaultFlags & FileDiffSection::FlagAccept))
-					&& (pSection->Attr & pSection->Erased))
-				{
-					// skip the string section
-					continue;
-				}
-				if ((pDiffSection->IsDeclined()
-						|| ! pDiffSection->IsAccepted()
-						&& (DefaultFlags & FileDiffSection::FlagDecline))
-					&& (pSection->Attr & pSection->Inserted))
-				{
-					// skip the string section
-					continue;
-				}
+				continue;
 			}
+			else if ((pSection->Attr & pSection->Inserted)
+					&& (pSection->IsDeclined()
+						|| ( ! pSection->IsAccepted()
+							&& (DefaultFlags & FileDiffSection::FlagDecline))))
+			{
+				continue;
+			}
+
 			if (pSection->Length != 0
 				&& 1 != fwrite(pSection->pBegin, pSection->Length, 1, file))
 			{

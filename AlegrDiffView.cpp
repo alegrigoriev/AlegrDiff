@@ -191,14 +191,44 @@ CString FileTimeToStr(FILETIME FileTime, LCID locale = LOCALE_USER_DEFAULT)
 	return result;
 }
 
-void CAlegrDiffView::BuildSortedPairArray(CArray<FilePair *,FilePair *> & PairArray, FilePair * pPairs, int nCount)
+template <class _Operation>
+class binder3rd
+	: public binary_function<typename _Operation::first_argument_type,
+							typename _Operation::second_argument_type,
+							typename _Operation::result_type>
 {
-	PairArray.SetSize(nCount);
+protected:
+	_Operation op;
+	typename _Operation::third_argument_type value;
+public:
+	binder3rd(const _Operation& __x,
+			const typename _Operation::third_argument_type& __y)
+		: op(__x), value(__y) {}
+	typename _Operation::result_type
+	operator()(const typename _Operation::first_argument_type& __x,
+				const typename _Operation::second_argument_type& __y) const
+	{
+		return op(__x, __y, value);
+	}
+};
+
+template <class _Operation, class _Tp>
+inline binder3rd<_Operation>
+	bind3rd(const _Operation& __fn, const _Tp& __x)
+{
+	typedef typename _Operation::third_argument_type _Arg3_type;
+	return binder3rd<_Operation>(__fn, _Arg3_type(__x));
+}
+
+void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, FilePair * pPairs, int nCount)
+{
+	PairArray.resize(nCount);
 	for (int i = 0; i < nCount && pPairs != NULL; i++, pPairs = pPairs->pNext)
 	{
 		PairArray[i] = pPairs;
 	}
-	PairArray.SetSize(i);
+	PairArray.resize(i);
+
 	int (_cdecl * SortFunc)(const void * , const void * );
 	if (m_bAscendingOrder)
 	{
@@ -244,8 +274,9 @@ void CAlegrDiffView::BuildSortedPairArray(CArray<FilePair *,FilePair *> & PairAr
 			break;
 		}
 	}
-
-	qsort(PairArray.GetData(), i, sizeof (FilePair *), SortFunc);
+	int nSort =
+		sort(PairArray.begin(), PairArray.end(), bind3rd(
+														qsort(PairArray.GetData(), i, sizeof (FilePair *), SortFunc);
 }
 
 void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
@@ -256,7 +287,7 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		AddListViewItemStruct * alvi = static_cast<AddListViewItemStruct *>(pHint);
 		if (NULL != alvi)
 		{
-			for (int i = 0; i < m_PairArray.GetSize(); i++)
+			for (int i = 0; i < m_PairArray.size(); i++)
 			{
 				if (m_PairArray[i] == alvi->pPair)
 				{
@@ -277,9 +308,9 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
 	BuildSortedPairArray(m_PairArray, pDoc->m_pPairList, pDoc->m_nFilePairs);
 
-	pListCtrl->SetItemCount(m_PairArray.GetSize());
+	pListCtrl->SetItemCount(m_PairArray.size());
 
-	for (int item = 0; item < m_PairArray.GetSize(); item++)
+	for (int item = 0; item < m_PairArray.size(); item++)
 	{
 		FilePair * pPair = m_PairArray[item];
 		AddListViewItem(pPair, item);
@@ -301,7 +332,7 @@ void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 	// compare two files
 	if (_AfxGetComCtlVersion() >= 0x00040070)
 	{
-		if (pNmlv->iItem >= 0 && pNmlv->iItem < m_PairArray.GetSize())
+		if (pNmlv->iItem >= 0 && pNmlv->iItem < m_PairArray.size())
 		{
 			// try to find if a view is already open
 			// view not found, create a new
@@ -324,7 +355,7 @@ void CAlegrDiffView::OnReturn(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 	while(-1 != nItem)
 	{
-		if (nItem < m_PairArray.GetSize())
+		if (nItem < m_PairArray.size())
 		{
 			GetApp()->OpenFilePairView(m_PairArray[nItem]);
 		}
@@ -343,7 +374,7 @@ void CAlegrDiffView::OnFileEditFirst()
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
 	}
 	if (-1 != nItem
-		&& nItem < m_PairArray.GetSize()
+		&& nItem < m_PairArray.size()
 		&& NULL != m_PairArray[nItem])
 	{
 		OpenFileForEditing(m_PairArray[nItem]->pFirstFile);
@@ -360,7 +391,7 @@ void CAlegrDiffView::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
 	}
 	FileItem * pFile = NULL;
 	if (-1 != nItem
-		&& nItem < m_PairArray.GetSize()
+		&& nItem < m_PairArray.size()
 		&& NULL != m_PairArray[nItem])
 	{
 		pFile = m_PairArray[nItem]->pFirstFile;
@@ -378,7 +409,7 @@ void CAlegrDiffView::OnFileEditSecond()
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
 	}
 	if (-1 != nItem
-		&& nItem < m_PairArray.GetSize()
+		&& nItem < m_PairArray.size()
 		&& NULL != m_PairArray[nItem])
 	{
 		OpenFileForEditing(m_PairArray[nItem]->pSecondFile);
@@ -395,7 +426,7 @@ void CAlegrDiffView::OnUpdateFileEditSecond(CCmdUI* pCmdUI)
 	}
 	FileItem * pFile = NULL;
 	if (-1 != nItem
-		&& nItem < m_PairArray.GetSize()
+		&& nItem < m_PairArray.size()
 		&& NULL != m_PairArray[nItem])
 	{
 		pFile = m_PairArray[nItem]->pSecondFile;
@@ -429,7 +460,7 @@ void CAlegrDiffView::OnListviewOpen()
 	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	while(-1 != nItem)
 	{
-		if (nItem < m_PairArray.GetSize())
+		if (nItem < m_PairArray.size())
 		{
 			GetApp()->OpenFilePairView(m_PairArray[nItem]);
 		}
@@ -493,7 +524,7 @@ BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 	}
 	while(-1 != nItem)
 	{
-		if (nItem < m_PairArray.GetSize())
+		if (nItem < m_PairArray.size())
 		{
 			FilePair * pPair = m_PairArray[nItem];
 			FileItem * pFile;

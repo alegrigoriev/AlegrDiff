@@ -144,7 +144,6 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 	// load the directory
 	FileList FileList1;
 	FileList FileList2;
-	int i;
 
 	// make full names from the directories
 	LPTSTR pFilePart;

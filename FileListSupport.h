@@ -6,6 +6,7 @@
 #include "SmallAllocator.h"
 #include <functional>
 #include <vector>
+#include <Wincrypt.h>
 
 using namespace std;
 
@@ -247,6 +248,8 @@ public:
 	~FileItem();
 	bool Load();
 	void Unload();
+	static BOOL InitHashCalculation();
+	static void DeinitHashCalculation();
 	BOOL CalculateHashes(BOOL volatile & bStopOperation);
 
 	bool m_C_Cpp;
@@ -311,6 +314,9 @@ private:
 	vector<FileLine *> m_NormalizedHashSortedLineGroups;   // non-blank only
 	//vector<TextToken> m_Tokens;
 	friend class FilePair;
+	//static CSimpleCriticalSection m_Cs;
+	static BYTE * m_HashBuf;
+	static HCRYPTPROV m_CryptProvider;
 };
 
 enum PairCheckResult { FilesDeleted, FilesUnchanged, FilesTimeChanged, };
@@ -394,10 +400,17 @@ public:
 		FilesDifferent,
 		OnlyFirstFile,
 		OnlySecondFile,
+		OnlyFirstDirectory,
+		OnlySecondDirectory,
 		FirstFileLonger,
 		SecondFileLonger,
+		ErrorReadingFirstFile,
+		ErrorReadingSecondFile,
 		ReadingFirstFile,
 		ReadingSecondFile,
+		CalculatingFirstFingerprint,
+		CalculatingSecondFingerprint,
+		ComparingFiles,
 		MemoryFile,
 	};
 
@@ -423,11 +436,12 @@ public:
 	eFileComparisionResult PreCompareTextFiles(BOOL volatile & bStopOperation);
 	eFileComparisionResult PreCompareBinaryFiles(BOOL volatile & bStopOperation);
 
+	int m_CompletedPercent;
 	eFileComparisionResult m_ComparisionResult;
-	bool m_bComparisionResultChanged;
+	bool m_bChanged;
 	bool m_bHideFromListView;
 	bool m_bSelected;
-	//bool m_bUnderComparision;
+
 	vector<LinePair *> m_LinePairs;
 	vector<FileDiffSection *> m_DiffSections;
 };

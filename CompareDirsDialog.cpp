@@ -101,10 +101,11 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 	else
 	{
 		// Update MRU, case insensitive
-		AddStringToHistory(m_sSecondDir, pApp->m_RecentFolders,
-							sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0], false);
 		AddStringToHistory(m_sFirstDir, pApp->m_RecentFolders,
 							sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0], false);
+		// second folder added after the first. If they both are the same, two same folders added
+		AddStringToHistory(m_sSecondDir, & pApp->m_RecentFolders[1],
+							sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0] - 1, false);
 		AddStringToHistory(m_FilenameFilter, pApp->m_sFilters,
 							sizeof pApp->m_sFilters / sizeof pApp->m_sFilters[0], false);
 
@@ -232,7 +233,7 @@ void CCompareDirsDialog::OnCheckBinary()
 	pWnd = GetDlgItem(IDC_CHECK_BINARY_FILES);
 	if (pWnd)
 	{
-		pWnd->EnableWindow(0 && NotBinary);
+		pWnd->EnableWindow(NotBinary);
 	}
 	pWnd = GetDlgItem(IDC_EDIT_BINARY_FILES);
 	if (pWnd)

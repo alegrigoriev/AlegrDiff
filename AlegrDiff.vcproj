@@ -294,6 +294,9 @@
 				RelativePath=".\DiffFileView.cpp">
 			</File>
 			<File
+				RelativePath="DirectoryFingerprintDlg.cpp">
+			</File>
+			<File
 				RelativePath=".\FileListSupport.cpp">
 			</File>
 			<File
@@ -385,6 +388,9 @@
 				RelativePath=".\DiffFileView.h">
 			</File>
 			<File
+				RelativePath="DirectoryFingerprintDlg.h">
+			</File>
+			<File
 				RelativePath=".\FileListSupport.h">
 			</File>
 			<File
@@ -440,6 +446,9 @@
 				RelativePath=".\res\AlegrDiffDoc.ico">
 			</File>
 			<File
+				RelativePath=".\res\Toolbar.bmp">
+			</File>
+			<File
 				RelativePath=".\res\cur00002.cur">
 			</File>
 			<File
@@ -447,9 +456,6 @@
 			</File>
 			<File
 				RelativePath=".\res\icon1.ico">
-			</File>
-			<File
-				RelativePath=".\res\Toolbar.bmp">
 			</File>
 		</Filter>
 		<File

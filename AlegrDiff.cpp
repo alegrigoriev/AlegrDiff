@@ -17,6 +17,7 @@
 #include <Dlgs.h>
 #include "BinaryCompareDoc.h"
 #include "BinaryCompareView.h"
+#include "DirectoryFingerprintDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -43,6 +44,7 @@ BEGIN_MESSAGE_MAP(CAlegrDiffApp, CWinApp)
 //	ON_COMMAND(ID_FILE_OPEN, CWinApp::OnFileOpen)
 	// Standard print setup command
 	ON_COMMAND(ID_FILE_PRINT_SETUP, CWinApp::OnFilePrintSetup)
+	ON_COMMAND(ID_FILE_CREATEDIRECTORYFINGERPRINT, OnFileCreatedirectoryfingerprint)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -676,7 +678,7 @@ void OpenFileForEditing(class FileItem * pFile)
 	}
 	CString name = pFile->GetFullName();
 	SHELLEXECUTEINFO shex;
-	memset( & shex, 0, sizeof shex);
+	memzero(shex);
 	shex.cbSize = sizeof shex;
 	shex.hwnd = AfxGetMainWnd()->m_hWnd;
 	//shex.lpVerb = _T("Open");
@@ -1125,7 +1127,7 @@ void CopyFilesToFolder(FileItem **ppFiles, int nCount, bool bAddSubdirToTarget)
 
 
 	LPTSTR pSrcBuf = new TCHAR[SrcBufLen];
-	LPTSTR pDstBuf = new TCHAR[SrcBufLen];
+	LPTSTR pDstBuf = new TCHAR[DstBufLen];
 
 	if (NULL == pSrcBuf || NULL == pDstBuf)
 	{
@@ -1171,7 +1173,7 @@ void CopyFilesToFolder(FileItem **ppFiles, int nCount, bool bAddSubdirToTarget)
 	pDstBuf[DstBufIdx] = 0;
 
 	SHFILEOPSTRUCT fo;
-	memset( & fo, 0, sizeof fo);
+	memzero(fo);
 	fo.hwnd = AfxGetMainWnd()->m_hWnd;
 	fo.wFunc = FO_COPY;
 	fo.fFlags = FOF_MULTIDESTFILES | FOF_NOCONFIRMMKDIR;
@@ -1190,7 +1192,7 @@ CString FileTimeToStr(FILETIME FileTime, LCID locale)
 	TCHAR str[TimeBufSize] = {0};
 	SYSTEMTIME SystemTime;
 	SYSTEMTIME LocalTime;
-	memset( & LocalTime, 0, sizeof LocalTime);
+	memzero(LocalTime);
 	FileTimeToSystemTime( & FileTime, & SystemTime);
 	SystemTimeToTzSpecificLocalTime(NULL, & SystemTime, & LocalTime);
 
@@ -1207,7 +1209,7 @@ CString FileTimeToStr(FILETIME FileTime, LCID locale)
 void CAboutDlg::OnButtonMailto()
 {
 	SHELLEXECUTEINFO shex;
-	memset( & shex, 0, sizeof shex);
+	memzero(shex);
 	shex.cbSize = sizeof shex;
 	shex.hwnd = NULL;//AfxGetMainWnd()->m_hWnd;
 
@@ -1237,14 +1239,20 @@ void AddStringToHistory(const CString & str, CString history[], int NumItems, bo
 	{
 		if (CaseSensitive)
 		{
-			if (0 == str.Compare(history[i]))
+			if (0 == str.Compare(history[i])
+				// check if previous string is the same
+				|| j > 0
+				&& 0 == history[j - 1].Compare(history[i]))
 			{
 				continue;
 			}
 		}
 		else
 		{
-			if (0 == str.CompareNoCase(history[i]))
+			if (0 == str.CompareNoCase(history[i])
+				// check if previous string is the same
+				|| j > 0
+				&& 0 == history[j - 1].CompareNoCase(history[i]))
 			{
 				continue;
 			}
@@ -1275,7 +1283,7 @@ void CAlegrDiffApp::OnHelpUsing()
 	HelpfileName += _T("AlegrDiff.mht");
 
 	SHELLEXECUTEINFO shex;
-	memset( & shex, 0, sizeof shex);
+	memzero(shex);
 	shex.cbSize = sizeof shex;
 	shex.hwnd = NULL;
 	//shex.lpVerb = _T("Open");
@@ -1601,4 +1609,18 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder)
 
 	Name = dlg.GetPathName();
 	return IDOK;
+}
+
+void CAlegrDiffApp::OnFileCreatedirectoryfingerprint()
+{
+	CDirectoryFingerprintDlg dlg;
+	dlg.m_bIncludeSubdirectories = m_bRecurseSubdirs;
+
+	//dlg.m_bUseIgnoreFilter = m_bUseIgnoreFilter;
+	//dlg.m_sIgnoreFilesFilter = m_sIgnoreFilesFilter;
+
+	if (IDOK != dlg.DoModal())
+	{
+		return;
+	}
 }

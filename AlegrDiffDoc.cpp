@@ -1788,8 +1788,8 @@ void CAlegrDiffDoc::RunComparisionThread()
 	unsigned threadid;
 	ResetEvent(m_hEvent);
 	m_bStopThread = false;
-	m_NextPairToRefresh = m_pPairList;
-	m_NextPairToCompare = m_pPairList;
+	m_NextPairToRefresh = NULL;
+	m_NextPairToCompare = NULL;
 
 	m_hThread = (HANDLE) _beginthreadex(NULL, 0x10000,
 										_CompareThreadFunction, this, 0, & threadid);
@@ -1805,33 +1805,78 @@ unsigned _stdcall CAlegrDiffDoc::_CompareThreadFunction(PVOID arg)
 
 unsigned CAlegrDiffDoc::CompareThreadFunction()
 {
-	for (FilePair * pPair = m_pPairList; pPair != NULL && ! m_bStopThread; pPair = pPair->pNext)
+	// preload first of binary files in pair (calculate MD5 digest)
+	FileItem::InitHashCalculation();
+	FilePair * pPair;
+	m_FileListCs.Lock();
+	m_NextPairToRefresh = m_pPairList;
+	m_NextPairToCompare = m_pPairList;
+	m_FileListCs.Unlock();
+
+	for (pPair = m_pPairList; pPair != NULL && ! m_bStopThread; pPair = pPair->pNext)
 	{
-		//m_FileListCs.Lock();
-		if (pPair->ResultUnknown != pPair->m_ComparisionResult)
+		if (NULL == pPair->pFirstFile
+			|| NULL == pPair->pSecondFile
+			|| ! pPair->pFirstFile->m_IsBinary)
 		{
 			m_NextPairToCompare = pPair->pNext;
 			continue;
 		}
-		//m_FileListCs.Unlock();
-		pPair->m_ComparisionResult = pPair->PreCompareFiles(m_bStopThread);
-		pPair->m_bComparisionResultChanged = true;
+		pPair->m_ComparisionResult = FilePair::CalculatingFirstFingerprint;
+		pPair->m_bChanged = true;
+		::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
+		if (pPair->pFirstFile->CalculateHashes(m_bStopThread)
+			|| m_bStopThread)
+		{
+			pPair->m_ComparisionResult = FilePair::ResultUnknown;
+		}
+		else
+		{
+			pPair->m_ComparisionResult = FilePair::ErrorReadingFirstFile;
+		}
+
+		pPair->m_bChanged = true;
 		m_NextPairToCompare = pPair->pNext;
 
 		::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
 	}
+
+	m_FileListCs.Lock();
+	m_NextPairToRefresh = m_pPairList;
+	m_NextPairToCompare = m_pPairList;
+	m_FileListCs.Unlock();
+
+	for (pPair = m_pPairList; pPair != NULL && ! m_bStopThread; pPair = pPair->pNext)
+	{
+		if (FilePair::ResultUnknown != pPair->m_ComparisionResult)
+		{
+			m_NextPairToCompare = pPair->pNext;
+			continue;
+		}
+
+		pPair->m_ComparisionResult = pPair->PreCompareFiles(m_bStopThread);
+		pPair->m_bChanged = true;
+		m_NextPairToCompare = pPair->pNext;
+
+		::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
+	}
+
+	FileItem::DeinitHashCalculation();
 	m_NextPairToCompare = NULL;
+	m_bStopThread = true;
 	::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
 	return 0;
 }
 
 void CAlegrDiffDoc::OnIdle()
 {
-	while (m_NextPairToRefresh != m_NextPairToCompare)
+	m_FileListCs.Lock();
+	while (NULL != m_NextPairToRefresh
+			&& m_NextPairToRefresh != m_NextPairToCompare)
 	{
-		if (m_NextPairToRefresh->m_bComparisionResultChanged)
+		if (m_NextPairToRefresh->m_bChanged)
 		{
-			m_NextPairToRefresh->m_bComparisionResultChanged = false;
+			m_NextPairToRefresh->m_bChanged = false;
 			AddListViewItemStruct alvi;
 			alvi.pPair = m_NextPairToRefresh;
 			UpdateAllViews(NULL, OnUpdateListViewItem, & alvi);
@@ -1839,17 +1884,15 @@ void CAlegrDiffDoc::OnIdle()
 		m_NextPairToRefresh = m_NextPairToRefresh->pNext;
 	}
 	FilePair * pPair = m_NextPairToCompare;
-	if (NULL != pPair
-		&& NULL != pPair->pFirstFile
-		&& NULL != pPair->pSecondFile)
+	m_FileListCs.Unlock();
+
+	if (NULL != pPair)
 	{
-		CString s;
-		s.Format(_T("Comparing %s - %s"),
-				LPCTSTR(pPair->pFirstFile->GetFullName()),
-				LPCTSTR(pPair->pSecondFile->GetFullName()));
-		((CFrameWnd*)AfxGetMainWnd())->SetMessageText(s);
+		((CFrameWnd*)AfxGetMainWnd())->
+			SetMessageText(pPair->GetComparisionResult());
 	}
-	if (NULL == m_NextPairToRefresh
+
+	if (m_bStopThread
 		&& NULL != m_hThread)
 	{
 		m_bStopThread = true;

@@ -1740,7 +1740,7 @@ void CDiffFileView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* 
 			FilePair * pPair = GetDocument()->GetFilePair();
 			if (NULL != pPair)
 			{
-				pMainFrm->SetMessageText(pPair->GetComparisonResult());
+				pMainFrm->SetMessageText(pPair->GetComparisonResultStr());
 			}
 		}
 		else
@@ -2102,7 +2102,7 @@ void CDiffFileView::OnActivateFrame(UINT nState, CFrameWnd* pDeactivateFrame)
 			FilePair * pPair = GetDocument()->GetFilePair();
 			if (NULL != pPair)
 			{
-				pMainFrm->SetMessageText(pPair->GetComparisonResult());
+				pMainFrm->SetMessageText(pPair->GetComparisonResultStr());
 			}
 		}
 	}

@@ -152,6 +152,10 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 	for (int CurrentY = ur.top - ur.top % LineHeight(); CurrentY < ur.bottom; CurrentY += LineHeight())
 	{
 		LONGLONG CurrentAddr = m_ScreenFilePos + CurrentY / LineHeight() * int(m_BytesPerLine);
+		if (CurrentAddr > pDoc->GetFileSize())
+		{
+			break;
+		}
 
 		TCHAR buf[256];
 
@@ -159,7 +163,6 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 
 		pDC->MoveTo(0, CurrentY);
 		pDC->SetBkColor(pApp->m_TextBackgroundColor);
-		pDC->SelectObject( & pApp->m_NormalFont);
 		pDC->SetTextColor(pApp->m_NormalTextColor);
 		pDC->TextOut(0, CurrentY, buf, len);
 
@@ -760,11 +763,13 @@ void CBinaryCompareView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollB
 	int nLinesInView = LinesInView();
 	switch (nSBCode)
 	{
+		// not actually generated with standard scrollbar
 	case SB_TOP:
 		TRACE("OnVScroll SB_TOP, nPos=%d\n", nPos);
 		VScrollToTheAddr(0);
 		break;
 
+		// not actually generated with standard scrollbar
 	case SB_BOTTOM:
 		TRACE("OnVScroll SB_BOTTOM, nPos=%d\n", nPos);
 		VScrollToTheAddr(GetDocument()->GetFileSize() - nLinesInView * int(m_BytesPerLine));
@@ -792,7 +797,15 @@ void CBinaryCompareView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollB
 
 	case SB_THUMBTRACK:
 		TRACE("OnVScroll SB_THUMBTRACK, nPos=%d\n", nPos);
-		VScrollToTheAddr(nPos * m_ScrollDataScale * LONGLONG(m_BytesPerLine));
+		if (nPos == m_VScrollInfo.nMax - (m_VScrollInfo.nPage - 1))
+		{
+			// scroll to the end of file
+			VScrollToTheAddr(GetDocument()->GetFileSize() - nLinesInView * int(m_BytesPerLine));
+		}
+		else
+		{
+			VScrollToTheAddr(nPos * m_ScrollDataScale * LONGLONG(m_BytesPerLine));
+		}
 		break;
 	default:
 		break;
@@ -919,7 +932,7 @@ void CBinaryCompareView::HScrollToThePos(int nPos)
 
 	// > 0 - scroll up (to see lines toward end),
 	// < 0 - scroll down (to see lines to the begin of the file)
-void CBinaryCompareView::DoVScroll(int nLinesToScroll)
+void CBinaryCompareView::DoVScroll(LONGLONG nLinesToScroll)
 {
 	VScrollToTheAddr(m_ScreenFilePos + nLinesToScroll * int(m_BytesPerLine));
 }
@@ -976,33 +989,33 @@ void CBinaryCompareView::UpdateVScrollBar()
 		return;
 	}
 
-	SCROLLINFO sci;
-	sci.cbSize = sizeof sci;
-	sci.nMin = 0;
+	m_VScrollInfo.cbSize = sizeof m_VScrollInfo;
+	m_VScrollInfo.nMin = 0;
 	// TODO: scale nMax and nPos
 	LONGLONG nLines = GetDocument()->GetFileSize() / m_BytesPerLine;
 	LONGLONG nCurLine = m_ScreenFilePos / m_BytesPerLine;
-	sci.nPage = LinesInView();
-	// limit the paramaters to 16 bit
+	m_VScrollInfo.nPage = LinesInView();
+	// limit the parameters to 16 bit
 	m_ScrollDataScale = 1;
 	while (nLines > SHRT_MAX)
 	{
 		nLines >>= 1;
 		nCurLine >>= 1;
-		sci.nPage >>= 1;
+		m_VScrollInfo.nPage >>= 1;
 		m_ScrollDataScale <<= 1;
 	}
-	if (0 == sci.nPage)
+	if (0 == m_VScrollInfo.nPage)
 	{
-		sci.nPage = 1;
+		m_VScrollInfo.nPage = 1;
 	}
-	sci.nMax = int(nLines);
-	sci.nPos = int(nCurLine);
-	TRACE("CBinaryCompareView::UpdateVScrollBar pos = %d\n", sci.nPos);
-	sci.nTrackPos = 0;
-	sci.fMask = SIF_ALL | SIF_DISABLENOSCROLL;
+	m_VScrollInfo.nMax = int(nLines);
+	m_VScrollInfo.nPos = int(nCurLine);
 
-	SetScrollInfo(SB_VERT, & sci);
+	TRACE("CBinaryCompareView::UpdateVScrollBar pos = %d\n", m_VScrollInfo.nPos);
+	m_VScrollInfo.nTrackPos = 0;
+	m_VScrollInfo.fMask = SIF_ALL | SIF_DISABLENOSCROLL;
+
+	SetScrollInfo(SB_VERT, & m_VScrollInfo);
 	UpdateVisibleRect();
 }
 
@@ -1139,17 +1152,9 @@ void CBinaryCompareView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHi
 	{
 		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
 		if (NULL != pArg
-			&& pArg->pPair == pDoc->GetFilePair())
+			&& pArg->m_pPair == pDoc->GetFilePair())
 		{
-			if (FilesDeleted == pDoc->GetFilePair()->GetComparisonResult())
-			{
-				return;
-			}
 			OnMetricsChange();
-			Invalidate(TRUE);
-			UpdateHScrollBar();
-			UpdateVScrollBar();
-			CreateAndShowCaret();
 		}
 	}
 	else if (lHint == UpdateViewsMetricsChanged)
@@ -1199,8 +1204,8 @@ void CBinaryCompareView::CaretToHome(int flags)
 void CBinaryCompareView::BringPositionsToBounds(LONGLONG textpos, LONGLONG endpos, const CRect & AllowedBounds, const CRect & BringToBounds)
 {
 	// if caret position is inside bounds, it doesn't need to change
-	CPoint CaretPos = PositionToPoint(textpos);
-	CPoint EndPos =  PositionToPoint(endpos);
+	LONGLONGPoint CaretPos = PositionToPoint(textpos);
+	LONGLONGPoint EndPos =  PositionToPoint(endpos);
 
 	if (CaretPos.y < AllowedBounds.top)
 	{
@@ -1209,7 +1214,7 @@ void CBinaryCompareView::BringPositionsToBounds(LONGLONG textpos, LONGLONG endpo
 	}
 	else if (EndPos.y > AllowedBounds.bottom)
 	{
-		int vscroll = EndPos.y - AllowedBounds.bottom;
+		LONGLONG vscroll = EndPos.y - AllowedBounds.bottom;
 		if (CaretPos.y - vscroll < BringToBounds.bottom)
 		{
 			vscroll = CaretPos.y - BringToBounds.bottom;
@@ -1376,23 +1381,11 @@ void CBinaryCompareView::InvalidateRange(LONGLONG begin, LONGLONG end)
 	}
 }
 
-CPoint CBinaryCompareView::PositionToPoint(ULONGLONG pos)
+CBinaryCompareView::LONGLONGPoint CBinaryCompareView::PositionToPoint(ULONGLONG pos)
 {
 	pos -= m_ScreenFilePos;
-	CPoint p;
-	LONGLONG line = pos / unsigned(m_BytesPerLine);
-	if (line > SHRT_MAX)
-	{
-		p.y = SHRT_MAX;
-	}
-	if (line < SHRT_MIN)
-	{
-		p.y = SHRT_MIN;
-	}
-	else
-	{
-		p.y = int(line);
-	}
+	LONGLONGPoint p;
+	p.y = pos / unsigned(m_BytesPerLine);
 	p.x = unsigned(pos) & int(m_BytesPerLine - 1);
 	return p;
 }

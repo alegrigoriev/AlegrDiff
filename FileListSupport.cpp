@@ -2587,6 +2587,8 @@ FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLin
 			{
 				// no identical lines found
 				TRACE("No more identical lines found\n");
+				nLine1 = NumLines1;
+				nLine2 = NumLines2;
 			}
 			else
 			{

@@ -1,4 +1,5 @@
 TODO:
+When merging two files, get the default name from the base file
 make word by word comparison in MatchStrings
 Refresh list view
 show version of file1, file2 of the line
@@ -22,6 +23,7 @@ Problems:
 screen move in two directions may corrupt the image (??)
 
 Fixed:
+If two completely different files, second is shorter, it would split the first file
 When there are much different areas, they may be randomly interlaced.
    Solution: if there is little common, just ignore it.
 Marking single line difference doesn't seem to call SetModified

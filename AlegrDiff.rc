@@ -173,6 +173,7 @@ BEGIN
         MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
         MENUITEM SEPARATOR
         MENUITEM "Refresh\tF5",                 ID_VIEW_REFRESH
+        MENUITEM "Show Line Numbers",           ID_VIEW_SHOW_LINE_NUMBERS
     END
     POPUP "&Window"
     BEGIN
@@ -226,7 +227,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 0.5 beta",IDC_STATIC,35,14,128,8,
+    CTEXT           "AlegrDiff Version 0.55 beta",IDC_STATIC,35,14,128,8,
                     SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001\nalegr@earthlink.net",
                     IDC_STATIC,35,34,128,21
@@ -581,6 +582,8 @@ BEGIN
     ID_EDIT_GOTOPREVDIFF    "Go to previous difference\nPrevious difference"
     ID_EDIT_GOTOLINE        "Go to the line number\nGo to line"
     ID_VIEW_REFRESH         "Reload the current file(s)\nRefresh"
+    ID_VIEW_SHOW_LINE_NUMBERS 
+                            "Show line numbers at the left margin\nShow line numbers"
 END
 
 #endif    // English (U.S.) resources

@@ -47,7 +47,7 @@ CSmallAllocator::BlockHeader * CSmallAllocator::AllocateBlock()
 		pBlock->pFreeItems = pItem;
 	}
 	pBlock->NumOfFreeItems = m_ItemsInBlock;
-	TRACE("CSmallAllocator::AllocateBlock: %X allocated\n", pBlock);
+	if (0) TRACE("CSmallAllocator::AllocateBlock: %X allocated\n", pBlock);
 	return pBlock;
 }
 
@@ -131,7 +131,7 @@ void CSmallAllocator::Free(void * ptr)
 		// remove from m_Blocks
 		pBlock->pNext->pPrev = pBlock->pPrev;
 		pBlock->pPrev->pNext = pBlock->pNext;
-		TRACE("CSmallAllocator::Free Block %X freed\n", pBlock);
+		if (0) TRACE("CSmallAllocator::Free Block %X freed\n", pBlock);
 		::delete[] (char *) pBlock;
 	}
 }

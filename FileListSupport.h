@@ -113,6 +113,8 @@ public:
 
 //    void SetLink(FileLine * pLine) { m_Link = pLine; }
 //    FileLine * GetLink() const { return m_Link; }
+	void SetNext(FileLine * pNext) { m_pNext = pNext; }
+	FileLine * Next() const { return m_pNext; }
 
 	int GetLineNumber() const { return m_Number; }
 	void SetLineNumber(int num) { m_Number = num; }
@@ -139,7 +141,10 @@ private:
 	//enum { HashValid = 1,
 	//BlankString = 2,
 	//};
-	int m_Number; // line ordinal number in the file
+	union {
+		int m_Number; // line ordinal number in the file
+		FileLine * m_pNext;
+	};
 	// length of the source string
 	int m_Length;
 	int m_NormalizedStringLength;
@@ -208,6 +213,8 @@ public:
 	LPCTSTR GetName() const { return m_Name; }
 	LPCTSTR GetSubdir() const { return m_Subdir; }
 	LPCTSTR GetBasedir() const { return m_BaseDir; }
+	CString GetFullName() const { return m_BaseDir + m_Subdir + m_Name; }
+
 	FILETIME GetLastWriteTime() const { return m_LastWriteTime; }
 	const FileLine * FindMatchingLine(const FileLine * pLine, int nStartLineNum, int nEndLineNum);
 	const FileLine * FindMatchingLineGroupLine(const FileLine * pLine, int nStartLineNum, int nEndLineNum);

@@ -47,6 +47,7 @@ public:
 
 	CString m_FileDir1;
 	CString m_FileDir2;
+	int m_UsedFilenameFilter;
 
 	CString m_sFilenameFilter;
 	CString m_sBinaryFilesFilter;

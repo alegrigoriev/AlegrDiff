@@ -327,3 +327,4 @@ void CAlegrDiffView::OnReturn(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 	*pResult = 0;
 }
+

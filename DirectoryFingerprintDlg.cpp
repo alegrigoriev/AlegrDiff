@@ -131,10 +131,14 @@ BOOL CDirectoryFingerprintDlg::OnInitDialog()
 
 	CDialog::OnInitDialog();
 
+	m_DirCombo.LimitText(MAX_PATH);
+
 	pApp->m_RecentFolders.LoadCombo( & m_DirCombo);
 	pApp->m_FileFilters.LoadCombo( & m_FilenameFilterCombo);
 
 	m_IgnoreFilterHistory.LoadCombo( & m_cbIgnoreFiles);
+
+	m_SaveFilename.LimitText(MAX_PATH);
 	m_FingerprintFilenameHistory.LoadCombo( & m_SaveFilename);
 
 	return TRUE;  // return TRUE unless you set the focus to a control

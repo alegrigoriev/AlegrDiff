@@ -1149,7 +1149,11 @@ void CopyFilesToFolder(FileItem **ppFiles, int nCount, bool bAddSubdirToTarget)
 	CString DlgTitle;
 	DlgTitle.LoadString(IDS_COPY_FILES_TITLE);
 
-	CFolderDialog dlg(DlgTitle, TargetDir, true);
+	CFolderDialog dlg(DlgTitle, TargetDir, true,
+					BIF_RETURNFSANCESTORS |
+					BIF_RETURNONLYFSDIRS |
+					BIF_NEWDIALOGSTYLE, NULL,
+					& GetApp()->m_RecentFolders);
 
 	if (IDOK != dlg.DoModal())
 	{

@@ -1607,3 +1607,27 @@ CString FileLengthToStrKb(ULONGLONG Length)
 	return CString(buf);
 }
 
+void SetWindowIcons(CWnd * pWnd, UINT id)
+{
+	HICON hIcon = (HICON) LoadImage(AfxFindResourceHandle
+									(MAKEINTRESOURCE(id), RT_GROUP_ICON),
+									MAKEINTRESOURCE(id),
+									IMAGE_ICON,
+									GetSystemMetrics(SM_CXICON),
+									GetSystemMetrics(SM_CYICON), 0);
+	if (NULL != hIcon)
+	{
+		pWnd->SetIcon(hIcon, TRUE);			// Set big icon
+	}
+
+	hIcon = (HICON) LoadImage(AfxFindResourceHandle
+							(MAKEINTRESOURCE(id), RT_GROUP_ICON),
+							MAKEINTRESOURCE(id),
+							IMAGE_ICON,
+							GetSystemMetrics(SM_CXSMICON),
+							GetSystemMetrics(SM_CYSMICON), 0);
+	if (NULL != hIcon)
+	{
+		pWnd->SetIcon(hIcon, FALSE);			// Set small icon
+	}
+}

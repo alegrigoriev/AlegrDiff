@@ -16,12 +16,11 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CAlegrDiffView
 
-IMPLEMENT_DYNCREATE(CAlegrDiffView, CView)
+IMPLEMENT_DYNCREATE(CAlegrDiffView, CListView)
 
-BEGIN_MESSAGE_MAP(CAlegrDiffView, CView)
+BEGIN_MESSAGE_MAP(CAlegrDiffView, CListView)
 	//{{AFX_MSG_MAP(CAlegrDiffView)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
-		//    DO NOT EDIT what you see in these blocks of generated code!
+	ON_NOTIFY_REFLECT(LVN_COLUMNCLICK, OnColumnclick)
 	//}}AFX_MSG_MAP
 	// Standard printing commands
 	ON_COMMAND(ID_FILE_PRINT, CView::OnFilePrint)
@@ -47,7 +46,9 @@ BOOL CAlegrDiffView::PreCreateWindow(CREATESTRUCT& cs)
 	// TODO: Modify the Window class or styles here by modifying
 	//  the CREATESTRUCT cs
 
-	return CView::PreCreateWindow(cs);
+	cs.style |= LVS_SHOWSELALWAYS | LVS_REPORT;
+	//cs.dwExStyle |= LVS_EX_FULLROWSELECT;
+	return CListView::PreCreateWindow(cs);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -85,12 +86,12 @@ void CAlegrDiffView::OnEndPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
 #ifdef _DEBUG
 void CAlegrDiffView::AssertValid() const
 {
-	CView::AssertValid();
+	CListView::AssertValid();
 }
 
 void CAlegrDiffView::Dump(CDumpContext& dc) const
 {
-	CView::Dump(dc);
+	CListView::Dump(dc);
 }
 
 CAlegrDiffDoc* CAlegrDiffView::GetDocument() // non-debug version is inline
@@ -102,3 +103,26 @@ CAlegrDiffDoc* CAlegrDiffView::GetDocument() // non-debug version is inline
 
 /////////////////////////////////////////////////////////////////////////////
 // CAlegrDiffView message handlers
+
+void CAlegrDiffView::OnInitialUpdate()
+{
+	CListView::OnInitialUpdate();
+
+	// set style, header columns
+	CListCtrl * pList = &GetListCtrl();
+	CHeaderCtrl * pHeader = pList->GetHeaderCtrl();
+	pList->InsertColumn(0, "File 1", LVCFMT_LEFT, 100, 0);
+	pList->InsertColumn(1, "Modified", LVCFMT_LEFT, 100, 1);
+	pList->InsertColumn(2, "File 2", LVCFMT_LEFT, 100, 2);
+	pList->InsertColumn(3, "Modified", LVCFMT_LEFT, 100, 3);
+	pList->InsertColumn(4, "Comparision result", LVCFMT_LEFT, 100, 4);
+	pList->SetExtendedStyle(pList->GetExtendedStyle() | LVS_EX_FULLROWSELECT);
+}
+
+void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
+	// TODO: Add your control notification handler code here
+
+	*pResult = 0;
+}

@@ -13,7 +13,65 @@
 #endif
 
 #include "resource.h"       // main symbols
+#include <afxtempl.h>
 
+struct TextToken
+{
+	int m_Offset;
+	int m_Len;
+	DWORD m_Hash;
+	class FileLine * m_pLine;
+};
+
+class FileLine
+{
+public:
+
+	FileLine(const char * src, size_t length, int OrdNum);
+
+	void * operator new (size_t structLen, size_t addLen)
+	{
+		return new char[structLen + addLen];
+	}
+	void operator delete(void * ptr, size_t)
+	{
+		::delete ptr;
+	}
+public:
+	DWORD GetHash() const { return m_HashCode; }
+	bool IsEqual(const FileLine & OtherLine) const;
+	bool GetNextToken(TextToken & token);
+private:
+	mutable DWORD m_HashCode;
+	mutable DWORD m_Flags;
+	enum { HashValid = 1,
+	};
+	int m_Number; // ordinal number
+	int m_Length;
+	int m_FirstTokenIndex;
+
+	// allocated with the buffer, must be the last member
+	char m_Data[1];
+};
+
+class FileItem
+{
+public:
+	FileItem(const CString & Name, const CString & Dir);
+	~FileItem();
+	bool Load();
+	void Unload();
+	const char * GetLine(int LineNum) const;
+	LPCTSTR GetName() const { return m_Name; }
+private:
+	CString m_Name;
+	CString m_Subdir;
+	CArray<FileLine *, FileLine *> m_Lines;
+	CArray<TextToken, TextToken> m_Tokens;
+};
+struct FilePair
+{
+};
 /////////////////////////////////////////////////////////////////////////////
 // CAlegrDiffApp:
 // See AlegrDiff.cpp for the implementation of this class
@@ -30,12 +88,9 @@ public:
 public:
 	virtual BOOL InitInstance();
 	//}}AFX_VIRTUAL
-
 // Implementation
 	//{{AFX_MSG(CAlegrDiffApp)
 	afx_msg void OnAppAbout();
-	// NOTE - the ClassWizard will add and remove member functions here.
-	//    DO NOT EDIT what you see in these blocks of generated code !
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -8,9 +8,9 @@
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
+#include <afxcview.h>
 
-
-class CAlegrDiffView : public CView
+class CAlegrDiffView : public CListView
 {
 protected: // create from serialization only
 	CAlegrDiffView();
@@ -29,6 +29,7 @@ public:
 public:
 	virtual void OnDraw(CDC* pDC);  // overridden to draw this view
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+	virtual void OnInitialUpdate();
 protected:
 	virtual BOOL OnPreparePrinting(CPrintInfo* pInfo);
 	virtual void OnBeginPrinting(CDC* pDC, CPrintInfo* pInfo);
@@ -37,6 +38,8 @@ protected:
 
 // Implementation
 public:
+	enum eColumns {ColumnName, ColumnSubdir, ColumnDate1, ColumnDate2, ColumnComparisionResult };
+	eColumns m_SortMode;
 	virtual ~CAlegrDiffView();
 #ifdef _DEBUG
 	virtual void AssertValid() const;
@@ -48,8 +51,7 @@ protected:
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CAlegrDiffView)
-	// NOTE - the ClassWizard will add and remove member functions here.
-	//    DO NOT EDIT what you see in these blocks of generated code !
+	afx_msg void OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

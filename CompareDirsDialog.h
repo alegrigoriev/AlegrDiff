@@ -19,8 +19,12 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CCompareDirsDialog)
 	enum { IDD = IDD_DIALOG_COMPARE_DIRS };
-	// NOTE: the ClassWizard will add data members here
+	CComboBox	m_FirstDirCombo;
+	CComboBox	m_SecondDirCombo;
+	BOOL	m_bIncludeSubdirs;
 	//}}AFX_DATA
+	CString	m_sFirstDirCombo;
+	CString	m_sSecondDirCombo;
 
 
 // Overrides
@@ -35,7 +39,8 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CCompareDirsDialog)
-	// NOTE: the ClassWizard will add member functions here
+	afx_msg void OnButtonBrowseFirstDir();
+	afx_msg void OnButtonBrowseSecondDir();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

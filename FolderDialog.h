@@ -23,7 +23,8 @@ public:
 				DWORD dwFlags = BIF_RETURNFSANCESTORS |
 								BIF_RETURNONLYFSDIRS |
 								BIF_NEWDIALOGSTYLE,
-				CWnd* pParentWnd = NULL);
+				CWnd* pParentWnd = NULL,
+				class CStringHistory * pHistory = NULL);
 
 	BROWSEINFO m_bi;
 	TCHAR szBuffer[MAX_PATH + 1];
@@ -31,6 +32,7 @@ public:
 	CString szStartupDir;
 	CString szDisplayName;
 	CString szPath;
+	CComboBox m_HistoryCombo;
 // Operations
 	virtual int DoModal();
 
@@ -42,6 +44,8 @@ public:
 	virtual int OnFolderChange(LPITEMIDLIST lpItem);
 	virtual int OnValidateFailed(LPCTSTR ErrorName);
 	virtual void OnIUnknown(IUnknown * pUnknown);
+
+	void LoadHistoryCb();
 
 	void EnableOK(BOOL Enable = TRUE);
 	void SetExpanded(LPCWSTR Path);
@@ -55,7 +59,7 @@ protected:
 	static int CALLBACK BrowseCallbackProc(HWND hwnd,
 											UINT uMsg, LPARAM lParam, LPARAM lpData);
 
-
+	class CStringHistory * m_pStringHistory;
 // Implementation
 #ifdef _DEBUG
 public:
@@ -65,7 +69,9 @@ public:
 protected:
 	//{{AFX_MSG(CFolderDialog)
 	// NOTE - the ClassWizard will add and remove member functions here.
+	afx_msg void OnComboSelendOK();
 	//}}AFX_MSG
+	//virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

@@ -319,7 +319,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 0.88 beta",IDC_STATIC,35,14,128,8,
+    CTEXT           "AlegrDiff Version 0.90 beta",IDC_STATIC,35,14,128,8,
                     SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001\nalegr@earthlink.net",
                     IDC_STATIC,35,34,128,21
@@ -543,8 +543,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,8,7,0
- PRODUCTVERSION 0,8,7,1
+ FILEVERSION 0,9,0,0
+ PRODUCTVERSION 0,9,0,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -562,14 +562,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "AleGr Software\0"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application\0"
-            VALUE "FileVersion", "0, 8, 7, 0\0"
+            VALUE "FileVersion", "0, 9, 0, 0\0"
             VALUE "InternalName", "AlegrDiff\0"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "AlegrDiff.EXE\0"
-            VALUE "PrivateBuild", "Beta 0.87\0"
+            VALUE "PrivateBuild", "Beta 0.90\0"
             VALUE "ProductName", "AlegrDiff Application\0"
-            VALUE "ProductVersion", "0, 8, 7, 1\0"
+            VALUE "ProductVersion", "0, 9, 0, 1\0"
             VALUE "SpecialBuild", "\0"
         END
     END

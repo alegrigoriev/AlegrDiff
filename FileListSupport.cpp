@@ -1810,7 +1810,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstCount,
 // and deleted chars
 // returns number of different characters.
 // if ppSections is not NULL, builds a list of sections
-struct StringDiffSection : public KListEntry<StringDiffSection>
+struct StringDiffSection : public ListItem<StringDiffSection>
 {
 public:
 	static void * operator new(size_t size)
@@ -1854,7 +1854,7 @@ StringDiffSection::StringDiffSection()
 }
 CSmallAllocator StringDiffSection::m_Allocator(sizeof (StringDiffSection));
 
-int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<StringSection> * ppSections, int nMinMatchingChars)
+int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<StringSection> * ppSections, int nMinMatchingChars)
 {
 	if (NULL == pStr2 && NULL == pStr1)
 	{
@@ -1914,7 +1914,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 	ASSERT(_tcslen(str1) == pStr1->GetNormalizedLength());
 	ASSERT(_tcslen(str2) == pStr2->GetNormalizedLength());
 
-	KListEntry<StringDiffSection> DiffSections;
+	ListHead<StringDiffSection> DiffSections;
 
 	// allocate an equal section of zero length and add to the list
 	StringDiffSection * pDiffSection;
@@ -2128,7 +2128,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 	str2 = pStr2->GetNormalizedText();
 
 	for (pDiffSection = DiffSections.First();
-		pDiffSection->NotEnd( & DiffSections); pDiffSection = pDiffSection->Next())
+		DiffSections.NotEnd(pDiffSection); pDiffSection = DiffSections.Next(pDiffSection))
 	{
 		if (NULL != pDiffSection->Str1)
 		{
@@ -2228,7 +2228,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 
 	// first expand them to make number of file1/file2 blanks equal
 	for (pDiffSection = DiffSections.First();
-		pDiffSection->NotEnd( & DiffSections); pDiffSection = pDiffSection->Next())
+		DiffSections.NotEnd(pDiffSection); pDiffSection = DiffSections.Next(pDiffSection))
 	{
 		if (! pDiffSection->Different)
 		{
@@ -2344,7 +2344,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 
 	// then add the remaining blanks
 	for (pDiffSection = DiffSections.First();
-		pDiffSection->NotEnd( & DiffSections); pDiffSection = pDiffSection->Next())
+		DiffSections.NotEnd(pDiffSection); pDiffSection = DiffSections.Next(pDiffSection))
 	{
 		if (! pDiffSection->Different)
 		{
@@ -4535,13 +4535,13 @@ BOOL FilePair::EnumStringDiffSections(TextPosLine & PosFrom, TextPosLine & PosTo
 	int pos = 0;
 	StringSection * pSection;
 	for (pSection = pPair->StrSections.First();
-		pPair->StrSections.NotEnd(pSection); pos += pSection->Length, pSection = pSection->Next())
+		pPair->StrSections.NotEnd(pSection); pos += pSection->Length, pSection = pPair->StrSections.Next(pSection))
 	{
 		if (end.line == begin.line
 			&& pos >= end.pos)
 		{
 			// no section in this line
-			pSection = pPair->StrSections.Head();
+			pSection = pPair->StrSections.Last()->Next();
 			break;
 		}
 		if (0 != (pSection->Attr & (pSection->Inserted | pSection->Erased))
@@ -4554,7 +4554,7 @@ BOOL FilePair::EnumStringDiffSections(TextPosLine & PosFrom, TextPosLine & PosTo
 		}
 	}
 	TextPosLine ChangeEnd = begin;
-	for ( ; pPair->StrSections.NotEnd(pSection); pos += pSection->Length, pSection = pSection->Next())
+	for ( ; pPair->StrSections.NotEnd(pSection); pos += pSection->Length, pSection = pPair->StrSections.Next(pSection))
 	{
 		if (end.line == begin.line
 			&& pos >= end.pos)

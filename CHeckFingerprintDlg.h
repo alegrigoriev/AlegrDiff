@@ -6,8 +6,6 @@
 
 class CCheckFingerprintDlg : public CResizableDialog
 {
-	DECLARE_DYNAMIC(CCheckFingerprintDlg)
-
 public:
 	CCheckFingerprintDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CCheckFingerprintDlg();

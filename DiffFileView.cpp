@@ -91,7 +91,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CDiffFileView drawing
 void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
-										KListEntry<StringSection> const * SectionEntry,
+										ListHead<StringSection> const * SectionEntry,
 										int nSkipChars, int nVisibleChars, int nTabIndent,
 										int SelBegin, int SelEnd, int nFileSelect)
 {
@@ -441,8 +441,8 @@ void CDiffFileView::OnDraw(CDC* pDC)
 				}
 			}
 
-			KListEntry<StringSection> EmptyList;
-			KListEntry<StringSection> const * pSectionEntry = & EmptyList;
+			ListHead<StringSection> EmptyList;
+			ListHead<StringSection> const * pSectionEntry = & EmptyList;
 
 			if (nLine >= (int)pFilePair->m_LinePairs.size())
 			{

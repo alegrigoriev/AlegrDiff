@@ -183,7 +183,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 	FileList2.GetSortedList(Files2, FileList::SortDirFirst | FileList::SortBackwards);
 
 	// we don't call FreeFilePairList, because we could be performing file list refrech
-	FilePair * pInsertBefore = m_PairList.Next();
+	FilePair * pInsertBefore = m_PairList.First();
 
 	// amount of data to process
 	ULONGLONG TotalFilesSize = 0;
@@ -280,6 +280,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 						LPCTSTR(FileList1.m_BaseDir + pPair->pFirstFile->GetSubdir()),
 						LPCTSTR(FileList2.m_BaseDir + pPair->pSecondFile->GetSubdir()));
 		}
+
 		while (m_PairList.NotEnd(pInsertBefore))
 		{
 			// check if we insert ir remove items, or the item is duplicate
@@ -294,6 +295,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			{
 				pItem2 = pInsertBefore->pSecondFile;
 			}
+
 			comparison = FileItem::DirNameCompare(pItem1, pItem2);
 			if (comparison < 0)
 			{
@@ -330,14 +332,14 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			{
 				pInsertBefore->m_bDeleted = true;
 			}
-			pInsertBefore = pInsertBefore->Next();
+			pInsertBefore = m_PairList.Next(pInsertBefore);
 			break;
 		}
 
 		if (pPair != NULL)
 		{
 			m_bNeedUpdateViews = true;
-			pInsertBefore->InsertTail(pPair);
+			pInsertBefore->InsertAsPrevItem(pPair);
 			m_nFilePairs++;
 
 			if (pPair->ResultUnknown == pPair->m_ComparisonResult)
@@ -372,7 +374,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 	while (m_PairList.NotEnd(pInsertBefore))
 	{
 		pInsertBefore->m_bDeleted = true;
-		pInsertBefore = pInsertBefore->Next();
+		pInsertBefore = m_PairList.Next(pInsertBefore);
 	}
 	// all files are referenced in FilePair list
 	FileList1.Detach();
@@ -1019,7 +1021,7 @@ void CAlegrDiffDoc::OnViewRefresh()
 		if (pPair->m_bDeleted)
 		{
 			FilePair * pTmp = pPair;
-			pPair = pPair->Next();
+			pPair = m_PairList.Next(pPair);
 			pTmp->RemoveFromList();
 
 			FilePairChangedArg arg;
@@ -1042,7 +1044,7 @@ void CAlegrDiffDoc::OnViewRefresh()
 				pPair->m_bChanged = false;
 				pApp->NotifyFilePairChanged(pPair);
 			}
-			pPair = pPair->Next();
+			pPair = m_PairList.Next(pPair);
 		}
 	}
 
@@ -1402,9 +1404,10 @@ bool CFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, Tex
 	int nPos = 0;
 	int CaretPos = OnPos.pos;
 
-	KListEntry<StringSection> StrSections;
+	ListHead<StringSection> StrSections;
 	StringSection Section;
-	KListEntry<StringSection> * pStrSections;
+	ListHead<StringSection> * pStrSections;
+
 	if (0 == OnPos.scope)
 	{
 		pStrSections = & pPair->StrSections;

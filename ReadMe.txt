@@ -34,8 +34,6 @@ F8 - hold anchor
 Problems:
 Doesn't refresh if one file changed on list view refresh
 If the text comparison got aborted because of read error, this is not shown
-History gets lost under Win9x
-"Length" column On/Off not saved (in Win9x???)
 Focus after hiding files
 Blank line immediately following difference block is considered separate 
    for "Next Difference" command
@@ -43,10 +41,12 @@ Blank lines prevent from proper line matching inside difference blocks
 Directory share name cannot be selected if no '\' appended
 Directory dialog allows to select network host. It won't return anything then.
 screen move in two directions may corrupt the image (??)
-Estimated time left is not shown while calculating a fingerpring of a big file   (???)
+Estimated time left is not shown while calculating a fingerpring of a big file  (???)
 "C:\\" shown in the list view title (???)
 
 Fixed:
+"Length" and Modification Time column On/Off not saved
+History gets lost under Win9x
 Text gets wrong colors (video driver problem)
 Text clipping in split mode: line is not clipped
 Zero byte in text file is causing text not shown

@@ -116,7 +116,7 @@ public:
 
 protected:
 	void DrawStringSections(CDC* pDC, CPoint point,
-							KListEntry<StringSection> const * pSection,
+							ListHead<StringSection> const * pSection,
 							int nSkipChars, int nVisibleChars, int nTabIndent,
 							// nFileSelect: 1 - first only, 2 - second only, 0 - both
 							int SelBegin, int SelEnd, int nFileSelect);

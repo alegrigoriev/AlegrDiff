@@ -77,6 +77,8 @@
 #define IDI_COMPARE_DIRS                180
 #define IDI_FILES_DIALOG                181
 #define IDI_COMPARE_FILES               181
+#define IDD_DIALOG_WITH_HISTORY_TEMPLATE_V4 187
+#define IDD_DIALOG_WITH_HISTORY_TEMPLATE_V5 188
 #define IDC_COMBO_FIRST_DIR             1000
 #define IDC_COMBO_SECOND_DIR            1001
 #define IDC_COMBO_SAVE_FILENAME         1001

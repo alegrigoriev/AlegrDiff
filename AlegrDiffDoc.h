@@ -45,13 +45,13 @@ public:
 	CString	m_sFirstDir;
 	CString	m_sSecondDir;
 
-	KListEntry<FilePair> m_PairList;
+	ListHead<FilePair> m_PairList;
 	int m_nFilePairs;
 	bool m_bRecurseSubdirs;
 	bool m_bCheckingFingerprint;
 	bool m_bNeedUpdateViews;
 
-	KListEntry<FilePair> * GetFilePairList()
+	ListHead<FilePair> * GetFilePairList()
 	{
 		return & m_PairList;
 	}

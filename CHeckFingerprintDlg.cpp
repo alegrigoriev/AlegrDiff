@@ -29,7 +29,7 @@ CCheckFingerprintDlg::CCheckFingerprintDlg(CWnd* pParent /*=NULL*/)
 
 CCheckFingerprintDlg::~CCheckFingerprintDlg()
 {
-	m_Profile.FlushItem(_T("Settings"), _T("CheckFpDlgWidth"));
+	m_Profile.UnloadItem(_T("Settings"), _T("CheckFpDlgWidth"));
 }
 
 void CCheckFingerprintDlg::DoDataExchange(CDataExchange* pDX)

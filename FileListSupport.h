@@ -19,9 +19,31 @@ struct TextPos
 	int pos;
 	TextPos() {}
 	TextPos(int l, int p)
+		: line(l), pos(p)
 	{
-		line = l;
-		pos = p;
+	}
+};
+
+struct TextPosLine
+{
+	int line;
+	int pos;
+	TextPosLine() {}
+	TextPosLine(int l, int p)
+		: line(l), pos(p)
+	{
+	}
+};
+
+struct TextPosDisplay
+{
+	int line;
+	short pos;
+	short scope;
+	TextPosDisplay() {}
+	TextPosDisplay(int l, short p, short s)
+		: line(l), pos(p), scope(s)
+	{
 	}
 };
 
@@ -59,6 +81,74 @@ inline bool operator !=(const TextPos & p1, const TextPos & p2)
 	return p1.line != p2.line || p1.pos != p2.pos;
 }
 
+inline bool operator >(const TextPosLine & p1, const TextPosLine & p2)
+{
+	return (p1.line > p2.line)
+		|| (p1.line == p2.line && p1.pos > p2.pos);
+}
+
+inline bool operator >=(const TextPosLine & p1, const TextPosLine & p2)
+{
+	return (p1.line > p2.line)
+		|| (p1.line == p2.line && p1.pos >= p2.pos);
+}
+
+inline bool operator <(const TextPosLine & p1, const TextPosLine & p2)
+{
+	return (p1.line < p2.line)
+		|| (p1.line == p2.line && p1.pos < p2.pos);
+}
+
+inline bool operator <=(const TextPosLine & p1, const TextPosLine & p2)
+{
+	return (p1.line < p2.line)
+		|| (p1.line == p2.line && p1.pos <= p2.pos);
+}
+
+inline bool operator ==(const TextPosLine & p1, const TextPosLine & p2)
+{
+	return p1.line == p2.line && p1.pos == p2.pos;
+}
+
+inline bool operator !=(const TextPosLine & p1, const TextPosLine & p2)
+{
+	return p1.line != p2.line || p1.pos != p2.pos;
+}
+
+inline bool operator >(const TextPosDisplay & p1, const TextPosDisplay & p2)
+{
+	return (p1.line > p2.line)
+		|| (p1.line == p2.line && p1.pos > p2.pos);
+}
+
+inline bool operator >=(const TextPosDisplay & p1, const TextPosDisplay & p2)
+{
+	return (p1.line > p2.line)
+		|| (p1.line == p2.line && p1.pos >= p2.pos);
+}
+
+inline bool operator <(const TextPosDisplay & p1, const TextPosDisplay & p2)
+{
+	return (p1.line < p2.line)
+		|| (p1.line == p2.line && p1.pos < p2.pos);
+}
+
+inline bool operator <=(const TextPosDisplay & p1, const TextPosDisplay & p2)
+{
+	return (p1.line < p2.line)
+		|| (p1.line == p2.line && p1.pos <= p2.pos);
+}
+
+inline bool operator ==(const TextPosDisplay & p1, const TextPosDisplay & p2)
+{
+	return p1.line == p2.line && p1.pos == p2.pos;
+}
+
+inline bool operator !=(const TextPosDisplay & p1, const TextPosDisplay & p2)
+{
+	return p1.line != p2.line || p1.pos != p2.pos;
+}
+
 struct TextToken
 {
 	int m_Offset;
@@ -72,8 +162,8 @@ class FileDiffSection
 public:
 	FileDiffSection() { m_Flags = 0; }
 	~FileDiffSection() {}
-	TextPos m_Begin;
-	TextPos m_End;
+	TextPosLine m_Begin;
+	TextPosLine m_End;
 	ULONG m_Flags;
 	enum {
 		FlagWhitespace = 0x100,
@@ -236,9 +326,9 @@ private:
 	static CSmallAllocator m_Allocator;
 public:
 	// recalculates offset in the raw line to offset in the line with or without whitespaces shown
-	int LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces);
+	int LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces, int FileScope);
 	// recalculates offset in the line with or without whitespaces shown to offset in the raw line
-	int DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces);
+	int DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces, int FileScope);
 	LPCTSTR GetText(LPTSTR buf, size_t nBufChars, int * pStrLen, BOOL IgnoreWhitespaces, int SelectFile);
 };
 
@@ -385,15 +475,17 @@ public:
 	PairCheckResult CheckForFilesChanged();
 	PairCheckResult ReloadIfChanged();
 
-	bool NextDifference(TextPos PosFrom, BOOL IgnoreWhitespaces,
-						TextPos * DiffPos, TextPos * EndPos);
-	bool PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces,
-						TextPos * DiffPos, TextPos * EndPos);
+	bool NextDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
+						TextPosDisplay * DiffPos, TextPosDisplay * EndPos);
+	bool PrevDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
+						TextPosDisplay * DiffPos, TextPosDisplay * EndPos);
+	TextPosLine DisplayPosToLinePos(TextPosDisplay position, BOOL IgnoreWhitespaces);
+	TextPosDisplay LinePosToDisplayPos(TextPosLine position, BOOL IgnoreWhitespaces, int FileScope);
 
-	int GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, bool bIgnoreWhitespaces);
-	BOOL ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int Set, int Reset);
+	int GetAcceptDeclineFlags(TextPosLine PosFrom, TextPosLine PosTo, bool bIgnoreWhitespaces);
+	BOOL ModifyAcceptDeclineFlags(TextPosLine & PosFrom, TextPosLine & PosTo, int Set, int Reset);
 
-	BOOL EnumStringDiffSections(TextPos & PosFrom, TextPos & PosTo,
+	BOOL EnumStringDiffSections(TextPosLine & PosFrom, TextPosLine & PosTo,
 								void (* Func)(StringSection * pSection, void * Param), void * pParam);
 	static void GetAcceptDeclineFlagsFunc(StringSection * pSection, void * Param);
 	static void ModifyAcceptDeclineFlagsFunc(StringSection * pSection, void * Param);

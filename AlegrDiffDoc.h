@@ -113,9 +113,9 @@ protected:
 
 // Attributes
 public:
-	TextPos m_CaretPos;
-	TextPos m_SelectionAnchor;
-	TextPos m_OriginalSelectionAnchor;
+	TextPosDisplay m_CaretPos;
+	TextPosDisplay m_SelectionAnchor;
+	TextPosDisplay m_OriginalSelectionAnchor;
 	bool m_WordSelectionMode;
 	bool m_bIgnoreWhitespaces;
 	bool m_CopyDisabled;
@@ -134,11 +134,11 @@ public:
 		InvalidateRange,
 	};
 
-	void SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags = SetPositionMakeCentered);
+	void SetSelection(TextPosDisplay CaretPos, TextPosDisplay AnchorPos, int flags = SetPositionMakeCentered);
 	void CaretToHome(int flags);
 	void CaretToEnd(int flags);
 	ULONG CopyTextToMemory(LPTSTR pBuf, ULONG BufLen,
-							TextPos pFrom, TextPos pTo, int FileSelect);
+							TextPosDisplay pFrom, TextPosDisplay pTo, int FileSelect);
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CFilePairDoc)
@@ -163,17 +163,24 @@ public:
 	virtual void OnUpdateAllViews(CView* pSender,
 								LPARAM lHint = 0L, CObject* pHint = NULL);
 
-	int GetAcceptDeclineFlags(TextPos begin, TextPos end);
+	int GetAcceptDeclineFlags(TextPosLine begin, TextPosLine end);
+	int GetAcceptDeclineFlags(TextPosDisplay begin, TextPosDisplay end);
 	BOOL DoSaveMerged(BOOL bOpenResultFile);
 	BOOL SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode);
 
-	LPCTSTR GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int * pStrLen, int Scope);
-	// recalculates offset in the raw line to offset in the line with or without whitespaces shown
-	TextPos LinePosToDisplayPos(TextPos position);
-	// recalculates offset in the line with or without whitespaces shown to offset in the raw line
-	TextPos DisplayPosToLinePos(TextPos position);
+	// FileScope: 0 - combined file shown, 1 - first file shown, 2 - second file shown
+	LPCTSTR GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int * pStrLen, int FileScope);
 
-	bool GetWordOnPos(TextPos OnPos, TextPos & Start, TextPos & End);
+	// recalculates offset in the raw line to offset in the line with or without whitespaces shown
+	TextPosDisplay LinePosToDisplayPos(TextPosLine position, int FileScope);
+	// recalculates offset in the line with or without whitespaces shown to offset in the raw line
+	TextPosLine DisplayPosToLinePos(TextPosDisplay position);
+	// recalculates offset in the raw line to the offset in the file line
+	TextPosLine LinePosToFilePos(TextPosLine position, int FileScope = 0);
+	// recalculates offset in the file line to the offset in the raw line
+	TextPosLine FilePosToLinePos(TextPosLine position, int FileScope = 0);
+
+	bool GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay & Start, TextPosDisplay & End);
 	void CaretLeftToWord(int SelectionFlags);
 	void CaretRightToWord(int SelectionFlags);
 
@@ -203,7 +210,6 @@ public:
 	afx_msg void OnUpdateEditDecline(CCmdUI* pCmdUI);
 	afx_msg void OnFileMergeSave();
 	afx_msg void OnViewIgnoreWhitespaces();
-	afx_msg void OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateFileCopyFirstDirFile(CCmdUI* pCmdUI);
 	afx_msg void OnFileCopyFirstDirFile();
 	afx_msg void OnUpdateFileCopySecondDirFile(CCmdUI* pCmdUI);

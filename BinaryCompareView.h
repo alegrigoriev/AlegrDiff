@@ -61,7 +61,7 @@ public:
 	void InvalidateRange(LONGLONG begin, LONGLONG end);
 
 	void MakePositionVisible(LONGLONG pos);
-	void MakeCaretCenteredRangeVisible(LONGLONG NewPos, LONGLONG EndPos);
+	//void MakeCaretCenteredRangeVisible(LONGLONG NewPos, LONGLONG EndPos);
 	void MakeCaretVisible()
 	{
 		MakePositionVisible(GetDocument()->m_CaretPos);

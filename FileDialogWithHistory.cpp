@@ -230,7 +230,7 @@ INT_PTR CResizableFileDialog::DoModal()
 	// proxy for MSLU fix under Windows ME
 	while (1)
 	{
-		UINT result = BaseClass::DoModal();
+		INT_PTR result = BaseClass::DoModal();
 		if (result != 0 || CommDlgExtendedError() != FNERR_INVALIDFILENAME)
 		{
 			return result;
@@ -253,7 +253,7 @@ INT_PTR CFileDialogWithHistory::DoModal()
 		if (GetFullPathName(m_ofn.lpstrFile, countof(Buf), Buf, & NamePart)
 			&& NULL != NamePart)
 		{
-			m_SubstituteInitialFolder = CString(Buf, NamePart - Buf);
+			m_SubstituteInitialFolder = CString(Buf, int(NamePart - Buf));
 		}
 		else
 		{
@@ -400,7 +400,7 @@ CString CResizableFileDialog::GetNextPathName(POSITION& pos) const
 	return FullPath;
 }
 
-size_t CResizableFileDialog::OpenfilenameSize()
+DWORD CResizableFileDialog::OpenfilenameSize()
 {
 	OSVERSIONINFO vi;
 	vi.dwOSVersionInfoSize = sizeof vi;

@@ -324,6 +324,18 @@ public:
 
 	eFileComparisionResult CompareFiles();
 	eFileComparisionResult CompareTextFiles();
+	struct FileSection
+	{
+		FileSection * pNext;
+		int File1LineBegin;
+		int File1LineEnd;
+
+		int File2LineBegin;
+		int File2LineEnd;
+	};
+
+	FileSection * BuildSectionList(int NumLine1Begin, int NumLine1AfterEnd,
+									int NumLine2Begin, int NumLine2AfterEnd, bool UseLineGroups);
 
 	eFileComparisionResult PreCompareFiles();
 	eFileComparisionResult PreCompareTextFiles();

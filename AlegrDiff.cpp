@@ -603,6 +603,7 @@ void CAlegrDiffApp::OnFileComparefiles()
 
 void CAlegrDiffApp::OnFilePreferences()
 {
+#if 0
 	CPreferencesDialog dlg;
 	dlg.m_bUseBinaryFilesFilter = m_bUseBinaryFilesFilter;
 	dlg.m_sBinaryFilesFilter = m_sBinaryFilesFilter;
@@ -654,6 +655,58 @@ void CAlegrDiffApp::OnFilePreferences()
 			OnFontChanged();
 		}
 	}
+#else
+	CPreferencesPropertySheet dlg;
+	dlg.m_FilesPage.m_bUseBinaryFilesFilter = m_bUseBinaryFilesFilter;
+	dlg.m_FilesPage.m_sBinaryFilesFilter = m_sBinaryFilesFilter;
+
+	dlg.m_FilesPage.m_bUseCppFilter = m_bUseCppFilter;
+	dlg.m_FilesPage.m_sCppFilesFilter = m_sCppFilesFilter;
+
+	dlg.m_FilesPage.m_bUseIgnoreFilter = m_bUseIgnoreFilter;
+	dlg.m_FilesPage.m_sIgnoreFilesFilter = m_sIgnoreFilesFilter;
+	dlg.m_FilesPage.m_AutoReloadChangedFiles = m_AutoReloadChangedFiles;
+
+	dlg.m_ViewPage.m_nTabIndent = m_TabIndent;
+
+	dlg.m_ViewPage.m_NormalLogFont = m_NormalLogFont;
+	dlg.m_ViewPage.m_NormalTextColor = m_NormalTextColor;
+	dlg.m_ViewPage.m_AddedLogFont = m_AddedLogFont;
+	dlg.m_ViewPage.m_AddedTextColor = m_AddedTextColor;
+	dlg.m_ViewPage.m_ErasedLogFont = m_ErasedLogFont;
+	dlg.m_ViewPage.m_ErasedTextColor = m_ErasedTextColor;
+	dlg.m_ViewPage.m_FontPointSize = m_FontPointSize;
+
+	if (IDOK == dlg.DoModal())
+	{
+		m_bUseBinaryFilesFilter = (0 != dlg.m_FilesPage.m_bUseBinaryFilesFilter);
+		m_sBinaryFilesFilter = dlg.m_FilesPage.m_sBinaryFilesFilter;
+
+		m_bUseCppFilter = (0 != dlg.m_FilesPage.m_bUseCppFilter);
+		m_sCppFilesFilter = dlg.m_FilesPage.m_sCppFilesFilter;
+
+		m_bUseIgnoreFilter = (0 != dlg.m_FilesPage.m_bUseIgnoreFilter);
+		m_sIgnoreFilesFilter = dlg.m_FilesPage.m_sIgnoreFilesFilter;
+
+		m_AutoReloadChangedFiles = dlg.m_FilesPage.m_AutoReloadChangedFiles;
+
+		m_TabIndent = dlg.m_ViewPage.m_nTabIndent;
+		if (dlg.m_ViewPage.m_bFontChanged)
+		{
+			m_NormalLogFont = dlg.m_ViewPage.m_NormalLogFont;
+			m_NormalTextColor = dlg.m_ViewPage.m_NormalTextColor;
+
+			m_AddedLogFont = dlg.m_ViewPage.m_AddedLogFont;
+			m_AddedTextColor = dlg.m_ViewPage.m_AddedTextColor;
+
+			m_ErasedLogFont = dlg.m_ViewPage.m_ErasedLogFont;
+			m_ErasedTextColor = dlg.m_ViewPage.m_ErasedTextColor;
+
+			m_FontPointSize = dlg.m_ViewPage.m_FontPointSize;
+			OnFontChanged();
+		}
+	}
+#endif
 }
 
 void CAlegrDiffApp::OnFontChanged()

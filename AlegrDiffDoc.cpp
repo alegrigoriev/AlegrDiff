@@ -6,6 +6,7 @@
 
 #include "AlegrDiffDoc.h"
 #include "CompareDirsDialog.h"
+#include "DiffFileView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -110,6 +111,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2)
 			{
 				pPair->pFirstFile = NULL;
 				pPair->pSecondFile = Files2[idx2];
+				pPair->ComparisionResult = FilePair::OnlySecondFile;
 				idx2++;
 
 				if (0) TRACE("File \"%s\" exists only in dir \"%s\"\n",
@@ -120,6 +122,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2)
 			{
 				pPair->pSecondFile = NULL;
 				pPair->pFirstFile = Files1[idx1];
+				pPair->ComparisionResult = FilePair::OnlyFirstFile;
 				idx1++;
 
 				if (0) TRACE("File \"%s\" exists only in dir \"%s\"\n",
@@ -132,7 +135,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2)
 				idx1++;
 				pPair->pSecondFile = Files2[idx2];
 				idx2++;
-
+				pPair->ComparisionResult = pPair->PreCompareFiles();
 				if (0) TRACE("File \"%s\" exists in both \"%s\" and \"%s\"\n",
 							pPair->pFirstFile->GetName(),
 							m_FileList1.m_BaseDir + pPair->pFirstFile->GetSubdir(),
@@ -150,7 +153,7 @@ void CAlegrDiffDoc::FreeFilePairList()
 	{
 		tmp = m_pPairList;
 		m_pPairList = tmp->pNext;
-		delete tmp;
+		tmp->Dereference();
 	}
 	m_nFilePairs = 0;
 }
@@ -202,6 +205,27 @@ void CAlegrDiffDoc::OnFileComparedirectories()
 		BuildFilePairList(dlg.m_sFirstDir, dlg.m_sSecondDir);
 		UpdateAllViews(NULL);
 //        CompareFileLists();
+	}
+}
+
+void CAlegrDiffDoc::OpenFilePairView(FilePair * pPair)
+{
+	if (0 == pPair->m_LinePairs.GetSize())
+	{
+		pPair->CompareFiles();
+	}
+	CDocTemplate * pTemplate = GetApp()->m_pFileDiffTemplate;
+	CFrameWnd * pFrame = pTemplate->CreateNewFrame(this, NULL);
+	CDiffFileView * pView = dynamic_cast<CDiffFileView *>(pFrame->GetWindow(GW_CHILD));
+
+	if (NULL != pView)
+	{
+		pPair->Reference();
+		pView->m_pFilePair = pPair;
+	}
+	if (NULL != pFrame)
+	{
+		pTemplate->InitialUpdateFrame(pFrame, this, TRUE);
 	}
 }
 

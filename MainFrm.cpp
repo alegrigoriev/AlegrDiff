@@ -5,6 +5,7 @@
 #include "AlegrDiff.h"
 
 #include "MainFrm.h"
+#include "DiffFileView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -19,9 +20,8 @@ IMPLEMENT_DYNAMIC(CMainFrame, CMDIFrameWnd)
 
 BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	//{{AFX_MSG_MAP(CMainFrame)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
-		//    DO NOT EDIT what you see in these blocks of generated code !
 	ON_WM_CREATE()
+	ON_COMMAND(ID_WINDOW_NEW, OnWindowNew)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -121,4 +121,15 @@ void CMainFrame::Dump(CDumpContext& dc) const
 
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame message handlers
+
+
+void CMainFrame::OnWindowNew()
+{
+	CMDIChildWnd* pActiveChild = MDIGetActive();
+	CDiffFileView * pView = dynamic_cast<CDiffFileView *>(pActiveChild->GetWindow(GW_CHILD));
+	if (NULL != pView)
+	{
+		pView->GetDocument()->OpenFilePairView(pView->m_pFilePair);
+	}
+}
 

@@ -5,6 +5,7 @@
 #include "AlegrDiff.h"
 
 #include "ChildFrm.h"
+#include "DiffFileView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -19,8 +20,7 @@ IMPLEMENT_DYNCREATE(CChildFrame, CMDIChildWnd)
 
 BEGIN_MESSAGE_MAP(CChildFrame, CMDIChildWnd)
 	//{{AFX_MSG_MAP(CChildFrame)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
-		//    DO NOT EDIT what you see in these blocks of generated code !
+	ON_UPDATE_COMMAND_UI(ID_WINDOW_NEW, OnUpdateWindowNew)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -78,3 +78,10 @@ void CChildFrame::Dump(CDumpContext& dc) const
 
 /////////////////////////////////////////////////////////////////////////////
 // CChildFrame message handlers
+
+void CChildFrame::OnUpdateWindowNew(CCmdUI* pCmdUI)
+{
+	CWnd * pChild = GetWindow(GW_CHILD);
+	pCmdUI->Enable(pChild->IsKindOf(RUNTIME_CLASS(CDiffFileView)));
+}
+

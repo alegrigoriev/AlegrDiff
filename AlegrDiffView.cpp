@@ -25,6 +25,7 @@ BEGIN_MESSAGE_MAP(CAlegrDiffView, CListView)
 	//{{AFX_MSG_MAP(CAlegrDiffView)
 	ON_NOTIFY_REFLECT(LVN_COLUMNCLICK, OnColumnclick)
 	ON_NOTIFY_REFLECT(NM_DBLCLK, OnDblclk)
+	ON_NOTIFY_REFLECT(NM_RETURN, OnReturn)
 	//}}AFX_MSG_MAP
 	// Standard printing commands
 	ON_COMMAND(ID_FILE_PRINT, CView::OnFilePrint)
@@ -286,6 +287,7 @@ void CAlegrDiffView::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 #endif
+
 void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	CListCtrl * pListCtrl = & GetListCtrl();
@@ -298,19 +300,7 @@ void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 		{
 			// try to find if a view is already open
 			// view not found, create a new
-			m_PairArray[pNmlv->iItem]->CompareFiles(true, false);
-			CDocTemplate * pTemplate = GetApp()->m_pFileDiffTemplate;
-			CFrameWnd * pFrame = pTemplate->CreateNewFrame(GetDocument(), NULL);
-			CDiffFileView * pView = dynamic_cast<CDiffFileView *>(pFrame->GetWindow(GW_CHILD));
-
-			if (NULL != pView)
-			{
-				pView->m_pFilePair = m_PairArray[pNmlv->iItem];
-			}
-			if (NULL != pFrame)
-			{
-				pTemplate->InitialUpdateFrame(pFrame, GetDocument(), TRUE);
-			}
+			GetDocument()->OpenFilePairView(m_PairArray[pNmlv->iItem]);
 		}
 	}
 
@@ -318,3 +308,22 @@ void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
+
+void CAlegrDiffView::OnReturn(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	CListCtrl * pListCtrl = & GetListCtrl();
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	if (-1 == nItem)
+	{
+		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
+	}
+	while(-1 != nItem)
+	{
+		if (nItem < m_PairArray.GetSize())
+		{
+			GetDocument()->OpenFilePairView(m_PairArray[nItem]);
+		}
+		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
+	}
+	*pResult = 0;
+}

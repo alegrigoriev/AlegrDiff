@@ -810,6 +810,14 @@ const FileLine * FileItem::FindMatchingLine(const FileLine * pLine, int nStartLi
 	if (pFoundLine->GetLineNumber() < nEndLineNum
 		&& pFoundLine->IsNormalizedEqual(pLine))
 	{
+#ifdef _DEBUG
+		if (pFoundLine->GetLineNumber() < nStartLineNum)
+		{
+			TRACE("Found line num=%d, required: %d\n",
+				pFoundLine->GetLineNumber(), nStartLineNum);
+			__asm int 3
+		}
+#endif
 		return pFoundLine;
 	}
 	else
@@ -888,8 +896,17 @@ const FileLine * FileItem::FindMatchingLineGroupLine(const FileLine * pLine, int
 	}
 	FileLine * pFoundLine = *(FileLine **) ppLine;
 	if (pFoundLine->GetLineNumber() <= nEndLineNum
+		&& pFoundLine->GetNormalizedGroupHash() == pLine->GetNormalizedGroupHash()
 		&& pFoundLine->IsNormalizedEqual(pLine))
 	{
+#ifdef _DEBUG
+		if (pFoundLine->GetLineNumber() < nStartLineNum)
+		{
+			TRACE("Found line num=%d, required: %d\n",
+				pFoundLine->GetLineNumber(), nStartLineNum);
+			__asm int 3
+		}
+#endif
 		return pFoundLine;
 	}
 	else
@@ -1651,12 +1668,12 @@ int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int 
 FileLine::FileLine(const char * src, bool MakeNormalizedString)
 	: m_Flags(0),
 	m_Number(-1),
-	m_Link(NULL),
+//m_Link(NULL),
+//m_FirstTokenIndex(-1),
 	m_HashCode(0),
 	m_GroupHashCode(0),
 	m_NormalizedHashCode(0),
-	m_NormalizedGroupHashCode(0),
-	m_FirstTokenIndex(-1)
+	m_NormalizedGroupHashCode(0)
 {
 	m_Length = strlen(src);
 	char TmpBuf[2048];
@@ -1712,16 +1729,30 @@ FilePair::FilePair()
 	: pNext(NULL),
 	pFirstFile(NULL),
 	pSecondFile(NULL),
-	ComparisionResult(0)
+	m_RefCount(1),
+	m_LoadedCount(0),
+	ComparisionResult(ResultUnknown)
 {
+}
+
+void FilePair::Reference()
+{
+	m_RefCount++;
+}
+
+void FilePair::Dereference()
+{
+	m_RefCount--;
+	if (0 == m_RefCount)
+	{
+		delete this;
+	}
 }
 
 FilePair::~FilePair()
 {
-	for (int i = 0; i < m_LinePairs.GetSize(); i++)
-	{
-		delete m_LinePairs[i];
-	}
+	m_LoadedCount = 0;
+	UnloadFiles();
 }
 
 int _cdecl FilePair::Time1SortFunc(const void * p1, const void * p2)
@@ -1897,6 +1928,11 @@ bool FileLine::IsNormalizedEqual(const FileLine * pOtherLine) const
 
 bool FilePair::LoadFiles()
 {
+	m_LoadedCount++;
+	if (m_LoadedCount > 1)
+	{
+		return true;
+	}
 	bool result = true;
 	if (NULL != pFirstFile)
 	{
@@ -1906,11 +1942,20 @@ bool FilePair::LoadFiles()
 	{
 		result = (pSecondFile->Load() && result);
 	}
+	if ( ! result)
+	{
+		UnloadFiles();
+	}
 	return result;
 }
 
 void FilePair::UnloadFiles()
 {
+	m_LoadedCount--;
+	if (m_LoadedCount > 0)
+	{
+		return;
+	}
 	for (int i = 0; i < m_LinePairs.GetSize(); i++)
 	{
 		LinePair * pPair = m_LinePairs[i];
@@ -1934,29 +1979,140 @@ void FilePair::UnloadFiles()
 	}
 }
 
-DWORD FilePair::CompareFiles(bool bCompareAll, bool bUnload)
+FilePair::eFileComparisionResult FilePair::PreCompareFiles()
 {
 	// TODO: different function for binary comparision
 	if (! LoadFiles())
 	{
-		return 0;
+		return ResultUnknown;
 	}
-	DWORD result = 0;
+	eFileComparisionResult result = ResultUnknown;
 	if (NULL != pFirstFile
 		&& NULL != pSecondFile)
 	{
-		result = CompareTextFiles(bCompareAll);
+		result = PreCompareTextFiles();
 	}
+	UnloadFiles();
 	// different comparision for different modes
-	if (bUnload)
-	{
-		UnloadFiles();
-	}
 	return result;
 }
 
-DWORD FilePair::CompareTextFiles(bool bCompareAll)
+FilePair::eFileComparisionResult FilePair::CompareFiles()
 {
+	// TODO: different function for binary comparision
+	if (! LoadFiles())
+	{
+		return ResultUnknown;
+	}
+	eFileComparisionResult result = ResultUnknown;
+	if (NULL != pFirstFile
+		&& NULL != pSecondFile)
+	{
+		result = CompareTextFiles();
+	}
+	// different comparision for different modes
+	return result;
+}
+
+FilePair::eFileComparisionResult FilePair::PreCompareTextFiles()
+{
+	int nLine1 = 0;
+	int nLine2 = 0;
+
+	int NumLines1 = pFirstFile->GetNumLines();
+	int NumNonBlankLines1 = pFirstFile->m_NormalizedHashSortedLines.GetSize();
+
+	int NumLines2 = pSecondFile->GetNumLines();
+	int NumNonBlankLines2 = pSecondFile->m_NormalizedHashSortedLines.GetSize();
+	if (NumNonBlankLines1 != NumNonBlankLines2)
+	{
+		return FilesDifferent;
+	}
+	bool SpacesDifferent = false;
+	while (nLine1 < NumLines1
+			|| nLine2 < NumLines2)
+	{
+		if (nLine1 >= NumLines1)
+		{
+			if (pSecondFile->GetLine(nLine2)->IsBlank())
+			{
+				nLine2++;
+				SpacesDifferent = true;
+				continue;
+			}
+			return FilesDifferent;
+		}
+
+		if (nLine2 >= NumLines2)
+		{
+			if (pFirstFile->GetLine(nLine1)->IsBlank())
+			{
+				nLine1++;
+				SpacesDifferent = true;
+				continue;
+			}
+			return FilesDifferent;
+		}
+
+		const FileLine * Line1 = pFirstFile->GetLine(nLine1);
+		const FileLine * Line2 = pSecondFile->GetLine(nLine2);
+		if (Line1->IsBlank())
+		{
+			if (Line2->IsBlank())
+			{
+				nLine1++;
+				nLine2++;
+				continue;
+			}
+			nLine1++;
+			SpacesDifferent = true;
+			continue;
+		}
+		else if (Line2->IsBlank())
+		{
+			nLine2++;
+			SpacesDifferent = true;
+			continue;
+		}
+		else
+		{
+			if ( ! Line1->IsEqual(Line2))
+			{
+				if (Line1->IsNormalizedEqual(Line2))
+				{
+					SpacesDifferent = true;
+				}
+				else
+				{
+					return FilesDifferent;
+				}
+			}
+			nLine1++;
+			nLine2++;
+		}
+	}
+	if (SpacesDifferent)
+	{
+		return DifferentInSpaces;
+	}
+	else
+	{
+		return FilesIdentical;
+	}
+}
+
+FilePair::eFileComparisionResult FilePair::CompareTextFiles()
+{
+	struct FileSection
+	{
+		FileSection * pNext;
+		int File1LineBegin;
+		int File1LineEnd;
+
+		int File2LineBegin;
+		int File2LineEnd;
+	};
+
 	// find similar lines
 	CThisApp * pApp = GetApp();
 	FileSection * pFirstSection = NULL;
@@ -2093,13 +2249,6 @@ DWORD FilePair::CompareTextFiles(bool bCompareAll)
 			else
 			{
 				// the lines are different
-				if (! bCompareAll)
-				{
-					// if we don't need to compare the while file (just scanning)
-					// return now
-					TRACE("Difference found at lines %d, %d, no need to compare anymore\n", nLine1, nLine2);
-					return 1;
-				}
 				TRACE("Difference found at lines %d, %d\n", nLine1, nLine2);
 				// check if the lines are similar enough
 				// the lines can be considered similar if < 1/4 of the characters is different,
@@ -2237,7 +2386,7 @@ DWORD FilePair::CompareTextFiles(bool bCompareAll)
 		nPrevSectionEnd1 = pSection->File1LineEnd;
 		nPrevSectionEnd2 = pSection->File2LineEnd;
 	}
-
+	ASSERT(nLineIndex == nTotalLines);
 	// deallocate the sections, don't need them anymore
 	for (pSection = pFirstSection; pSection != NULL; )
 	{
@@ -2245,7 +2394,7 @@ DWORD FilePair::CompareTextFiles(bool bCompareAll)
 		pSection = pSection->pNext;
 		delete tmp;
 	}
-	return 1;
+	return FilesDifferent;
 }
 
 CSmallAllocator FileLine::m_Allocator(sizeof FileLine);

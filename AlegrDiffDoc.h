@@ -33,6 +33,7 @@ public:
 public:
 	bool BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2);
 	void FreeFilePairList();
+	void OpenFilePairView(FilePair * pPair);
 	//bool BuildFileList(LPCTSTR dir);
 
 

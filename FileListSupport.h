@@ -44,10 +44,10 @@ public:
 	bool LooksLike(const FileLine * pOtherLine, int PercentsDifferent) const;
 	bool IsBlank() const { return 0 != (m_Flags & BlankString); }
 
-	bool GetNextToken(TextToken & token);
+//    bool GetNextToken(TextToken & token);
 
-	void SetLink(FileLine * pLine) { m_Link = pLine; }
-	FileLine * GetLink() const { return m_Link; }
+//    void SetLink(FileLine * pLine) { m_Link = pLine; }
+//    FileLine * GetLink() const { return m_Link; }
 
 	int GetLineNumber() const { return m_Number; }
 	void SetLineNumber(int num) { m_Number = num; }
@@ -78,8 +78,8 @@ private:
 	// length of the source string
 	int m_Length;
 	int m_NormalizedStringLength;
-	int m_FirstTokenIndex;
-	FileLine * m_Link;
+	//int m_FirstTokenIndex;
+	//FileLine * m_Link;
 	char * m_pAllocatedBuf;
 	const char * m_pString;
 	// points to the string with extra spaces removed
@@ -126,16 +126,6 @@ struct LinePair
 	StringSection * pFirstSection;
 private:
 	static CSmallAllocator m_Allocator;
-};
-
-struct FileSection
-{
-	FileSection * pNext;
-	int File1LineBegin;
-	int File1LineEnd;
-
-	int File2LineBegin;
-	int File2LineEnd;
 };
 
 class FileItem
@@ -188,8 +178,14 @@ class FilePair
 {
 public:
 	FilePair();
+	void Reference();
+	void Dereference();
+private:
 	~FilePair();
+	int m_RefCount;
+	int m_LoadedCount;
 
+public:
 	FilePair * pNext;
 	FileItem * pFirstFile;
 	FileItem * pSecondFile;
@@ -210,11 +206,25 @@ public:
 
 	bool LoadFiles();
 	void UnloadFiles();
-	DWORD CompareFiles(bool bCompareAll = false, bool bUnload = true);
-	DWORD CompareTextFiles(bool bCompareAll);
-	DWORD CompareTextFilesNoExtraSpaces(bool bCompareAll);
 
-	DWORD ComparisionResult;
+	enum eFileComparisionResult
+	{
+		ResultUnknown,
+		FilesIdentical,
+		VersionInfoDifferent,
+		DifferentInSpaces,
+		FilesDifferent,
+		OnlyFirstFile,
+		OnlySecondFile,
+	};
+
+	eFileComparisionResult CompareFiles();
+	eFileComparisionResult CompareTextFiles();
+
+	eFileComparisionResult PreCompareFiles();
+	eFileComparisionResult PreCompareTextFiles();
+
+	eFileComparisionResult ComparisionResult;
 	CArray<LinePair *, LinePair *> m_LinePairs;
 };
 

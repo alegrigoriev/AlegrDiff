@@ -81,10 +81,10 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_MinPercentWeakIdenticalLines(10),
 	m_PercentsOfLookLikeDifference(30),
 
-	m_RecentFolders( & Profile, _T("History"), _T("dir%d"), 15),
+	m_RecentFolders( & Profile, _T("History"), _T("dir%d"), 20),
 	m_FindHistory( & Profile, _T("History"), _T("find%d"), 15, CStringHistory::CaseSensitive),
 	m_FileFilters( & Profile, _T("History"), _T("filter%d"), 10),
-	m_RecentFiles( & Profile, _T("History"), _T("file%d"), 15),
+	m_RecentFiles( & Profile, _T("History"), _T("file%d"), 20),
 
 	m_MinIdenticalLines(5)
 {
@@ -909,7 +909,7 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 	}
 
 	// if both directories are specified and Shift is not held, then skip the dialog
-	if ((NULL != dir1 && NULL != dir2 && 0 == (0x8000 & GetKeyState(VK_SHIFT)))
+	if ((NULL != dir1 && 0 != dir1[0] && NULL != dir2 && 0 != dir1[0] && 0 == (0x8000 & GetKeyState(VK_SHIFT)))
 		|| IDOK == dlg.DoModal())
 	{
 		m_sFilenameFilter = dlg.m_FilenameFilter;
@@ -951,12 +951,12 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 	// TODO: check if there is already a CFilePairDoc
 	CString Name1;
 	CString Name2;
-	if (pName1 != NULL)
+	if (pName1 != NULL && 0 != pName1[0])
 	{
 		Name1 = pName1;
 	}
 
-	if (pName2 != NULL)
+	if (pName2 != NULL && 0 != pName1[0])
 	{
 		Name2 = pName2;
 	}
@@ -1113,7 +1113,7 @@ void CAlegrDiffApp::OpenPairOfPathnames(LPTSTR Arg1, LPTSTR Arg2)
 	// check if it's folder or file
 	// don't use FildFirstFile, because it won't work for the root directory
 	DWORD FileAttr1 = GetFileAttributes(Arg1);
-	if (0xFFFFFFFF == FileAttr1)
+	if (INVALID_FILE_ATTRIBUTES == FileAttr1)
 	{
 		// failed
 		return;
@@ -1123,7 +1123,7 @@ void CAlegrDiffApp::OpenPairOfPathnames(LPTSTR Arg1, LPTSTR Arg2)
 		if (Arg2 != NULL && Arg2[0] != 0)
 		{
 			DWORD FileAttr2 = GetFileAttributes(Arg2);
-			if (0xFFFFFFFF == FileAttr2)
+			if (INVALID_FILE_ATTRIBUTES == FileAttr2)
 			{
 				// failed
 				return;

@@ -8,6 +8,7 @@
 #include "CompareDirsDialog.h"
 #include "DiffFileView.h"
 #include "FindDialog.h"
+#include "FilesPropertiesDialog.h"
 #include <process.h>
 #include <afxpriv.h>
 
@@ -277,6 +278,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 {
 	if (NULL != m_pFilePair)
 	{
+		m_pFilePair->UnloadFiles();
 		m_pFilePair->Dereference();
 	}
 	m_pFilePair = pPair;
@@ -495,6 +497,7 @@ BEGIN_MESSAGE_MAP(CFilePairDoc, CDocument)
 	ON_COMMAND(ID_FILE_COPY_FIRST_DIR_FILE, OnFileCopyFirstDirFile)
 	ON_UPDATE_COMMAND_UI(ID_FILE_COPY_SECOND_DIR_FILE, OnUpdateFileCopySecondDirFile)
 	ON_COMMAND(ID_FILE_COPY_SECOND_DIR_FILE, OnFileCopySecondDirFile)
+	ON_COMMAND(ID_FILE_PROPERTIES, OnFileProperties)
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
 END_MESSAGE_MAP()
@@ -716,22 +719,29 @@ void CFilePairDoc::OnViewRefresh()
 		}
 	}
 	res1 = m_pFilePair->ReloadIfChanged();
+	if (FilesUnchanged == res1)
+	{
+		return;
+	}
 	if (FilesDeleted == res1)
 	{
 		// close this document
 		OnCloseDocument();
 		return;
 	}
-	if (FilesUnchanged != res1)
-	{
-		TRACE("Reloading the files\n");
-		TextPos caretpos = m_CaretPos;
-		m_pFilePair->Reference();
-		SetFilePair(m_pFilePair);
-		m_pFilePair->Dereference();
-		SetCaretPosition(caretpos.pos, caretpos.line, SetPositionCancelSelection);
-		UpdateAllViews(NULL);
-	}
+	TRACE("Reloading the files\n");
+	TextPos caretpos = m_CaretPos;
+
+	m_pFilePair->LoadFiles();   // make one more reference
+	m_pFilePair->Reference();
+
+	SetFilePair(m_pFilePair);
+
+	m_pFilePair->UnloadFiles(); // decrement extra reference
+	m_pFilePair->Dereference();
+
+	SetCaretPosition(caretpos.pos, caretpos.line, SetPositionCancelSelection);
+	UpdateAllViews(NULL);
 }
 
 void CFilePairDoc::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
@@ -1497,8 +1507,30 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags)
 			continue;
 		}
 
-		for (StringSection * pSection = pPair->pFirstSection
-			; NULL != pSection; pSection = pSection->pNext)
+		StringSection * pSection = pPair->pFirstSection;
+
+		if (NULL == pPair->pFirstLine && NULL != pSection)
+		{
+			if (pSection->IsDeclined()
+				|| ( ! pSection->IsAccepted()
+					&& (DefaultFlags & FileDiffSection::FlagDecline)))
+			{
+				// skip the line completely
+				continue;
+			}
+		}
+		else if (NULL == pPair->pSecondLine && NULL != pSection)
+		{
+			if (pSection->IsAccepted()
+				|| ( ! pSection->IsDeclined()
+					&& (DefaultFlags & FileDiffSection::FlagAccept)))
+			{
+				// skip the line completely
+				continue;
+			}
+		}
+
+		for ( ; NULL != pSection; pSection = pSection->pNext)
 		{
 
 			// check if the string section is all removed
@@ -1672,12 +1704,13 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 		//m_FileListCs.Lock();
 		if (pPair->ResultUnknown != pPair->m_ComparisionResult)
 		{
+			m_NextPairToCompare = pPair->pNext;
 			continue;
 		}
 		//m_FileListCs.Unlock();
 		pPair->m_ComparisionResult = pPair->PreCompareFiles();
-		m_NextPairToCompare = pPair->pNext;
 		pPair->m_bComparisionResultChanged = true;
+		m_NextPairToCompare = pPair->pNext;
 
 		::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
 	}
@@ -1699,6 +1732,17 @@ void CAlegrDiffDoc::OnIdle()
 		}
 		m_NextPairToRefresh = m_NextPairToRefresh->pNext;
 	}
+	FilePair * pPair = m_NextPairToCompare;
+	if (NULL != pPair
+		&& NULL != pPair->pFirstFile
+		&& NULL != pPair->pSecondFile)
+	{
+		CString s;
+		s.Format(_T("Comparing %s - %s"),
+				LPCTSTR(pPair->pFirstFile->GetFullName()),
+				LPCTSTR(pPair->pSecondFile->GetFullName()));
+		((CFrameWnd*)AfxGetMainWnd())->SetMessageText(s);
+	}
 	if (NULL == m_NextPairToRefresh
 		&& NULL != m_hThread)
 	{
@@ -1707,6 +1751,7 @@ void CAlegrDiffDoc::OnIdle()
 		CloseHandle(m_hThread);
 		m_hThread = NULL;
 		UpdateAllViews(NULL);
+		((CFrameWnd*)AfxGetMainWnd())->SetMessageText(AFX_IDS_IDLEMESSAGE);
 	}
 }
 
@@ -1714,4 +1759,27 @@ void CAlegrDiffDoc::OnFileCancel()
 {
 	m_bStopThread = true;
 
+}
+
+void CFilePairDoc::OnFileProperties()
+{
+	CFilesPropertiesDialog dlg;
+	if (m_pFilePair != NULL)
+	{
+		if (NULL != m_pFilePair->pFirstFile)
+		{
+			dlg.m_FirstFileName = m_pFilePair->pFirstFile->GetFullName();
+			dlg.m_FirstTime = FileTimeToStr(m_pFilePair->pFirstFile->GetLastWriteTime());
+		}
+
+		if (NULL != m_pFilePair->pSecondFile)
+		{
+			dlg.m_SecondFileName = m_pFilePair->pSecondFile->GetFullName();
+			dlg.m_SecondTime = FileTimeToStr(m_pFilePair->pSecondFile->GetLastWriteTime());
+		}
+
+		dlg.m_ComparisonResult = m_pFilePair->GetComparisionResult();
+
+		dlg.DoModal();
+	}
 }

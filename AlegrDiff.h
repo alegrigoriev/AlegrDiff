@@ -128,6 +128,7 @@ inline CThisApp * GetApp()
 void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, UINT FormatID, UINT DisabledItemID);
 void OpenFileForEditing(class FileItem * pFile);
 void CopyFilesToFolder(FileItem ** ppFiles, int nCount, bool bAddSubdirToTarget);
+CString FileTimeToStr(FILETIME FileTime, LCID locale = LOCALE_USER_DEFAULT);
 /////////////////////////////////////////////////////////////////////////////
 
 //{{AFX_INSERT_LOCATION}}

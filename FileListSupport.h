@@ -316,21 +316,33 @@ public:
 	FilePair * pNext;
 	FileItem * pFirstFile;
 	FileItem * pSecondFile;
-	CString GetComparisionResult();
-	static bool Compare(FilePair * p1, FilePair * p2, int param[4]);
-	static int _cdecl NameSortFunc(const void * p1, const void * p2);
-	static int _cdecl NameSortBackwardsFunc(const void * p1, const void * p2);
-	static int _cdecl DirNameSortFunc(const void * p1, const void * p2);
-	static int _cdecl DirNameSortBackwardsFunc(const void * p1, const void * p2);
-	static int _cdecl Time1SortFunc(const void * p1, const void * p2);
-	static int _cdecl Time1SortBackwardsFunc(const void * p1, const void * p2);
-	static int _cdecl Time2SortFunc(const void * p1, const void * p2);
-	static int _cdecl Time2SortBackwardsFunc(const void * p1, const void * p2);
-	static int _cdecl ComparisionSortFunc(const void * p1, const void * p2);
-	static int _cdecl ComparisionSortBackwardsFunc(const void * p1, const void * p2);
+	CString GetComparisionResult() const;
+	enum CompareSubitem
+	{
+		CompareSubitemName,
+		CompareSubitemDir,
+		CompareSubitemDate1,
+		CompareSubitemDate2,
+		CompareSubitemResult,
+	};
+	struct CompareParam
+	{
+		CompareSubitem PrimarySort;
+		bool PrimaryBackward;
+		CompareSubitem SecondarySort;
+		bool SecondaryBackward;
+	};
 
-	static int NameCompare(FilePair * Pair1, FilePair * Pair2);
-	static int DirNameCompare(FilePair * Pair1, FilePair * Pair2);
+	static bool Compare(const FilePair * Pair1, const FilePair * Pair2, CompareParam comp);
+
+	static int Time1SortFunc(const FilePair * Pair1, const FilePair * Pair2);
+	static int Time1SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2);
+	static int Time2SortFunc(const FilePair * Pair1, const FilePair * Pair2);
+	static int Time2SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2);
+	static int ComparisionSortFunc(const FilePair * Pair1, const FilePair * Pair2);
+
+	static int NameCompare(const FilePair * Pair1, const FilePair * Pair2);
+	static int DirNameCompare(const FilePair * Pair1, const FilePair * Pair2);
 
 	bool LoadFiles();
 	void UnloadFiles(bool ForceUnload = false);
@@ -363,7 +375,7 @@ public:
 		OnlySecondFile,
 	};
 
-	int ComparisionResultPriority();
+	int ComparisionResultPriority() const;
 
 	eFileComparisionResult CompareFiles();
 	eFileComparisionResult CompareTextFiles();

@@ -153,6 +153,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Edit 1st File",               ID_FILE_EDIT_FIRST
         MENUITEM "Edit 2nd File",               ID_FILE_EDIT_SECOND
+        MENUITEM "Properties...\tAlt+Enter",    ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "Copy 1st File To Folder...",  ID_FILE_COPY_FIRST_DIR_FILE
         MENUITEM "Copy 2nd File To Folder...",  ID_FILE_COPY_SECOND_DIR_FILE
@@ -304,6 +305,7 @@ BEGIN
     VK_F8,          ID_VIEW_FILE_2_VERSION, VIRTKEY, SHIFT, NOINVERT
     VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_RETURN,      ID_FILE_PROPERTIES,     VIRTKEY, ALT, NOINVERT
     "W",            ID_VIEW_IGNORE_WHITESPACES, VIRTKEY, CONTROL, NOINVERT
     "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
@@ -340,10 +342,10 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Compare directories"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "&First directory:",IDC_STATIC,7,7,43,8
+    LTEXT           "&First directory:",IDC_STATIC,7,7,64,8
     COMBOBOX        IDC_COMBO_FIRST_DIR,7,25,167,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "&Second directory:",IDC_STATIC,7,43,54,8
+    LTEXT           "&Second directory:",IDC_STATIC,7,43,75,8
     COMBOBOX        IDC_COMBO_SECOND_DIR,7,59,167,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_DIR,183,24,17,14
@@ -365,10 +367,10 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Compare directories"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "&First directory:",IDC_STATIC,7,7,43,8
+    LTEXT           "&First directory:",IDC_STATIC,7,7,59,8
     COMBOBOX        IDC_COMBO_FIRST_DIR,7,25,167,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "&Second directory:",IDC_STATIC,7,43,54,8
+    LTEXT           "&Second directory:",IDC_STATIC,7,43,67,8
     COMBOBOX        IDC_COMBO_SECOND_DIR,7,59,167,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_DIR,183,24,17,14
@@ -414,7 +416,7 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,85,59,50,14
 END
 
-IDD_DIALOG_OPEN_TEMPLATE DIALOG DISCARDABLE  0, 0, 281, 49
+IDD_DIALOG_OPEN_TEMPLATE DIALOG DISCARDABLE  0, 0, 281, 37
 STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -422,8 +424,6 @@ BEGIN
     COMBOBOX        IDC_COMBO_RECENT,55,7,219,68,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     RTEXT           "",1119,7,22,265,8,NOT WS_VISIBLE
-    CONTROL         "Binary comparison",IDC_CHECK_BINARY,"Button",
-                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,32,78,10
 END
 
 IDD_PROPPAGE_FILE_PREFERENCES DIALOG DISCARDABLE  0, 0, 195, 127
@@ -537,6 +537,48 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,189,24,50,14
 END
 
+IDD_DIALOG_PROPERTIES DIALOG DISCARDABLE  0, 0, 265, 188
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "First file:",IDC_STATIC,7,14,43,8
+    EDITTEXT        IDC_EDIT_FIRST_FILENAME,7,27,251,28,ES_MULTILINE | 
+                    ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT 
+                    WS_TABSTOP
+    LTEXT           "Last modified:",IDC_STATIC,7,60,53,8
+    LTEXT           "",IDC_EDIT_FIRST_LAST_MODIFIED,63,60,83,8
+    LTEXT           "Second file:",IDC_STATIC,7,76,58,8
+    EDITTEXT        IDC_EDIT_SECOND_FILENAME,7,89,251,28,ES_MULTILINE | 
+                    ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT 
+                    WS_TABSTOP
+    LTEXT           "Last modified:",IDC_STATIC,7,123,53,8
+    LTEXT           "",IDC_EDIT_SECOND_LAST_MODIFIED,63,123,83,8
+    LTEXT           "",IDC_STATIC_COMPARISON_RESULT,7,141,251,20
+    DEFPUSHBUTTON   "OK",IDOK,107,167,50,14
+END
+
+IDD_DIALOG_COMPARE_FILES DIALOG DISCARDABLE  0, 0, 249, 131
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Compare files"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&First file:",-1,7,7,42,8
+    COMBOBOX        IDC_COMBO_FIRST_FILE,7,21,208,69,CBS_DROPDOWN | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Second file:",-1,7,41,70,8
+    COMBOBOX        IDC_COMBO_SECOND_FILE,7,55,208,69,CBS_DROPDOWN | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_FILE,225,20,17,14
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SECOND_FILE,225,54,17,14
+    CONTROL         "&Binary comparison",IDC_CHECK_BINARY,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,77,126,10
+    DEFPUSHBUTTON   "OK",IDOK,66,110,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,133,110,50,14
+    CONTROL         "Compare as C/C++ files",IDC_CHECK_COMPARE_C_CPP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,92,99,10
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -629,7 +671,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 274
         TOPMARGIN, 7
-        BOTTOMMARGIN, 42
+        BOTTOMMARGIN, 30
     END
 
     IDD_PROPPAGE_FILE_PREFERENCES, DIALOG
@@ -678,6 +720,22 @@ BEGIN
         RIGHTMARGIN, 239
         TOPMARGIN, 7
         BOTTOMMARGIN, 65
+    END
+
+    IDD_DIALOG_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 258
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 181
+    END
+
+    IDD_DIALOG_COMPARE_FILES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 242
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 124
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -862,6 +920,7 @@ BEGIN
                             "Copy first file to a selected directory\nCopy first file"
     ID_FILE_COPY_SECOND_DIR_FILE 
                             "Copy second file to a selected directory\nCopy second file"
+    ID_FILE_PROPERTIES      "Show files properties\nProperties"
 END
 
 STRINGTABLE DISCARDABLE 

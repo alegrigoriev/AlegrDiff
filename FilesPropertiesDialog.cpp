@@ -19,7 +19,11 @@ CFilesPropertiesDialog::CFilesPropertiesDialog(CWnd* pParent /*=NULL*/)
 	: CDialog(CFilesPropertiesDialog::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CFilesPropertiesDialog)
-	// NOTE: the ClassWizard will add member initialization here
+	m_FirstFileName = _T("");
+	m_SecondFileName = _T("");
+	m_FirstTime = _T("");
+	m_SecondTime = _T("");
+	m_ComparisonResult = _T("");
 	//}}AFX_DATA_INIT
 }
 
@@ -28,7 +32,11 @@ void CFilesPropertiesDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CFilesPropertiesDialog)
-	// NOTE: the ClassWizard will add DDX and DDV calls here
+	DDX_Text(pDX, IDC_EDIT_FIRST_FILENAME, m_FirstFileName);
+	DDX_Text(pDX, IDC_EDIT_SECOND_FILENAME, m_SecondFileName);
+	DDX_Text(pDX, IDC_EDIT_FIRST_LAST_MODIFIED, m_FirstTime);
+	DDX_Text(pDX, IDC_EDIT_SECOND_LAST_MODIFIED, m_SecondTime);
+	DDX_Text(pDX, IDC_STATIC_COMPARISON_RESULT, m_ComparisonResult);
 	//}}AFX_DATA_MAP
 }
 

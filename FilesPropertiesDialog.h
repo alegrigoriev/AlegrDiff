@@ -19,7 +19,11 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CFilesPropertiesDialog)
 	enum { IDD = IDD_DIALOG_PROPERTIES };
-	// NOTE: the ClassWizard will add data members here
+	CString	m_FirstFileName;
+	CString	m_SecondFileName;
+	CString	m_FirstTime;
+	CString	m_SecondTime;
+	CString	m_ComparisonResult;
 	//}}AFX_DATA
 
 

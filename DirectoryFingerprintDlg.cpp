@@ -15,7 +15,6 @@ CDirectoryFingerprintDlg::CDirectoryFingerprintDlg(CWnd* pParent /*=NULL*/)
 	, m_bIncludeSubdirectories(FALSE)
 	, m_sDirectory(_T(""))
 	, m_sFilenameFilter(_T(""))
-	, m_bIgnoreFiles(FALSE)
 	, m_sIgnoreFiles(_T(""))
 	, m_sSaveFilename(_T(""))
 {
@@ -31,21 +30,38 @@ void CDirectoryFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_FIRST_DIR, m_DirCombo);
 	DDX_Check(pDX, IDC_CHECK_INCLUDE_DIRECTORY_STRUCTURE, m_bIncludeDirectoryStructure);
 	DDX_Check(pDX, IDC_CHECK_INCLUDE_SUBDIRS, m_bIncludeSubdirectories);
-	DDX_Text(pDX, IDC_COMBO_FIRST_DIR, m_sDirectory);
+	DDX_CBString(pDX, IDC_COMBO_FIRST_DIR, m_sDirectory);
 	DDX_Control(pDX, IDC_EDITFILENAME_FILTER, m_FilenameFilterCombo);
 	DDX_Text(pDX, IDC_EDITFILENAME_FILTER, m_sFilenameFilter);
-	DDX_Check(pDX, IDC_CHECK_IGNORE_FILES, m_bIgnoreFiles);
 	DDX_Control(pDX, IDC_COMBO_IGNORE_FILES, m_cbIgnoreFiles);
-	DDX_Text(pDX, IDC_COMBO_IGNORE_FILES, m_sIgnoreFiles);
+	DDX_CBString(pDX, IDC_COMBO_IGNORE_FILES, m_sIgnoreFiles);
 	DDX_Control(pDX, IDC_COMBO_SAVE_FILENAME, m_SaveFilename);
 	DDX_CBString(pDX, IDC_COMBO_SAVE_FILENAME, m_sSaveFilename);
+
+	if (pDX->m_bSaveAndValidate)
+	{
+		CThisApp * pApp = GetApp();
+
+		AddStringToHistory(m_sDirectory, pApp->m_RecentFolders,
+							sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0], false);
+
+		AddStringToHistory(m_sIgnoreFiles, m_sIgnoreFilterHistory,
+							sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0], false);
+
+		AddStringToHistory(m_sFilenameFilter, pApp->m_sFilters,
+							sizeof pApp->m_sFilters / sizeof pApp->m_sFilters[0], false);
+
+		AddStringToHistory(m_sSaveFilename, m_sFingerprintFilenameHistory,
+							sizeof m_sFingerprintFilenameHistory / sizeof m_sFingerprintFilenameHistory[0], false);
+
+		m_Profile.FlushAll();
+	}
 }
 
 
 BEGIN_MESSAGE_MAP(CDirectoryFingerprintDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_FIRST_DIR, OnBnClickedButtonBrowseDir)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_SAVE_FILENAME, OnBnClickedButtonBrowseSaveFilename)
-	ON_BN_CLICKED(IDC_CHECK_IGNORE_FILES, OnBnClickedCheckIgnoreFiles)
 END_MESSAGE_MAP()
 
 
@@ -84,9 +100,35 @@ void CDirectoryFingerprintDlg::OnBnClickedButtonBrowseSaveFilename()
 	m_SaveFilename.SetWindowText(dlg.GetPathName());
 }
 
-
-void CDirectoryFingerprintDlg::OnBnClickedCheckIgnoreFiles()
+BOOL CDirectoryFingerprintDlg::OnInitDialog()
 {
-	GetDlgItem(IDC_COMBO_IGNORE_FILES)->EnableWindow
-		(IsDlgButtonChecked(IDC_CHECK_IGNORE_FILES));
+	CThisApp * pApp = GetApp();
+	LoadHistory(m_Profile, _T("History"), _T("FingerprintFile%d"), m_sFingerprintFilenameHistory,
+				sizeof m_sFingerprintFilenameHistory / sizeof m_sFingerprintFilenameHistory[0], true);
+
+	LoadHistory(m_Profile, _T("History"), _T("IgnoreFiles%d"), m_sIgnoreFilterHistory,
+				sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0], true);
+
+	m_Profile.AddBoolItem(_T("Settings"), _T("IncludeDirsToFingerprint"), m_bIncludeDirectoryStructure, TRUE);
+
+	m_sSaveFilename = m_sFingerprintFilenameHistory[0];
+	m_sIgnoreFiles = m_sIgnoreFilterHistory[0];
+	m_sDirectory = pApp->m_RecentFolders[0];
+
+	CDialog::OnInitDialog();
+
+	LoadHistoryCombo(m_DirCombo, pApp->m_RecentFolders,
+					sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0]);
+
+	LoadHistoryCombo(m_FilenameFilterCombo, pApp->m_sFilters,
+					sizeof pApp->m_sFilters / sizeof pApp->m_sFilters[0]);
+
+	LoadHistoryCombo(m_cbIgnoreFiles, m_sIgnoreFilterHistory,
+					sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0]);
+
+	LoadHistoryCombo(m_SaveFilename, m_sFingerprintFilenameHistory,
+					sizeof m_sFingerprintFilenameHistory / sizeof m_sFingerprintFilenameHistory[0]);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+	// EXCEPTION: OCX Property Pages should return FALSE
 }

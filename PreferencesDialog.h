@@ -1,3 +1,4 @@
+#include "afxwin.h"
 #if !defined(AFX_PREFERENCESDIALOG_H__6B414FED_6394_4F4C_B09C_1978222E1249__INCLUDED_)
 #define AFX_PREFERENCESDIALOG_H__6B414FED_6394_4F4C_B09C_1978222E1249__INCLUDED_
 
@@ -22,9 +23,6 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CFilesPreferencePage)
 	enum { IDD = IDD_PROPPAGE_FILE_PREFERENCES };
-	BOOL	m_bUseBinaryFilesFilter;
-	BOOL	m_bUseCppFilter;
-	BOOL	m_bUseIgnoreFilter;
 	CString	m_sBinaryFilesFilter;
 	CString	m_sCppFilesFilter;
 	CString	m_sIgnoreFilesFilter;
@@ -43,13 +41,14 @@ protected:
 protected:
 	// Generated message map functions
 	//{{AFX_MSG(CFilesPreferencePage)
-	afx_msg void OnCheckBinaryFiles();
-	afx_msg void OnCheckCCpp();
-	afx_msg void OnCheckIgnore();
 	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
+public:
+	CComboBox m_cbCppFilter;
+	CComboBox m_cbBinaryFilter;
+	CComboBox m_cbIgnoreFilter;
 };
 
 /////////////////////////////////////////////////////////////////////////////

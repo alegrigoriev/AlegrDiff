@@ -44,9 +44,6 @@ IMPLEMENT_DYNCREATE(CFilesPreferencePage, CPropertyPage)
 CFilesPreferencePage::CFilesPreferencePage() : CPropertyPage(CFilesPreferencePage::IDD)
 {
 	//{{AFX_DATA_INIT(CFilesPreferencePage)
-	m_bUseBinaryFilesFilter = FALSE;
-	m_bUseCppFilter = FALSE;
-	m_bUseIgnoreFilter = FALSE;
 	m_sBinaryFilesFilter = _T("");
 	m_sCppFilesFilter = _T("");
 	m_sIgnoreFilesFilter = _T("");
@@ -61,76 +58,29 @@ CFilesPreferencePage::~CFilesPreferencePage()
 void CFilesPreferencePage::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CFilesPreferencePage)
-	DDX_Check(pDX, IDC_CHECK_BINARY_FILES, m_bUseBinaryFilesFilter);
-	DDX_Check(pDX, IDC_CHECK_C_CPP, m_bUseCppFilter);
-	DDX_Check(pDX, IDC_CHECK_IGNORE, m_bUseIgnoreFilter);
-	DDX_Text(pDX, IDC_EDIT_BINARY_FILES, m_sBinaryFilesFilter);
-	DDX_Text(pDX, IDC_EDIT_C_CPP, m_sCppFilesFilter);
-	DDX_Text(pDX, IDC_EDIT_IGNORE, m_sIgnoreFilesFilter);
+//{{AFX_DATA_MAP(CFilesPreferencePage)
+	DDX_CBString(pDX, IDC_EDIT_BINARY_FILES, m_sBinaryFilesFilter);
+	DDX_CBString(pDX, IDC_EDIT_C_CPP, m_sCppFilesFilter);
+	DDX_CBString(pDX, IDC_EDIT_IGNORE, m_sIgnoreFilesFilter);
 	DDX_Check(pDX, IDC_CHECK_AUTO_RELOAD, m_AutoReloadChangedFiles);
-	//}}AFX_DATA_MAP
+//}}AFX_DATA_MAP
+	DDX_Control(pDX, IDC_EDIT_C_CPP, m_cbCppFilter);
+	DDX_Control(pDX, IDC_EDIT_BINARY_FILES, m_cbBinaryFilter);
+	DDX_Control(pDX, IDC_EDIT_IGNORE, m_cbIgnoreFilter);
 }
 
 
 BEGIN_MESSAGE_MAP(CFilesPreferencePage, CPropertyPage)
 	//{{AFX_MSG_MAP(CFilesPreferencePage)
-	ON_BN_CLICKED(IDC_CHECK_BINARY_FILES, OnCheckBinaryFiles)
-	ON_BN_CLICKED(IDC_CHECK_C_CPP, OnCheckCCpp)
-	ON_BN_CLICKED(IDC_CHECK_IGNORE, OnCheckIgnore)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CFilesPreferencePage message handlers
-void CFilesPreferencePage::OnCheckBinaryFiles()
-{
-	CWnd * pEdit = GetDlgItem(IDC_EDIT_BINARY_FILES);
-	if (pEdit)
-	{
-		pEdit->EnableWindow(IsDlgButtonChecked(IDC_CHECK_BINARY_FILES));
-	}
-}
-
-void CFilesPreferencePage::OnCheckCCpp()
-{
-	CWnd * pEdit = GetDlgItem(IDC_EDIT_C_CPP);
-	if (pEdit)
-	{
-		pEdit->EnableWindow(IsDlgButtonChecked(IDC_CHECK_C_CPP));
-	}
-}
-
-void CFilesPreferencePage::OnCheckIgnore()
-{
-	CWnd * pEdit = GetDlgItem(IDC_EDIT_IGNORE);
-	if (pEdit)
-	{
-		pEdit->EnableWindow(IsDlgButtonChecked(IDC_CHECK_IGNORE));
-	}
-}
 
 BOOL CFilesPreferencePage::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
-
-	CWnd * pWnd = GetDlgItem(IDC_EDIT_C_CPP);
-	if (pWnd)
-	{
-		pWnd->EnableWindow(m_bUseCppFilter);
-	}
-
-	pWnd = GetDlgItem(IDC_EDIT_BINARY_FILES);
-	if (pWnd)
-	{
-		pWnd->EnableWindow(m_bUseBinaryFilesFilter);
-	}
-
-	pWnd = GetDlgItem(IDC_EDIT_IGNORE);
-	if (pWnd)
-	{
-		pWnd->EnableWindow(m_bUseIgnoreFilter);
-	}
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE

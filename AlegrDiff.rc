@@ -450,46 +450,50 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_DIALOG_COMPARE_DIRS_ADVANCED DIALOGEX 0, 0, 230, 295
+IDD_DIALOG_COMPARE_DIRS_ADVANCED DIALOGEX 0, 0, 231, 307
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
     WS_SYSMENU
 CAPTION "Compare directories"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "&First directory:",IDC_STATIC,7,7,59,8
+    LTEXT           "&First directory:",IDC_STATIC,7,7,103,8
     COMBOBOX        IDC_COMBO_FIRST_DIR,7,25,189,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "&Second directory:",IDC_STATIC,7,43,67,8
+    LTEXT           "&Second directory:",IDC_STATIC,7,43,101,8
     COMBOBOX        IDC_COMBO_SECOND_DIR,7,59,189,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_DIR,206,24,17,14
-    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SECOND_DIR,206,58,17,14
-    CONTROL         "Include &subdirectories",IDC_CHECK_INCLUDE_SUBDIRS,
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_DIR,207,24,17,14
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SECOND_DIR,207,58,17,14
+    CONTROL         "Include s&ubdirectories",IDC_CHECK_INCLUDE_SUBDIRS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,122,10
-    PUSHBUTTON      "&Less options <<",IDC_BUTTON_ADVANCED,160,86,63,14
+    PUSHBUTTON      "&Less options <<",IDC_BUTTON_ADVANCED,161,86,63,14
     CONTROL         "&Binary comparison only",IDC_CHECK_BINARY,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,99,126,10
-    LTEXT           "File&name filter: ",IDC_STATIC,7,117,56,8
-    COMBOBOX        IDC_EDITFILENAME_FILTER,66,116,157,56,CBS_DROPDOWN | 
+    LTEXT           "File&name filter: ",IDC_STATIC,7,140,56,8
+    COMBOBOX        IDC_EDITFILENAME_FILTER,67,139,157,56,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Compare the following files as C/C++:",IDC_CHECK_C_CPP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,133,167,10
-    EDITTEXT        IDC_EDIT_C_CPP,7,151,216,14,ES_AUTOHSCROLL
-    CONTROL         "Compare the following files as binary:",
-                    IDC_CHECK_BINARY_FILES,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,173,172,10
-    EDITTEXT        IDC_EDIT_BINARY_FILES,7,191,216,14,ES_AUTOHSCROLL
-    CONTROL         "&Ignore the following files:",IDC_CHECK_IGNORE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,213,149,10
-    EDITTEXT        IDC_EDIT_IGNORE,7,231,216,14,ES_AUTOHSCROLL
-    LTEXT           "&Tab indent:",IDC_STATIC,7,253,43,8
-    EDITTEXT        IDC_EDIT_TAB_INDENT,56,250,29,14,ES_AUTOHSCROLL | 
+    LTEXT           "&Tab indent:",IDC_STATIC,7,265,43,8
+    EDITTEXT        IDC_EDIT_TAB_INDENT,56,262,29,14,ES_AUTOHSCROLL | 
                     ES_NUMBER
     CONTROL         "Spin1",IDC_SPIN1,"msctls_updown32",UDS_SETBUDDYINT | 
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
-                    UDS_NOTHOUSANDS,85,250,10,14
-    DEFPUSHBUTTON   "OK",IDOK,47,274,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,123,274,50,14
+                    UDS_NOTHOUSANDS,85,262,12,14
+    DEFPUSHBUTTON   "OK",IDOK,47,286,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,123,286,50,14
+    LTEXT           "Compare the following files as C/C+&+:",IDC_STATIC,7,
+                    158,199,8
+    COMBOBOX        IDC_EDIT_C_CPP,7,171,217,30,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Compare the following files as binar&y:",IDC_STATIC,7,
+                    189,188,8
+    COMBOBOX        IDC_EDIT_BINARY_FILES,7,204,217,30,CBS_DROPDOWN | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Ignore the following files:",IDC_STATIC,7,221,141,8
+    COMBOBOX        IDC_EDIT_IGNORE,7,235,217,30,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "Binary comparison uses &MD5 file fingerprint",
+                    IDC_CHECK_USE_MD5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    7,116,209,10
 END
 
 IDD_DIALOG_GOTO_LINE DIALOGEX 0, 0, 142, 86
@@ -521,24 +525,25 @@ BEGIN
     RTEXT           "",1119,7,22,265,8,NOT WS_VISIBLE
 END
 
-IDD_PROPPAGE_FILE_PREFERENCES DIALOGEX 0, 0, 195, 127
+IDD_PROPPAGE_FILE_PREFERENCES DIALOGEX 0, 0, 184, 146
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Files"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    CONTROL         "Compare the following files as &C/C++:",IDC_CHECK_C_CPP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,9,142,10
-    EDITTEXT        IDC_EDIT_C_CPP,7,21,173,14,ES_AUTOHSCROLL
-    CONTROL         "Compare the following files as &binary:",
-                    IDC_CHECK_BINARY_FILES,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,39,138,10
-    EDITTEXT        IDC_EDIT_BINARY_FILES,7,51,173,14,ES_AUTOHSCROLL
-    CONTROL         "&Ignore the following files:",IDC_CHECK_IGNORE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,69,119,10
-    EDITTEXT        IDC_EDIT_IGNORE,7,81,173,14,ES_AUTOHSCROLL
     CONTROL         "&Automatically reload modified files",
                     IDC_CHECK_AUTO_RELOAD,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,100,139,10
+                    WS_TABSTOP,14,107,139,10
+    LTEXT           "Compare the following files as C/C++:",IDC_STATIC,7,7,
+                    170,8
+    COMBOBOX        IDC_EDIT_C_CPP,7,20,170,30,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Compare the following files as binary:",IDC_STATIC,7,41,
+                    165,8
+    COMBOBOX        IDC_EDIT_BINARY_FILES,7,53,170,30,CBS_DROPDOWN | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Ignore the following files:",IDC_STATIC,7,74,154,8
+    COMBOBOX        IDC_EDIT_IGNORE,7,88,170,30,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGE_COMPARISION_PREFERENCES DIALOG  0, 0, 226, 103
@@ -884,9 +889,9 @@ BEGIN
     IDD_DIALOG_COMPARE_DIRS_ADVANCED, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 223
+        RIGHTMARGIN, 224
         TOPMARGIN, 7
-        BOTTOMMARGIN, 288
+        BOTTOMMARGIN, 300
     END
 
     IDD_DIALOG_GOTO_LINE, DIALOG
@@ -908,9 +913,9 @@ BEGIN
     IDD_PROPPAGE_FILE_PREFERENCES, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 188
+        RIGHTMARGIN, 177
         TOPMARGIN, 7
-        BOTTOMMARGIN, 120
+        BOTTOMMARGIN, 139
     END
 
     IDD_PROPPAGE_COMPARISION_PREFERENCES, DIALOG

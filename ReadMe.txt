@@ -1,11 +1,16 @@
 TODO:
 
+Save all strings to history lists
+Make binary comparision
+For binary comparison: show file size
+UNICODE file support
+Compare directory structure
+Support comparison of BIG lists
 Add Copy 1st file text, copy 2nd file text
 Add 1st file size, 2nd file size (with exact size tooltips?)
 Add extensions from the recent files to the browse for file dialog
 Remove "Use Binary filter", "Use Ignore Filter" etc checkboxes,
   replace those edit controls with comboboxes
-For binary comparison: show file size
 Refresh list view
 make word by word comparison in MatchStrings
 show version of file1, file2 of the line
@@ -14,20 +19,18 @@ Import font settings from Visual C/VisualStudio
 Maybe different color for selected accepted/declined
 add option to keep the caret on one line during F3 and F7
 If main window is minimized, save its state before minimization
-check "*." filter
 
 V1.5:
-Make binary comparision
 Compare EXE version info for DLL, EXE, SYS
 Show file version (add handler code)
 Make progress dialog for binary comparision
-UNICODE file support
 Add Save differences
 // for text editor:
 Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+"*." filter doesn't work
 screen move in two directions may corrupt the image (??)
 
 Fixed:

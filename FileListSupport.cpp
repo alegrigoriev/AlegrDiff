@@ -1120,12 +1120,11 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 			{
 				continue;
 			}
-			if (pApp->m_bUseBinaryFilesFilter
-				&& MultiPatternMatches(wfd.cFileName, sBinaryMask))
+			if (MultiPatternMatches(wfd.cFileName, sBinaryMask))
 			{
 				pFile->m_IsBinary = true;
 			}
-			else if (pApp->m_bUseCppFilter)
+			if ( ! pFile->m_IsBinary)
 			{
 				pFile->m_C_Cpp = MultiPatternMatches(wfd.cFileName, sC_CPPMask);
 			}

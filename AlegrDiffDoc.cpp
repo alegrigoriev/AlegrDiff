@@ -51,18 +51,12 @@ CAlegrDiffDoc::CAlegrDiffDoc()
 	{
 		m_sInclusionPattern = "*";
 	}
-	if (pApp->m_bUseIgnoreFilter)
-	{
-		m_sExclusionPattern = PatternToMultiCString(pApp->m_sIgnoreFilesFilter);
-	}
-	if (pApp->m_bUseCppFilter)
-	{
-		m_sCFilesPattern = PatternToMultiCString(pApp->m_sCppFilesFilter);
-	}
-	if (pApp->m_bUseBinaryFilesFilter)
-	{
-		m_sBinaryFilesPattern = PatternToMultiCString(pApp->m_sBinaryFilesFilter);
-	}
+
+	m_sExclusionPattern = PatternToMultiCString(pApp->m_sIgnoreFilesFilter);
+
+	m_sCFilesPattern = PatternToMultiCString(pApp->m_sCppFilesFilter);
+
+	m_sBinaryFilesPattern = PatternToMultiCString(pApp->m_sBinaryFilesFilter);
 }
 
 CAlegrDiffDoc::~CAlegrDiffDoc()
@@ -1817,6 +1811,7 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 
 	for (pPair = m_pPairList; pPair != NULL && ! m_bStopThread; pPair = pPair->pNext)
 	{
+		TRACE("First pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisionResult);
 		if (NULL == pPair->pFirstFile
 			|| NULL == pPair->pSecondFile
 			|| ! pPair->pFirstFile->m_IsBinary)
@@ -1850,6 +1845,7 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 
 	for (pPair = m_pPairList; pPair != NULL && ! m_bStopThread; pPair = pPair->pNext)
 	{
+		TRACE("Second pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisionResult);
 		if (FilePair::ResultUnknown != pPair->m_ComparisionResult)
 		{
 			m_NextPairToCompare = pPair->pNext;
@@ -1876,6 +1872,7 @@ void CAlegrDiffDoc::OnIdle()
 	while (NULL != m_NextPairToRefresh
 			&& m_NextPairToRefresh != m_NextPairToCompare)
 	{
+		TRACE("Foreground view refresh, pPair=%p, result=%d\n", m_NextPairToRefresh, m_NextPairToRefresh->m_ComparisionResult);
 		if (m_NextPairToRefresh->m_bChanged)
 		{
 			m_NextPairToRefresh->m_bChanged = false;

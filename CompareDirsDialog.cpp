@@ -19,9 +19,6 @@ static char THIS_FILE[] = __FILE__;
 CCompareDirsDialog::CCompareDirsDialog(CWnd* pParent /*=NULL*/)
 	: CDialog(CCompareDirsDialog::IDD, pParent),
 	m_bAdvanced(false),
-	m_bUseBinaryFilesFilter(false),
-	m_bUseCppFilter(true),
-	m_bUseIgnoreFilter(true),
 	m_nTabIndent(4)
 {
 	//{{AFX_DATA_INIT(CCompareDirsDialog)
@@ -38,23 +35,6 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	CThisApp * pApp = GetApp();
-	int i;
-	if ( ! pDX->m_bSaveAndValidate)
-	{
-		if (m_sFirstDir.IsEmpty())
-		{
-			m_sFirstDir = pApp->m_RecentFolders[0];
-		}
-		if (m_sSecondDir.IsEmpty())
-		{
-			m_sSecondDir = pApp->m_RecentFolders[1];
-		}
-
-		if (m_FilenameFilter.IsEmpty())
-		{
-			m_FilenameFilter = pApp->m_sFilters[0];
-		}
-	}
 	//{{AFX_DATA_MAP(CCompareDirsDialog)
 	DDX_Control(pDX, IDC_COMBO_FIRST_DIR, m_FirstDirCombo);
 	DDX_Control(pDX, IDC_COMBO_SECOND_DIR, m_SecondDirCombo);
@@ -68,37 +48,19 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 	if (m_bAdvanced)
 	{
 		DDX_Control(pDX, IDC_SPIN1, m_Spin);
-//	    DDX_Check(pDX, IDC_CHECK_BINARY_FILES, m_bUseBinaryFilesFilter);
-		DDX_Check(pDX, IDC_CHECK_C_CPP, m_bUseCppFilter);
-		DDX_Check(pDX, IDC_CHECK_IGNORE, m_bUseIgnoreFilter);
-		DDX_Text(pDX, IDC_EDIT_BINARY_FILES, m_sBinaryFilesFilter);
-		DDX_Text(pDX, IDC_EDIT_C_CPP, m_sCppFilesFilter);
-		DDX_Text(pDX, IDC_EDIT_IGNORE, m_sIgnoreFilesFilter);
+		DDX_Control(pDX, IDC_EDIT_BINARY_FILES, m_cbBinaryFilesFilter);
+		DDX_Control(pDX, IDC_EDIT_C_CPP, m_cbCppFilesFilter);
+		DDX_Control(pDX, IDC_EDIT_IGNORE, m_cbIgnoreFilesFilter);
+
+		DDX_CBString(pDX, IDC_EDIT_BINARY_FILES, m_sBinaryFilesFilter);
+		DDX_CBString(pDX, IDC_EDIT_C_CPP, m_sCppFilesFilter);
+		DDX_CBString(pDX, IDC_EDIT_IGNORE, m_sIgnoreFilesFilter);
+
 		DDX_Text(pDX, IDC_EDIT_TAB_INDENT, m_nTabIndent);
 		DDV_MinMaxUInt(pDX, m_nTabIndent, 0, 32);
 	}
-	if ( ! pDX->m_bSaveAndValidate)
-	{
-		// set the dirs to combobox
-		for (i = 0; i < sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0]; i++)
-		{
-			if ( ! pApp->m_RecentFolders[i].IsEmpty())
-			{
-				m_FirstDirCombo.AddString(pApp->m_RecentFolders[i]);
-				m_SecondDirCombo.AddString(pApp->m_RecentFolders[i]);
-			}
-		}
 
-		// set the filters to combobox
-		for (i = 0; i < sizeof pApp->m_sFilters / sizeof pApp->m_sFilters[0]; i++)
-		{
-			if ( ! pApp->m_sFilters[i].IsEmpty())
-			{
-				m_cFilenameFilter.AddString(pApp->m_sFilters[i]);
-			}
-		}
-	}
-	else
+	if (pDX->m_bSaveAndValidate)
 	{
 		// Update MRU, case insensitive
 		AddStringToHistory(m_sFirstDir, pApp->m_RecentFolders,
@@ -106,9 +68,20 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 		// second folder added after the first. If they both are the same, two same folders added
 		AddStringToHistory(m_sSecondDir, & pApp->m_RecentFolders[1],
 							sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0] - 1, false);
+
 		AddStringToHistory(m_FilenameFilter, pApp->m_sFilters,
 							sizeof pApp->m_sFilters / sizeof pApp->m_sFilters[0], false);
 
+		AddStringToHistory(m_sBinaryFilesFilter, m_sBinaryFilterHistory,
+							sizeof m_sBinaryFilterHistory / sizeof m_sBinaryFilterHistory[0], false);
+
+		AddStringToHistory(m_sCppFilesFilter, m_sCppFilterHistory,
+							sizeof m_sCppFilterHistory / sizeof m_sCppFilterHistory[0], false);
+
+		AddStringToHistory(m_sIgnoreFilesFilter, m_sIgnoreFilterHistory,
+							sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0], false);
+
+		m_Profile.UnloadAll();
 	}
 }
 
@@ -119,42 +92,12 @@ BEGIN_MESSAGE_MAP(CCompareDirsDialog, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_SECOND_DIR, OnButtonBrowseSecondDir)
 	ON_BN_CLICKED(IDC_BUTTON_ADVANCED, OnButtonAdvanced)
 	ON_BN_CLICKED(IDC_CHECK_BINARY, OnCheckBinary)
-	ON_BN_CLICKED(IDC_CHECK_BINARY_FILES, OnCheckBinaryFiles)
-	ON_BN_CLICKED(IDC_CHECK_C_CPP, OnCheckCCpp)
-	ON_BN_CLICKED(IDC_CHECK_IGNORE, OnCheckIgnore)
 	ON_WM_DROPFILES()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CCompareDirsDialog message handlers
-
-void CCompareDirsDialog::OnCheckBinaryFiles()
-{
-	CWnd * pEdit = GetDlgItem(IDC_EDIT_BINARY_FILES);
-	if (pEdit)
-	{
-		pEdit->EnableWindow(IsDlgButtonChecked(IDC_CHECK_BINARY_FILES));
-	}
-}
-
-void CCompareDirsDialog::OnCheckCCpp()
-{
-	CWnd * pEdit = GetDlgItem(IDC_EDIT_C_CPP);
-	if (pEdit)
-	{
-		pEdit->EnableWindow(IsDlgButtonChecked(IDC_CHECK_C_CPP));
-	}
-}
-
-void CCompareDirsDialog::OnCheckIgnore()
-{
-	CWnd * pEdit = GetDlgItem(IDC_EDIT_IGNORE);
-	if (pEdit)
-	{
-		pEdit->EnableWindow(IsDlgButtonChecked(IDC_CHECK_IGNORE));
-	}
-}
 
 void CCompareDirsDialog::OnButtonBrowseFirstDir()
 {
@@ -196,6 +139,20 @@ void CCompareDirsDialog::OnButtonAdvanced()
 int CCompareDirsDialog::DoModal()
 {
 	int Result;
+	CThisApp * pApp = GetApp();
+	if (m_sFirstDir.IsEmpty())
+	{
+		m_sFirstDir = pApp->m_RecentFolders[0];
+	}
+	if (m_sSecondDir.IsEmpty())
+	{
+		m_sSecondDir = pApp->m_RecentFolders[1];
+	}
+
+	if (m_FilenameFilter.IsEmpty())
+	{
+		m_FilenameFilter = pApp->m_sFilters[0];
+	}
 	while (1)
 	{
 		if (m_bAdvanced)
@@ -228,7 +185,7 @@ void CCompareDirsDialog::OnCheckBinary()
 	pWnd = GetDlgItem(IDC_EDIT_C_CPP);
 	if (pWnd)
 	{
-		pWnd->EnableWindow(NotBinary && IsDlgButtonChecked(IDC_CHECK_C_CPP));
+		pWnd->EnableWindow(NotBinary);
 	}
 	pWnd = GetDlgItem(IDC_CHECK_BINARY_FILES);
 	if (pWnd)
@@ -238,7 +195,7 @@ void CCompareDirsDialog::OnCheckBinary()
 	pWnd = GetDlgItem(IDC_EDIT_BINARY_FILES);
 	if (pWnd)
 	{
-		pWnd->EnableWindow(NotBinary && IsDlgButtonChecked(IDC_CHECK_BINARY_FILES));
+		pWnd->EnableWindow(NotBinary);
 	}
 	pWnd = GetDlgItem(IDC_EDIT_TAB_INDENT);
 	if (pWnd)
@@ -249,11 +206,36 @@ void CCompareDirsDialog::OnCheckBinary()
 
 BOOL CCompareDirsDialog::OnInitDialog()
 {
+	CThisApp * pApp = GetApp();
+
+	LoadHistory(m_Profile, _T("History"), _T("BinaryFiles%d"), m_sBinaryFilterHistory,
+				sizeof m_sBinaryFilterHistory / sizeof m_sBinaryFilterHistory[0], true);
+
+	LoadHistory(m_Profile, _T("History"), _T("CppFiles%d"), m_sCppFilterHistory,
+				sizeof m_sCppFilterHistory / sizeof m_sCppFilterHistory[0], true);
+
+	LoadHistory(m_Profile, _T("History"), _T("IgnoreFiles%d"), m_sIgnoreFilterHistory,
+				sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0], true);
+
 	CDialog::OnInitDialog();
+
+	LoadHistoryCombo(m_FirstDirCombo, pApp->m_RecentFolders, sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0]);
+	LoadHistoryCombo(m_SecondDirCombo, pApp->m_RecentFolders, sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0]);
+
+	// set the filters to combobox
+	LoadHistoryCombo(m_cFilenameFilter, pApp->m_sFilters, sizeof pApp->m_sFilters / sizeof pApp->m_sFilters[0]);
 
 	if (m_bAdvanced)
 	{
 		m_Spin.SetRange(1, 32);
+		LoadHistoryCombo(m_cbBinaryFilesFilter, m_sBinaryFilterHistory,
+						sizeof m_sBinaryFilterHistory / sizeof m_sBinaryFilterHistory[0]);
+
+		LoadHistoryCombo(m_cbCppFilesFilter, m_sCppFilterHistory,
+						sizeof m_sCppFilterHistory / sizeof m_sCppFilterHistory[0]);
+
+		LoadHistoryCombo(m_cbIgnoreFilesFilter, m_sIgnoreFilterHistory,
+						sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0]);
 	}
 
 	OnCheckBinary();

@@ -50,6 +50,9 @@
 #define IDC_EDIT1                       1026
 #define IDC_EDIT2                       1027
 #define IDC_EDIT3                       1028
+#define IDC_EDIT_NUMBER_OF_IDENTICAL_LINES 1029
+#define IDC_EDIT_MINIMAL_LINE_LENGTH    1030
+#define IDC_EDIT_PERCENT_OF_LOOKLIKE_DIFFERENCE 1031
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -82,7 +85,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        138
 #define _APS_NEXT_COMMAND_VALUE         32803
-#define _APS_NEXT_CONTROL_VALUE         1029
+#define _APS_NEXT_CONTROL_VALUE         1032
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -450,6 +450,10 @@ BEGIN_MESSAGE_MAP(CFilePairDoc, CDocument)
 	ON_COMMAND(ID_FILE_EDIT_FIRST, OnFileEditFirst)
 	ON_UPDATE_COMMAND_UI(ID_FILE_EDIT_SECOND, OnUpdateFileEditSecond)
 	ON_COMMAND(ID_FILE_EDIT_SECOND, OnFileEditSecond)
+	ON_COMMAND(ID_EDIT_ACCEPT, OnEditAccept)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_ACCEPT, OnUpdateEditAccept)
+	ON_COMMAND(ID_EDIT_DECLINE, OnEditDecline)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DECLINE, OnUpdateEditDecline)
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
 END_MESSAGE_MAP()
@@ -1085,4 +1089,62 @@ void CFilePairDoc::CaretLeftToWord(bool bCancelSelection)
 }
 void CFilePairDoc::CaretRightToWord(bool bCancelSelection)
 {
+}
+
+void CFilePairDoc::OnEditAccept()
+{
+	if (NULL != m_pFilePair)
+	{
+		int flags = m_pFilePair->GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
+		int SetFlags = FileDiffSection::FlagAccept;
+		int ResetFlags = FileDiffSection::FlagDecline;
+		if (flags & FileDiffSection::FlagAccept)
+		{
+			SetFlags = 0;
+			ResetFlags = FileDiffSection::FlagAccept | FileDiffSection::FlagDecline;
+		}
+		int FirstSectionIdx = 0, NumSections = 0;
+		m_pFilePair->ModifyAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos,
+											SetFlags, ResetFlags, & FirstSectionIdx, & NumSections);
+	}
+}
+
+void CFilePairDoc::OnUpdateEditAccept(CCmdUI* pCmdUI)
+{
+	int flags = FileDiffSection::FlagNoDifference;
+	if (NULL != m_pFilePair)
+	{
+		flags = m_pFilePair->GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
+	}
+	pCmdUI->Enable(0 == (flags & FileDiffSection::FlagNoDifference));
+	pCmdUI->SetCheck(0 != (flags & FileDiffSection::FlagAccept));
+}
+
+void CFilePairDoc::OnEditDecline()
+{
+	if (NULL != m_pFilePair)
+	{
+		int flags = m_pFilePair->GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
+		int SetFlags = FileDiffSection::FlagDecline;
+		int ResetFlags = FileDiffSection::FlagAccept;
+		if (flags & FileDiffSection::FlagDecline)
+		{
+			SetFlags = 0;
+			ResetFlags = FileDiffSection::FlagAccept | FileDiffSection::FlagDecline;
+		}
+		int FirstSectionIdx = 0, NumSections = 0;
+		m_pFilePair->ModifyAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos,
+											SetFlags, ResetFlags, & FirstSectionIdx, & NumSections);
+	}
+}
+
+void CFilePairDoc::OnUpdateEditDecline(CCmdUI* pCmdUI)
+{
+	int flags = FileDiffSection::FlagNoDifference;
+	if (NULL != m_pFilePair)
+	{
+		flags = m_pFilePair->GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
+	}
+	pCmdUI->Enable(0 == (flags & FileDiffSection::FlagNoDifference));
+	pCmdUI->SetCheck(0 != (flags & FileDiffSection::FlagDecline));
 }

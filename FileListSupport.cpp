@@ -179,6 +179,7 @@ FileItem::FileItem(const CString & Name, const CString & BaseDir, const CString 
 	m_LastWriteTime.dwHighDateTime = 0;
 	m_LastWriteTime.dwLowDateTime = 0;
 }
+
 FileItem::FileItem(const WIN32_FIND_DATA * pWfd, const CString & BaseDir, const CString & Dir)
 	:m_Name(pWfd->cFileName),
 	m_BaseDir(BaseDir),
@@ -404,7 +405,7 @@ bool FileItem::Load()
 	{
 		DWORD GroupHash[MaxLineGroupSize];
 		DWORD NormGroupHash[MaxLineGroupSize];
-		for (j = 0; j < MaxLineGroupSize && j < pApp->m_MinIdenticalLines && j + i < LinNum; j++)
+		for (j = 0; j < MaxLineGroupSize && j < pApp->m_NumberOfIdenticalLines && j + i < LinNum; j++)
 		{
 			GroupHash[j] = m_NonBlankLines[i + j]->GetHash();
 			NormGroupHash[j] = m_NonBlankLines[i + j]->GetNormalizedHash();
@@ -429,7 +430,7 @@ bool FileItem::Load()
 	m_NormalizedHashSortedLineGroups.Copy(m_NonBlankLines);
 	qsort(m_NormalizedHashSortedLineGroups.GetData(), m_NormalizedHashSortedLineGroups.GetSize(),
 		sizeof m_NormalizedHashSortedLineGroups[0], FileLine::NormalizedGroupHashAndLineNumberCompareFunc);
-#if 0//def _DEBUG
+#ifdef _DEBUG
 	// check if the array is sorted correctly
 	{
 		int i;
@@ -2204,7 +2205,7 @@ CString FilePair::GetComparisionResult()
 		s = "Different in spaces only";
 		break;
 	case FilesDifferent:
-		s = "Files are different";
+		s = "Files are DIFFERENT";
 		break;
 	case OnlyFirstFile:
 		s.Format("File exists only in \"%s%s\"",
@@ -2516,14 +2517,17 @@ FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLin
 			if ( ! Line1->IsBlank())
 			{
 				// check the lines in file2 in range Line2 to Line2+dist
-				const FileLine * pFoundLine;
+				const FileLine * pFoundLine = NULL;
 				if (UseLineGroups)
 				{
 					pFoundLine = pSecondFile->FindMatchingLineGroupLine(Line1, nLine2, Line1MatchIn2);
 				}
 				else
 				{
-					pFoundLine = pSecondFile->FindMatchingLine(Line1, nLine2, Line1MatchIn2);
+					if (Line1->GetNormalizedLength() >= pApp->m_MinimalLineLength)
+					{
+						pFoundLine = pSecondFile->FindMatchingLine(Line1, nLine2, Line1MatchIn2);
+					}
 				}
 				if (NULL != pFoundLine)
 				{
@@ -2539,14 +2543,17 @@ FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLin
 			if ( ! Line2->IsBlank())
 			{
 				// check the lines in file1 in range Line2 to Line2+dist
-				const FileLine * pFoundLine;
+				const FileLine * pFoundLine = NULL;
 				if (UseLineGroups)
 				{
 					pFoundLine = pFirstFile->FindMatchingLineGroupLine(Line2, nLine1, Line2MatchIn1);
 				}
 				else
 				{
-					pFoundLine = pFirstFile->FindMatchingLine(Line2, nLine1, Line2MatchIn1);
+					if (Line2->GetNormalizedLength() >= pApp->m_MinimalLineLength)
+					{
+						pFoundLine = pFirstFile->FindMatchingLine(Line2, nLine1, Line2MatchIn1);
+					}
 				}
 				if (NULL != pFoundLine)
 				{
@@ -2660,6 +2667,7 @@ FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLin
 FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 {
 	// find similar lines
+	CThisApp * pApp = GetApp();
 	FileSection * pSection;
 	FileSection * pFirstSection =
 		BuildSectionList(0, pFirstFile->GetNumLines(),
@@ -2727,7 +2735,8 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 		while (pSection->File1LineBegin > nPrevSectionEnd1
 				&& pSection->File2LineBegin > nPrevSectionEnd2
 				&& pFirstFile->GetLine(pSection->File1LineBegin - 1)->
-				LooksLike(pSecondFile->GetLine(pSection->File2LineBegin - 1), 15))
+				LooksLike(pSecondFile->GetLine(pSection->File2LineBegin - 1),
+						pApp->m_PercentsOfLookLikeDifference))
 		{
 			// expand the section down, to include alike lines
 			pSection->File1LineBegin--;
@@ -2746,7 +2755,8 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 		while (pSection->File1LineEnd < nNextSectionBegin1
 				&& pSection->File2LineEnd < nNextSectionBegin2
 				&& pFirstFile->GetLine(pSection->File1LineEnd)->
-				LooksLike(pSecondFile->GetLine(pSection->File2LineEnd), 15))
+				LooksLike(pSecondFile->GetLine(pSection->File2LineEnd),
+						pApp->m_PercentsOfLookLikeDifference))
 		{
 			// expand the section up, to include alike lines
 			pSection->File1LineEnd++;
@@ -2979,6 +2989,130 @@ TextPos FilePair::PrevDifference(TextPos PosFrom)
 		return ppSection[1]->m_Begin;
 	}
 	return pSection->m_Begin;
+}
+
+int FilePair::GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo)
+{
+	int flags = 0;
+	if (0 == m_DiffSections.GetSize())
+	{
+		return FileDiffSection::FlagNoDifference;
+	}
+	if (PosTo < PosFrom)
+	{
+		TextPos tmp = PosTo;
+		PosTo = PosFrom;
+		PosFrom = tmp;
+	}
+	FileDiffSection const *const * ppSection =
+		BinLookupAbout<FileDiffSection *, TextPos, int>
+	(& PosFrom, 0,
+		m_DiffSections.GetData(), m_DiffSections.GetSize(),
+		CompareTextPosEnd);
+	int SectionIdx = ppSection - m_DiffSections.GetData();
+	if (SectionIdx > m_DiffSections.GetUpperBound())
+	{
+		return FileDiffSection::FlagNoDifference;
+	}
+	const FileDiffSection * pSection = m_DiffSections[SectionIdx];
+	if (PosTo == PosFrom)
+	{
+		// if the range is of zero length, then PosTo inclusive.
+		if (PosFrom < pSection->m_Begin
+			&& PosFrom >= pSection->m_End)
+		{
+			return FileDiffSection::FlagNoDifference;
+		}
+		else
+		{
+			return pSection->m_Flags;
+		}
+	}
+	if (PosTo < pSection->m_Begin
+		&& PosFrom >= pSection->m_End)
+	{
+		return FileDiffSection::FlagNoDifference;
+	}
+	// if the range is not of zero length, then PosTo not inclusize
+	for ( ; SectionIdx < m_DiffSections.GetSize(); SectionIdx++)
+	{
+		pSection = m_DiffSections[SectionIdx];
+		if (PosTo <= pSection->m_Begin)
+		{
+			break;
+		}
+		flags |= pSection->m_Flags;
+	}
+	return flags;
+}
+
+void FilePair::ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo,
+										int Set, int Reset,
+										int * pFirstSectionIdx, int * pNumSections)
+{
+	int flags = 0;
+	if (NULL != pFirstSectionIdx)
+	{
+		* pFirstSectionIdx = 0;
+		* pNumSections = 0;
+	}
+	if (0 == m_DiffSections.GetSize())
+	{
+		return;
+	}
+	if (PosTo < PosFrom)
+	{
+		TextPos tmp = PosTo;
+		PosTo = PosFrom;
+		PosFrom = tmp;
+	}
+
+	FileDiffSection *const * ppSection =
+		BinLookupAbout<FileDiffSection *, TextPos, int>
+	(& PosFrom, 0,
+		m_DiffSections.GetData(), m_DiffSections.GetSize(),
+		CompareTextPosEnd);
+	int SectionIdx = ppSection - m_DiffSections.GetData();
+	if (SectionIdx > m_DiffSections.GetUpperBound())
+	{
+		return;
+	}
+	FileDiffSection * pSection = *ppSection;
+	if (PosFrom == PosTo)
+	{
+		if (PosFrom >= pSection->m_Begin
+			&& PosFrom < pSection->m_End)
+		{
+			if (NULL != pFirstSectionIdx)
+			{
+				* pFirstSectionIdx = SectionIdx;
+				* pNumSections = 1;
+			}
+			pSection->m_Flags &= ~Reset;
+			pSection->m_Flags |= Set;
+		}
+		return;
+	}
+	if (NULL != pFirstSectionIdx)
+	{
+		* pFirstSectionIdx = SectionIdx;
+		* pNumSections = 0;
+	}
+	// if the range is not of zero length, then PosTo not inclusize
+	for ( ; SectionIdx < m_DiffSections.GetSize(); SectionIdx++)
+	{
+		pSection = m_DiffSections[SectionIdx];
+		if (PosTo <= pSection->m_Begin)
+		{
+			break;
+		}
+		flags |= pSection->m_Flags;
+		if (NULL != pFirstSectionIdx)
+		{
+			* pNumSections++;
+		}
+	}
+
 }
 
 LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen)

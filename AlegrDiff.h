@@ -37,6 +37,8 @@ public:
 	DWORD m_ErasedTextColor;
 	DWORD m_AddedTextColor;
 	DWORD m_TextBackgroundColor;
+	DWORD m_AcceptedTextBackgroundColor;
+	DWORD m_DiscardedTextBackgroundColor;
 	DWORD m_SelectedTextColor;
 
 	bool m_bRecurseSubdirs;
@@ -58,6 +60,10 @@ public:
 
 	CString m_FindString;
 	bool m_bCaseSensitive;
+
+	DWORD	m_MinimalLineLength;
+	DWORD	m_NumberOfIdenticalLines;
+	DWORD	m_PercentsOfLookLikeDifference;
 
 	LOGFONT m_NormalLogFont;
 	CFont m_NormalFont;

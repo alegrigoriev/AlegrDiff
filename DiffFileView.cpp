@@ -69,6 +69,7 @@ BEGIN_MESSAGE_MAP(CDiffFileView, CView)
 	ON_WM_LBUTTONDBLCLK()
 	ON_WM_CONTEXTMENU()
 	ON_COMMAND(ID_EDIT_GOTOLINE, OnEditGotoline)
+	ON_WM_RBUTTONDOWN()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -139,6 +140,9 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 			Length = nVisibleChars - nDrawnChars;
 		}
 		// choose font
+		// text not in the merged file is drawn with alterative background
+		// for accepted changes it is erased text,
+		// for discarded changes it is inserted text
 		while (Length > 0)
 		{
 			CFont * pFont;
@@ -146,12 +150,12 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 			DWORD BackgroundColor = pApp->m_TextBackgroundColor;
 			int nCharsToDraw = Length;
 
-			if (pSection->Attr == pSection->Inserted)
+			if (pSection->Attr & pSection->Inserted)
 			{
 				Color = pApp->m_AddedTextColor;
 				pFont = & pApp->m_AddedFont;
 			}
-			else if (pSection->Attr == pSection->Erased)
+			else if (pSection->Attr & pSection->Erased)
 			{
 				Color = pApp->m_ErasedTextColor;
 				pFont = & pApp->m_ErasedFont;
@@ -1339,4 +1343,26 @@ void CDiffFileView::OnEditGotoline()
 	{
 		SetCaretPosition(0, dlg.m_LineNumber, SetPositionMakeCentered | SetPositionCancelSelection);
 	}
+}
+
+void CDiffFileView::OnRButtonDown(UINT nFlags, CPoint point)
+{
+	CPoint point1 = point;
+	point1.x -= m_LineNumberMarginWidth;
+	int flags = SetPositionMakeVisible | SetPositionCancelSelection;
+	// if the left margin is clicked, the whole line is selected
+	int nLine = point1.y / LineHeight() + m_FirstLineSeen;
+
+	if (point1.x < 0)
+	{
+		SetCaretPosition(0, nLine, flags);
+	}
+	else
+	{
+		SetCaretPosition(m_FirstPosSeen + (point1.x + CharWidth() / 2) / CharWidth(),
+						nLine,
+						flags);
+	}
+
+	CView::OnRButtonDown(nFlags, point);
 }

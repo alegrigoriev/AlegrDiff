@@ -32,7 +32,6 @@ public:
 	CApplicationProfileItemStr(CApplicationProfile * pProfile,
 								LPCTSTR szSection, LPCTSTR szName,
 								CString& StringReference, LPCTSTR Default);
-	~CApplicationProfileItemStr() {}
 };
 
 class CApplicationProfileItemLong: public CApplicationProfileItem
@@ -50,11 +49,11 @@ public:
 	CApplicationProfileItemLong(CApplicationProfile * pProfile,
 								LPCTSTR szSection, LPCTSTR szName, LONG & RefValue,
 								LONG Default, LONG MinVal, LONG MaxVal);
-	~CApplicationProfileItemLong() {}
 };
 
 class CApplicationProfileItemInt: public CApplicationProfileItem
 {
+protected:
 	int & Ref;
 	int InitialData;
 	int m_Default;
@@ -68,7 +67,52 @@ public:
 	CApplicationProfileItemInt(CApplicationProfile * pProfile,
 								LPCTSTR szSection, LPCTSTR szName, int & RefValue,
 								int Default, int MinVal, int MaxVal);
-	~CApplicationProfileItemInt() {}
+};
+
+class CApplicationProfileItemUint: public CApplicationProfileItem
+{
+protected:
+	unsigned int & Ref;
+	unsigned int InitialData;
+	unsigned int m_Default;
+	unsigned int m_MinVal;
+	unsigned int m_MaxVal;
+public:
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+	virtual void ResetToDefault();
+	virtual void ResetToInitial();
+	CApplicationProfileItemUint(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, unsigned int & RefValue,
+								unsigned int Default, unsigned int MinVal, unsigned int MaxVal);
+};
+
+class CApplicationProfileItemShort : public CApplicationProfileItemInt
+{
+	short & ShortRef;
+	int m_TempInt;
+public:
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+	virtual void ResetToDefault();
+	virtual void ResetToInitial();
+	CApplicationProfileItemShort(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, short & RefValue,
+								short Default, short MinVal, short MaxVal);
+};
+
+class CApplicationProfileItemUshort : public CApplicationProfileItemUint
+{
+	unsigned short & ShortRef;
+	unsigned int m_TempInt;
+public:
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+	virtual void ResetToDefault();
+	virtual void ResetToInitial();
+	CApplicationProfileItemUshort(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, unsigned short & RefValue,
+								unsigned short Default, unsigned short MinVal, unsigned short MaxVal);
 };
 
 template<class T> class CApplicationProfileItemBinary: public CApplicationProfileItem
@@ -101,7 +145,6 @@ public:
 	CApplicationProfileItemBool(CApplicationProfile * pProfile,
 								LPCTSTR szSection, LPCTSTR szName, bool & RefValue,
 								bool Default = false);
-	~CApplicationProfileItemBool() {}
 };
 
 class CApplicationProfileItemUlong: public CApplicationProfileItem
@@ -119,7 +162,6 @@ public:
 	CApplicationProfileItemUlong(CApplicationProfile * pProfile,
 								LPCTSTR szSection, LPCTSTR szName, ULONG & RefValue,
 								ULONG Default, ULONG MinVal, ULONG MaxVal);
-	~CApplicationProfileItemUlong() {}
 };
 
 class CApplicationProfileItemDouble: public CApplicationProfileItem
@@ -172,10 +214,21 @@ public:
 				int MaxLen=256);
 	void AddItem(LPCTSTR szSection, LPCTSTR szName, LONG & val,
 				LONG nDefault = 0, LONG nMin = LONG_MIN, LONG nMax=LONG_MAX);
-	void AddItem(LPCTSTR szSection, LPCTSTR szName, int & val,
-				int nDefault = 0, int nMin = LONG_MIN, int nMax=LONG_MAX);
 	void AddItem(LPCTSTR szSection, LPCTSTR szName, ULONG & val,
 				ULONG nDefault = 0, ULONG nMin = 0, ULONG nMax=ULONG_MAX);
+
+	void AddItem(LPCTSTR szSection, LPCTSTR szName, int & val,
+				int nDefault = 0, int nMin = INT_MIN, int nMax = INT_MAX);
+	void AddItem(LPCTSTR szSection, LPCTSTR szName, unsigned int & val,
+				unsigned int nDefault = 0,
+				unsigned int nMin = 0, unsigned int nMax = UINT_MAX);
+
+	void AddItem(LPCTSTR szSection, LPCTSTR szName, short & val,
+				short nDefault = 0, short nMin = SHRT_MIN, short nMax = SHRT_MAX);
+	void AddItem(LPCTSTR szSection, LPCTSTR szName, unsigned short & val,
+				unsigned short nDefault = 0,
+				unsigned short nMin = 0, unsigned short nMax = USHRT_MAX);
+
 	void AddItem(LPCTSTR szSection, LPCTSTR szName, bool & val,
 				bool nDefault = false);
 	// Visual C 6 doesn't like out of class member template definition

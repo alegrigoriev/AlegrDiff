@@ -1,8 +1,6 @@
 TODO:
 
-Remove final dialog in fingerprint creation
-Close file view if the file is updated in the list view
-Update comparison result in the list view on load and reload
+When checking the fingerprint, use "Original" and "Current" instead of "1st and 2nd
 make word by word comparison in MatchStrings
 Find full word only
 Version stamp keywords: $Archive: $Revision: $Date:
@@ -31,7 +29,6 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-Windows ME: old style file open dialog
 Directory share name cannot be selected if no '\' appended
 Blank lines prevent from proper line matching inside difference blocks
 "   if()" and "  if ()" shows non-whitespace difference	- need full word mode
@@ -41,6 +38,7 @@ screen move in two directions may corrupt the image (??)
 Directory dialog allows to select network host. It won't return anything then.
 
 Fixed:
+Windows ME: old style file open dialog
 Default sort for names: reversed
 status string on open files: garbled
 Name dialog doesn't work if directory name with backslash is specified
@@ -68,6 +66,9 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+Close file view if the file is updated in the list view
+Update comparison result in the list view on load and reload
+Remove final dialog in fingerprint creation
 If a file(s) exists only in one directory, don't show "Copy From" for another directory
 Don't change current directory
 Add "CStringHistory" class

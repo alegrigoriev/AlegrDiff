@@ -10,7 +10,17 @@
 #endif // _MSC_VER > 1000
 #include "FileListSupport.h"
 
-class CAlegrDiffDoc : public CDocument
+class CAlegrDiffBaseDoc : public CDocument
+{
+protected:
+	DECLARE_DYNCREATE(CAlegrDiffBaseDoc)
+public:
+	CAlegrDiffBaseDoc() {}
+	virtual void OnUpdateAllViews(CView* pSender,
+								LPARAM lHint = 0L, CObject* pHint = NULL);
+};
+
+class CAlegrDiffDoc : public CAlegrDiffBaseDoc
 {
 protected: // create from serialization only
 	CAlegrDiffDoc();
@@ -52,8 +62,9 @@ public:
 	bool BuildFilePairList(FileList & FileList1, FileList & FileList2);
 	void FreeFilePairList();
 
-
 // Overrides
+	virtual void OnUpdateAllViews(CView* pSender,
+								LPARAM lHint = 0L, CObject* pHint = NULL);
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CAlegrDiffDoc)
 public:
@@ -93,7 +104,7 @@ public:
 	FilePair * pPair;
 };
 
-class CFilePairDoc : public CDocument
+class CFilePairDoc : public CAlegrDiffBaseDoc
 {
 protected:
 	CFilePairDoc();           // protected constructor used by dynamic creation
@@ -119,9 +130,7 @@ public:
 
 	enum {
 		CaretPositionChanged = 1,
-		FileLoaded,
 		InvalidateRange,
-		MetricsChanged,
 	};
 
 	void SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags = SetPositionMakeCentered);
@@ -148,8 +157,10 @@ public:
 #endif
 
 protected:
-	// Generated message map functions
 public:
+	virtual void OnUpdateAllViews(CView* pSender,
+								LPARAM lHint = 0L, CObject* pHint = NULL);
+
 	int GetAcceptDeclineFlags(TextPos begin, TextPos end);
 	BOOL DoSaveMerged(BOOL bOpenResultFile);
 	BOOL SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode);
@@ -172,6 +183,7 @@ public:
 	bool OnEditFindWordNext();
 	bool OnEditFindWordPrev();
 	afx_msg void OnUpdateCaretPosIndicator(CCmdUI* pCmdUI);
+	// Generated message map functions
 	//{{AFX_MSG(CFilePairDoc)
 	afx_msg void OnUpdateEditGotonextdiff(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditGotoprevdiff(CCmdUI* pCmdUI);

@@ -48,6 +48,7 @@ void CDirectoryFingerpringCreateDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CDirectoryFingerpringCreateDlg, CDialog)
 	ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
+	ON_COMMAND(IDYES, OnYes)
 END_MESSAGE_MAP()
 
 
@@ -244,19 +245,19 @@ unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
 	m_pFile = NULL;
 	if (NULL != m_hWnd)
 	{
-		::PostMessage(m_hWnd, WM_COMMAND, IDOK, NULL);
+		::PostMessage(m_hWnd, WM_COMMAND, IDYES, NULL);
 	}
 	return 0;
 }
 
 
-void CDirectoryFingerpringCreateDlg::OnOK()
+void CDirectoryFingerpringCreateDlg::OnYes()
 {
 	CString s;
 	s.Format(IDS_STRING_FINGERPRINT_CREATED, LPCTSTR(m_sDirectory), LPCTSTR(m_FingerprintFilename));
-	AfxMessageBox(s, MB_OK);
-
-	CDialog::OnOK();
+	m_bFilenameChanged = false;
+	m_Filename.SetWindowText(s);
+	SetDlgItemText(IDCANCEL, _T("OK"));
 }
 
 LRESULT CDirectoryFingerpringCreateDlg::OnKickIdle(WPARAM, LPARAM)

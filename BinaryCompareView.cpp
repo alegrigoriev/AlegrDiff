@@ -965,12 +965,29 @@ void CBinaryCompareView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHi
 			InvalidateRange(begin, end);
 		}
 	}
-	else if (lHint == CBinaryCompareDoc::FileLoaded
-			|| lHint == CBinaryCompareDoc::MetricsChanged)
+	else if (lHint == UpdateViewsFilePairChanged)
+	{
+		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
+		if (NULL != pArg
+			&& pArg->pPair == pDoc->GetFilePair())
+		{
+			if (FilesDeleted == pDoc->GetFilePair()->m_ComparisionResult)
+			{
+				return;
+			}
+			OnMetricsChange();
+			Invalidate(TRUE);
+			UpdateHScrollBar();
+			UpdateVScrollBar();
+			CreateAndShowCaret();
+		}
+	}
+	else if (lHint == UpdateViewsMetricsChanged)
 	{
 		OnMetricsChange();
 	}
-	else
+	else if (0 == lHint
+			|| UpdateViewsColorsChanged == lHint)
 	{
 		Invalidate(TRUE);
 		UpdateHScrollBar();

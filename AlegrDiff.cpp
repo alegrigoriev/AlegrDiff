@@ -554,7 +554,7 @@ void CAlegrDiffApp::OnFilePreferences()
 			m_AcceptedTextBackgroundColor = dlg.m_ViewPage.m_AddedTextBackground;
 			m_DiscardedTextBackgroundColor = dlg.m_ViewPage.m_ErasedTextBackground;
 
-			UpdateAllDiffViews();
+			UpdateAllViews(UpdateViewsColorsChanged);
 		}
 	}
 }
@@ -578,58 +578,35 @@ void CAlegrDiffApp::OnFontChanged()
 	m_ErasedFont.DeleteObject();
 	m_ErasedFont.CreateFontIndirect( & m_ErasedLogFont);
 
-	UpdateAllDiffViews(CFilePairDoc::MetricsChanged);
+	UpdateAllViews(UpdateViewsMetricsChanged);
 }
 
 void CAlegrDiffApp::NotifyFilePairChanged(FilePair *pPair)
 {
-	POSITION position = m_pFileDiffTemplate->GetFirstDocPosition();
-	while(position)
-	{
-		CFilePairDoc * pDoc =
-			dynamic_cast<CFilePairDoc *>(m_pFileDiffTemplate->GetNextDoc(position));
-		if (NULL != pDoc
-			&& pPair == pDoc->GetFilePair())
-		{
-			pDoc->UpdateAllViews(NULL, CFilePairDoc::FileLoaded);
-			return;
-		}
-	}
-
-	position = m_pBinaryDiffTemplate->GetFirstDocPosition();
-	while(position)
-	{
-		CBinaryCompareDoc * pDoc =
-			dynamic_cast<CBinaryCompareDoc *>(m_pBinaryDiffTemplate->GetNextDoc(position));
-		if (NULL != pDoc
-			&& pPair == pDoc->GetFilePair())
-		{
-			pDoc->UpdateAllViews(NULL, CBinaryCompareDoc::FileLoaded);
-		}
-	}
+	FilePairChangedArg arg;
+	arg.pPair = pPair;
+	UpdateAllViews(UpdateViewsFilePairChanged, & arg);
 }
 
-void CAlegrDiffApp::UpdateAllDiffViews(LPARAM lHint, CObject* pHint)
+void CAlegrDiffApp::UpdateAllViews(LPARAM lHint, CObject* pHint)
 {
-	POSITION position = m_pFileDiffTemplate->GetFirstDocPosition();
-	while(position)
+	POSITION DocTempPos = m_pDocManager->GetFirstDocTemplatePosition();
+	while (DocTempPos)
 	{
-		CFilePairDoc * pDoc =
-			dynamic_cast<CFilePairDoc *>(m_pFileDiffTemplate->GetNextDoc(position));
-		if (NULL != pDoc)
+		CDocTemplate* pTemplate = m_pDocManager->GetNextDocTemplate(DocTempPos);
+		POSITION position = pTemplate->GetFirstDocPosition();
+		while(position)
 		{
-			pDoc->UpdateAllViews(NULL, lHint, pHint);
-		}
-	}
-
-	position = m_pBinaryDiffTemplate->GetFirstDocPosition();
-	while(position)
-	{
-		CBinaryCompareDoc * pDoc =
-			dynamic_cast<CBinaryCompareDoc *>(m_pBinaryDiffTemplate->GetNextDoc(position));
-		if (NULL != pDoc)
-		{
-			pDoc->UpdateAllViews(NULL, lHint, pHint);
+			CDocument * pDoc = pTemplate->GetNextDoc(position);
+			CAlegrDiffBaseDoc * pBaseDoc = dynamic_cast<CAlegrDiffBaseDoc *>(pDoc);
+			if (NULL != pBaseDoc)
+			{
+				pBaseDoc->OnUpdateAllViews(NULL, lHint, pHint);
+			}
+			else
+			{
+				pDoc->UpdateAllViews(NULL, lHint, pHint);
+			}
 		}
 	}
 }

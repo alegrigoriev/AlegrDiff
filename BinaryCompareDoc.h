@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include "AlegrDiffDoc.h"
 // CBinaryCompareDoc document
 
 class InvalidatedRangeBin : public CObject
@@ -10,16 +10,14 @@ public:
 	LONGLONG end;
 };
 
-class CBinaryCompareDoc : public CDocument
+class CBinaryCompareDoc : public CAlegrDiffBaseDoc
 {
 	DECLARE_DYNCREATE(CBinaryCompareDoc)
 
 public:
 	enum {
 		CaretPositionChanged = 1,
-		FileLoaded,
 		InvalidateRange,
-		MetricsChanged,
 	};
 
 	TCHAR m_ComparisonResult[MAX_PATH];
@@ -49,4 +47,6 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
+	virtual void OnUpdateAllViews(CView* pSender,
+								LPARAM lHint = 0L, CObject* pHint = NULL);
 };

@@ -55,7 +55,7 @@ public:
 	}
 	virtual BOOL OnInitDialog();
 protected:
-	virtual void OnOK();
+	afx_msg void OnYes();
 public:
 	CProgressCtrl m_Progress;
 };

@@ -377,7 +377,7 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 														m_StopRunThread, m_CurrentFileDone, m_hWnd))
 				{
 					if (0 == memcmp(pPair->pFirstFile->GetDigest(),
-									pPair->pFirstFile->GetDigest(), 16))
+									pPair->pSecondFile->GetDigest(), 16))
 					{
 						pPair->m_ComparisionResult = FilePair::FilesIdentical;
 					}

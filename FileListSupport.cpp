@@ -704,6 +704,27 @@ int FileItem::TimeCompare(FileItem * Item1, FileItem * Item2)
 	return 0;
 }
 
+int FileItem::LengthCompare(FileItem * Item1, FileItem * Item2)
+{
+	if (NULL == Item1)
+	{
+		return NULL != Item2;
+	}
+	if (NULL == Item2)
+	{
+		return -1;
+	}
+	if (Item1->m_Length > Item2->m_Length)
+	{
+		return 1;
+	}
+	if (Item1->m_Length < Item2->m_Length)
+	{
+		return -1;
+	}
+	return 0;
+}
+
 FileCheckResult FileItem::CheckForFileChanged()
 {
 	CString s = GetFullName();
@@ -2174,7 +2195,7 @@ FilePair::~FilePair()
 	}
 }
 
-int FilePair::Time1SortFunc(const FilePair * Pair1, const FilePair * Pair2)
+int FilePairComparePredicate::Time1SortFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
 	FileItem * Item1 = Pair1->pFirstFile;
 	FileItem * Item2 = Pair2->pFirstFile;
@@ -2190,7 +2211,7 @@ int FilePair::Time1SortFunc(const FilePair * Pair1, const FilePair * Pair2)
 	return FileItem::TimeCompare(Item2, Item1);
 }
 
-int FilePair::Time1SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2)
+int FilePairComparePredicate::Time1SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
 	FileItem * Item1 = Pair1->pFirstFile;
 	FileItem * Item2 = Pair2->pFirstFile;
@@ -2206,7 +2227,7 @@ int FilePair::Time1SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pa
 	return FileItem::TimeCompare(Item1, Item2);
 }
 
-int FilePair::Time2SortFunc(const FilePair * Pair1, const FilePair * Pair2)
+int FilePairComparePredicate::Time2SortFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
 	FileItem * Item1 = Pair1->pSecondFile;
 	FileItem * Item2 = Pair2->pSecondFile;
@@ -2222,7 +2243,7 @@ int FilePair::Time2SortFunc(const FilePair * Pair1, const FilePair * Pair2)
 	return FileItem::TimeCompare(Item2, Item1);
 }
 
-int FilePair::Time2SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2)
+int FilePairComparePredicate::Time2SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
 	FileItem * Item1 = Pair1->pSecondFile;
 	FileItem * Item2 = Pair2->pSecondFile;
@@ -2238,7 +2259,71 @@ int FilePair::Time2SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pa
 	return FileItem::TimeCompare(Item1, Item2);
 }
 
-int FilePair::NameCompare(const FilePair * Pair1, const FilePair * Pair2)
+int FilePairComparePredicate::Length1SortFunc(const FilePair * Pair1, const FilePair * Pair2)
+{
+	FileItem * Item1 = Pair1->pFirstFile;
+	FileItem * Item2 = Pair2->pFirstFile;
+
+	if (NULL == Item1)
+	{
+		return NULL != Item2;
+	}
+	if (NULL == Item2)
+	{
+		return -1;
+	}
+	return FileItem::LengthCompare(Item2, Item1);
+}
+
+int FilePairComparePredicate::Length1SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2)
+{
+	FileItem * Item1 = Pair1->pFirstFile;
+	FileItem * Item2 = Pair2->pFirstFile;
+
+	if (NULL == Item1)
+	{
+		return NULL != Item2;
+	}
+	if (NULL == Item2)
+	{
+		return -1;
+	}
+	return FileItem::LengthCompare(Item1, Item2);
+}
+
+int FilePairComparePredicate::Length2SortFunc(const FilePair * Pair1, const FilePair * Pair2)
+{
+	FileItem * Item1 = Pair1->pSecondFile;
+	FileItem * Item2 = Pair2->pSecondFile;
+
+	if (NULL == Item1)
+	{
+		return NULL != Item2;
+	}
+	if (NULL == Item2)
+	{
+		return -1;
+	}
+	return FileItem::LengthCompare(Item2, Item1);
+}
+
+int FilePairComparePredicate::Length2SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2)
+{
+	FileItem * Item1 = Pair1->pSecondFile;
+	FileItem * Item2 = Pair2->pSecondFile;
+
+	if (NULL == Item1)
+	{
+		return NULL != Item2;
+	}
+	if (NULL == Item2)
+	{
+		return -1;
+	}
+	return FileItem::LengthCompare(Item1, Item2);
+}
+
+int FilePairComparePredicate::NameCompare(const FilePair * Pair1, const FilePair * Pair2)
 {
 	FileItem * Item1;
 	FileItem * Item2;
@@ -2254,10 +2339,15 @@ int FilePair::NameCompare(const FilePair * Pair1, const FilePair * Pair2)
 	{
 		Item2 = Pair2->pSecondFile;
 	}
-	return FileItem::NameCompare(Item1, Item2);
+	return FileItem::LengthCompare(Item1, Item2);
 }
 
-int FilePair::DirNameCompare(const FilePair * Pair1, const FilePair * Pair2)
+int FilePairComparePredicate::NameCompareBackward(const FilePair * Pair1, const FilePair * Pair2)
+{
+	return NameCompare(Pair2, Pair1);
+}
+
+int FilePairComparePredicate::DirNameCompare(const FilePair * Pair1, const FilePair * Pair2)
 {
 	FileItem * Item1;
 	FileItem * Item2;
@@ -2274,6 +2364,11 @@ int FilePair::DirNameCompare(const FilePair * Pair1, const FilePair * Pair2)
 		Item2 = Pair2->pSecondFile;
 	}
 	return FileItem::DirNameCompare(Item1, Item2);
+}
+
+int FilePairComparePredicate::DirNameCompareBackward(const FilePair * Pair1, const FilePair * Pair2)
+{
+	return DirNameCompare(Pair2, Pair1);
 }
 
 int FilePair::ComparisionResultPriority() const
@@ -2316,62 +2411,93 @@ int FilePair::ComparisionResultPriority() const
 	}
 }
 
-bool FilePair::Compare(const FilePair * Pair1, const FilePair * Pair2, const CompareParam comp)
+bool FilePairComparePredicate::operator ()(const FilePair * Pair1, const FilePair * Pair2)
 {
-	int result = 0;
-	switch (comp.PrimarySort)
+	for (int i = 0; i < countof (Functions); i++)
 	{
-	case CompareSubitemName:
-		result = NameCompare(Pair1, Pair2);
-		break;
-	default:
-	case CompareSubitemDir:
-		result = DirNameCompare(Pair1, Pair2);
-		break;
-	case CompareSubitemDate1:
-		if (comp.PrimaryBackward)
+		int result = Functions[i](Pair1, Pair2);
+		if (result != 0)
 		{
-			return Time1SortBackwardsFunc(Pair1, Pair2) < 0;
+			return result > 0;
+		}
+	}
+	return 0;
+}
+
+FilePairComparePredicate::FilePairComparePredicate(enum eColumns Sort[], bool Ascending[], int SortNumber)
+{
+	for (int i = 0; i < countof (Functions); i++)
+	{
+		if (i >= SortNumber)
+		{
+			Functions[i] = NoOp;
+			continue;
+		}
+
+		if (Ascending[i])
+		{
+			switch (Sort[i])
+			{
+			case ColumnName:
+				Functions[i] = NameCompare;
+				break;
+			case ColumnSubdir:
+				Functions[i] = DirNameCompare;
+				break;
+			case ColumnDate1:
+				Functions[i] = Time1SortFunc;
+				break;
+			case ColumnDate2:
+				Functions[i] = Time2SortFunc;
+				break;
+			case ColumnLength1:
+				Functions[i] = Length1SortFunc;
+				break;
+			case ColumnLength2:
+				Functions[i] = Length2SortFunc;
+				break;
+			case ColumnComparisionResult:
+				Functions[i] = ComparisionSortFunc;
+				break;
+			default:
+				Functions[i] = NoOp;
+				break;
+			}
 		}
 		else
 		{
-			return Time1SortFunc(Pair1, Pair2) < 0;
+			switch (Sort[i])
+			{
+			case ColumnName:
+				Functions[i] = NameCompareBackward;
+				break;
+			case ColumnSubdir:
+				Functions[i] = DirNameCompareBackward;
+				break;
+			case ColumnDate1:
+				Functions[i] = Time1SortBackwardsFunc;
+				break;
+			case ColumnDate2:
+				Functions[i] = Time2SortBackwardsFunc;
+				break;
+			case ColumnLength1:
+				Functions[i] = Length1SortBackwardsFunc;
+				break;
+			case ColumnLength2:
+				Functions[i] = Length2SortBackwardsFunc;
+				break;
+			case ColumnComparisionResult:
+				Functions[i] = ComparisionSortBackwardsFunc;
+				break;
+			default:
+				Functions[i] = NoOp;
+				break;
+			}
 		}
-		break;
-	case CompareSubitemDate2:
-		if (comp.PrimaryBackward)
-		{
-			return Time2SortBackwardsFunc(Pair1, Pair2) < 0;
-		}
-		else
-		{
-			return Time2SortFunc(Pair1, Pair2) < 0;
-		}
-		break;
-	case CompareSubitemResult:
-		result = ComparisionSortFunc(Pair1, Pair2);
-		if (0 == result)
-		{
-			CompareParam comp1;
-			comp1.PrimarySort = comp.SecondarySort;
-			comp1.PrimaryBackward = comp.SecondaryBackward;
-			comp1.SecondaryBackward =0;
-			comp1.SecondarySort = CompareSubitemName;
-			return Compare(Pair1, Pair2, comp1);
-		}
-		break;
-	}
-	if (comp.PrimaryBackward)
-	{
-		return result > 0;
-	}
-	else
-	{
-		return result < 0;
 	}
 }
 
-int FilePair::ComparisionSortFunc(const FilePair * Pair1, const FilePair * Pair2)
+int FilePairComparePredicate::ComparisionSortFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
 	int priority1 = Pair1->ComparisionResultPriority();
 	int priority2 = Pair2->ComparisionResultPriority();
@@ -2383,6 +2509,23 @@ int FilePair::ComparisionSortFunc(const FilePair * Pair1, const FilePair * Pair2
 	if (priority1 < priority2)
 	{
 		return -1;
+	}
+
+	return 0;
+}
+
+int FilePairComparePredicate::ComparisionSortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2)
+{
+	int priority1 = Pair1->ComparisionResultPriority();
+	int priority2 = Pair2->ComparisionResultPriority();
+
+	if (priority1 > priority2)
+	{
+		return -1;
+	}
+	if (priority1 < priority2)
+	{
+		return 1;
 	}
 
 	return 0;

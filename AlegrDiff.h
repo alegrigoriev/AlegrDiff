@@ -94,7 +94,7 @@ public:
 	CString m_RecentFiles[15];
 
 	UCHAR m_ColumnArray[MaxColumns];
-	USHORT m_ColumnWidthArray[MaxColumns];
+	SHORT m_ColumnWidthArray[MaxColumns];
 
 	DWORD m_FileListSort;
 

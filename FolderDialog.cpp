@@ -45,6 +45,37 @@ CFolderDialog::CFolderDialog(LPCTSTR lpszTitle, LPCTSTR lpszStartingDirectory,
 	m_bi.lParam = (LPARAM) this;
 }
 
+CFolderDialog::CFolderDialog(UINT TitleId, LPCTSTR lpszStartingDirectory,
+							bool EnableCreateFolder,
+							DWORD dwFlags, CWnd* pParentWnd, class CStringHistory * pHistory)
+	: CCommonDialog(pParentWnd),
+	szStartupDir(lpszStartingDirectory),
+	m_pStringHistory(pHistory),
+	m_bEnableCreateDir(EnableCreateFolder)
+{
+	memzero(m_bi);
+	m_bi.ulFlags = dwFlags;
+
+	if (EnableCreateFolder)
+	{
+		m_bi.ulFlags |= BIF_EDITBOX;
+	}
+
+	if ( ! m_bEnableCreateDir)
+	{
+		m_bi.ulFlags |= BIF_NONEWFOLDERBUTTON;
+	}
+
+	m_bi.pszDisplayName = szBuffer;
+	szBuffer[0] = 0;
+
+	m_sTitle.LoadString(TitleId);
+
+	m_bi.lpszTitle = m_sTitle;
+	m_bi.lpfn = BrowseCallbackProc;
+	m_bi.lParam = (LPARAM) this;
+}
+
 BEGIN_MESSAGE_MAP(CFolderDialog, CCommonDialog)
 	//{{AFX_MSG_MAP(CFolderDialog)
 	ON_CBN_SELENDOK(0x3744, OnComboSelendOK)

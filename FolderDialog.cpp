@@ -138,6 +138,7 @@ void CFolderDialog::LoadHistoryCb()
 	}
 	pEdit->GetWindowRect( & r);
 	ScreenToClient( & r);
+	r.bottom = r.top + r.Height() * 10;
 
 	CFont * pFont = pEdit->GetFont();
 
@@ -153,6 +154,8 @@ void CFolderDialog::LoadHistoryCb()
 	{
 		//m_HistoryCombo.Detach();
 		m_HistoryCombo.SetFont(pFont);
+		m_HistoryCombo.LimitText(MAX_PATH);
+
 		m_pStringHistory->LoadCombo( & m_HistoryCombo);
 		m_HistoryCombo.SetExtendedUI();
 	}

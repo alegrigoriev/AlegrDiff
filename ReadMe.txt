@@ -34,6 +34,7 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+GetFileData breaks sometimes near the end of file
 Cursor up out of screen
 "Hasbani" text files make it crash (in text mode comparison).
 During binary comparison, alternate "Calculating fingerprint" and "Comparing" messages shown
@@ -48,6 +49,7 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+Goto next/prev difference in binary view
 Open Binary file difference
 Address granularity is word size. Selection granularity too.
 Add an icon for binary files' MDI child

@@ -1405,14 +1405,14 @@ UINT CBinaryCompareView::FindDataProc(class CDifferenceProgressDialog * pContext
 		FindingFirstDifference = TRUE;
 		// search backward
 		while (! pContext->m_StopSearch
-				&& Addr > pContext->BeginAddr)
+				&& Addr > pContext->EndAddr)
 		{
 			if (File1BufIndex <= 0)
 			{
 				ULONG ToRead = BufferSize;
-				if (Addr - pContext->BeginAddr < BufferSize)
+				if (Addr - pContext->EndAddr < BufferSize)
 				{
-					ToRead = ULONG(Addr - pContext->BeginAddr);
+					ToRead = ULONG(Addr - pContext->EndAddr);
 				}
 
 				File1BufFilled = pFilePair->pFirstFile->GetFileData(Addr - ToRead,
@@ -1423,17 +1423,18 @@ UINT CBinaryCompareView::FindDataProc(class CDifferenceProgressDialog * pContext
 			if (File2BufIndex <= 0)
 			{
 				ULONG ToRead = BufferSize;
-				if (Addr - pContext->BeginAddr < BufferSize)
+				if (Addr - pContext->EndAddr < BufferSize)
 				{
-					ToRead = ULONG(Addr - pContext->BeginAddr);
+					ToRead = ULONG(Addr - pContext->EndAddr);
 				}
 
 				File2BufFilled = pFilePair->pSecondFile->GetFileData(Addr - ToRead,
 									File2Buffer, ToRead);
 				File2BufIndex = File2BufFilled;
 
-				int PercentCompleted = int((pContext->EndAddr - Addr) * 100
-											/ (pContext->EndAddr - pContext->BeginAddr));
+				int PercentCompleted = int((pContext->BeginAddr - Addr) * 100
+											/ (pContext->BeginAddr - pContext->EndAddr));
+
 				if (PercentCompleted != pContext->m_PercentCompleted
 					|| pContext->m_hWnd != NULL)
 				{

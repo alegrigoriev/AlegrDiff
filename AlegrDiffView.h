@@ -78,6 +78,8 @@ protected:
 	afx_msg void OnFileCopyFirstDir();
 	afx_msg void OnUpdateFileCopySecondDir(CCmdUI* pCmdUI);
 	afx_msg void OnFileCopySecondDir();
+	afx_msg void OnFileSaveList();
+	afx_msg void OnUpdateFileSaveList(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -126,15 +126,7 @@ SOURCE=.\DiffFileView.cpp
 # Begin Source File
 
 SOURCE=.\DlgFileNew.cpp
-
-!IF  "$(CFG)" == "AlegrDiff - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "AlegrDiff - Win32 Debug"
-
 # SUBTRACT CPP /YX /Yc /Yu
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -167,6 +159,10 @@ SOURCE=.\MainFrm.cpp
 # Begin Source File
 
 SOURCE=.\PreferencesDialog.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\SaveFileListDlg.cpp
 # End Source File
 # Begin Source File
 
@@ -248,6 +244,10 @@ SOURCE=.\PreferencesDialog.h
 # Begin Source File
 
 SOURCE=.\Resource.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\SaveFileListDlg.h
 # End Source File
 # Begin Source File
 

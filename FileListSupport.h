@@ -11,6 +11,8 @@
 
 using namespace std;
 
+#define FILE_OPEN_OVERHEAD 0x2000
+
 struct TextPos
 {
 	int line;
@@ -360,7 +362,7 @@ private:
 public:
 	FileItem * pFirstFile;
 	FileItem * pSecondFile;
-	CString GetComparisionResult() const;
+	CString GetComparisonResult() const;
 	void SetMemoryFile()
 	{
 		m_LoadedCount = 1;

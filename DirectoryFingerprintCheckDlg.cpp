@@ -300,7 +300,7 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 			}
 			else
 			{
-				m_TotalDataSize += 0x2000 + pPair->pFirstFile->GetFileLength();
+				m_TotalDataSize += FILE_OPEN_OVERHEAD + pPair->pFirstFile->GetFileLength();
 			}
 		}
 	}
@@ -318,7 +318,7 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 		{
 			if (pPair->pFirstFile->GetFileLength() == pPair->pSecondFile->GetFileLength())
 			{
-				SetNextItem(pPair->pSecondFile->GetFullName(), pPair->pSecondFile->GetFileLength(), 0x2000);
+				SetNextItem(pPair->pSecondFile->GetFullName(), pPair->pSecondFile->GetFileLength(), FILE_OPEN_OVERHEAD);
 
 				if (pPair->pSecondFile->CalculateHashes( & HashCalc, this))
 				{

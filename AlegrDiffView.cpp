@@ -402,7 +402,7 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 			{
 				if (m_PairArray[i] == alvi->pPair)
 				{
-					CString ComparisionResult = alvi->pPair->GetComparisionResult();
+					CString ComparisionResult = alvi->pPair->GetComparisonResult();
 					pListCtrl->SetItemText(i,
 											m_ColumnArray[ColumnComparisionResult],
 											ComparisionResult);
@@ -995,7 +995,7 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 		}
 	}
 
-	CString ComparisionResult = pPair->GetComparisionResult();
+	CString ComparisionResult = pPair->GetComparisonResult();
 	pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnComparisionResult], ComparisionResult);
 }
 
@@ -1112,7 +1112,7 @@ void CAlegrDiffView::OnFileSaveList()
 				}
 				if (dlg.m_bIncludeComparisonResult)
 				{
-					line += pFilePair->GetComparisionResult();
+					line += pFilePair->GetComparisonResult();
 				}
 				line.TrimRight();
 				line += '\n';

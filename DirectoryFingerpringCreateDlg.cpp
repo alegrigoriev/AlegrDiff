@@ -110,7 +110,7 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 		if ( ! pFile->IsFolder())
 		{
 			// a file open is taken as equivalent of 8K
-			TotalDataSize += pFile->GetFileLength() + 0x2000;
+			TotalDataSize += pFile->GetFileLength() + FILE_OPEN_OVERHEAD;
 		}
 	}
 	SetTotalDataSize(TotalDataSize);
@@ -160,7 +160,7 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 			continue;
 		}
 
-		SetNextItem(pFile->GetFullName(), pFile->GetFileLength(), 0x2000);
+		SetNextItem(pFile->GetFullName(), pFile->GetFileLength(), FILE_OPEN_OVERHEAD);
 
 		if (pFile->CalculateHashes( & HashCalc, this))
 		{

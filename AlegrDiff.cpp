@@ -23,6 +23,7 @@
 #include "DirectoryFingerpringCreateDlg.h"
 #include "CheckFingerprintDlg.h"
 #include "DirectoryFingerprintCheckDlg.h"
+#include <Shlwapi.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -133,8 +134,8 @@ CAlegrDiffApp theApp;
 
 BOOL CAlegrDiffApp::InitInstance()
 {
-	char * Locale = setlocale(LC_ALL, ".ACP");
-	TRACE("Locale set : %s\n", Locale);
+	//char * Locale = setlocale(LC_ALL, ".ACP");
+	//TRACE("Locale set : %s\n", Locale);
 	// Standard initialization
 	// If you are not using these features and wish to reduce the size
 	//  of your final executable, you should remove from the following
@@ -715,7 +716,10 @@ void CAlegrDiffApp::OpenSingleFile(LPCTSTR pName)
 	TCHAR FileDir1[MAX_PATH];
 	LPTSTR pFileName1 = FileDir1;
 	GetFullPathName(pName, MAX_PATH, FileDir1, & pFileName1);
-	*pFileName1 = 0;
+	if (NULL != pFileName1)
+	{
+		*pFileName1 = 0;
+	}
 
 	bool bCppFile = false;
 	bool bBinaryFile = false;
@@ -887,6 +891,7 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 		if (pDoc->BuildFilePairList(dlg.m_sFirstDir, dlg.m_sSecondDir,
 									m_bRecurseSubdirs, m_BinaryComparision))
 		{
+			pDoc->UpdateAllViews(NULL);
 			pDoc->RunComparisionThread();
 			pDoc->UpdateAllViews(NULL);
 		}
@@ -1320,7 +1325,10 @@ void CAlegrDiffApp::OnHelpUsing()
 	LPTSTR FilePart = FullPathName;
 	GetModuleFileName(NULL, ModuleName, MAX_PATH);
 	GetFullPathName(ModuleName, MAX_PATH, FullPathName, & FilePart);
-	*FilePart = 0;
+	if (NULL != FilePart)
+	{
+		*FilePart = 0;
+	}
 	CString HelpfileName(FullPathName);
 	HelpfileName += _T("AlegrDiff.mht");
 
@@ -1575,7 +1583,8 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 	CString LastFileName;
 
 	if ( ! Name.IsEmpty()
-		&& GetFullPathName(Name, MAX_PATH, FullPath, & FileNamePart))
+		&& GetFullPathName(Name, MAX_PATH, FullPath, & FileNamePart)
+		&& NULL != FileNamePart)
 	{
 		LastFileName = FileNamePart;
 		// find extension
@@ -1599,7 +1608,8 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 			TCHAR FullPath[MAX_PATH];
 			LPTSTR FileNamePart;
 			if ( ! pHistory[i].IsEmpty()
-				&& GetFullPathName(pHistory[i], MAX_PATH, FullPath, & FileNamePart))
+				&& GetFullPathName(pHistory[i], MAX_PATH, FullPath, & FileNamePart)
+				&& NULL != FileNamePart)
 			{
 				// find extension
 				LPCTSTR pExt = _tcsrchr(FileNamePart, '.');
@@ -1748,4 +1758,11 @@ void CAlegrDiffApp::OnFileCheckDirectoryFingerprint()
 		return;
 	}
 	pDoc->UpdateAllViews(NULL);
+}
+
+CString FileLengthToStr(ULONGLONG Length)
+{
+	TCHAR buf[32]={0};
+	StrFormatByteSize(Length, buf, countof(buf));
+	return CString(buf);
 }

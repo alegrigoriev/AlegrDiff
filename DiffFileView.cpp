@@ -897,8 +897,18 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 	begin.pos -= m_FirstPosSeen;
 	begin.line -= m_FirstLineSeen;
 
+	if (begin.line < -1)
+	{
+		begin.line = -1;
+	}
+
 	end.pos -= m_FirstPosSeen;
 	end.line -= m_FirstLineSeen;
+
+	if (end.line > nLinesInView + 3)
+	{
+		end.line = nLinesInView + 3;
+	}
 
 	if (begin.line == end.line)
 	{

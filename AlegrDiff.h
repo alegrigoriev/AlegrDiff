@@ -25,9 +25,9 @@ enum eColumns
 	ColumnSubdir,
 	ColumnDate1,
 	ColumnDate2,
-	ColumnComparisionResult,
 	ColumnLength1,
 	ColumnLength2,
+	ColumnComparisionResult,
 	MaxColumns,
 };
 
@@ -180,6 +180,7 @@ void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, UINT FormatID, U
 void OpenFileForEditing(class FileItem * pFile);
 void CopyFilesToFolder(FileItem ** ppFiles, int nCount, bool bAddSubdirToTarget);
 CString FileTimeToStr(FILETIME FileTime, LCID locale = LOCALE_USER_DEFAULT);
+CString FileLengthToStr(ULONGLONG Length);
 
 void AddStringToHistory(const CString & str, CString history[], int NumItems, bool CaseSensitive = false);
 void LoadHistory(CApplicationProfile & Profile, LPCTSTR szKey, LPCTSTR Format, CString history[], int NumItems, bool Trim);

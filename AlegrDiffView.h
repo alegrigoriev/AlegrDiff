@@ -46,13 +46,19 @@ public:
 	eColumns m_SortColumn;
 	eColumns m_PrevSortColumn;
 
+	// keeps order of columns (even those non-visible)
 	UCHAR m_ColumnArray[MaxColumns];
+	//UCHAR m_SubitemArray[MaxColumns];
 	USHORT m_ColumnWidthArray[MaxColumns];
+	int m_ColumnToItem[MaxColumns];
+	int m_ItemToColumn[MaxColumns];
+	void ResetColumnsArray();
 
 	bool m_bAscendingOrder;
 	bool m_bPrevAscendingOrder;
-	bool m_bSubdirColumnPresent;
 	void UpdateAppSort();
+
+	void PrintColumnOrder();
 
 	virtual ~CAlegrDiffView();
 #ifdef _DEBUG
@@ -111,6 +117,8 @@ public:
 	afx_msg void OnUpdateListviewSortbyDescendingorder(CCmdUI *pCmdUI);
 	afx_msg void OnListviewSortby2ndmodificationdate();
 	afx_msg void OnUpdateListviewSortby2ndmodificationdate(CCmdUI *pCmdUI);
+	afx_msg void OnHdnBegindrag(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnHdnEnddrag(NMHDR *pNMHDR, LRESULT *pResult);
 };
 
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp

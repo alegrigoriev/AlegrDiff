@@ -1,20 +1,23 @@
 TODO:
 
-Make sure to report read errors and file unaccessible errors during fingerprint creation.
-Directory dialog allows to select network host. It won't return anything then.
-Check that the correct OleInitialize succeeded. If not, don't call OleUninitialize.
 Save columns width and order
 Make "Show columns" menu with "reset Columns"
-For binary comparison: show file size
-In Properties dialog: show file size
 Add 1st file size, 2nd file size (with exact size tooltips?)
+For binary comparison: show file size
+Add "CStringHistory" class
+Make sure to report read errors and file unaccessible errors during fingerprint creation.
+In Properties dialog: show file size
 Refresh list view
 Add Copy 1st file text, copy 2nd file text
 Copy binary dump as text
 Switch from text view to binary view
 Add folder picture under the fingerprint picture
+Sort all result codes separately
+Update comparison result on load and reload
+replace edit box with a combobox in FolderDialog
+Add history to SaveListOf Files
 
-Detect "Version stamp different only"
+Detect "Version control information different only"
 Detect "Different in spaces only"
 make word by word comparison in MatchStrings
 show version of file1, file2 of the line
@@ -35,11 +38,19 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+Non-UNICODE OS: doesn't work configuration dialog.
+Non-UNICODE OS: wrong status string
+Non-UNICODE OS: clipboard
+Blank lines prevent from proper line matching inside difference blocks
+"   if()" and "  if ()" shows non-whitespace difference
+Directory dialog allows to select network host. It won't return anything then.
 Subdirectory check fails when checking the fingerprint.
 During binary comparison, alternate "Calculating fingerprint" and "Comparing" messages shown
 screen move in two directions may corrupt the image (??)
 
 Fixed:
+Crash when a folder is specified as file name and Browse clicked
+Binary view: last bytes wrong
 Wrong byte order in text representation, when words are shown
 Crash when openng single binary file
 text files with long lines make it crash (in text mode comparison).
@@ -53,6 +64,7 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+Check that the correct OleInitialize succeeded. If not, don't call OleUninitialize.
 Show replace fingerprint file warning
 Show progress inside one file
 Check fingerprint
@@ -88,12 +100,12 @@ Make binary comparision
 Add save file list
 Add "Hide" to list view context menu
 
-//////////////////////////////
-Comparing files in binary mode:
-1. Load directories
-2. find which files do have a corresponding pair with the same size and calculate CRC32/CRC64/MD5 for them. First calculate for the first source directory and subdirectories, then for the second.
-3. Compare MD5 hash
-
 New state codes:
 Reading first file
 Reading second file
+
+When list view is created, subitems are numbered in contiguous order (1, 2, 3, 4,5) as the columns are added
+When a column is removed, subitem numbers are changed.
+When a column is moved, subitems are reordered.
+When a column is added, its subitem number is the last.
+When a header item is clicked, use subitem number to convert to the column type

@@ -123,7 +123,8 @@ void CSaveFileListDlg::OnButtonBrowse()
 
 	if ( ! Name.IsEmpty())
 	{
-		if (GetFullPathName(Name, MAX_PATH, FullPath, & FileNamePart))
+		if (GetFullPathName(Name, MAX_PATH, FullPath, & FileNamePart)
+			&& NULL != FileNamePart)
 		{
 			_tcsncpy(dlg.m_ofn.lpstrFile, FileNamePart, dlg.m_ofn.nMaxFile - 1);
 			*FileNamePart = 0;

@@ -189,7 +189,7 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 		for (int DrawTextChars = 0; DrawTextChars <= 1; DrawTextChars++)
 		{
 			for (unsigned offset = 0;
-				offset < m_BytesPerLine && (offset < Buf1Filled || offset < Buf2Filled);
+				offset < m_BytesPerLine;
 				offset += m_WordSize)
 			{
 				for (int ByteNum = 1; ByteNum <= m_WordSize; ByteNum++)
@@ -221,9 +221,9 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 					}
 					else
 					{
-						CurrChar = '?';
-						buf[0] = '?';
-						buf[1] = '?';
+						CurrChar = ' ';
+						buf[0] = ' ';
+						buf[1] = ' ';
 						buf[2] = 0;
 					}
 					int chars = 2;

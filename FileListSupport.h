@@ -22,23 +22,38 @@ public:
 public:
 	DWORD GetHash() const { return m_HashCode; }
 	DWORD GetNormalizedHash() const { return m_NormalizedHashCode; }
+
+	DWORD GetGroupHash() const { return m_GroupHashCode; }
+	DWORD GetNormalizedGroupHash() const { return m_NormalizedGroupHashCode; }
+
+	void SetGroupHash(DWORD hash) { m_GroupHashCode = hash; }
+	void SetNormalizedGroupHash(DWORD hash) { m_NormalizedGroupHashCode = hash; }
+
 	bool IsEqual(const FileLine * pOtherLine) const;
 	bool IsNormalizedEqual(const FileLine * pOtherLine) const;
 	bool LooksLike(const FileLine * pOtherLine, int PercentsDifferent) const;
 	bool IsBlank() const { return 0 != (m_Flags & BlankString); }
+
 	bool GetNextToken(TextToken & token);
 	void SetLink(FileLine * pLine) { m_Link = pLine; }
 	FileLine * GetLink() const { return m_Link; }
 	int GetLineNumber() const { return m_Number; }
 	void SetLineNumber(int num) { m_Number = num; }
+	LPCSTR GetText() const { return m_pString; }
+	LPCSTR GetNormalizedText() const { return m_pNormalizedString; }
 
 	static int _cdecl HashCompareFunc(const void * p1, const void * p2);
 	static int _cdecl HashAndLineNumberCompareFunc(const void * p1, const void * p2);
 	static int _cdecl NormalizedHashAndLineNumberCompareFunc(const void * p1, const void * p2);
 
+	static int _cdecl GroupHashAndLineNumberCompareFunc(const void * p1, const void * p2);
+	static int _cdecl NormalizedGroupHashAndLineNumberCompareFunc(const void * p1, const void * p2);
+
 private:
 	DWORD m_HashCode;
+	DWORD m_GroupHashCode;
 	DWORD m_NormalizedHashCode;
+	DWORD m_NormalizedGroupHashCode;
 	DWORD m_Flags;
 	enum { HashValid = 1,
 		BlankString = 2,
@@ -82,8 +97,10 @@ public:
 	LPCTSTR GetSubdir() const { return m_Subdir; }
 	LPCTSTR GetBasedir() const { return m_BaseDir; }
 	FILETIME GetLastWriteTime() const { return m_LastWriteTime; }
-	int FindMatchingLineIndex(const FileLine * pLine, int nStartLineIndex);
-	//int FindMatchingLineGroupIndex(const FileLine * pLine, int nStartLineIndex);
+	const FileLine * FindMatchingLine(const FileLine * pLine, int nStartLineNum, int nEndLineNum);
+	const FileLine * FindMatchingLineGroupLine(const FileLine * pLine, int nStartLineNum, int nEndLineNum);
+
+	enum { MaxLineGroupSize = 32 };
 	FileItem * m_pNext;
 	static int _cdecl NameSortFunc(const void * p1, const void * p2);
 	static int _cdecl DirNameSortFunc(const void * p1, const void * p2);
@@ -101,8 +118,11 @@ private:
 	CString m_BaseDir;
 	FILETIME m_LastWriteTime;
 	CArray<FileLine *, FileLine *> m_Lines;
-	CArray<FileLine *, FileLine *> m_HashSortedLines;
-	CArray<FileLine *, FileLine *> m_NormalizedHashSortedLines;
+	CArray<FileLine *, FileLine *> m_NonBlankLines;
+	CArray<FileLine *, FileLine *> m_HashSortedLines;   // non-blank only
+	CArray<FileLine *, FileLine *> m_HashSortedLineGroups;   // non-blank only
+	CArray<FileLine *, FileLine *> m_NormalizedHashSortedLines;   // non-blank only
+	CArray<FileLine *, FileLine *> m_NormalizedHashSortedLineGroups;   // non-blank only
 	CArray<TextToken, TextToken> m_Tokens;
 	friend struct FilePair;
 };

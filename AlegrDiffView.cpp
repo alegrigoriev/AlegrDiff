@@ -295,7 +295,7 @@ void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 	{
 		if (pNmlv->iItem >= 0 && pNmlv->iItem < m_PairArray.GetSize())
 		{
-			m_PairArray[pNmlv->iItem]->CompareFiles();
+			m_PairArray[pNmlv->iItem]->CompareFiles(true);
 		}
 	}
 

@@ -1289,7 +1289,7 @@ const FileLine * FileItem::FindMatchingLineGroupLine(const FileLine * pLine, uns
 
 bool FileList::LoadFolder(const CString & BaseDir, bool bRecurseSubdirs,
 						LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
-						LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask)
+						LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask, LPCTSTR sIgnoreDirs)
 {
 	// make sure the directory is appended with '\', or ends with ':'
 	m_BaseDir = BaseDir;
@@ -1305,12 +1305,13 @@ bool FileList::LoadFolder(const CString & BaseDir, bool bRecurseSubdirs,
 		}
 	}
 	return LoadSubFolder(CString(), bRecurseSubdirs, sInclusionMask, sExclusionMask,
-						sC_CPPMask, sBinaryMask);
+						sC_CPPMask, sBinaryMask, sIgnoreDirs);
 }
 
 bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 							LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
-							LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask)
+							LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask,
+							LPCTSTR sIgnoreDirs)
 {
 	TRACE(_T("LoadSubFolder: scanning %s\n"), LPCTSTR(Subdir));
 	CThisApp * pApp = GetApp();
@@ -1338,6 +1339,7 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 			if ( ! bRecurseSubdirs
 				|| 0 == _tcscmp(wfd.cFileName, _T("."))
 				|| 0 == _tcscmp(wfd.cFileName, _T(".."))
+				|| MultiPatternMatches(wfd.cFileName, sIgnoreDirs)
 				)
 			{
 				continue;
@@ -1346,7 +1348,7 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 			// scan the subdirectory
 			CString NewDir = SubDirectory + wfd.cFileName;
 			LoadSubFolder(NewDir, true,
-						sInclusionMask, sExclusionMask, sC_CPPMask, sBinaryMask);
+						sInclusionMask, sExclusionMask, sC_CPPMask, sBinaryMask, sIgnoreDirs);
 
 			wfd.cFileName[countof(wfd.cFileName) - 2] = 0;
 			_tcscat(wfd.cFileName, _T("\\"));

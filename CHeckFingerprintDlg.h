@@ -1,10 +1,10 @@
 #pragma once
 #include "afxwin.h"
-
+#include "UiUpdatedDlg.h"
 
 // CCheckFingerprintDlg dialog
 
-class CCheckFingerprintDlg : public CDialog
+class CCheckFingerprintDlg : public CUiUpdatedDlg
 {
 	DECLARE_DYNAMIC(CCheckFingerprintDlg)
 
@@ -14,7 +14,6 @@ public:
 
 // Dialog Data
 	enum { IDD = IDD_DIALOG_DIR_FINGERPRINT_CHECK };
-	BOOL m_bNeedUpdateControls;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -33,7 +32,6 @@ public:
 	CStringHistory m_FingerprintFilenameHistory;
 
 	void OnUpdateOk(CCmdUI * pCmdUI);
-	LRESULT OnKickIdle(WPARAM, LPARAM);
 	afx_msg void OnCbnEditchangeComboFirstDir();
 	afx_msg void OnCbnSelchangeComboFirstDir();
 	afx_msg void OnCbnEditchangeComboSaveFilename();

@@ -6,11 +6,11 @@
 #endif // _MSC_VER > 1000
 // SaveFileListDlg.h : header file
 //
-
+#include "UiUpdatedDlg.h"
 /////////////////////////////////////////////////////////////////////////////
 // CSaveFileListDlg dialog
 
-class CSaveFileListDlg : public CDialog
+class CSaveFileListDlg : public CUiUpdatedDlg
 {
 // Construction
 public:
@@ -32,11 +32,9 @@ public:
 	int		m_IncludeFilesSelect;
 	//}}AFX_DATA
 
-	bool m_bNeedUpdateControls;
 	CApplicationProfile m_Profile;
 // Overrides
 	// ClassWizard generated virtual function overrides
-	LRESULT OnKickIdle(WPARAM, LPARAM);
 	void OnUpdateOk(CCmdUI * pCmdUI);
 	void OnUpdateCheckIncludeGroup(CCmdUI * pCmdUI);
 	//{{AFX_VIRTUAL(CSaveFileListDlg)

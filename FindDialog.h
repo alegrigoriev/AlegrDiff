@@ -6,11 +6,12 @@
 #endif // _MSC_VER > 1000
 // FindDialog.h : header file
 //
+#include "UiUpdatedDlg.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CMyFindDialog dialog
 
-class CMyFindDialog : public CDialog
+class CMyFindDialog : public CUiUpdatedDlg
 {
 // Construction
 public:
@@ -25,7 +26,6 @@ public:
 	int		m_FindDown;
 	//}}AFX_DATA
 	CString	m_sFindCombo;
-	BOOL m_bNeedUpdateControls;
 	// 0 - both files, 1 - file1, 2 - file2
 	int m_SearchScope;
 // Overrides
@@ -48,7 +48,6 @@ public:
 	afx_msg void OnBnClickedRadio2();
 	afx_msg void OnBnClickedRadio3();
 	afx_msg void OnBnClickedCheckWholeWord();
-	afx_msg LRESULT OnKickIdle(WPARAM, LPARAM);
 	afx_msg void OnUpdateCheckWholeWord(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateOk(CCmdUI* pCmdUI);
 };

@@ -13,9 +13,10 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CResizableDialog dialog
 
+IMPLEMENT_DYNAMIC(CResizableDialog, CUiUpdatedDlg)
 
 CResizableDialog::CResizableDialog(UINT id, CWnd* pParent)
-	: CDialog(id, pParent)
+	: CUiUpdatedDlg(id, pParent)
 {
 	//{{AFX_DATA_INIT(CResizableDialog)
 	// NOTE: the ClassWizard will add member initialization here
@@ -31,7 +32,7 @@ CResizableDialog::CResizableDialog(UINT id, CWnd* pParent)
 }
 
 
-BEGIN_MESSAGE_MAP(CResizableDialog, CDialog)
+BEGIN_MESSAGE_MAP(CResizableDialog, CUiUpdatedDlg)
 	//{{AFX_MSG_MAP(CResizableDialog)
 	ON_WM_SIZE()
 	ON_WM_SIZING()
@@ -62,7 +63,7 @@ void CResizableDialog::OnMetricsChange()
 
 void CResizableDialog::OnSize(UINT nType, int cx, int cy)
 {
-	CDialog::OnSize(nType, cx, cy);
+	CUiUpdatedDlg::OnSize(nType, cx, cy);
 
 	if (m_PrevSize.cx < 0)
 	{
@@ -145,7 +146,7 @@ void CResizableDialog::OnSize(UINT nType, int cx, int cy)
 
 void CResizableDialog::OnSizing(UINT fwSide, LPRECT pRect)
 {
-	CDialog::OnSizing(fwSide, pRect);
+	CUiUpdatedDlg::OnSizing(fwSide, pRect);
 
 	// invalidate an area currently (before resizing)
 	// occupied by size grip
@@ -165,13 +166,13 @@ void CResizableDialog::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI)
 	}
 	else
 	{
-		CDialog::OnGetMinMaxInfo(lpMMI);
+		CUiUpdatedDlg::OnGetMinMaxInfo(lpMMI);
 	}
 }
 
 BOOL CResizableDialog::OnEraseBkgnd(CDC* pDC)
 {
-	if (CDialog::OnEraseBkgnd(pDC))
+	if (CUiUpdatedDlg::OnEraseBkgnd(pDC))
 	{
 		// draw size grip
 		CRect r;
@@ -203,13 +204,13 @@ UINT CResizableDialog::OnNcHitTest(CPoint point)
 		return HTBOTTOMRIGHT;
 	}
 	else
-		return CDialog::OnNcHitTest(point);
+		return CUiUpdatedDlg::OnNcHitTest(point);
 }
 
 
 BOOL CResizableDialog::OnInitDialog()
 {
-	CDialog::OnInitDialog();
+	CUiUpdatedDlg::OnInitDialog();
 
 	// init MINMAXINFO
 	OnMetricsChange();
@@ -246,5 +247,14 @@ void CResizableDialog::OnOK()
 	m_DlgWidth = r.Width();
 	m_DlgHeight = r.Height();
 
-	CDialog::OnOK();
+	CUiUpdatedDlg::OnOK();
+}
+
+INT_PTR CResizableDialog::DoModal()
+{
+	m_PrevSize.cy = -1;
+	m_PrevSize.cx = -1;
+	memzero(m_mmxi);
+
+	return CUiUpdatedDlg::DoModal();
 }

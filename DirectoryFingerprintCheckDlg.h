@@ -24,6 +24,8 @@ public:
 	CString m_FingerprintFilename;
 	CString m_sFilenameFilter;
 	CString m_sIgnoreFiles;
+	CString m_sIgnoreFolders;
+
 	FILE * m_pFile;
 	virtual unsigned ThreadProc();
 

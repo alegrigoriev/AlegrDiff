@@ -130,6 +130,7 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 
 	CString ExclusionPattern(PatternToMultiCString(m_sIgnoreFiles));
 	CString InclusionPattern(PatternToMultiCString(m_sFilenameFilter));
+	CString IgnoreDirsPattern(PatternToMultiCString(m_sIgnoreFolders));
 
 	TCHAR FileName[512];
 	while(NULL != _fgetts(buf, 1023, m_pFile))
@@ -261,7 +262,7 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 
 	if (! FileList2.LoadFolder(buf, m_bIncludeSubdirectories != 0,
 								InclusionPattern, ExclusionPattern, PatternToMultiCString(_T("")),
-								PatternToMultiCString(_T("*"))))
+								PatternToMultiCString(_T("*")), IgnoreDirsPattern))
 	{
 		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, buf);
 

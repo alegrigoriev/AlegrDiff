@@ -17,12 +17,13 @@ static char THIS_FILE[] = __FILE__;
 
 
 CCompareDirsDialog::CCompareDirsDialog(CWnd* pParent /*=NULL*/)
-	: CDialog(CCompareDirsDialog::IDD, pParent),
+	: CResizableDialog(CCompareDirsDialog::IDD, pParent),
 	m_bAdvanced(false),
 	m_nTabIndent(4)
 	, m_BinaryFilterHistory(& m_Profile, _T("History"), _T("BinaryFiles%d"), 5)
 	, m_CppFilterHistory(& m_Profile, _T("History"), _T("CppFiles%d"), 5)
 	, m_IgnoreFilterHistory(& m_Profile, _T("History"), _T("IgnoreFiles%d"), 10)
+	, m_IgnoreFoldersHistory(& m_Profile, _T("History"), _T("IgnoreFolders%d"), 10)
 {
 	//{{AFX_DATA_INIT(CCompareDirsDialog)
 	m_bIncludeSubdirs = FALSE;
@@ -32,12 +33,30 @@ CCompareDirsDialog::CCompareDirsDialog(CWnd* pParent /*=NULL*/)
 	m_BinaryComparision = FALSE;
 	//}}AFX_DATA_INIT
 	m_bUseMd5 = TRUE;
+
+	static const ResizableDlgItem items[] =
+	{
+		IDC_COMBO_FIRST_DIR, ExpandRight,
+		IDC_COMBO_SECOND_DIR, ExpandRight,
+		IDC_EDITFILENAME_FILTER, ExpandRight,
+		IDC_EDIT_BINARY_FILES, ExpandRight,
+		IDC_EDIT_C_CPP, ExpandRight,
+		IDC_EDIT_IGNORE, ExpandRight,
+		IDC_EDIT_IGNORE_DIRS, ExpandRight,
+		IDC_BUTTON_BROWSE_FIRST_DIR, MoveRight,
+		IDC_BUTTON_BROWSE_SECOND_DIR, MoveRight,
+		IDC_BUTTON_ADVANCED, MoveRight,
+		IDOK, CenterHorizontally,
+		IDCANCEL, CenterHorizontally,
+	};
+	m_pResizeItems = items;
+	m_pResizeItemsCount = countof (items);
 }
 
 
 void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
+	CResizableDialog::DoDataExchange(pDX);
 	CThisApp * pApp = GetApp();
 	//{{AFX_DATA_MAP(CCompareDirsDialog)
 	DDX_Control(pDX, IDC_COMBO_FIRST_DIR, m_FirstDirCombo);
@@ -56,10 +75,12 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 		DDX_Control(pDX, IDC_EDIT_BINARY_FILES, m_cbBinaryFilesFilter);
 		DDX_Control(pDX, IDC_EDIT_C_CPP, m_cbCppFilesFilter);
 		DDX_Control(pDX, IDC_EDIT_IGNORE, m_cbIgnoreFilesFilter);
+		DDX_Control(pDX, IDC_EDIT_IGNORE_DIRS, m_cbIgnoreFoldersFilter);
 
 		DDX_CBString(pDX, IDC_EDIT_BINARY_FILES, m_sBinaryFilesFilter);
 		DDX_CBString(pDX, IDC_EDIT_C_CPP, m_sCppFilesFilter);
 		DDX_CBString(pDX, IDC_EDIT_IGNORE, m_sIgnoreFilesFilter);
+		DDX_CBString(pDX, IDC_EDIT_IGNORE_DIRS, m_sIgnoreFoldersFilter);
 
 		DDX_Text(pDX, IDC_EDIT_TAB_INDENT, m_nTabIndent);
 		DDV_MinMaxUInt(pDX, m_nTabIndent, 0, 32);
@@ -77,20 +98,26 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 		m_BinaryFilterHistory.AddString(m_sBinaryFilesFilter);
 		m_CppFilterHistory.AddString(m_sCppFilesFilter);
 		m_IgnoreFilterHistory.AddString(m_sIgnoreFilesFilter);
+		m_IgnoreFoldersHistory.AddString(m_sIgnoreFoldersFilter);
 
 		m_Profile.UnloadAll();
 	}
 }
 
 
-BEGIN_MESSAGE_MAP(CCompareDirsDialog, CDialog)
+BEGIN_MESSAGE_MAP(CCompareDirsDialog, CResizableDialog)
 	//{{AFX_MSG_MAP(CCompareDirsDialog)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_FIRST_DIR, OnButtonBrowseFirstDir)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_SECOND_DIR, OnButtonBrowseSecondDir)
 	ON_BN_CLICKED(IDC_BUTTON_ADVANCED, OnButtonAdvanced)
 	ON_BN_CLICKED(IDC_CHECK_BINARY, OnCheckBinary)
+	ON_BN_CLICKED(IDC_CHECK_INCLUDE_SUBDIRS, OnCheckIncludeSubdirs)
 	ON_WM_DROPFILES()
 	//}}AFX_MSG_MAP
+	ON_UPDATE_COMMAND_UI(IDC_EDIT_IGNORE_DIRS, OnUpdateIgnoreDirs)
+	ON_UPDATE_COMMAND_UI(IDC_EDIT_BINARY_FILES, OnUpdateEditBinaryFiles)
+	ON_UPDATE_COMMAND_UI(IDC_EDIT_C_CPP, OnUpdateEditCCpp)
+	ON_UPDATE_COMMAND_UI(IDC_EDIT_TAB_INDENT, OnUpdateTabIndent)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -133,7 +160,7 @@ void CCompareDirsDialog::OnButtonAdvanced()
 	}
 }
 
-int CCompareDirsDialog::DoModal()
+INT_PTR CCompareDirsDialog::DoModal()
 {
 	int Result;
 	CThisApp * pApp = GetApp();
@@ -160,7 +187,8 @@ int CCompareDirsDialog::DoModal()
 		{
 			m_lpszTemplateName = MAKEINTRESOURCE(IDD_DIALOG_COMPARE_DIRS);
 		}
-		Result = CDialog::DoModal();
+
+		Result = CResizableDialog::DoModal();
 		if (Result != IDC_BUTTON_ADVANCED)
 		{
 			break;
@@ -172,23 +200,12 @@ int CCompareDirsDialog::DoModal()
 
 void CCompareDirsDialog::OnCheckBinary()
 {
-	BOOL NotBinary = ! IsDlgButtonChecked(IDC_CHECK_BINARY);
+	NeedUpdateControls();
+}
 
-	CWnd * pWnd = GetDlgItem(IDC_EDIT_C_CPP);
-	if (pWnd)
-	{
-		pWnd->EnableWindow(NotBinary);
-	}
-	pWnd = GetDlgItem(IDC_EDIT_BINARY_FILES);
-	if (pWnd)
-	{
-		pWnd->EnableWindow(NotBinary);
-	}
-	pWnd = GetDlgItem(IDC_EDIT_TAB_INDENT);
-	if (pWnd)
-	{
-		pWnd->EnableWindow(NotBinary);
-	}
+void CCompareDirsDialog::OnCheckIncludeSubdirs()
+{
+	NeedUpdateControls();
 }
 
 BOOL CCompareDirsDialog::OnInitDialog()
@@ -200,8 +217,9 @@ BOOL CCompareDirsDialog::OnInitDialog()
 	m_CppFilterHistory.Load();
 
 	m_IgnoreFilterHistory.Load();
+	m_IgnoreFoldersHistory.Load();
 
-	CDialog::OnInitDialog();
+	CResizableDialog::OnInitDialog();
 
 	// set the filters to combobox
 	m_FirstDirCombo.LimitText(MAX_PATH);
@@ -218,9 +236,9 @@ BOOL CCompareDirsDialog::OnInitDialog()
 		m_BinaryFilterHistory.LoadCombo( & m_cbBinaryFilesFilter);
 		m_CppFilterHistory.LoadCombo( & m_cbCppFilesFilter);
 		m_IgnoreFilterHistory.LoadCombo( & m_cbIgnoreFilesFilter);
+		m_IgnoreFoldersHistory.LoadCombo( & m_cbIgnoreFoldersFilter);
 	}
 
-	OnCheckBinary();
 	DragAcceptFiles();
 
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -280,4 +298,31 @@ void CCompareDirsDialog::OnDropFiles(HDROP hDropInfo)
 			// TODO
 		}
 	}
+}
+
+void CCompareDirsDialog::OnUpdateIgnoreDirs(CCmdUI * pCmdUI)
+{
+	pCmdUI->Enable(IsDlgButtonChecked(IDC_CHECK_INCLUDE_SUBDIRS));
+}
+
+void CCompareDirsDialog::OnUpdateEditBinaryFiles(CCmdUI * pCmdUI)
+{
+	pCmdUI->Enable(! IsDlgButtonChecked(IDC_CHECK_BINARY));
+}
+
+void CCompareDirsDialog::OnUpdateEditCCpp(CCmdUI * pCmdUI)
+{
+	pCmdUI->Enable(! IsDlgButtonChecked(IDC_CHECK_BINARY));
+}
+
+void CCompareDirsDialog::OnUpdateTabIndent(CCmdUI * pCmdUI)
+{
+	pCmdUI->Enable(! IsDlgButtonChecked(IDC_CHECK_BINARY));
+}
+
+void CCompareDirsDialog::OnMetricsChange()
+{
+	CResizableDialog::OnMetricsChange();
+	m_mmxi.ptMaxTrackSize.y = m_mmxi.ptMinTrackSize.y;
+	m_mmxi.ptMaxSize.y = m_mmxi.ptMinTrackSize.y;
 }

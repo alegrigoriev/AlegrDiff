@@ -1,7 +1,10 @@
 TODO:
 
 Add "Ignore folders" option
+Assign an index to the files during original sort (for faster sorting)
+View files side by side
 Find full word only
+Allow doublequotes in the search pattern
 Resync file list when compare result changed.
 Use OnActivateApp to refresh the files
 Make radio buttons in file compare dialog: Binary Text Default
@@ -14,7 +17,7 @@ Add folder picture under the fingerprint picture
 make word by word comparison in MatchStrings
 Make HTML help
 Check that all dialog boxes got HWND, for the correct monitor
-File\Preferences dialog must remeber selected tab for current session.
+File\Preferences dialog must remember selected tab for current session.
 
 Maybe different color for selected accepted/declined
 add option to keep the caret on one line during F3 and F7
@@ -33,6 +36,8 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+History gets lost
+Creates Recent File List subkey and deletes it on exit
 Zero byte in text file is causing text not shown
 "Length" column On/Off not saved
 Focus after hiding files
@@ -86,6 +91,7 @@ insufficient space allocated for copying files
 
 Done:
 
+Must indicate time-consuming operations (like sorting a file list) with Hour Glass cursor.
 Make progress dialog for binary comparision
 Swap "File 2 Text" (V) "File 1 Text" (X) buttons in toolbar.
 Hide files: Ctrl+H

@@ -17,21 +17,21 @@ to merge the text differences from two files.</p>
 another directory, optionally with the subdirectories, or just one file against
 another file. The differences are shown with different font and
 color.</p>
-<p align="left">The files are compared either as text or binary.</p>
+<p align="left">The files are compared either as text or binary. <b>Beta 1.00
+doesn't support binary comparison yet.</b></p>
 <p align="left">To compare just two files, select <font face="Microsoft Sans Serif">File/Compare
-Files</font> command in the menu, or click <img border="0" src="CompareFiles.png" width="16" height="15">
-toolbar button. You will be prompted for the first file, then for the second
-file. The file open dialogs have <b>Recent Dirs</b> combobox, which allows you
-to jump to one of recent folders you used, and <b>Binary comparision</b>
-checkbox:</p>
-<p align="left"><img border="0" src="OpenFirstFile.png" width="600" height="408"></p>
-<p align="left">&nbsp;</p>
+Files...</font> command in the menu, or click <img border="0" src="CompareFiles.png" width="16" height="15">
+toolbar button. You will be presented with <b>Compare Files&nbsp;</b> dialog:</p>
+<p align="left"><img border="0" src="CompareFilesDlg.png" width="504" height="256"></p>
+<p align="left">You can select one of recently used files, by opening the
+combobox list, or browse for file by clicking <img border="0" src="BrowseButton.png" align="center" width="37" height="30">
+button.</p>
 <p align="left">To compare directories, select <b>File/Compare Directories... </b>
 command in the menu, or click <img border="0" src="CompareDirs.png" width="16" height="15">
 toolbar button. In the following dialog you can type in the directory names, or,
-by clicking on the [<b>...] </b>buttons, select them from the directory tree, or
-select from recently used folders.</p>
-<p align="left"><img border="0" src="CompareDirsDlg.png" width="420" height="368"></p>
+browse for directory by clicking <img border="0" src="BrowseButton.png" align="center" width="37" height="30"><b>
+</b>button, or, by opening the combobox list, select from recently used folders.</p>
+<p align="left"><img border="0" src="CompareDirsDlg.png" width="466" height="368"></p>
 <p align="left">In the <b>Filename filter</b> edit box you can specify pattern for the filenames to be included in
 comparison. You can specify one or a
 number of patterns, separated by comma or by semicolon, for example *.c<b> </b>or
@@ -59,7 +59,8 @@ one, by pressing <b>Enter</b> key. The program allows to keep several files open
 which is only in the first or second file is shown with different style and
 color. Default for file 1 text is <font color="#FF0000"><strike>strikethrough,
 red</strike></font>, for file 2 text is <font color="#0000FF"><u>underlined, blue</u></font>.
-You can change this in the <b>Preferences</b> dialog. You can move to the next
+You can change this in the <b>Preferences</b> dialog. The program detects
+inserted and deleted lines, and in-line changes. You can move to the next
 difference by clicking <img border="0" src="NextDiff.png" width="18" height="18">
 button, or by pressing <b>F7</b> key. You can move to the previous difference by
 clicking <img border="0" src="PrevDifference.png" width="18" height="18">
@@ -76,7 +77,7 @@ shows line numbers along with the text. Numbers of lines which are present in
 both files are shown in black, numbers of first-file-only lines are shown in red
 (or whatever color is chosen for the erased text), numbers of second-file-only
 lines are shown in blue:</p>
-<p align="left"><img border="1" src="TextWithLineNumbers.png" width="608" height="155"></p>
+<p align="left"><img border="1" src="TextWithLineNumbers.png" width="735" height="142"></p>
 <p align="left">Toolbar button <img border="0" src="IgnoreWhitespaces.png" width="19" height="20">
 hides whitespace difference. Not all spaces are ignored, but only those which
 don't change the text syntax and meaning. See, for example, the original text:</p>
@@ -101,10 +102,10 @@ the text which goes to the merged file is shown with green background:</p>
 <p align="left"><img border="1" src="MergedText.png" width="436" height="133"></p>
 <p align="left">You can change these colors, by <b>File/Preferences </b>dialog, <b>View</b>
 tab.</p>
-<p align="left">To <b>accept </b>the difference, set the caret on it and select <b>Merge/Accept</b>
-menu command, or click <img border="0" src="AcceptButton.png" width="17" height="17">
-toolbar button, or press <b>Shift+F6</b>. To <b>decline</b> the difference, set
-the caret on it and select <b>Merge/Decline</b> menu command, or click <img border="0" src="DeclineButton.png" width="18" height="18">
+<p align="left">To <b>accept </b>the difference, set the caret on it and select <b>Merge/Merge
+File 1 Text</b> menu command, or click <img border="0" src="AcceptButton.png" width="17" height="17">
+toolbar button, or press <b>Shift+F6</b>. To <b>discard</b> the difference, set
+the caret on it and select <b>Merge/Merge File 2 Text</b> menu command, or click <img border="0" src="DeclineButton.png" width="18" height="18">
 toolbar button, or press <b>F6</b>. You can also do the operation over all the
 differences in the selected text area. Text selection is done by the standard
 keyboard and mouse means. Accept/Decline commands are also available in the
@@ -123,8 +124,48 @@ selecting the corresponding command from <b>File </b>menu. If you change the
 file and save it, you can reload it by pressing <b>F5</b>, to see the most
 current differences. You can enable automatic reload in <b>Preferences</b>
  dialog, <b>Files</b> tab.</p>
-<p align="left">&nbsp;</p>
-<p align="left">&nbsp;</p>
+<p align="left"><b>Setting the preferences</b></p>
+<p align="left">To change file, comparison and view preferences, open <b>Preferences
+</b>dialog by selecting <b>File/Preferences... </b> menu command, or by clicking
+<img border="0" src="PreferencesButton.png" width="18" height="18"> toolbar
+button.</p>
+<p align="left">The <b>Preferences </b>dialog has three tabs: <b> Files</b>, <b>Comparison</b>,
+<b>View</b>. <b>Files </b>tab looks as follows:</p>
+<p align="left"><img border="0" src="FilesPreferences.png" width="482" height="397"></p>
+<p align="left">&quot;Compare the following files as C/C++&quot; checkbox and
+edit field allow to specify files for which C/C++ syntax rules will be used.
+Those rules tell which whitespace can be removed without breaking the syntax.</p>
+
+<p align="left">&quot;Automatically reload modified files&quot; specifies
+whether the program, when it becomes the active application, will check for the
+files last modification time. If any file time changed, the files will be
+automatically reloaded and shown with the new content.</p>
+
+<p align="left"><b>Comparison</b> tab looks as follows:</p>
+
+<p align="left"><img border="0" src="ComparisonTab.png" width="482" height="397"></p>
+
+<p align="left">&quot;Number of consecutive identical lines&quot; specifies how
+many non-blank lines should match when the program looks for identical region.</p>
+
+<p align="left">&quot;Minimal line length for search&quot; specifies minimal
+number of non-space characters in the lines to be checked for single-line match.
+If 1 is specified, even lines with only curly braces will be checked; it may
+cause false detection. Default value is 2.</p>
+<p align="left">&quot;Percent of difference in &quot;looking like&quot;
+lines&quot; specifies how much different lines can be, to be shown as single
+line with in-line differences. The greater is the value, the more different
+lines could be. If two lines are too much different, they will be shown
+separately, as removed and added lines.</p>
+<p align="left">&quot;Minimum matching chars for in-line comparison&quot;
+specifies now many characters should be equal when the program is trying to find
+an identical region, when building list of in-line differences.</p>
+<p align="left"><b>View</b> tab looks as follows:</p>
+<p align="left"><img border="0" src="ViewPreferencesTab.png" width="482" height="397"></p>
+<p align="left">&quot;Tab Indent&quot; specifies now many spaces should be
+substituted for one tab character.</p>
+<p align="left">&quot;Font&quot; and &quot;Background&quot; buttons allow to set
+font and background for the corresponding file view elements.</p>
 
 </body>
 

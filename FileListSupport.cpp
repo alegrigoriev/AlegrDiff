@@ -2368,8 +2368,10 @@ FilePair::eFileComparisionResult FilePair::CompareFiles()
 	{
 		// just build the line array
 		FileItem * pFile = pFirstFile;
+		result = OnlyFirstFile;
 		if (NULL == pFile)
 		{
+			result = OnlySecondFile;
 			pFile = pSecondFile;
 		}
 		if (NULL != pFile)

@@ -152,7 +152,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("CopyFilesDir"), m_CopyFilesDir, _T("."));
 
 	//Profile.AddItem(_T("Settings"), _T("FilenameFilter"), m_sFilenameFilter, _T("*"));
-	Profile.AddItem(_T("Settings"), _T("UseBinaryFilesFilter"), m_bUseBinaryFilesFilter, true);
+	Profile.AddItem(_T("Settings"), _T("UseBinaryFilesFilter"), m_bUseBinaryFilesFilter, false);
 	Profile.AddItem(_T("Settings"), _T("UseCppFilter"), m_bUseCppFilter, true);
 	Profile.AddItem(_T("Settings"), _T("UseIgnoreFilter"), m_bUseIgnoreFilter, true);
 	Profile.AddItem(_T("Settings"), _T("AdvancedCompareDialog"), m_bAdvancedCompareDialog, false);
@@ -415,7 +415,7 @@ void CAlegrDiffApp::OnFilePreferences()
 		m_bUseIgnoreFilter = (0 != dlg.m_FilesPage.m_bUseIgnoreFilter);
 		m_sIgnoreFilesFilter = dlg.m_FilesPage.m_sIgnoreFilesFilter;
 
-		m_AutoReloadChangedFiles = dlg.m_FilesPage.m_AutoReloadChangedFiles;
+		m_AutoReloadChangedFiles = (0 != dlg.m_FilesPage.m_AutoReloadChangedFiles);
 
 		m_TabIndent = dlg.m_ViewPage.m_nTabIndent;
 		m_MinimalLineLength = dlg.m_ComparisionPage.m_MinimalLineLength;
@@ -788,7 +788,7 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 
 		m_TabIndent = dlg.m_nTabIndent;
 
-		m_BinaryComparision = dlg.m_BinaryComparision;
+		m_BinaryComparision = (0 != dlg.m_BinaryComparision);
 
 		m_bAdvancedCompareDialog = dlg.m_bAdvanced;
 
@@ -843,7 +843,7 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 		}
 
 		m_UsedFilenameFilter = dlg.m_UsedFilenameFilter;
-		m_BinaryComparision = dlg.m_bBinaryFile;
+		m_BinaryComparision = (0 != dlg.m_bBinaryFile);
 		Name1 = dlg.m_sFirstFileName;
 		Name2 = dlg.m_sSecondFileName;
 	}

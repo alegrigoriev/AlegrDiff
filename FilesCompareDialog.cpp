@@ -114,7 +114,6 @@ void COpenDiffDialog::OnComboSelendOK()
 BOOL COpenDiffDialog::OnFileNameOK()
 {
 	// add the current directory name to MRU
-	int i, j;
 	CThisApp * pApp = GetApp();
 	CString sCurrDir;
 	GetParent()->SendMessage(CDM_GETFOLDERPATH, MAX_PATH, LPARAM(sCurrDir.GetBuffer(MAX_PATH)));
@@ -135,14 +134,29 @@ void COpenDiffDialog::OnInitDone()
 	CComboBox * pCb = static_cast<CComboBox *>(GetDlgItem(IDC_COMBO_RECENT));
 	if (NULL != pCb)
 	{
+		CString dir(m_ofn.lpstrInitialDir);
+		if (dir.GetLength() > 1
+			&& dir[dir.GetLength() - 1] == '\\')
+		{
+			dir.SetAt(dir.GetLength() - 1, 0);
+		}
 		pCb->SetExtendedUI();
 		CThisApp * pApp = GetApp();
+		int sel = -1;
 		for (int i = 0; i < sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0]; i++)
 		{
 			if ( ! pApp->m_RecentFolders[i].IsEmpty())
 			{
 				pCb->AddString(pApp->m_RecentFolders[i]);
+				if (0 == pApp->m_RecentFolders[i].CompareNoCase(dir))
+				{
+					sel = i;
+				}
 			}
+		}
+		if (-1 != sel)
+		{
+			pCb->SetCurSel(sel);
 		}
 	}
 }

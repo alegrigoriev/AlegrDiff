@@ -45,6 +45,7 @@ BEGIN_MESSAGE_MAP(CDiffFileView, CView)
 	ON_WM_MOUSEMOVE()
 	ON_WM_MOUSEWHEEL()
 	ON_WM_SIZE()
+	ON_WM_SETCURSOR()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -324,11 +325,15 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 	case VK_PRIOR:
 		TRACE("VK_PRIOR\n");
+		// do VScroll and move cursor, to keep the cursor at the same line
+		DoVScroll(-(nLinesInView - 1));
 		MoveCaretBy(0, -(nLinesInView - 1), bCancelSelection);
 		break;
 
 	case VK_NEXT:
 		TRACE("VK_NEXT\n");
+		// do VScroll and move cursor, to keep the cursor at the same line
+		DoVScroll(nLinesInView - 1);
 		MoveCaretBy(0, nLinesInView - 1, bCancelSelection);
 		break;
 	}
@@ -639,6 +644,7 @@ void CDiffFileView::OnSetFocus(CWnd* pOldWnd)
 
 void CDiffFileView::CancelSelection()
 {
+	// TODO
 }
 
 void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
@@ -658,7 +664,7 @@ void CDiffFileView::OnLButtonUp(UINT nFlags, CPoint point)
 
 void CDiffFileView::OnMouseMove(UINT nFlags, CPoint point)
 {
-	// TODO: Add your message handler code here and/or call default
+	// TODO: make mouse selection
 
 	CView::OnMouseMove(nFlags, point);
 }
@@ -684,4 +690,12 @@ void CDiffFileView::OnSize(UINT nType, int cx, int cy)
 	UpdateVScrollBar();
 	UpdateHScrollBar();
 
+}
+
+BOOL CDiffFileView::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
+{
+	SetCursor(GetApp()->LoadCursor(IDC_CURSOR_BEAM));
+	return TRUE;
+
+	return CView::OnSetCursor(pWnd, nHitTest, message);
 }

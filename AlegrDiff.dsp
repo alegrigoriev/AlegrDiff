@@ -222,6 +222,10 @@ SOURCE=.\res\AlegrDiffDoc.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\cur00002.cur
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\icon1.ico
 # End Source File
 # Begin Source File

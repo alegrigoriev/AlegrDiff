@@ -7,6 +7,7 @@
 #define IDR_ALEGRDTYPE                  129
 #define IDD_DIALOG_COMPARE_DIRS         130
 #define IDR_FILEDIFFTYPE                131
+#define IDC_CURSOR_BEAM                 150
 #define IDC_COMBO_FIRST_DIR             1000
 #define IDC_COMBO_SECOND_DIR            1001
 #define IDC_BUTTON_BROWSE_FIRST_DIR     1002
@@ -18,7 +19,6 @@
 #define ID_EDIT_ACCEPT                  32778
 #define ID_EDIT_DECLINE                 32779
 #define ID_WINDOW_CLOSE_DIFF            32780
-#define ID_EDIT_CURSOR_DOWN             32781
 
 // Next default values for new objects
 //

@@ -59,18 +59,53 @@ END_MESSAGE_MAP()
 
 void CPreferencesDialog::OnCheckBinaryFiles()
 {
-	// TODO: Add your control notification handler code here
-
+	CWnd * pEdit = GetDlgItem(IDC_EDIT_BINARY_FILES);
+	if (pEdit)
+	{
+		pEdit->EnableWindow(IsDlgButtonChecked(IDC_CHECK_BINARY_FILES));
+	}
 }
 
 void CPreferencesDialog::OnCheckCCpp()
 {
-	// TODO: Add your control notification handler code here
-
+	CWnd * pEdit = GetDlgItem(IDC_EDIT_C_CPP);
+	if (pEdit)
+	{
+		pEdit->EnableWindow(IsDlgButtonChecked(IDC_CHECK_C_CPP));
+	}
 }
 
 void CPreferencesDialog::OnCheckIgnore()
 {
-	// TODO: Add your control notification handler code here
+	CWnd * pEdit = GetDlgItem(IDC_EDIT_IGNORE);
+	if (pEdit)
+	{
+		pEdit->EnableWindow(IsDlgButtonChecked(IDC_CHECK_IGNORE));
+	}
+}
 
+BOOL CPreferencesDialog::OnInitDialog()
+{
+	CDialog::OnInitDialog();
+
+	CWnd * pEdit = GetDlgItem(IDC_EDIT_C_CPP);
+	if (pEdit)
+	{
+		pEdit->EnableWindow(m_bUseCppFilter);
+	}
+
+	pEdit = GetDlgItem(IDC_EDIT_BINARY_FILES);
+	if (pEdit)
+	{
+		pEdit->EnableWindow(m_bUseBinaryFilesFilter);
+	}
+
+	pEdit = GetDlgItem(IDC_EDIT_IGNORE);
+	if (pEdit)
+	{
+		pEdit->EnableWindow(m_bUseIgnoreFilter);
+	}
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+	// EXCEPTION: OCX Property Pages should return FALSE
 }

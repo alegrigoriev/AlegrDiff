@@ -66,6 +66,22 @@ public:
 	~CApplicationProfileItemInt() {}
 };
 
+class CApplicationProfileItemBool: public CApplicationProfileItemInt
+{
+	bool & Ref;
+	int m_TempVal;
+	bool InitialData;
+	bool m_bDefault;
+public:
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+	virtual void ResetToDefault();
+	virtual void ResetToInitial();
+	CApplicationProfileItemBool(LPCTSTR szSection, LPCTSTR szName, bool & RefValue,
+								bool Default = false);
+	~CApplicationProfileItemBool() {}
+};
+
 class CApplicationProfileItemUlong: public CApplicationProfileItem
 {
 	ULONG & LongRef;
@@ -135,6 +151,8 @@ public:
 				int nDefault = 0, int nMin = LONG_MIN, int nMax=LONG_MAX);
 	BOOL AddItem(LPCTSTR szSection, LPCTSTR szName, ULONG & val,
 				ULONG nDefault = 0, ULONG nMin = 0, ULONG nMax=ULONG_MAX);
+	BOOL AddItem(LPCTSTR szSection, LPCTSTR szName, bool & val,
+				bool nDefault = false);
 	BOOL AddBoolItem(LPCTSTR szSection, LPCTSTR szName, int & val,
 					int nDefault = 0);
 	BOOL AddItem(LPCTSTR szSection, LPCTSTR szName, float & val,

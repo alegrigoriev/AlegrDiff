@@ -100,6 +100,8 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 		// choose font
 		CFont * pFont;
 		DWORD Color;
+		DWORD BackgroundColor = pApp->m_TextBackgroundColor;
+
 		if (pSection->Attr == pSection->Inserted)
 		{
 			Color = pApp->m_AddedTextColor;
@@ -116,6 +118,7 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 			pFont = & m_NormalFont;
 		}
 
+		pDC->SetBkColor(BackgroundColor);
 		pDC->SetTextColor(Color);
 		pDC->SelectObject(pFont);
 		// text is drawn from the current position

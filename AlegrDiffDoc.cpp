@@ -32,10 +32,24 @@ CAlegrDiffDoc::CAlegrDiffDoc()
 	m_pPairList(NULL)
 {
 	// TODO: add one-time construction code here
-	m_sInclusionPattern = MiltiSzToCString("*\0");
-	m_sExclusionPattern = MiltiSzToCString("*.ncb\0");
-	m_sCFilesPattern = MiltiSzToCString("*.C\0*.cpp\0*.h\0*.hpp\0*.inl\0*.rc\0*.h++");
-	m_sBinaryFilesPattern = MiltiSzToCString("*.exe\0*.dll\0*.sys\0*.obj\0*.pdb\0");
+	CThisApp * pApp = GetApp();
+	m_sInclusionPattern = PatternToMultiCString(pApp->m_sFilenameFilter);
+	if (m_sInclusionPattern.IsEmpty())
+	{
+		m_sInclusionPattern = "*";
+	}
+	if (pApp->m_bUseIgnoreFilter)
+	{
+		m_sExclusionPattern = PatternToMultiCString(pApp->m_sIgnoreFilesFilter);
+	}
+	if (pApp->m_bUseCppFilter)
+	{
+		m_sCFilesPattern = PatternToMultiCString(pApp->m_sCppFilesFilter);
+	}
+	if (pApp->m_bUseBinaryFilesFilter)
+	{
+		m_sBinaryFilesPattern = PatternToMultiCString(pApp->m_sBinaryFilesFilter);
+	}
 }
 
 CAlegrDiffDoc::~CAlegrDiffDoc()
@@ -264,6 +278,31 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 			}
 
 			m_TotalLines = pFile->GetNumLines();
+		}
+		if (NULL != pPair->pFirstFile)
+		{
+			CString title(pPair->pFirstFile->GetBasedir());
+			title += pPair->pFirstFile->GetSubdir();
+			title += pPair->pFirstFile->GetName();
+			if (NULL != pPair->pSecondFile)
+			{
+				title += " - ";
+				title += pPair->pSecondFile->GetBasedir();
+				title += pPair->pSecondFile->GetSubdir();
+				title += pPair->pSecondFile->GetName();
+			}
+			SetTitle(title);
+		}
+		else if (NULL != pPair->pSecondFile)
+		{
+			CString title(pPair->pSecondFile->GetBasedir());
+			title += pPair->pSecondFile->GetSubdir();
+			title += pPair->pSecondFile->GetName();
+			SetTitle(title);
+		}
+		else
+		{
+			SetTitle("");
 		}
 	}
 	UpdateAllViews(NULL);

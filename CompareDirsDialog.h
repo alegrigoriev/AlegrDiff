@@ -23,14 +23,27 @@ public:
 	CComboBox	m_SecondDirCombo;
 	BOOL	m_bIncludeSubdirs;
 	CString	m_FilenameFilter;
+	BOOL	m_BinaryComparision;
 	//}}AFX_DATA
 	CString	m_sFirstDir;
 	CString	m_sSecondDir;
 	CString m_sHistory[10];
+	bool m_bAdvanced;
+
+	// Advanced items:
+	BOOL	m_bUseBinaryFilesFilter;
+	BOOL	m_bUseCppFilter;
+	BOOL	m_bUseIgnoreFilter;
+	CString	m_sBinaryFilesFilter;
+	CString	m_sCppFilesFilter;
+	CString	m_sIgnoreFilesFilter;
+	UINT	m_nTabIndent;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CCompareDirsDialog)
+public:
+	virtual int DoModal();
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
@@ -43,6 +56,9 @@ protected:
 	afx_msg void OnButtonBrowseFirstDir();
 	afx_msg void OnButtonBrowseSecondDir();
 	virtual void OnCancel();
+	afx_msg void OnButtonAdvanced();
+	afx_msg void OnCheckBinary();
+	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

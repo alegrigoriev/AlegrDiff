@@ -85,9 +85,26 @@ CApplicationProfileItemInt::CApplicationProfileItemInt(LPCTSTR szSection, LPCTST
 	InitialData = Ref;
 }
 
+CApplicationProfileItemBool::CApplicationProfileItemBool(LPCTSTR szSection, LPCTSTR szName,
+														bool & RefValue,
+														bool Default)
+	: CApplicationProfileItemInt(szSection, szName, m_TempVal, Default, 0, 1),
+	Ref(RefValue), m_bDefault(Default)
+{
+	// read value
+	ReadData();
+	InitialData = Ref;
+}
+
 void CApplicationProfileItemInt::ReadData()
 {
 	Ref = AfxGetApp()->GetProfileInt(Section, Name, m_Default);
+}
+
+void CApplicationProfileItemBool::ReadData()
+{
+	CApplicationProfileItemInt::ReadData();
+	Ref = (m_TempVal != 0);
 }
 
 void CApplicationProfileItemInt::WriteData(BOOL bForceWrite)
@@ -98,6 +115,12 @@ void CApplicationProfileItemInt::WriteData(BOOL bForceWrite)
 	}
 }
 
+void CApplicationProfileItemBool::WriteData(BOOL bForceWrite)
+{
+	m_TempVal = Ref;
+	CApplicationProfileItemInt::WriteData(bForceWrite);
+}
+
 void CApplicationProfileItemInt::ResetToInitial()
 {
 	Ref = InitialData;
@@ -106,6 +129,16 @@ void CApplicationProfileItemInt::ResetToInitial()
 void CApplicationProfileItemInt::ResetToDefault()
 {
 	Ref = m_Default;
+}
+
+void CApplicationProfileItemBool::ResetToInitial()
+{
+	Ref = InitialData;
+}
+
+void CApplicationProfileItemBool::ResetToDefault()
+{
+	Ref = m_bDefault;
 }
 
 CApplicationProfileItemUlong::CApplicationProfileItemUlong(LPCTSTR szSection, LPCTSTR szName,
@@ -296,6 +329,17 @@ BOOL CApplicationProfile::AddBoolItem(LPCTSTR szSection, LPCTSTR szName, int & v
 	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
 	pTmp = new CApplicationProfileItemInt(szSection, szName, val, nDefault, 0, 1);
+	pTmp->Next = pItems;
+	pItems = pTmp;
+	return TRUE;
+}
+
+BOOL CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, bool & val,
+								bool nDefault)
+{
+	CApplicationProfileItem * pTmp;
+	RemoveItem(szSection, szName);
+	pTmp = new CApplicationProfileItemBool(szSection, szName, val, nDefault);
 	pTmp->Next = pItems;
 	pItems = pTmp;
 	return TRUE;

@@ -17,13 +17,19 @@ static char THIS_FILE[] = __FILE__;
 
 
 CCompareDirsDialog::CCompareDirsDialog(CWnd* pParent /*=NULL*/)
-	: CDialog(CCompareDirsDialog::IDD, pParent)
+	: CDialog(CCompareDirsDialog::IDD, pParent),
+	m_bAdvanced(false),
+	m_bUseBinaryFilesFilter(true),
+	m_bUseCppFilter(true),
+	m_bUseIgnoreFilter(true),
+	m_nTabIndent(4)
 {
 	//{{AFX_DATA_INIT(CCompareDirsDialog)
 	m_bIncludeSubdirs = FALSE;
+	m_FilenameFilter = _T("");
 	m_sSecondDir = _T("");
 	m_sFirstDir = _T("");
-	m_FilenameFilter = _T("");
+	m_BinaryComparision = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -51,9 +57,21 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_SECOND_DIR, m_SecondDirCombo);
 	DDX_Check(pDX, IDC_CHECK_INCLUDE_SUBDIRS, m_bIncludeSubdirs);
 	DDX_Text(pDX, IDC_EDITFILENAME_FILTER, m_FilenameFilter);
+	DDX_Check(pDX, IDC_CHECK_BINARY, m_BinaryComparision);
 	//}}AFX_DATA_MAP
 	DDX_CBString(pDX, IDC_COMBO_FIRST_DIR, m_sFirstDir);
 	DDX_CBString(pDX, IDC_COMBO_SECOND_DIR, m_sSecondDir);
+	if (m_bAdvanced)
+	{
+		DDX_Check(pDX, IDC_CHECK_BINARY_FILES, m_bUseBinaryFilesFilter);
+		DDX_Check(pDX, IDC_CHECK_C_CPP, m_bUseCppFilter);
+		DDX_Check(pDX, IDC_CHECK_IGNORE, m_bUseIgnoreFilter);
+		DDX_Text(pDX, IDC_EDIT_BINARY_FILES, m_sBinaryFilesFilter);
+		DDX_Text(pDX, IDC_EDIT_C_CPP, m_sCppFilesFilter);
+		DDX_Text(pDX, IDC_EDIT_IGNORE, m_sIgnoreFilesFilter);
+		DDX_Text(pDX, IDC_EDIT_TAB_INDENT, m_nTabIndent);
+		DDV_MinMaxUInt(pDX, m_nTabIndent, 0, 32);
+	}
 	if ( ! pDX->m_bSaveAndValidate)
 	{
 		//m_FirstDirCombo.SetExtendedUI();
@@ -103,6 +121,8 @@ BEGIN_MESSAGE_MAP(CCompareDirsDialog, CDialog)
 	//{{AFX_MSG_MAP(CCompareDirsDialog)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_FIRST_DIR, OnButtonBrowseFirstDir)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_SECOND_DIR, OnButtonBrowseSecondDir)
+	ON_BN_CLICKED(IDC_BUTTON_ADVANCED, OnButtonAdvanced)
+	ON_BN_CLICKED(IDC_CHECK_BINARY, OnCheckBinary)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -135,4 +155,79 @@ void CCompareDirsDialog::OnCancel()
 {
 	GetApp()->Profile.RemoveSection(_T("History"));
 	CDialog::OnCancel();
+}
+
+void CCompareDirsDialog::OnButtonAdvanced()
+{
+	EndDialog(IDC_BUTTON_ADVANCED);
+	if (!UpdateData(TRUE))
+	{
+		TRACE0("UpdateData failed during dialog termination.\n");
+		// the UpdateData routine will set focus to correct item
+		return;
+	}
+}
+
+int CCompareDirsDialog::DoModal()
+{
+	int Result;
+	while (1)
+	{
+		if (m_bAdvanced)
+		{
+			m_lpszTemplateName = MAKEINTRESOURCE(IDD_DIALOG_COMPARE_DIRS_ADVANCED);
+		}
+		else
+		{
+			m_lpszTemplateName = MAKEINTRESOURCE(IDD_DIALOG_COMPARE_DIRS);
+		}
+		Result = CDialog::DoModal();
+		if (Result != IDC_BUTTON_ADVANCED)
+		{
+			break;
+		}
+		m_bAdvanced = ! m_bAdvanced;
+	}
+	return Result;
+}
+
+void CCompareDirsDialog::OnCheckBinary()
+{
+	BOOL NotBinary = ! IsDlgButtonChecked(IDC_CHECK_BINARY);
+
+	CWnd * pWnd = GetDlgItem(IDC_CHECK_C_CPP);
+	if (pWnd)
+	{
+		pWnd->EnableWindow(NotBinary);
+	}
+	pWnd = GetDlgItem(IDC_EDIT_C_CPP);
+	if (pWnd)
+	{
+		pWnd->EnableWindow(NotBinary && IsDlgButtonChecked(IDC_CHECK_C_CPP));
+	}
+	pWnd = GetDlgItem(IDC_CHECK_BINARY_FILES);
+	if (pWnd)
+	{
+		pWnd->EnableWindow(NotBinary);
+	}
+	pWnd = GetDlgItem(IDC_EDIT_BINARY_FILES);
+	if (pWnd)
+	{
+		pWnd->EnableWindow(NotBinary && IsDlgButtonChecked(IDC_CHECK_BINARY_FILES));
+	}
+	pWnd = GetDlgItem(IDC_EDIT_TAB_INDENT);
+	if (pWnd)
+	{
+		pWnd->EnableWindow(NotBinary);
+	}
+}
+
+BOOL CCompareDirsDialog::OnInitDialog()
+{
+	CDialog::OnInitDialog();
+
+	OnCheckBinary();
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+	// EXCEPTION: OCX Property Pages should return FALSE
 }

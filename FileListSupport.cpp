@@ -10,7 +10,65 @@ static DWORD CalculateHash(const char * data, int len);
 CString PatternToMultiCString(LPCTSTR src)
 {
 	// all ';', ',' are replaced with 0, another 0 is appended
-	return "";
+	// if string without * or ?, then * is prepended and appended
+	// empty string is removed
+	// spaces before and after are removed
+	CString tmp(src);
+	CString dst;
+
+	bool Wildcard = false;
+	int nBeginIndex = 0;
+	for (int i = 0; ; i++)
+	{
+		if (tmp.GetLength() == i
+			|| ',' == tmp[i]
+			|| ';' == tmp[i])
+		{
+			// if previous
+			// trim spaces
+			while (i < tmp.GetLength()
+					&& ' ' == tmp[nBeginIndex])
+			{
+				nBeginIndex++;
+			}
+			int nEndIndex = i;
+			while (nEndIndex > nBeginIndex
+					&& ' ' == tmp[nEndIndex - 1])
+			{
+				nEndIndex--;
+			}
+
+			if (nBeginIndex != nEndIndex)
+			{
+				CString s = tmp.Mid(nBeginIndex, nEndIndex - nBeginIndex);
+				if ( ! Wildcard)
+				{
+					s.Insert(0, "*");
+					s += "*";
+				}
+				int BufLen = dst.GetLength() + s.GetLength() + 1;
+				LPTSTR pBuf = dst.GetBuffer(BufLen);
+				if (NULL != pBuf)
+				{
+					memcpy(pBuf + dst.GetLength(), LPCTSTR(s), (s.GetLength() + 1) + sizeof pBuf[0]);
+					dst.ReleaseBuffer(BufLen);
+				}
+			}
+			Wildcard = false;
+			nBeginIndex = i + 1;
+		}
+		else if ('*' == tmp[i]
+				|| '?' == tmp[i])
+		{
+			Wildcard = true;
+		}
+
+		if (0 == src[i])
+		{
+			break;
+		}
+	}
+	return dst;
 }
 
 CString MiltiSzToCString(LPCTSTR pMsz)

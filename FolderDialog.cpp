@@ -29,6 +29,11 @@ CFolderDialog::CFolderDialog(LPCTSTR lpszTitle, LPCTSTR lpszStartingDirectory,
 		m_bi.ulFlags |= BIF_EDITBOX;
 	}
 
+	if ( ! m_bEnableCreateDir)
+	{
+		m_bi.ulFlags |= BIF_NONEWFOLDERBUTTON;
+	}
+
 	m_bi.pszDisplayName = szBuffer;
 	szBuffer[0] = 0;
 	m_bi.lpszTitle = lpszTitle;
@@ -186,6 +191,45 @@ CString CFolderDialog::GetFolderDisplayName() const
 CString CFolderDialog::GetFolderPath() const
 {
 	return szPath;
+}
+
+void CFolderDialog::EnableOK(BOOL Enable)
+{
+	SendMessage(BFFM_ENABLEOK, 0, Enable);
+}
+
+void CFolderDialog::SetExpanded(LPCWSTR Path)
+{
+	SendMessage(BFFM_SETEXPANDED, TRUE, LPARAM(Path));
+}
+
+void CFolderDialog::SetExpanded(LPITEMIDLIST Path)
+{
+	SendMessage(BFFM_SETEXPANDED, FALSE, LPARAM(Path));
+}
+
+void CFolderDialog::SetOkText(LPCWSTR Text)
+{
+	SendMessage(BFFM_SETOKTEXT, 0, LPARAM(Text));
+}
+
+void CFolderDialog::SetSelection(LPCTSTR Path)
+{
+	SendMessage(BFFM_SETSELECTION, TRUE, LPARAM(Path));
+}
+
+void CFolderDialog::SetSelection(LPITEMIDLIST Path)
+{
+	SendMessage(BFFM_SETSELECTION, FALSE, LPARAM(Path));
+}
+
+void CFolderDialog::SetStatusText(LPCTSTR Text)
+{
+	SendMessage(BFFM_SETSTATUSTEXT, 0, LPARAM(Text));
+}
+
+void CFolderDialog::OnIUnknown(IUnknown * pUnknown)
+{
 }
 
 #ifdef _DEBUG

@@ -13,7 +13,7 @@ public:
 							BYTE MD5Hash[16],
 							BOOL volatile & bStopOperation,
 							LONGLONG volatile & BytesComplete,
-							HWND volatile & hNotifyWnd);
+							HWND volatile const & hNotifyWnd);
 
 	static int const BufferSize = 0x10000;
 

@@ -31,6 +31,8 @@ template<typename T> inline void memzero(T & obj)
 	memset( & obj, 0, sizeof obj);
 }
 
+#define countof(a) (sizeof (a) / sizeof (a[0]))
+
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 

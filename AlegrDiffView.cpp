@@ -83,6 +83,12 @@ CAlegrDiffView::CAlegrDiffView()
 {
 	m_bSubdirColumnPresent = true;
 	CThisApp * pApp = GetApp();
+
+	for (int i = 0; i < countof(m_ColumnArray); i++)
+	{
+		m_ColumnArray[i] = pApp->m_ColumnArray[i];
+		m_ColumnWidthArray[i] = pApp->m_ColumnWidthArray[i];
+	}
 	if (pApp->m_FileListSort >= 0)
 	{
 		m_SortColumn = eColumns(0xFF & pApp->m_FileListSort);

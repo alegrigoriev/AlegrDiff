@@ -260,7 +260,7 @@ public:
 	BOOL CalculateHashes(CMd5HashCalculator * pMd5Calc,
 						BOOL volatile & bStopOperation,
 						LONGLONG volatile & BytesComplete,
-						HWND volatile & hNotifyWnd);
+						HWND volatile const & hNotifyWnd);
 	void SetMD5(BYTE md5[16]);
 
 	// add line from memory. Assuming the file created dynamically by the program

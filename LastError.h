@@ -5,7 +5,7 @@ class CLastError
 public:
 
 	CLastError(void)
-		: LastError(~0)
+		: LastError(~0UL)
 	{
 	}
 	DWORD Get()

@@ -9,32 +9,49 @@ static void * operator new(size_t, void * ptr)
 
 static void operator delete(void * ptr, void *)
 {
-	//::delete(ptr);
 }
 #endif
 
 CSmallAllocator::CSmallAllocator(size_t ItemSize, size_t BlockSize)
-	: m_ItemSize(ItemSize),
-	m_Blocks(NULL), m_BlocksWithFreeItems(NULL),
-	m_BlockSize(BlockSize)
+	: m_ItemSize(ItemSize)
+	, m_TotalFreeItems(0)
+	, m_BlockSize(BlockSize)
 {
 	size_t RoundedItemSize = (ItemSize + 3) & ~3;
 	m_ItemsInBlock = (BlockSize - sizeof BlockHeader) / (RoundedItemSize + sizeof ItemHeader);
 }
+
 CSmallAllocator::~CSmallAllocator()
 {
 	// check that all the blocks are freed
-	if (m_Blocks.pNext != & m_Blocks
-		|| m_BlocksWithFreeItems.pNext != & m_BlocksWithFreeItems)
+	CSimpleCriticalSectionLock lock(m_cs);
+
+	while ( ! m_BlocksWithFreeItems.IsEmpty())
 	{
-		TRACE("CSmallAllocator::~CSmallAllocator ItemSize= %d, Some blocks are not freed\n",
-			m_ItemSize);
+		BlockHeader * pBlock = m_BlocksWithFreeItems.RemoveTail();
+		if (pBlock->NumOfFreeItems < m_ItemsInBlock)
+		{
+			TRACE("CSmallAllocator::~CSmallAllocator ItemSize= %d, %d blocks are not freed\n",
+				m_ItemSize, m_ItemsInBlock - pBlock->NumOfFreeItems);
+		}
+		else
+		{
+			pBlock->~BlockHeader();
+			::delete[] (char*) pBlock;
+		}
+	}
+
+	while ( ! m_Blocks.IsEmpty())
+	{
+		BlockHeader * pBlock = m_Blocks.RemoveTail();
+		TRACE("CSmallAllocator::~CSmallAllocator ItemSize= %d, %d blocks are not freed\n",
+			m_ItemSize, m_ItemsInBlock);
 	}
 }
 
 CSmallAllocator::BlockHeader * CSmallAllocator::AllocateBlock()
 {
-	char * pBuf = new char[m_BlockSize];
+	char * pBuf = ::new char[m_BlockSize];
 	if (NULL == pBuf)
 	{
 		return NULL;
@@ -63,8 +80,8 @@ void * CSmallAllocator::Allocate(size_t size)
 	}
 	CSimpleCriticalSectionLock lock(m_cs);
 
-	BlockHeader * pBlock = m_BlocksWithFreeItems.pNext;
-	if (pBlock == & m_BlocksWithFreeItems)
+	BlockHeader * pBlock;
+	if (m_BlocksWithFreeItems.IsEmpty())
 	{
 		// allocate another block
 		pBlock = AllocateBlock();
@@ -72,25 +89,25 @@ void * CSmallAllocator::Allocate(size_t size)
 		{
 			return NULL;
 		}
-		pBlock->pNext = m_BlocksWithFreeItems.pNext;
-		m_BlocksWithFreeItems.pNext = pBlock;
-		pBlock->pNext->pPrev = pBlock;
-		pBlock->pPrev = & m_BlocksWithFreeItems;
+		m_BlocksWithFreeItems.InsertHead(pBlock);
+		m_TotalFreeItems += m_ItemsInBlock;
 	}
+	else
+	{
+		pBlock = m_BlocksWithFreeItems.First();
+	}
+
 	ItemHeader * pItem = pBlock->pFreeItems;
 	pBlock->pFreeItems = pItem->pNext;
 	pItem->pContainingBlock = pBlock;
+
 	pBlock->NumOfFreeItems--;
+	m_TotalFreeItems--;
+
 	if (0 == pBlock->NumOfFreeItems)
 	{
-		// remove from m_BlocksWithFreeItems
-		pBlock->pNext->pPrev = pBlock->pPrev;
-		pBlock->pPrev->pNext = pBlock->pNext;
-		// put to m_Blocks
-		pBlock->pNext = m_Blocks.pNext;
-		m_Blocks.pNext = pBlock;
-		pBlock->pNext->pPrev = pBlock;
-		pBlock->pPrev = & m_Blocks;
+		pBlock->RemoveFromList();
+		m_Blocks.InsertTail(pBlock);
 	}
 	return pItem + 1;
 }
@@ -102,6 +119,7 @@ void CSmallAllocator::Free(void * ptr)
 		return;
 	}
 	ItemHeader * pItem = static_cast<ItemHeader *>(ptr) - 1;
+
 	BlockHeader * pBlock = pItem->pContainingBlock;
 	if (pBlock->m_Signature != pBlock->eSignature)
 	{
@@ -116,25 +134,28 @@ void CSmallAllocator::Free(void * ptr)
 	pItem->pNext = pBlock->pFreeItems;
 	pBlock->pFreeItems = pItem;
 
+	pAlloc->m_TotalFreeItems++;
 	pBlock->NumOfFreeItems++;
+
 	if (1 == pBlock->NumOfFreeItems)
 	{
 		// remove from m_Blocks
-		pBlock->pNext->pPrev = pBlock->pPrev;
-		pBlock->pPrev->pNext = pBlock->pNext;
+		pBlock->RemoveFromList();
 		// put to m_BlocksWithFreeItems
-		pBlock->pNext = pAlloc->m_BlocksWithFreeItems.pNext;
-		pAlloc->m_BlocksWithFreeItems.pNext = pBlock;
-		pBlock->pNext->pPrev = pBlock;
-		pBlock->pPrev = & pAlloc->m_BlocksWithFreeItems;
+		pAlloc->m_BlocksWithFreeItems.InsertTail(pBlock);
 	}
-	if (pAlloc->m_ItemsInBlock == pBlock->NumOfFreeItems)
+
+	// leave the block for the future allocations
+	if (pAlloc->m_ItemsInBlock == pBlock->NumOfFreeItems
+		&& pAlloc->m_TotalFreeItems >= pAlloc->m_ItemsInBlock * 2)
 	{
 		// remove from m_Blocks
-		pBlock->pNext->pPrev = pBlock->pPrev;
-		pBlock->pPrev->pNext = pBlock->pNext;
+		pBlock->RemoveFromList();
+		pAlloc->m_TotalFreeItems -= pAlloc->m_ItemsInBlock;
 		if (0) TRACE("CSmallAllocator::Free Block %X freed\n", pBlock);
-		::delete[] (char *) pBlock;
+
+		pBlock->~BlockHeader();
+		::delete[] (char*) pBlock;
 	}
 }
 

@@ -3,14 +3,16 @@
 #include <float.h>
 #include <afxpriv.h>
 
-CApplicationProfileItem::CApplicationProfileItem(LPCTSTR szSection, LPCTSTR szName)
-	: Section(szSection), Name(szName)
+CApplicationProfileItem::CApplicationProfileItem(CApplicationProfile * pProfile,
+												LPCTSTR szSection, LPCTSTR szName)
+	: Section(szSection), Name(szName), m_pProfile(pProfile)
 {
 }
 
-CApplicationProfileItemStr::CApplicationProfileItemStr(LPCTSTR szSection, LPCTSTR szName,
+CApplicationProfileItemStr::CApplicationProfileItemStr(CApplicationProfile * pProfile,
+														LPCTSTR szSection, LPCTSTR szName,
 														CString& StringReference, LPCTSTR Default)
-	: CApplicationProfileItem(szSection, szName), StrRef(StringReference), m_Default(Default)
+	: CApplicationProfileItem(pProfile, szSection, szName), StrRef(StringReference), m_Default(Default)
 {
 	// read value
 	ReadData();
@@ -19,14 +21,14 @@ CApplicationProfileItemStr::CApplicationProfileItemStr(LPCTSTR szSection, LPCTST
 
 void CApplicationProfileItemStr::ReadData()
 {
-	StrRef = AfxGetApp()->GetProfileString(Section, Name, m_Default);
+	StrRef = m_pProfile->GetProfileString(Section, Name, m_Default);
 }
 
 void CApplicationProfileItemStr::WriteData(BOOL bForceWrite)
 {
 	if (bForceWrite || StrRef != InitialData)
 	{
-		AfxGetApp()->WriteProfileString(Section, Name, StrRef);
+		m_pProfile->WriteProfileString(Section, Name, StrRef);
 	}
 }
 
@@ -40,10 +42,11 @@ void CApplicationProfileItemStr::ResetToDefault()
 	StrRef = m_Default;
 }
 
-CApplicationProfileItemLong::CApplicationProfileItemLong(LPCTSTR szSection, LPCTSTR szName,
+CApplicationProfileItemLong::CApplicationProfileItemLong(CApplicationProfile * pProfile,
+														LPCTSTR szSection, LPCTSTR szName,
 														LONG& LongReference,
 														LONG Default, LONG MinVal, LONG MaxVal)
-	: CApplicationProfileItem(szSection, szName),
+	: CApplicationProfileItem(pProfile, szSection, szName),
 	LongRef(LongReference), m_Default(Default), m_MinVal(MinVal), m_MaxVal(MaxVal)
 {
 	// read value
@@ -53,14 +56,14 @@ CApplicationProfileItemLong::CApplicationProfileItemLong(LPCTSTR szSection, LPCT
 
 void CApplicationProfileItemLong::ReadData()
 {
-	LongRef = AfxGetApp()->GetProfileInt(Section, Name, m_Default);
+	LongRef = m_pProfile->GetProfileInt(Section, Name, m_Default);
 }
 
 void CApplicationProfileItemLong::WriteData(BOOL bForceWrite)
 {
 	if (bForceWrite || LongRef != InitialData)
 	{
-		AfxGetApp()->WriteProfileInt(Section, Name, LongRef);
+		m_pProfile->WriteProfileInt(Section, Name, LongRef);
 	}
 }
 
@@ -74,10 +77,11 @@ void CApplicationProfileItemLong::ResetToDefault()
 	LongRef = m_Default;
 }
 
-CApplicationProfileItemInt::CApplicationProfileItemInt(LPCTSTR szSection, LPCTSTR szName,
+CApplicationProfileItemInt::CApplicationProfileItemInt(CApplicationProfile * pProfile,
+														LPCTSTR szSection, LPCTSTR szName,
 														int & Reference,
 														int Default, int MinVal, int MaxVal)
-	: CApplicationProfileItem(szSection, szName),
+	: CApplicationProfileItem(pProfile, szSection, szName),
 	Ref(Reference), m_Default(Default), m_MinVal(MinVal), m_MaxVal(MaxVal)
 {
 	// read value
@@ -85,10 +89,11 @@ CApplicationProfileItemInt::CApplicationProfileItemInt(LPCTSTR szSection, LPCTST
 	InitialData = Ref;
 }
 
-CApplicationProfileItemBool::CApplicationProfileItemBool(LPCTSTR szSection, LPCTSTR szName,
+CApplicationProfileItemBool::CApplicationProfileItemBool(CApplicationProfile * pProfile,
+														LPCTSTR szSection, LPCTSTR szName,
 														bool & RefValue,
 														bool Default)
-	: CApplicationProfileItemInt(szSection, szName, m_TempVal, Default, 0, 1),
+	: CApplicationProfileItemInt(pProfile, szSection, szName, m_TempVal, Default, 0, 1),
 	Ref(RefValue), m_bDefault(Default)
 {
 	// read value
@@ -98,7 +103,7 @@ CApplicationProfileItemBool::CApplicationProfileItemBool(LPCTSTR szSection, LPCT
 
 void CApplicationProfileItemInt::ReadData()
 {
-	Ref = AfxGetApp()->GetProfileInt(Section, Name, m_Default);
+	Ref = m_pProfile->GetProfileInt(Section, Name, m_Default);
 }
 
 void CApplicationProfileItemBool::ReadData()
@@ -111,7 +116,7 @@ void CApplicationProfileItemInt::WriteData(BOOL bForceWrite)
 {
 	if (bForceWrite || Ref != InitialData)
 	{
-		AfxGetApp()->WriteProfileInt(Section, Name, Ref);
+		m_pProfile->WriteProfileInt(Section, Name, Ref);
 	}
 }
 
@@ -141,10 +146,11 @@ void CApplicationProfileItemBool::ResetToDefault()
 	Ref = m_bDefault;
 }
 
-CApplicationProfileItemUlong::CApplicationProfileItemUlong(LPCTSTR szSection, LPCTSTR szName,
+CApplicationProfileItemUlong::CApplicationProfileItemUlong(CApplicationProfile * pProfile,
+															LPCTSTR szSection, LPCTSTR szName,
 															ULONG& LongReference,
 															ULONG Default, ULONG MinVal, ULONG MaxVal)
-	: CApplicationProfileItem(szSection, szName),
+	: CApplicationProfileItem(pProfile, szSection, szName),
 	LongRef(LongReference), m_Default(Default), m_MinVal(MinVal), m_MaxVal(MaxVal)
 {
 	// read value
@@ -154,14 +160,14 @@ CApplicationProfileItemUlong::CApplicationProfileItemUlong(LPCTSTR szSection, LP
 
 void CApplicationProfileItemUlong::ReadData()
 {
-	LongRef = AfxGetApp()->GetProfileInt(Section, Name, m_Default);
+	LongRef = m_pProfile->GetProfileInt(Section, Name, m_Default);
 }
 
 void CApplicationProfileItemUlong::WriteData(BOOL bForceWrite)
 {
 	if (bForceWrite || LongRef != InitialData)
 	{
-		AfxGetApp()->WriteProfileInt(Section, Name, LongRef);
+		m_pProfile->WriteProfileInt(Section, Name, LongRef);
 	}
 }
 
@@ -175,10 +181,11 @@ void CApplicationProfileItemUlong::ResetToDefault()
 	LongRef = m_Default;
 }
 
-CApplicationProfileItemDouble::CApplicationProfileItemDouble(LPCTSTR szSection, LPCTSTR szName,
+CApplicationProfileItemDouble::CApplicationProfileItemDouble(CApplicationProfile * pProfile,
+															LPCTSTR szSection, LPCTSTR szName,
 															double& DoubleReference,
 															double Default, double MinVal, double MaxVal)
-	: CApplicationProfileItem(szSection, szName),
+	: CApplicationProfileItem(pProfile, szSection, szName),
 	DoubleRef(DoubleReference), m_Default(Default), m_MinVal(MinVal), m_MaxVal(MaxVal)
 {
 	// read value
@@ -188,7 +195,7 @@ CApplicationProfileItemDouble::CApplicationProfileItemDouble(LPCTSTR szSection, 
 
 void CApplicationProfileItemDouble::ReadData()
 {
-	CString s = AfxGetApp()->GetProfileString(Section, Name, "");
+	CString s = m_pProfile->GetProfileString(Section, Name, "");
 	double val;
 	TCHAR * endptr;
 
@@ -214,7 +221,7 @@ void CApplicationProfileItemDouble::WriteData(BOOL bForceWrite)
 	{
 		CString s;
 		s.Format("%g", DoubleRef);
-		AfxGetApp()->WriteProfileString(Section, Name, s);
+		m_pProfile->WriteProfileString(Section, Name, s);
 	}
 }
 
@@ -228,10 +235,11 @@ void CApplicationProfileItemDouble::ResetToDefault()
 	DoubleRef = m_Default;
 }
 
-CApplicationProfileItemFloat::CApplicationProfileItemFloat(LPCTSTR szSection, LPCTSTR szName,
+CApplicationProfileItemFloat::CApplicationProfileItemFloat(CApplicationProfile * pProfile,
+															LPCTSTR szSection, LPCTSTR szName,
 															float& FloatReference,
 															double Default, double MinVal, double MaxVal)
-	: CApplicationProfileItemDouble(szSection, szName, IntermediateValue,
+	: CApplicationProfileItemDouble(pProfile, szSection, szName, IntermediateValue,
 									Default, MinVal, MaxVal),
 	FloatRef(FloatReference)
 {
@@ -264,7 +272,9 @@ void CApplicationProfileItemFloat::ResetToDefault()
 }
 
 CApplicationProfile::CApplicationProfile()
-	:pItems(NULL)
+	:pItems(NULL),
+	hCachedRegistryKey(NULL),
+	hCachedSectionKey(NULL)
 {
 }
 
@@ -277,6 +287,7 @@ CApplicationProfile::~CApplicationProfile()
 		pItems = pTmp->Next;
 		delete pTmp;
 	}
+	CloseCachedKeys();
 }
 
 void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, CString & str,
@@ -284,7 +295,7 @@ void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, CString & s
 {
 	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemStr(szSection, szName, str, szDefault);
+	pTmp = new CApplicationProfileItemStr(this, szSection, szName, str, szDefault);
 	pTmp->Next = pItems;
 	pItems = pTmp;
 }
@@ -294,7 +305,7 @@ void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, LONG & val,
 {
 	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemLong(szSection, szName, val, nDefault, nMin, nMax);
+	pTmp = new CApplicationProfileItemLong(this, szSection, szName, val, nDefault, nMin, nMax);
 	pTmp->Next = pItems;
 	pItems = pTmp;
 }
@@ -304,7 +315,7 @@ void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, int & val,
 {
 	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemInt(szSection, szName, val, nDefault, nMin, nMax);
+	pTmp = new CApplicationProfileItemInt(this, szSection, szName, val, nDefault, nMin, nMax);
 	pTmp->Next = pItems;
 	pItems = pTmp;
 }
@@ -314,7 +325,7 @@ void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, ULONG & val
 {
 	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemUlong(szSection, szName, val, nDefault, nMin, nMax);
+	pTmp = new CApplicationProfileItemUlong(this, szSection, szName, val, nDefault, nMin, nMax);
 	pTmp->Next = pItems;
 	pItems = pTmp;
 }
@@ -324,7 +335,7 @@ void CApplicationProfile::AddBoolItem(LPCTSTR szSection, LPCTSTR szName, int & v
 {
 	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemInt(szSection, szName, val, nDefault, 0, 1);
+	pTmp = new CApplicationProfileItemInt(this, szSection, szName, val, nDefault, 0, 1);
 	pTmp->Next = pItems;
 	pItems = pTmp;
 }
@@ -334,7 +345,7 @@ void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, bool & val,
 {
 	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemBool(szSection, szName, val, nDefault);
+	pTmp = new CApplicationProfileItemBool(this, szSection, szName, val, nDefault);
 	pTmp->Next = pItems;
 	pItems = pTmp;
 }
@@ -344,7 +355,7 @@ void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, double & va
 {
 	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemDouble(szSection, szName, val, nDefault, nMin, nMax);
+	pTmp = new CApplicationProfileItemDouble(this, szSection, szName, val, nDefault, nMin, nMax);
 	pTmp->Next = pItems;
 	pItems = pTmp;
 }
@@ -354,7 +365,7 @@ void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, float & val
 {
 	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemFloat(szSection, szName, val, nDefault, nMin, nMax);
+	pTmp = new CApplicationProfileItemFloat(this, szSection, szName, val, nDefault, nMin, nMax);
 	pTmp->Next = pItems;
 	pItems = pTmp;
 }
@@ -385,7 +396,7 @@ BOOL CApplicationProfile::RemoveItem(LPCTSTR szSection, LPCTSTR szName)
 	return FALSE;
 }
 
-BOOL CApplicationProfile::RemoveSection(LPCTSTR szSection)
+void CApplicationProfile::RemoveSection(LPCTSTR szSection)
 {
 	CApplicationProfileItem * pTmp = pItems;
 	CApplicationProfileItem * pPrev = NULL;
@@ -411,7 +422,6 @@ BOOL CApplicationProfile::RemoveSection(LPCTSTR szSection)
 		pPrev = pTmp;
 		pTmp = pTmp->Next;
 	}
-	return TRUE;
 }
 
 BOOL CApplicationProfile::FlushItem(LPCTSTR szSection, LPCTSTR szName)
@@ -430,7 +440,7 @@ BOOL CApplicationProfile::FlushItem(LPCTSTR szSection, LPCTSTR szName)
 	return FALSE;
 }
 
-BOOL CApplicationProfile::FlushSection(LPCTSTR szSection)
+void CApplicationProfile::FlushSection(LPCTSTR szSection)
 {
 	CApplicationProfileItem * pTmp = pItems;
 	while(pTmp != NULL)
@@ -442,7 +452,6 @@ BOOL CApplicationProfile::FlushSection(LPCTSTR szSection)
 		}
 		pTmp = pTmp->Next;
 	}
-	return TRUE;
 }
 
 BOOL CApplicationProfile::UnloadItem(LPCTSTR szSection, LPCTSTR szName)
@@ -450,9 +459,10 @@ BOOL CApplicationProfile::UnloadItem(LPCTSTR szSection, LPCTSTR szName)
 	return FlushItem(szSection, szName) && RemoveItem(szSection, szName);
 }
 
-BOOL CApplicationProfile::UnloadSection(LPCTSTR szSection)
+void CApplicationProfile::UnloadSection(LPCTSTR szSection)
 {
-	return FlushSection(szSection) && RemoveSection(szSection);
+	FlushSection(szSection);
+	RemoveSection(szSection);
 }
 
 BOOL CApplicationProfile::ResetItemToDefault(LPCTSTR szSection, LPCTSTR szName)
@@ -471,7 +481,7 @@ BOOL CApplicationProfile::ResetItemToDefault(LPCTSTR szSection, LPCTSTR szName)
 	return FALSE;
 }
 
-BOOL CApplicationProfile::ResetSectionToDefault(LPCTSTR szSection)
+void CApplicationProfile::ResetSectionToDefault(LPCTSTR szSection)
 {
 	CApplicationProfileItem * pTmp = pItems;
 	while(pTmp != NULL)
@@ -482,7 +492,6 @@ BOOL CApplicationProfile::ResetSectionToDefault(LPCTSTR szSection)
 		}
 		pTmp = pTmp->Next;
 	}
-	return TRUE;
 }
 
 BOOL CApplicationProfile::RevertItemToInitial(LPCTSTR szSection, LPCTSTR szName)
@@ -501,7 +510,7 @@ BOOL CApplicationProfile::RevertItemToInitial(LPCTSTR szSection, LPCTSTR szName)
 	return FALSE;
 }
 
-BOOL CApplicationProfile::RevertSectionToInitial(LPCTSTR szSection)
+void CApplicationProfile::RevertSectionToInitial(LPCTSTR szSection)
 {
 	CApplicationProfileItem * pTmp = pItems;
 	while(pTmp != NULL)
@@ -512,21 +521,20 @@ BOOL CApplicationProfile::RevertSectionToInitial(LPCTSTR szSection)
 		}
 		pTmp = pTmp->Next;
 	}
-	return TRUE;
 }
 		// saves the section in INI file. If section name is empty,
 		// saves all of them
 BOOL CApplicationProfile::ExportSection(LPCTSTR szSection, LPCTSTR szFilename)
 {
-	CWinApp * pApp = AfxGetApp();
 	if (NULL == szFilename || 0 == szFilename[0])
 	{
 		return FALSE;
 	}
-	LPCTSTR OldRegistryKeyName = pApp->m_pszRegistryKey;
-	LPCTSTR OldProfileName = pApp->m_pszProfileName;
-	pApp->m_pszRegistryKey = NULL;
-	pApp->m_pszProfileName = szFilename;
+	CString OldRegistryKeyName = m_pszRegistryKey;
+	CString OldProfileName = m_pszProfileName;
+	m_pszRegistryKey.Empty();
+	m_pszProfileName = szFilename;
+	CloseCachedKeys();
 	try
 	{
 		CApplicationProfileItem * pTmp = pItems;
@@ -543,12 +551,12 @@ BOOL CApplicationProfile::ExportSection(LPCTSTR szSection, LPCTSTR szFilename)
 	}
 	catch(...)
 	{
-		pApp->m_pszProfileName = OldProfileName;
-		pApp->m_pszRegistryKey = OldRegistryKeyName;
+		m_pszProfileName = OldProfileName;
+		m_pszRegistryKey = OldRegistryKeyName;
 		throw;
 	}
-	pApp->m_pszProfileName = OldProfileName;
-	pApp->m_pszRegistryKey = OldRegistryKeyName;
+	m_pszProfileName = OldProfileName;
+	m_pszRegistryKey = OldRegistryKeyName;
 	return TRUE;
 }
 
@@ -556,15 +564,15 @@ BOOL CApplicationProfile::ExportSection(LPCTSTR szSection, LPCTSTR szFilename)
 // restores all of them.
 BOOL CApplicationProfile::ImportSection(LPCTSTR szSection, LPCTSTR szFilename)
 {
-	CWinApp * pApp = AfxGetApp();
 	if (NULL == szFilename || 0 == szFilename[0])
 	{
 		return FALSE;
 	}
-	LPCTSTR OldRegistryKeyName = pApp->m_pszRegistryKey;
-	LPCTSTR OldProfileName = pApp->m_pszProfileName;
-	pApp->m_pszRegistryKey = NULL;
-	pApp->m_pszProfileName = szFilename;
+	CString OldRegistryKeyName = m_pszRegistryKey;
+	CString OldProfileName = m_pszProfileName;
+	m_pszRegistryKey.Empty();
+	m_pszProfileName = szFilename;
+	CloseCachedKeys();
 	try
 	{
 		CApplicationProfileItem * pTmp = pItems;
@@ -581,12 +589,12 @@ BOOL CApplicationProfile::ImportSection(LPCTSTR szSection, LPCTSTR szFilename)
 	}
 	catch(...)
 	{
-		pApp->m_pszProfileName = OldProfileName;
-		pApp->m_pszRegistryKey = OldRegistryKeyName;
+		m_pszProfileName = OldProfileName;
+		m_pszRegistryKey = OldRegistryKeyName;
 		throw;
 	}
-	pApp->m_pszProfileName = OldProfileName;
-	pApp->m_pszRegistryKey = OldRegistryKeyName;
+	m_pszProfileName = OldProfileName;
+	m_pszRegistryKey = OldRegistryKeyName;
 	return TRUE;
 }
 
@@ -604,58 +612,65 @@ BOOL CApplicationProfile::ImportSection(LPCTSTR szSection, LPCTSTR szFilename)
 // CWinApp Settings Helpers
 
 // the original registry functions modified to get faster registry access.
-HKEY hCachedRegistryKey = NULL;
-HKEY hCachedSectionKey = NULL;
-CString sCachedSectionName;
 
-void CWinApp::SetRegistryKey(LPCTSTR lpszRegistryKey)
+void CApplicationProfile::SetRegistryKey(LPCTSTR lpszRegistryKey)
 {
-	ASSERT(m_pszRegistryKey == NULL);
 	ASSERT(lpszRegistryKey != NULL);
-	ASSERT(m_pszAppName != NULL);
 
-	BOOL bEnable = AfxEnableMemoryTracking(FALSE);
-	free((void*)m_pszRegistryKey);
-	m_pszRegistryKey = _tcsdup(lpszRegistryKey);
-	free((void*)m_pszProfileName);
-	m_pszProfileName = _tcsdup(m_pszAppName);
-	AfxEnableMemoryTracking(bEnable);
+	m_pszRegistryKey = lpszRegistryKey;
 
-	// ++AG:
-	if (NULL != hCachedRegistryKey)
-	{
-		RegCloseKey(hCachedRegistryKey);
-		hCachedRegistryKey = NULL;
-	}
-	sCachedSectionName.Empty();
-	if (NULL != hCachedSectionKey)
-	{
-		RegCloseKey(hCachedSectionKey);
-		hCachedSectionKey = NULL;
-	}
+	m_pszProfileName = AfxGetApp()->m_pszAppName;
+
+	CloseCachedKeys();
 }
 
-void CWinApp::SetRegistryKey(UINT nIDRegistryKey)
+void CApplicationProfile::SetRegistryKey(UINT nIDRegistryKey)
 {
-	ASSERT(m_pszRegistryKey == NULL);
-
-	TCHAR szRegistryKey[256];
-	VERIFY(AfxLoadString(nIDRegistryKey, szRegistryKey));
+	CString szRegistryKey;
+	VERIFY(szRegistryKey.LoadString(nIDRegistryKey));
 	SetRegistryKey(szRegistryKey);
 }
 
 // returns key for HKEY_CURRENT_USER\"Software"\RegistryKey\ProfileName
 // creating it if it doesn't exist
 // responsibility of the caller to call RegCloseKey() on the returned HKEY
-HKEY CWinApp::GetAppRegistryKey()
+LPCTSTR CApplicationProfile::GetProfileName() const
 {
-	ASSERT(m_pszRegistryKey != NULL);
-	ASSERT(m_pszProfileName != NULL);
+	if ( ! m_pszProfileName.IsEmpty())
+	{
+		return m_pszProfileName;
+	}
+	else
+	{
+		return AfxGetApp()->m_pszProfileName;
+	}
+}
+
+HKEY CApplicationProfile::GetAppRegistryKey()
+{
+	LPCTSTR RegistryKey = NULL;
+	if (m_pszRegistryKey.IsEmpty())
+	{
+		return NULL;
+		RegistryKey = AfxGetApp()->m_pszRegistryKey;
+	}
+	else
+	{
+		RegistryKey = m_pszRegistryKey;
+	}
+	if (NULL == RegistryKey)
+	{
+		// use .INI file
+		return NULL;
+	}
+
+	LPCTSTR ProfileName = GetProfileName();
+	ASSERT(ProfileName != NULL);
 
 	HKEY hAppKey = NULL;
 	HKEY hSoftKey = NULL;
 	HKEY hCompanyKey = NULL;
-	// +AG:
+
 	if (NULL != hCachedRegistryKey)
 	{
 		return hCachedRegistryKey;
@@ -665,11 +680,11 @@ HKEY CWinApp::GetAppRegistryKey()
 					&hSoftKey) == ERROR_SUCCESS)
 	{
 		DWORD dw;
-		if (RegCreateKeyEx(hSoftKey, m_pszRegistryKey, 0, REG_NONE,
+		if (RegCreateKeyEx(hSoftKey, RegistryKey, 0, REG_NONE,
 							REG_OPTION_NON_VOLATILE, KEY_WRITE|KEY_READ, NULL,
 							&hCompanyKey, &dw) == ERROR_SUCCESS)
 		{
-			RegCreateKeyEx(hCompanyKey, m_pszProfileName, 0, REG_NONE,
+			RegCreateKeyEx(hCompanyKey, ProfileName, 0, REG_NONE,
 							REG_OPTION_NON_VOLATILE, KEY_WRITE|KEY_READ, NULL,
 							&hAppKey, &dw);
 		}
@@ -687,7 +702,23 @@ HKEY CWinApp::GetAppRegistryKey()
 //      HKEY_CURRENT_USER\"Software"\RegistryKey\AppName\lpszSection
 // creating it if it doesn't exist.
 // responsibility of the caller to call RegCloseKey() on the returned HKEY
-HKEY CWinApp::GetSectionKey(LPCTSTR lpszSection)
+
+void CApplicationProfile::CloseCachedKeys()
+{
+	if (NULL != hCachedRegistryKey)
+	{
+		RegCloseKey(hCachedRegistryKey);
+		hCachedRegistryKey = NULL;
+	}
+	sCachedSectionName.Empty();
+	if (NULL != hCachedSectionKey)
+	{
+		RegCloseKey(hCachedSectionKey);
+		hCachedSectionKey = NULL;
+	}
+}
+
+HKEY CApplicationProfile::GetSectionKey(LPCTSTR lpszSection)
 {
 	ASSERT(lpszSection != NULL);
 	//++AG:
@@ -705,34 +736,31 @@ HKEY CWinApp::GetSectionKey(LPCTSTR lpszSection)
 	HKEY hSectionKey = NULL;
 	HKEY hAppKey = GetAppRegistryKey();
 	if (hAppKey == NULL)
-		return NULL;
+		return NULL;  // use .INI file
 
 	DWORD dw;
 	RegCreateKeyEx(hAppKey, lpszSection, 0, REG_NONE,
 					REG_OPTION_NON_VOLATILE, KEY_WRITE|KEY_READ, NULL,
 					&hSectionKey, &dw);
-	//RegCloseKey(hAppKey);
+
 	hCachedSectionKey = hSectionKey;
 	sCachedSectionName = lpszSection;
 	return hSectionKey;
 }
 
-UINT CWinApp::GetProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry,
-							int nDefault)
+UINT CApplicationProfile::GetProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry,
+										int nDefault)
 {
 	ASSERT(lpszSection != NULL);
 	ASSERT(lpszEntry != NULL);
-	if (m_pszRegistryKey != NULL) // use registry
+	HKEY hSecKey = GetSectionKey(lpszSection);
+	if (NULL != hSecKey) // use registry
 	{
-		HKEY hSecKey = GetSectionKey(lpszSection);
-		if (hSecKey == NULL)
-			return nDefault;
 		DWORD dwValue;
 		DWORD dwType;
 		DWORD dwCount = sizeof(DWORD);
 		LONG lResult = RegQueryValueEx(hSecKey, (LPTSTR)lpszEntry, NULL, &dwType,
 										(LPBYTE)&dwValue, &dwCount);
-		//RegCloseKey(hSecKey);
 		if (lResult == ERROR_SUCCESS)
 		{
 			ASSERT(dwType == REG_DWORD);
@@ -743,22 +771,21 @@ UINT CWinApp::GetProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry,
 	}
 	else
 	{
-		ASSERT(m_pszProfileName != NULL);
+		LPCTSTR ProfileName = GetProfileName();
+		ASSERT(ProfileName != NULL);
 		return ::GetPrivateProfileInt(lpszSection, lpszEntry, nDefault,
-									m_pszProfileName);
+									ProfileName);
 	}
 }
 
-CString CWinApp::GetProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry,
-								LPCTSTR lpszDefault)
+CString CApplicationProfile::GetProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry,
+											LPCTSTR lpszDefault)
 {
 	ASSERT(lpszSection != NULL);
 	ASSERT(lpszEntry != NULL);
-	if (m_pszRegistryKey != NULL)
+	HKEY hSecKey = GetSectionKey(lpszSection);
+	if (NULL != hSecKey) // use registry
 	{
-		HKEY hSecKey = GetSectionKey(lpszSection);
-		if (hSecKey == NULL)
-			return lpszDefault;
 		CString strValue;
 		DWORD dwType, dwCount;
 		LONG lResult = RegQueryValueEx(hSecKey, (LPTSTR)lpszEntry, NULL, &dwType,
@@ -780,20 +807,21 @@ CString CWinApp::GetProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry,
 	}
 	else
 	{
-		ASSERT(m_pszProfileName != NULL);
+		LPCTSTR ProfileName = GetProfileName();
+		ASSERT(ProfileName != NULL);
 
 		if (lpszDefault == NULL)
 			lpszDefault = &afxChNil;    // don't pass in NULL
 		TCHAR szT[4096];
 		DWORD dw = ::GetPrivateProfileString(lpszSection, lpszEntry,
-											lpszDefault, szT, 4096, m_pszProfileName);
+											lpszDefault, szT, 4096, ProfileName);
 		ASSERT(dw < 4095);
 		return szT;
 	}
 }
 
-BOOL CWinApp::GetProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry,
-								BYTE** ppData, UINT* pBytes)
+BOOL CApplicationProfile::GetProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry,
+											BYTE** ppData, UINT* pBytes)
 {
 	ASSERT(lpszSection != NULL);
 	ASSERT(lpszEntry != NULL);
@@ -801,11 +829,9 @@ BOOL CWinApp::GetProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry,
 	ASSERT(pBytes != NULL);
 	*ppData = NULL;
 	*pBytes = 0;
-	if (m_pszRegistryKey != NULL)
+	HKEY hSecKey = GetSectionKey(lpszSection);
+	if (NULL != hSecKey) // use registry
 	{
-		HKEY hSecKey = GetSectionKey(lpszSection);
-		if (hSecKey == NULL)
-			return FALSE;
 
 		DWORD dwType, dwCount;
 		LONG lResult = RegQueryValueEx(hSecKey, (LPTSTR)lpszEntry, NULL, &dwType,
@@ -818,7 +844,7 @@ BOOL CWinApp::GetProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry,
 			lResult = RegQueryValueEx(hSecKey, (LPTSTR)lpszEntry, NULL, &dwType,
 									*ppData, &dwCount);
 		}
-		//RegCloseKey(hSecKey);
+
 		if (lResult == ERROR_SUCCESS)
 		{
 			ASSERT(dwType == REG_BINARY);
@@ -833,7 +859,7 @@ BOOL CWinApp::GetProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry,
 	}
 	else
 	{
-		ASSERT(m_pszProfileName != NULL);
+		ASSERT(GetProfileName() != NULL);
 
 		CString str = GetProfileString(lpszSection, lpszEntry, NULL);
 		if (str.IsEmpty())
@@ -851,36 +877,36 @@ BOOL CWinApp::GetProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry,
 	}
 }
 
-BOOL CWinApp::WriteProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry,
-							int nValue)
+BOOL CApplicationProfile::WriteProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry,
+										int nValue)
 {
 	ASSERT(lpszSection != NULL);
 	ASSERT(lpszEntry != NULL);
-	if (m_pszRegistryKey != NULL)
+	HKEY hSecKey = GetSectionKey(lpszSection);
+	if (NULL != hSecKey) // use registry
 	{
-		HKEY hSecKey = GetSectionKey(lpszSection);
-		if (hSecKey == NULL)
-			return FALSE;
 		LONG lResult = RegSetValueEx(hSecKey, lpszEntry, NULL, REG_DWORD,
 									(LPBYTE)&nValue, sizeof(nValue));
 		return lResult == ERROR_SUCCESS;
 	}
 	else
 	{
-		ASSERT(m_pszProfileName != NULL);
+		LPCTSTR ProfileName = GetProfileName();
+		ASSERT(ProfileName != NULL);
 
 		TCHAR szT[16];
 		wsprintf(szT, _T("%d"), nValue);
 		return ::WritePrivateProfileString(lpszSection, lpszEntry, szT,
-											m_pszProfileName);
+											ProfileName);
 	}
 }
 
-BOOL CWinApp::WriteProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry,
-								LPCTSTR lpszValue)
+BOOL CApplicationProfile::WriteProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry,
+											LPCTSTR lpszValue)
 {
 	ASSERT(lpszSection != NULL);
-	if (m_pszRegistryKey != NULL)
+	HKEY hSecKey = GetSectionKey(lpszSection);
+	if (NULL != hSecKey) // use registry
 	{
 		LONG lResult;
 		if (lpszEntry == NULL) //delete whole section
@@ -897,17 +923,11 @@ BOOL CWinApp::WriteProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry,
 		}
 		else if (lpszValue == NULL)
 		{
-			HKEY hSecKey = GetSectionKey(lpszSection);
-			if (hSecKey == NULL)
-				return FALSE;
 			// necessary to cast away const below
 			lResult = ::RegDeleteValue(hSecKey, (LPTSTR)lpszEntry);
 		}
 		else
 		{
-			HKEY hSecKey = GetSectionKey(lpszSection);
-			if (hSecKey == NULL)
-				return FALSE;
 			lResult = RegSetValueEx(hSecKey, lpszEntry, NULL, REG_SZ,
 									(LPBYTE)lpszValue, (lstrlen(lpszValue)+1)*sizeof(TCHAR));
 		}
@@ -915,26 +935,24 @@ BOOL CWinApp::WriteProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry,
 	}
 	else
 	{
-		ASSERT(m_pszProfileName != NULL);
-		ASSERT(lstrlen(m_pszProfileName) < 4095); // can't read in bigger
+		LPCTSTR ProfileName = GetProfileName();
+		ASSERT(ProfileName != NULL);
+
 		return ::WritePrivateProfileString(lpszSection, lpszEntry, lpszValue,
-											m_pszProfileName);
+											ProfileName);
 	}
 }
 
-BOOL CWinApp::WriteProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry,
-								LPBYTE pData, UINT nBytes)
+BOOL CApplicationProfile::WriteProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry,
+											LPBYTE pData, UINT nBytes)
 {
 	ASSERT(lpszSection != NULL);
-	if (m_pszRegistryKey != NULL)
+	HKEY hSecKey = GetSectionKey(lpszSection);
+	if (NULL != hSecKey) // use registry
 	{
 		LONG lResult;
-		HKEY hSecKey = GetSectionKey(lpszSection);
-		if (hSecKey == NULL)
-			return FALSE;
 		lResult = RegSetValueEx(hSecKey, lpszEntry, NULL, REG_BINARY,
 								pData, nBytes);
-		//RegCloseKey(hSecKey);
 		return lResult == ERROR_SUCCESS;
 	}
 
@@ -947,7 +965,7 @@ BOOL CWinApp::WriteProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry,
 	}
 	lpsz[i*2] = 0;
 
-	ASSERT(m_pszProfileName != NULL);
+	ASSERT(GetProfileName() != NULL);
 
 	BOOL bResult = WriteProfileString(lpszSection, lpszEntry, lpsz);
 	delete[] lpsz;

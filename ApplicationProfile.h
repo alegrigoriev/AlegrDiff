@@ -2,6 +2,7 @@
 #ifndef APPLICATIONPROFILE_H
 #define APPLICATIONPROFILE_H
 
+class CApplicationProfile;
 class CApplicationProfileItem
 {
 public:
@@ -10,10 +11,11 @@ public:
 	virtual void ReadData() =0;
 	virtual void ResetToDefault() = 0;
 	virtual void ResetToInitial() = 0;
-	CApplicationProfileItem(LPCTSTR szSection, LPCTSTR szName);
+	CApplicationProfileItem(CApplicationProfile * pProfile, LPCTSTR szSection, LPCTSTR szName);
 	virtual ~CApplicationProfileItem() {}
 	CString Section;
 	CString Name;
+	CApplicationProfile * m_pProfile;
 	BOOL Exists;
 };
 
@@ -27,7 +29,8 @@ public:
 	virtual void ReadData();
 	virtual void ResetToDefault();
 	virtual void ResetToInitial();
-	CApplicationProfileItemStr(LPCTSTR szSection, LPCTSTR szName,
+	CApplicationProfileItemStr(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName,
 								CString& StringReference, LPCTSTR Default);
 	~CApplicationProfileItemStr() {}
 };
@@ -44,7 +47,8 @@ public:
 	virtual void ReadData();
 	virtual void ResetToDefault();
 	virtual void ResetToInitial();
-	CApplicationProfileItemLong(LPCTSTR szSection, LPCTSTR szName, LONG & RefValue,
+	CApplicationProfileItemLong(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, LONG & RefValue,
 								LONG Default, LONG MinVal, LONG MaxVal);
 	~CApplicationProfileItemLong() {}
 };
@@ -61,7 +65,8 @@ public:
 	virtual void ReadData();
 	virtual void ResetToDefault();
 	virtual void ResetToInitial();
-	CApplicationProfileItemInt(LPCTSTR szSection, LPCTSTR szName, int & RefValue,
+	CApplicationProfileItemInt(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, int & RefValue,
 								int Default, int MinVal, int MaxVal);
 	~CApplicationProfileItemInt() {}
 };
@@ -76,7 +81,8 @@ public:
 	virtual void ReadData();
 	virtual void ResetToDefault() { m_Ref = m_Default; }
 	virtual void ResetToInitial() { m_Ref = m_InitialData; }
-	CApplicationProfileItemBinary(LPCTSTR szSection, LPCTSTR szName, T & RefValue,
+	CApplicationProfileItemBinary(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, T & RefValue,
 								T & Default);
 	~CApplicationProfileItemBinary() {}
 };
@@ -92,7 +98,8 @@ public:
 	virtual void ReadData();
 	virtual void ResetToDefault();
 	virtual void ResetToInitial();
-	CApplicationProfileItemBool(LPCTSTR szSection, LPCTSTR szName, bool & RefValue,
+	CApplicationProfileItemBool(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, bool & RefValue,
 								bool Default = false);
 	~CApplicationProfileItemBool() {}
 };
@@ -109,7 +116,8 @@ public:
 	virtual void ReadData();
 	virtual void ResetToDefault();
 	virtual void ResetToInitial();
-	CApplicationProfileItemUlong(LPCTSTR szSection, LPCTSTR szName, ULONG & RefValue,
+	CApplicationProfileItemUlong(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, ULONG & RefValue,
 								ULONG Default, ULONG MinVal, ULONG MaxVal);
 	~CApplicationProfileItemUlong() {}
 };
@@ -126,7 +134,8 @@ public:
 	virtual void ReadData();
 	virtual void ResetToDefault();
 	virtual void ResetToInitial();
-	CApplicationProfileItemDouble(LPCTSTR szSection, LPCTSTR szName, double & RefValue,
+	CApplicationProfileItemDouble(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, double & RefValue,
 								double Default, double MinVal, double MaxVal);
 	~CApplicationProfileItemDouble() {}
 };
@@ -141,7 +150,8 @@ public:
 	virtual void ReadData();
 	virtual void ResetToDefault();
 	virtual void ResetToInitial();
-	CApplicationProfileItemFloat(LPCTSTR szSection, LPCTSTR szName, float & RefValue,
+	CApplicationProfileItemFloat(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, float & RefValue,
 								double Default, double MinVal, double MaxVal);
 	~CApplicationProfileItemFloat() {}
 };
@@ -174,7 +184,7 @@ public:
 	{
 		CApplicationProfileItem * pTmp;
 		RemoveItem(szSection, szName);
-		pTmp = new CApplicationProfileItemBinary<T>(szSection, szName, value, Default);
+		pTmp = new CApplicationProfileItemBinary<T>(this, szSection, szName, value, Default);
 		pTmp->Next = pItems;
 		pItems = pTmp;
 	}
@@ -185,24 +195,57 @@ public:
 	void AddItem(LPCTSTR szSection, LPCTSTR szName, double & val,
 				double nDefault = 0., double nMin = 0., double nMax=0.);
 	BOOL RemoveItem(LPCTSTR szSection, LPCTSTR szName);
-	BOOL RemoveSection(LPCTSTR szSection);
+	void RemoveSection(LPCTSTR szSection);
 	BOOL ResetItemToDefault(LPCTSTR szSection, LPCTSTR szName);
-	BOOL ResetSectionToDefault(LPCTSTR szSection);
+	void ResetSectionToDefault(LPCTSTR szSection);
 	BOOL RevertItemToInitial(LPCTSTR szSection, LPCTSTR szName);
-	BOOL RevertSectionToInitial(LPCTSTR szSection);
+	void RevertSectionToInitial(LPCTSTR szSection);
 	BOOL FlushItem(LPCTSTR szSection, LPCTSTR szName);
-	BOOL FlushSection(LPCTSTR szSection);
+	void FlushSection(LPCTSTR szSection);
+	void FlushAll()
+	{
+		FlushSection(NULL);
+	}
 	BOOL UnloadItem(LPCTSTR szSection, LPCTSTR szName);
-	BOOL UnloadSection(LPCTSTR szSection);
+	void UnloadSection(LPCTSTR szSection);
+	void UnloadAll()
+	{
+		UnloadSection(NULL);
+	}
+
+	void SetRegistryKey(LPCTSTR lpszRegistryKey);
+	void SetRegistryKey(UINT nIDRegistryKey);
+	HKEY GetAppRegistryKey();
+	HKEY GetSectionKey(LPCTSTR lpszSection);
+	UINT GetProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry,
+						int nDefault);
+	CString GetProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry,
+							LPCTSTR lpszDefault);
+	BOOL GetProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry,
+						BYTE** ppData, UINT* pBytes);
+	BOOL WriteProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry,
+						int nValue);
+	BOOL WriteProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry,
+							LPCTSTR lpszValue);
+	BOOL WriteProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry,
+							LPBYTE pData, UINT nBytes);
+	void CloseCachedKeys();
+	LPCTSTR GetProfileName() const;
 
 	CApplicationProfileItem * pItems;
+	HKEY hCachedRegistryKey;
+	HKEY hCachedSectionKey;
+	CString sCachedSectionName;
+	CString m_pszProfileName;
+	CString m_pszRegistryKey;
+	CString m_pszAppName;
 };
 
 template<class T>
 CApplicationProfileItemBinary<T>::CApplicationProfileItemBinary(
-																LPCTSTR szSection, LPCTSTR szName,
-																T & Reference, T & Default)
-	: CApplicationProfileItem(szSection, szName),
+	CApplicationProfile * pProfile, LPCTSTR szSection, LPCTSTR szName,
+	T & Reference, T & Default)
+	: CApplicationProfileItem(pProfile, szSection, szName),
 	m_Ref(Reference), m_Default(Default)
 {
 	// read value
@@ -214,7 +257,7 @@ template<class T> void CApplicationProfileItemBinary<T>::ReadData()
 {
 	BYTE * pData = NULL;
 	UINT ReadBytes = 0;
-	BOOL res = AfxGetApp()->GetProfileBinary(Section, Name, & pData, & ReadBytes);
+	BOOL res = m_pProfile->GetProfileBinary(Section, Name, & pData, & ReadBytes);
 	if (res && NULL != pData && ReadBytes == sizeof (T))
 	{
 		memcpy( & m_Ref, pData, sizeof (T));
@@ -230,7 +273,7 @@ template<class T> void CApplicationProfileItemBinary<T>::WriteData(BOOL bForceWr
 {
 	if (bForceWrite || memcmp(& m_Ref, & m_InitialData, sizeof (T)))
 	{
-		AfxGetApp()->WriteProfileBinary(Section, Name, LPBYTE( & m_Ref), sizeof (T));
+		m_pProfile->WriteProfileBinary(Section, Name, LPBYTE( & m_Ref), sizeof (T));
 	}
 }
 

@@ -49,7 +49,13 @@ public:
 	eColumns m_SortColumns[MaxColumns];
 	bool m_AscendingSortOrder[MaxColumns];
 
-	void SetSortColumn(eColumns nColumn, bool AscendingOrder, bool InvertOrder = false);
+	enum eSetSortColumnOrder
+	{
+		SetSortColumnAscending,
+		SetSortColumnDescending,
+		SetSortColumnMouseClick,
+	};
+	void SetSortColumn(eColumns nColumn, eSetSortColumnOrder Order);
 
 	UCHAR m_ColumnArray[MaxColumns];
 	//UCHAR m_SubitemArray[MaxColumns];

@@ -503,6 +503,11 @@ void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, float & val
 	pItems = pTmp;
 }
 
+void CApplicationProfile::RemoveFromRegistry(LPCTSTR szSection, LPCTSTR szName)
+{
+	WriteProfileString(szSection, szName, NULL);
+}
+
 BOOL CApplicationProfile::RemoveItem(LPCTSTR szSection, LPCTSTR szName)
 {
 	CApplicationProfileItem * pTmp = pItems;

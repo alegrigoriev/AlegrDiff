@@ -118,14 +118,14 @@ public:
 
 template<class T> class CApplicationProfileItemBinary: public CApplicationProfileItem
 {
-	T & m_Ref;
+	T * m_Ref;
 	T m_InitialData;
 	T m_Default;
 public:
 	virtual void WriteData(BOOL bForceWrite=FALSE);
 	virtual void ReadData();
-	virtual void ResetToDefault() { m_Ref = m_Default; }
-	virtual void ResetToInitial() { m_Ref = m_InitialData; }
+	virtual void ResetToDefault() { memcpy(m_Ref, & m_Default, sizeof T); }
+	virtual void ResetToInitial() { memcpy(m_Ref, & m_InitialData, sizeof T); }
 	CApplicationProfileItemBinary(CApplicationProfile * pProfile,
 								LPCTSTR szSection, LPCTSTR szName, T & RefValue,
 								T const & Default);
@@ -249,6 +249,9 @@ public:
 	void AddItem(LPCTSTR szSection, LPCTSTR szName, double & val,
 				double nDefault = 0., double nMin = 0., double nMax=0.);
 	BOOL RemoveItem(LPCTSTR szSection, LPCTSTR szName);
+
+	void RemoveFromRegistry(LPCTSTR szSection, LPCTSTR szName);
+
 	void RemoveSection(LPCTSTR szSection);
 	BOOL ResetItemToDefault(LPCTSTR szSection, LPCTSTR szName);
 	void ResetSectionToDefault(LPCTSTR szSection);
@@ -300,11 +303,12 @@ CApplicationProfileItemBinary<T>::CApplicationProfileItemBinary(
 	CApplicationProfile * pProfile, LPCTSTR szSection, LPCTSTR szName,
 	T & Reference, T const & Default)
 	: CApplicationProfileItem(pProfile, szSection, szName),
-	m_Ref(Reference), m_Default(Default)
+	m_Ref( & Reference)
 {
+	memcpy( & m_Default, & Default, sizeof T);
 	// read value
 	ReadData();
-	m_InitialData = m_Ref;
+	memcpy(& m_InitialData, m_Ref, sizeof T);
 }
 
 template<class T> void CApplicationProfileItemBinary<T>::ReadData()
@@ -314,20 +318,20 @@ template<class T> void CApplicationProfileItemBinary<T>::ReadData()
 	BOOL res = m_pProfile->GetProfileBinary(Section, Name, & pData, & ReadBytes);
 	if (res && NULL != pData && ReadBytes == sizeof (T))
 	{
-		memcpy( & m_Ref, pData, sizeof (T));
+		memcpy(m_Ref, pData, sizeof (T));
 	}
 	else
 	{
-		memcpy( & m_Ref, & m_Default, sizeof (T));
+		memcpy(m_Ref, & m_Default, sizeof (T));
 	}
 	delete[] pData;
 }
 
 template<class T> void CApplicationProfileItemBinary<T>::WriteData(BOOL bForceWrite)
 {
-	if (bForceWrite || memcmp(& m_Ref, & m_InitialData, sizeof (T)))
+	if (bForceWrite || memcmp(m_Ref, & m_InitialData, sizeof (T)))
 	{
-		m_pProfile->WriteProfileBinary(Section, Name, LPBYTE( & m_Ref), sizeof (T));
+		m_pProfile->WriteProfileBinary(Section, Name, LPBYTE(m_Ref), sizeof (T));
 	}
 }
 

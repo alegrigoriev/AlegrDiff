@@ -20,7 +20,9 @@ public:
 	CFolderDialog(LPCTSTR lpszTitle = NULL,
 				LPCTSTR lpszStartingDirectory = NULL,
 				bool EnableCreateFolder = false,
-				DWORD dwFlags = BIF_RETURNFSANCESTORS | BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE,
+				DWORD dwFlags = BIF_RETURNFSANCESTORS |
+								BIF_RETURNONLYFSDIRS |
+								BIF_NEWDIALOGSTYLE,
 				CWnd* pParentWnd = NULL);
 
 	BROWSEINFO m_bi;

@@ -75,9 +75,15 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_NumberOfIdenticalLines(5),
 	m_MinPercentWeakIdenticalLines(10),
 	m_PercentsOfLookLikeDifference(30),
-	m_FileListSort(ColumnSubdir),
 	m_MinIdenticalLines(5)
 {
+	OSVERSIONINFO vi;
+	ZeroMemory(&vi, sizeof(OSVERSIONINFO));
+	vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	::GetVersionEx(&vi);
+
+	m_bIsWin9x = (vi.dwPlatformId != VER_PLATFORM_WIN32_NT);
+
 	m_PreferencesFlags = 0;
 	// then init subfields:
 	m_bRecurseSubdirs = false;
@@ -159,9 +165,6 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("FontPointSize"), m_FontPointSize, 100, 30, 500);
 	Profile.AddItem(_T("Settings"), _T("TabIndent"), m_TabIndent, 4, 1, 32);
 
-	Profile.AddItem(_T("Settings"), _T("FileListSort"), m_FileListSort,
-					ColumnSubdir, 0, ~0);
-
 	Profile.AddItem(_T("Settings"), _T("InitialDir1"), m_FileDir1, _T(""));
 	Profile.AddItem(_T("Settings"), _T("InitialDir2"), m_FileDir2, _T(""));
 	Profile.AddItem(_T("Settings"), _T("LastSaveMergedDir"), m_LastSaveMergedDir, _T("."));
@@ -204,6 +207,46 @@ BOOL CAlegrDiffApp::InitInstance()
 					_T("*.c;*.cpp;*.h;*.hpp;*.inl;*.rc;*.h++"));
 	Profile.AddItem(_T("Settings"), _T("IgnoreFiles"), m_sIgnoreFilesFilter,
 					_T("*.ncb"));
+
+	static UCHAR DefaultColumnArray[MaxColumns] =
+	{
+		ColumnName,
+		ColumnSubdir,
+		ColumnDate1,
+		ColumnDate2,
+		ColumnLength1,
+		ColumnLength2,
+		ColumnComparisionResult,
+	};
+
+	static SHORT DefaultColumnWidthArray[MaxColumns] =
+	{
+		200, 200,
+		150, 150,
+		100, 100,
+		400,
+	};
+
+	Profile.AddItem(_T("Settings"), _T("Columns"), m_ColumnArray,
+					DefaultColumnArray);
+	Profile.AddItem(_T("Settings"), _T("ColumnsWidth"), m_ColumnWidthArray,
+					DefaultColumnWidthArray);
+
+	static UCHAR DefaultSortOrder[MaxColumns] =
+	{
+		ColumnSubdir,
+		ColumnName,
+		ColumnDate1 | 0x80,
+		ColumnDate2 | 0x80,
+		ColumnLength1 | 0x80,
+		ColumnLength2 | 0x80,
+		ColumnComparisionResult,
+	};
+
+	Profile.AddItem(_T("Settings"), _T("SortOrder"), m_ColumnSort,
+					DefaultSortOrder);
+
+	Profile.RemoveFromRegistry(_T("Settings"), _T("FileListSort"));
 
 	LoadHistory(Profile, _T("History"), _T("find%d"), m_sFindHistory,
 				countof(m_sFindHistory), false);
@@ -1210,8 +1253,14 @@ CString FileTimeToStr(FILETIME FileTime, LCID locale)
 	SYSTEMTIME SystemTime;
 	SYSTEMTIME LocalTime;
 	memzero(LocalTime);
+
 	FileTimeToSystemTime( & FileTime, & SystemTime);
-	SystemTimeToTzSpecificLocalTime(NULL, & SystemTime, & LocalTime);
+	if ( ! SystemTimeToTzSpecificLocalTime(NULL, & SystemTime, & LocalTime))
+	{
+		FILETIME LocalFileTime;
+		FileTimeToLocalFileTime( & FileTime, & LocalFileTime);
+		FileTimeToSystemTime( & LocalFileTime, & LocalTime);
+	}
 
 	GetDateFormat(locale, DATE_SHORTDATE, & LocalTime, NULL, str, TimeBufSize - 1);
 	CString result = str;

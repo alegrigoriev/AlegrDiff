@@ -195,6 +195,7 @@ FileItem::FileItem(const WIN32_FIND_DATA * pWfd,
 	m_IsUnicode(false),
 	m_IsUnicodeBigEndian(false),
 	m_bMd5Calculated(false),
+	m_bIsPhantomFile(false),
 	m_pFileReadBuf(NULL)
 	, m_FileReadBufSize(0)
 	, m_FileReadPos(0)
@@ -215,6 +216,7 @@ FileItem::FileItem(LPCTSTR name)
 	m_IsUnicode(false),
 	m_IsUnicodeBigEndian(false),
 	m_bMd5Calculated(false),
+	m_bIsPhantomFile(false),
 	m_bIsFolder(false),
 	m_pFileReadBuf(NULL)
 	, m_FileReadBufSize(0)
@@ -2962,7 +2964,8 @@ FilePair::eFileComparisionResult FilePair::CompareBinaryFiles(BOOL volatile & bS
 	return ResultUnknown;
 }
 
-FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalculator * pMd5Calc, BOOL volatile & bStopOperation)
+FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalculator * pMd5Calc,
+																BOOL volatile & bStopOperation)
 {
 	CThisApp * pApp = GetApp();
 	// comparison can be done through CRC, or direct comparison
@@ -2980,15 +2983,17 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 	}
 	if (pApp->m_bUseMd5)
 	{
+		LONGLONG FileDone = 0;
+		HWND hWnd = AfxGetMainWnd()->m_hWnd;
 		if ( ! pFirstFile->m_bMd5Calculated)
 		{
 			m_ComparisionResult = CalculatingFirstFingerprint;
-			pFirstFile->CalculateHashes(pMd5Calc, bStopOperation);
+			pFirstFile->CalculateHashes(pMd5Calc, bStopOperation, FileDone, hWnd);
 		}
 		if ( ! pSecondFile->m_bMd5Calculated)
 		{
 			m_ComparisionResult = CalculatingSecondFingerprint;
-			pSecondFile->CalculateHashes(pMd5Calc, bStopOperation);
+			pSecondFile->CalculateHashes(pMd5Calc, bStopOperation, FileDone, hWnd);
 		}
 	}
 	// if files have MD5 calculated, use it
@@ -3893,14 +3898,26 @@ int LinePair::DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces)
 	return position + adj;
 }
 
-BOOL FileItem::CalculateHashes(CMd5HashCalculator * pMd5Calc, BOOL volatile & bStopOperation)
+BOOL FileItem::CalculateHashes(CMd5HashCalculator * pMd5Calc,
+								BOOL volatile & bStopOperation,
+								LONGLONG volatile & BytesComplete,
+								HWND volatile & hNotifyWnd)
 {
-	BOOL res = pMd5Calc->CalculateFileMd5Hash(GetFullName(), m_Md5, bStopOperation);
+	BOOL res = pMd5Calc->CalculateFileMd5Hash(GetFullName(), m_Md5,
+											bStopOperation, BytesComplete, hNotifyWnd);
 	if (res)
 	{
 		m_bMd5Calculated = true;
 	}
 	return res;
+}
+
+void FileItem::SetMD5(BYTE md5[16])
+{
+	memcpy(m_Md5, md5, sizeof m_Md5);
+	m_bMd5Calculated = true;
+	m_bIsPhantomFile = true;
+	m_IsBinary = true;
 }
 
 CSmallAllocator FileLine::m_Allocator(sizeof FileLine);

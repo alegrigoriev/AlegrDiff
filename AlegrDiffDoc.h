@@ -39,6 +39,11 @@ public:
 	bool m_bRecurseSubdirs;
 
 	void RunComparisionThread();
+
+	FilePair * GetFilePairList() const
+	{
+		return m_pPairList;
+	}
 // Operations
 public:
 	bool BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,

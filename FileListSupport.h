@@ -255,8 +255,14 @@ public:
 	bool m_IsUnicodeBigEndian:1;
 	bool m_bMd5Calculated:1;
 	bool m_bIsFolder:1;
+	bool m_bIsPhantomFile:1;
 
-	BOOL CalculateHashes(CMd5HashCalculator * pMd5Calc, BOOL volatile & bStopOperation);
+	BOOL CalculateHashes(CMd5HashCalculator * pMd5Calc,
+						BOOL volatile & bStopOperation,
+						LONGLONG volatile & BytesComplete,
+						HWND volatile & hNotifyWnd);
+	void SetMD5(BYTE md5[16]);
+
 	// add line from memory. Assuming the file created dynamically by the program
 	void AddLine(LPCTSTR pLine);
 	bool IsFolder() const { return m_bIsFolder; }
@@ -284,6 +290,7 @@ public:
 
 	LONGLONG GetFileLength() const { return m_Length; }
 	UINT GetDigest(int idx) const { return m_Md5[idx]; }
+	BYTE const * GetDigest() const { return m_Md5; }
 
 	const FileLine * FindMatchingLine(const FileLine * pLine,
 									unsigned nStartLineNum, unsigned nEndLineNum);

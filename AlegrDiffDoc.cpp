@@ -1876,6 +1876,8 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 	// preload first of binary files in pair (calculate MD5 digest)
 	CMd5HashCalculator HashCalc;
 	FilePair * pPair;
+	LONGLONG FileComplete;
+	HWND NotifyWnd = GetApp()->m_pMainWnd->m_hWnd;
 
 	{
 		CSimpleCriticalSectionLock lock(m_FileListCs);
@@ -1895,8 +1897,9 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 		}
 		pPair->m_ComparisionResult = FilePair::CalculatingFirstFingerprint;
 		pPair->m_bChanged = true;
-		::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
-		if (pPair->pFirstFile->CalculateHashes( & HashCalc, m_bStopThread)
+		::PostMessage(NotifyWnd, WM_KICKIDLE, 0, 0);
+		if (pPair->pFirstFile->CalculateHashes( & HashCalc, m_bStopThread,
+												FileComplete, NotifyWnd)
 			|| m_bStopThread)
 		{
 			pPair->m_ComparisionResult = FilePair::ResultUnknown;
@@ -1909,7 +1912,7 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 		pPair->m_bChanged = true;
 		m_NextPairToCompare = pPair->pNext;
 
-		::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
+		::PostMessage(NotifyWnd, WM_KICKIDLE, 0, 0);
 	}
 
 	{
@@ -1928,7 +1931,7 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 		}
 
 		pPair->m_ComparisionResult = FilePair::ComparingFiles;
-		::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
+		::PostMessage(NotifyWnd, WM_KICKIDLE, 0, 0);
 		pPair->m_ComparisionResult = pPair->PreCompareFiles( & HashCalc, m_bStopThread);
 		pPair->m_bChanged = true;
 		m_NextPairToCompare = pPair->pNext;
@@ -1941,7 +1944,7 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 		m_NextPairToRefresh = NULL;
 	}
 	m_bStopThread = true;
-	::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
+	::PostMessage(NotifyWnd, WM_KICKIDLE, 0, 0);
 	return 0;
 }
 

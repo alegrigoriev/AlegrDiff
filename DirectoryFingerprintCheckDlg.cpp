@@ -21,6 +21,7 @@ CDirectoryFingerprintCheckDlg::CDirectoryFingerprintCheckDlg(
 	, m_bIncludeDirectoryStructure(FALSE)
 	, m_bSaveAsUnicode(FALSE)
 	, m_StopRunThread(FALSE)
+	, m_bFilenameChanged(TRUE)
 	, m_Thread(ThreadProc, this)
 	, m_TotalDataSize(0)
 	, m_ProcessedFiles(0)
@@ -88,7 +89,17 @@ INT_PTR CDirectoryFingerprintCheckDlg::DoModal()
 		_setmode(_fileno(m_pFile), _O_TEXT);
 	}
 
-	return CDialog::DoModal();
+	INT_PTR result = CDialog::DoModal();
+	if (m_Thread.m_hThread)
+	{
+		m_StopRunThread = TRUE;
+		if (WAIT_TIMEOUT == WaitForSingleObject(m_Thread.m_hThread, 5000))
+		{
+			TerminateThread(m_Thread.m_hThread, -1);
+		}
+	}
+
+	return result;
 }
 
 BOOL CDirectoryFingerprintCheckDlg::OnInitDialog()
@@ -111,13 +122,18 @@ LRESULT CDirectoryFingerprintCheckDlg::OnKickIdle(WPARAM, LPARAM)
 
 	CSimpleCriticalSectionLock lock(m_cs);
 
-	if (m_Filename.m_hWnd != NULL)
+	if (m_Filename.m_hWnd != NULL && m_bFilenameChanged)
 	{
 		m_Filename.SetWindowText(m_CurrentFilename);
+		m_bFilenameChanged = FALSE;
 	}
 	if (m_Progress.m_hWnd != NULL && m_TotalDataSize != 0)
 	{
-		m_Progress.SetPos(int(100. * (m_ProcessedFiles + m_CurrentFileDone) / m_TotalDataSize));
+		int PercentComplete = int(100. * (m_ProcessedFiles + m_CurrentFileDone) / m_TotalDataSize);
+		if (PercentComplete != m_Progress.GetPos())
+		{
+			m_Progress.SetPos(PercentComplete);
+		}
 	}
 	return 0;
 }
@@ -130,9 +146,6 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 	FileList FileList2;
 	int i;
 
-	CString ExclusionPattern(PatternToMultiCString(m_sIgnoreFiles));
-	CString InclusionPattern(PatternToMultiCString(m_sFilenameFilter));
-
 	// make full names from the directories
 	LPTSTR pFilePart;
 	LPCTSTR crlf = _T("\n");
@@ -142,26 +155,69 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 	}
 
 	// load the fingerprint file
-
 	TCHAR buf[1024];
+	while(NULL != _fgetts(buf, 1023, m_pFile))
+	{
+		if (';' == buf[0])
+		{
+			continue;
+		}
+		if (0 == _tcsnicmp(buf, _T("IncludeFiles="), 13))
+		{
+			m_sFilenameFilter = buf + 13;
+			m_sFilenameFilter.Trim();
+		}
+		else if (0 == _tcsnicmp(buf, _T("ExcludeFiles="), 13))
+		{
+			m_sIgnoreFiles = buf + 13;
+			m_sIgnoreFiles.Trim();
+		}
+		else if (0 == _tcsnicmp(buf, _T("IncludeSubdirs="), 15))
+		{
+			TCHAR * Endptr;
+			m_bIncludeSubdirectories = _tcstol(buf + 15, & Endptr, 10);
+		}
+		else if (0 == _tcsnicmp(buf, _T("IncludeDirInfo="), 15))
+		{
+			TCHAR * Endptr;
+			m_bIncludeDirectoryStructure = _tcstol(buf + 15, & Endptr, 10);
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	CString ExclusionPattern(PatternToMultiCString(m_sIgnoreFiles));
+	CString InclusionPattern(PatternToMultiCString(m_sFilenameFilter));
+
 	TCHAR FileName[512];
 	while(NULL != _fgetts(buf, 1023, m_pFile))
 	{
+		if (';' == buf[0])
+		{
+			continue;
+		}
 		buf[1023] = 0;
 		FileName[511] = 0;
 
 		LONGLONG FileLength;
+
+		WIN32_FIND_DATA wfd;
+		memzero(wfd);
 		ULONG MD5[16];
+		BYTE md5[16];
 
 		int NumScannedItems = _stscanf(buf,
-										_T("\"%511[^\"]\" %I64u ")
+										_T("\"%511[^\"]\" %I64u %I64x ")
 										_T("%2x%2x%2x%2x")
 										_T("%2x%2x%2x%2x")
 										_T("%2x%2x%2x%2x")
 										_T("%2x%2x%2x%2x")
 										_T("\n")
 										,
-										FileName, & FileLength,
+										FileName, & FileLength, & wfd.ftLastWriteTime,
+
 										& MD5[0], & MD5[1], & MD5[2], & MD5[3],
 										& MD5[4], & MD5[5], & MD5[6], & MD5[7],
 										& MD5[8], & MD5[9], & MD5[10], & MD5[11],
@@ -173,14 +229,17 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 			break;
 		}
 
+		for (int i = 0; i < 16; i++)
+		{
+			md5[i] = MD5[i];
+		}
+
 		// find the last '\'
 		LPTSTR Dir = _tcsrchr(FileName, '\\');
 		LPTSTR NamePart;
 		CString SubDir;
 		FileItem * pFile;
 
-		WIN32_FIND_DATA wfd;
-		memzero(wfd);
 
 		if (NULL != Dir && 0 == Dir[1])
 		{
@@ -206,7 +265,7 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 		}
 		else
 		{
-			if (NumScannedItems != 18)
+			if (NumScannedItems != 19)
 			{
 				// error
 				break;
@@ -227,6 +286,8 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 		_tcsncpy(wfd.cFileName, NamePart, sizeof wfd.cFileName / sizeof wfd.cFileName[0] - 1);
 		pFile = new FileItem(& wfd, CString(), SubDir);
 
+		pFile->SetMD5(md5);
+
 		pFile->m_pNext = FileList1.m_pList;
 		FileList1.m_pList = pFile;
 		FileList1.m_NumFiles++;
@@ -243,6 +304,7 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 								InclusionPattern, ExclusionPattern, PatternToMultiCString(_T("*")),
 								PatternToMultiCString(_T(""))))
 	{
+		// todo: post a command
 		DWORD error = GetLastError();
 		CString s;
 		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, buf);
@@ -262,7 +324,71 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 
 	m_TotalDataSize = 0;
 
-	// TODO: read files, verify MD5
+	// calculate total size to read
+	FilePair * pPair;
+
+	for (pPair = m_pDocument->GetFilePairList(); NULL != pPair; pPair = pPair->pNext)
+	{
+		if (pPair->pFirstFile != NULL
+			&& NULL != pPair->pSecondFile
+			&& ! pPair->pFirstFile->IsFolder()
+			&& ! pPair->pSecondFile->IsFolder()
+			&& pPair->pFirstFile->GetFileLength() == pPair->pFirstFile->GetFileLength()
+			)
+		{
+			m_TotalDataSize += 0x2000 + pPair->pFirstFile->GetFileLength();
+		}
+	}
+
+	// read files, verify MD5
+	CMd5HashCalculator HashCalc;
+
+	for (pPair = m_pDocument->GetFilePairList(); NULL != pPair; pPair = pPair->pNext)
+	{
+		if (pPair->pFirstFile != NULL
+			&& NULL != pPair->pSecondFile
+			&& ! pPair->pFirstFile->IsFolder()
+			&& ! pPair->pSecondFile->IsFolder())
+		{
+			if (pPair->pFirstFile->GetFileLength() == pPair->pFirstFile->GetFileLength())
+			{
+				{
+					CSimpleCriticalSectionLock lock(m_cs);
+
+					m_CurrentFilename = pPair->pSecondFile->GetFullName();
+					m_bFilenameChanged = TRUE;
+					m_CurrentFileDone = 0;
+				}
+
+				::PostMessage(m_hWnd, WM_KICKIDLE, 0, 0);
+				if (pPair->pSecondFile->CalculateHashes( & HashCalc,
+														m_StopRunThread, m_CurrentFileDone, m_hWnd))
+				{
+					if (0 == memcmp(pPair->pFirstFile->GetDigest(),
+									pPair->pFirstFile->GetDigest(), 16))
+					{
+						pPair->m_ComparisionResult = FilePair::FilesIdentical;
+					}
+					else
+					{
+						pPair->m_ComparisionResult = FilePair::FilesDifferent;
+					}
+				}
+
+				m_ProcessedFiles += 0x2000 + pPair->pFirstFile->GetFileLength();
+			}
+			else if (pPair->pFirstFile->GetFileLength() < pPair->pFirstFile->GetFileLength())
+			{
+				pPair->m_ComparisionResult = FilePair::SecondFileLonger;
+			}
+			else
+			{
+				pPair->m_ComparisionResult = FilePair::FirstFileLonger;
+			}
+		}
+
+	}
+
 
 	if (NULL != m_hWnd)
 	{

@@ -23,6 +23,7 @@
 class CAlegrDiffApp : public CWinApp
 {
 public:
+	void NotifyFilePairChanged(FilePair * pPair);
 	CAlegrDiffApp();
 	~CAlegrDiffApp();
 
@@ -44,6 +45,7 @@ public:
 	bool m_bUseIgnoreFilter;
 	bool m_bAdvancedCompareDialog;
 	bool m_BinaryComparision;
+	bool m_AutoReloadChangedFiles;
 
 	CString m_FileDir1;
 	CString m_FileDir2;
@@ -54,6 +56,9 @@ public:
 	CString m_sCppFilesFilter;
 	CString m_sIgnoreFilesFilter;
 
+	CString m_FindString;
+	bool m_bCaseSensitive;
+
 	LOGFONT m_NormalLogFont;
 	CFont m_NormalFont;
 	LOGFONT m_AddedLogFont;
@@ -62,6 +67,7 @@ public:
 	CFont m_ErasedFont;
 	int m_FontPointSize;
 	void OnFontChanged();
+	void UpdateAllDiffViews();
 
 	void OpenFilePairView(FilePair * pPair);
 	// Overrides

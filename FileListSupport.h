@@ -62,10 +62,21 @@ struct TextToken
 class FileDiffSection
 {
 public:
-	FileDiffSection() {}
+	FileDiffSection() { m_Flags = 0; }
 	~FileDiffSection() {}
 	TextPos m_Begin;
 	TextPos m_End;
+	ULONG m_Flags;
+	enum { FlagAccept = 1, FlagDecline = 2, };
+
+	void AcceptChange() { m_Flags &= ~FlagDecline; m_Flags |= FlagAccept; }
+	void DeclineChange() { m_Flags &= ~FlagAccept; m_Flags |= FlagDecline; }
+	void ChangeUndetermined() { m_Flags &= ~(FlagAccept | FlagDecline); }
+
+	bool IsAccepted() const { return 0 != (m_Flags & FlagAccept); }
+	bool IsDeclined() const { return 0 != (m_Flags & FlagDecline); }
+	bool IsUndetermined() const { return 0 == (m_Flags & (FlagAccept | FlagDecline)); }
+
 	static void * operator new(size_t size)
 	{
 		return m_Allocator.Allocate(size);
@@ -196,7 +207,11 @@ struct LinePair
 	StringSection * pFirstSection;
 private:
 	static CSmallAllocator m_Allocator;
+public:
+	LPCTSTR GetText(LPTSTR buf, size_t nBufChars, int * pStrLen);
 };
+
+enum FileCheckResult { FileDeleted, FileUnchanged, FileTimeChanged, };
 
 class FileItem
 {
@@ -220,6 +235,11 @@ public:
 	const FileLine * FindMatchingLineGroupLine(const FileLine * pLine, int nStartLineNum, int nEndLineNum);
 
 	enum { MaxLineGroupSize = 32 };
+
+
+	FileCheckResult CheckForFileChanged();
+	FileCheckResult ReloadIfChanged();
+
 	FileItem * m_pNext;
 	static int _cdecl NameSortFunc(const void * p1, const void * p2);
 	static int _cdecl DirNameSortFunc(const void * p1, const void * p2);
@@ -245,6 +265,8 @@ private:
 	CArray<TextToken, TextToken> m_Tokens;
 	friend class FilePair;
 };
+
+enum PairCheckResult { FilesDeleted, FilesUnchanged, FilesTimeChanged, };
 
 class FilePair
 {
@@ -277,7 +299,12 @@ public:
 	static int DirNameCompare(FilePair * Pair1, FilePair * Pair2);
 
 	bool LoadFiles();
-	void UnloadFiles();
+	void UnloadFiles(bool ForceUnload = false);
+	void FreeLinePairData();
+
+
+	PairCheckResult CheckForFilesChanged();
+	PairCheckResult ReloadIfChanged();
 
 	TextPos NextDifference(TextPos PosFrom);
 	TextPos PrevDifference(TextPos PosFrom);

@@ -49,6 +49,8 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_bRecurseSubdirs(false),
 	m_FontPointSize(100),
 	m_UsedFilenameFilter(0),
+	m_AutoReloadChangedFiles(false),
+	m_bCaseSensitive(true),
 	m_MinIdenticalLines(5)
 {
 	m_NormalLogFont.lfCharSet = ANSI_CHARSET;
@@ -124,6 +126,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("UseIgnoreFilter"), m_bUseIgnoreFilter, true);
 	Profile.AddItem(_T("Settings"), _T("AdvancedCompareDialog"), m_bAdvancedCompareDialog, false);
 	Profile.AddItem(_T("Settings"), _T("BinaryComparision"), m_BinaryComparision, false);
+	Profile.AddItem(_T("Settings"), _T("AutoReloadChangedFiles"), m_AutoReloadChangedFiles, false);
 
 	Profile.AddItem(_T("Settings"), _T("BinaryFiles"), m_sBinaryFilesFilter,
 					_T("*.exe;*.dll;*.sys;*.obj;*.pdb;*.zip"));
@@ -286,7 +289,6 @@ void CAlegrDiffApp::OnFileComparedirectories()
 		{
 			return;
 		}
-//        pDoc->
 		if (pDoc->BuildFilePairList(dlg.m_sFirstDir, dlg.m_sSecondDir, m_bRecurseSubdirs))
 		{
 			pDoc->UpdateAllViews(NULL);
@@ -428,6 +430,8 @@ void CAlegrDiffApp::OnFilePreferences()
 	dlg.m_ErasedTextColor = m_ErasedTextColor;
 	dlg.m_FontPointSize = m_FontPointSize;
 
+	dlg.m_AutoReloadChangedFiles = m_AutoReloadChangedFiles;
+
 	if (IDOK == dlg.DoModal())
 	{
 		m_bUseBinaryFilesFilter = (0 != dlg.m_bUseBinaryFilesFilter);
@@ -440,7 +444,7 @@ void CAlegrDiffApp::OnFilePreferences()
 		m_sIgnoreFilesFilter = dlg.m_sIgnoreFilesFilter;
 
 		m_TabIndent = dlg.m_nTabIndent;
-
+		m_AutoReloadChangedFiles = dlg.m_AutoReloadChangedFiles;
 
 		if (dlg.m_bFontChanged)
 		{
@@ -478,4 +482,33 @@ void CAlegrDiffApp::OnFontChanged()
 	m_ErasedFont.DeleteObject();
 	m_ErasedFont.CreateFontIndirect( & m_ErasedLogFont);
 
+	UpdateAllDiffViews();
+}
+
+void CAlegrDiffApp::NotifyFilePairChanged(FilePair *pPair)
+{
+	POSITION position = m_pFileDiffTemplate->GetFirstDocPosition();
+	while(position)
+	{
+		CFilePairDoc * pDoc =
+			dynamic_cast<CFilePairDoc *>(m_pFileDiffTemplate->GetNextDoc(position));
+		if (NULL != pDoc
+			&& pPair == pDoc->GetFilePair())
+		{
+		}
+	}
+}
+
+void CAlegrDiffApp::UpdateAllDiffViews()
+{
+	POSITION position = m_pFileDiffTemplate->GetFirstDocPosition();
+	while(position)
+	{
+		CFilePairDoc * pDoc =
+			dynamic_cast<CFilePairDoc *>(m_pFileDiffTemplate->GetNextDoc(position));
+		if (NULL != pDoc)
+		{
+			pDoc->UpdateAllViews(NULL);
+		}
+	}
 }

@@ -26,6 +26,7 @@ public:
 	CString	m_sSecondDir;
 	FilePair * m_pPairList;
 	int m_nFilePairs;
+	bool m_bRecurseSubdirs;
 // Operations
 public:
 	bool BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseSubdirs);
@@ -55,6 +56,7 @@ protected:
 protected:
 	//{{AFX_MSG(CAlegrDiffDoc)
 	afx_msg void OnFileSave();
+	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
@@ -63,6 +65,12 @@ protected:
 
 /////////////////////////////////////////////////////////////////////////////
 // CFilePairDoc document
+
+enum {
+	SetPositionMakeVisible = 1,
+	SetPositionMakeCentered = 2,
+	SetPositionCancelSelection = 4,
+};
 
 class CFilePairDoc : public CDocument
 {
@@ -84,6 +92,7 @@ public:
 	bool BaseOnFirstFile() const { return m_BaseOnFirstFile; }
 	void SetCaretPosition(int pos, int line, int flags);
 	enum { CaretPositionChanged = 0x100, FileLoaded = 0x200};
+	void SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags = SetPositionMakeCentered);
 	void OnEditGotonextdiff();
 	void OnEditGotoprevdiff();
 	void CaretToHome(int flags);
@@ -110,15 +119,34 @@ public:
 	virtual void Dump(CDumpContext& dc) const;
 #endif
 
-	// Generated message map functions
 protected:
+	// Generated message map functions
+public:
+	LPCTSTR GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int * pStrLen);
+	bool GetWordUnderCaret(TextPos & Start, TextPos & End);
+	bool FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive);
+	bool FindWordOrSelection(bool bBackwards);
+	void CaretLeftToWord(bool bCancelSelection);
+	void CaretRightToWord(bool bCancelSelection);
+	bool OnEditFind();
+	bool OnEditFindNext();
+	bool OnEditFindPrev();
+	bool OnEditFindWordNext();
+	bool OnEditFindWordPrev();
+	afx_msg void OnUpdateCaretPosIndicator(CCmdUI* pCmdUI);
 	//{{AFX_MSG(CFilePairDoc)
 	afx_msg void OnUpdateEditGotonextdiff(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditGotoprevdiff(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditCopy(CCmdUI* pCmdUI);
 	afx_msg void OnEditCopy();
 	afx_msg void OnFileSave();
+	afx_msg void OnViewRefresh();
+	afx_msg void OnUpdateFileEditFirst(CCmdUI* pCmdUI);
+	afx_msg void OnFileEditFirst();
+	afx_msg void OnUpdateFileEditSecond(CCmdUI* pCmdUI);
+	afx_msg void OnFileEditSecond();
 	//}}AFX_MSG
+protected:
 	DECLARE_MESSAGE_MAP()
 };
 //{{AFX_INSERT_LOCATION}}

@@ -26,6 +26,7 @@ CPreferencesDialog::CPreferencesDialog(CWnd* pParent /*=NULL*/)
 	m_sCppFilesFilter = _T("");
 	m_sIgnoreFilesFilter = _T("");
 	m_nTabIndent = 0;
+	m_AutoReloadChangedFiles = FALSE;
 	//}}AFX_DATA_INIT
 	m_FontPointSize = 100;
 	m_bFontChanged = false;
@@ -45,6 +46,7 @@ void CPreferencesDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_IGNORE, m_sIgnoreFilesFilter);
 	DDX_Text(pDX, IDC_EDIT_TAB_INDENT, m_nTabIndent);
 	DDV_MinMaxUInt(pDX, m_nTabIndent, 0, 32);
+	DDX_Check(pDX, IDC_CHECK_AUTO_RELOAD, m_AutoReloadChangedFiles);
 	//}}AFX_DATA_MAP
 }
 

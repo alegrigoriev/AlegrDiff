@@ -60,6 +60,12 @@ BEGIN_MESSAGE_MAP(CDiffFileView, CView)
 	ON_COMMAND(ID_EDIT_GOTOPREVDIFF, OnEditGotoprevdiff)
 	ON_COMMAND(ID_VIEW_SHOW_LINE_NUMBERS, OnViewShowLineNumbers)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_LINE_NUMBERS, OnUpdateViewShowLineNumbers)
+	ON_COMMAND(ID_EDIT_FIND, OnEditFind)
+	ON_COMMAND(ID_EDIT_FIND_NEXT, OnEditFindNext)
+	ON_COMMAND(ID_EDIT_FIND_PREV, OnEditFindPrev)
+	ON_COMMAND(ID_EDIT_FIND_WORD_NEXT, OnEditFindWordNext)
+	ON_COMMAND(ID_EDIT_FIND_WORD_PREV, OnEditFindWordPrev)
+	ON_WM_LBUTTONDBLCLK()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -225,16 +231,6 @@ void CDiffFileView::OnDraw(CDC* pDC)
 	{
 		return;
 	}
-	FileItem * pFile = pFilePair->pFirstFile;
-	if (NULL == pFile
-		|| (! pDoc->BaseOnFirstFile() && NULL != pFilePair->pSecondFile))
-	{
-		pFile = pFilePair->pSecondFile;
-	}
-	if (NULL == pFile)
-	{
-		return;
-	}
 
 	CFont * pOldFont = pDC->SelectObject( & pApp->m_NormalFont);
 
@@ -268,125 +264,117 @@ void CDiffFileView::OnDraw(CDC* pDC)
 		pDC->SelectObject(pOldPen);
 		PosX = m_LineNumberMarginWidth;
 	}
+
 	int nLineHeight = LineHeight();
 
-	if (pDoc->UseLinePairArray())
+	int nTabIndent = GetApp()->m_TabIndent;
+	int nCharsInView = CharsInView() + 1;
+
+	pDC->SetTextAlign(pDC->GetTextAlign() | TA_UPDATECP);
+
+	for (int nLine = m_FirstLineSeen, PosY = cr.top; PosY < cr.bottom; nLine++, PosY += nLineHeight)
 	{
-		int nTabIndent = GetApp()->m_TabIndent;
-		int nCharsInView = CharsInView() + 1;
-
-		pDC->SetTextAlign(pDC->GetTextAlign() | TA_UPDATECP);
-
-		for (int nLine = m_FirstLineSeen,
-			PosY = cr.top;
-			nLine < pFilePair->m_LinePairs.GetSize() && PosY < cr.bottom;
-			nLine++, PosY += nLineHeight)
+		TextPos SelBegin, SelEnd;
+		if (pDoc->m_CaretPos < pDoc->m_SelectionAnchor)
 		{
-			const LinePair * pPair = pFilePair->m_LinePairs[nLine];
-			ASSERT(NULL != pPair);
-			TextPos SelBegin, SelEnd;
-			if (pDoc->m_CaretPos < pDoc->m_SelectionAnchor)
-			{
-				SelBegin = pDoc->m_CaretPos;
-				SelEnd = pDoc->m_SelectionAnchor;
-			}
-			else
-			{
-				SelBegin = pDoc->m_SelectionAnchor;
-				SelEnd = pDoc->m_CaretPos;
-			}
-			int nSelBegin = 0;
-			int nSelEnd = 0;
+			SelBegin = pDoc->m_CaretPos;
+			SelEnd = pDoc->m_SelectionAnchor;
+		}
+		else
+		{
+			SelBegin = pDoc->m_SelectionAnchor;
+			SelEnd = pDoc->m_CaretPos;
+		}
+		int nSelBegin = 0;
+		int nSelEnd = 0;
 
-			if (SelEnd.line == SelBegin.line)
+		if (SelEnd.line == SelBegin.line)
+		{
+			if (SelBegin.line == nLine)
 			{
-				if (SelBegin.line == nLine)
-				{
-					if (SelBegin.pos < SelEnd.pos)
-					{
-						nSelBegin = SelBegin.pos;
-						nSelEnd = SelEnd.pos;
-					}
-					else if (SelBegin.pos > SelEnd.pos)
-					{
-						nSelBegin = SelEnd.pos;
-						nSelEnd = SelBegin.pos;
-					}
-				}
-			}
-			else
-			{
-				if (SelBegin.line == nLine)
+				if (SelBegin.pos < SelEnd.pos)
 				{
 					nSelBegin = SelBegin.pos;
+					nSelEnd = SelEnd.pos;
+				}
+				else if (SelBegin.pos > SelEnd.pos)
+				{
+					nSelBegin = SelEnd.pos;
+					nSelEnd = SelBegin.pos;
+				}
+			}
+		}
+		else
+		{
+			if (SelBegin.line == nLine)
+			{
+				nSelBegin = SelBegin.pos;
+				nSelEnd = 2048;
+			}
+			else if (SelBegin.line < nLine)
+			{
+				if (SelEnd.line == nLine)
+				{
+					nSelEnd = SelEnd.pos;
+				}
+				else if (SelEnd.line > nLine)
+				{
 					nSelEnd = 2048;
 				}
-				else if (SelBegin.line < nLine)
-				{
-					if (SelEnd.line == nLine)
-					{
-						nSelEnd = SelEnd.pos;
-					}
-					else if (SelEnd.line > nLine)
-					{
-						nSelEnd = 2048;
-					}
-				}
-			}
-
-			if (NULL != pPair)
-			{
-				// draw line number
-				if (m_ShowLineNumbers)
-				{
-					CString s;
-					DWORD TextColor = pApp->m_NormalTextColor;
-					if (NULL == pPair->pFirstLine)
-					{
-						s.Format("%d", pPair->pSecondLine->GetLineNumber());
-						TextColor = pApp->m_AddedTextColor;
-					}
-					else if (NULL == pPair->pSecondLine)
-					{
-						s.Format("(%d)", pPair->pFirstLine->GetLineNumber());
-						TextColor = pApp->m_ErasedTextColor;
-					}
-					else
-					{
-						s.Format("%d", pPair->pSecondLine->GetLineNumber());
-					}
-					pDC->MoveTo(m_LineNumberMarginWidth - 1, PosY);
-					pDC->SetTextAlign(TA_RIGHT | TA_TOP | TA_UPDATECP);
-					pDC->SetTextColor(TextColor);
-					pDC->SetBkColor(pApp->m_TextBackgroundColor);
-					pDC->SelectObject( & pApp->m_NormalFont);
-					pDC->TextOut(0, 0, s);
-					pDC->SetTextAlign(TA_LEFT | TA_TOP |TA_UPDATECP);
-
-				}
-				DrawStringSections(pDC, CPoint(PosX, PosY),
-									pPair->pFirstSection, m_FirstPosSeen, nCharsInView, nTabIndent,
-									nSelBegin, nSelEnd);
 			}
 		}
-	}
-	else
-	{
-		pDC->SetBkColor(pApp->m_TextBackgroundColor);
-		int nTabWidth = GetApp()->m_TabIndent * CharWidth();
-		for (int nLine = m_FirstLineSeen,
-			PosY = cr.top;
-			nLine < pFile->GetNumLines() && PosY < cr.bottom;
-			nLine++, PosY += nLineHeight)
+
+		const LinePair * pPair = NULL;
+		StringSection Section;
+		Section.Attr = Section.Identical;
+		Section.pNext = NULL;
+		StringSection * pSection = NULL;
+		if (nLine >= pFilePair->m_LinePairs.GetSize())
 		{
-			const FileLine * pLine = pFile->GetLine(nLine);
-			if (pLine->GetLength() > m_FirstPosSeen)
+			break;
+		}
+		pPair = pFilePair->m_LinePairs[nLine];
+		ASSERT(NULL != pPair);
+		if (NULL != pPair)
+		{
+			pSection = pPair->pFirstSection;
+			// draw line number
+			if (m_ShowLineNumbers)
 			{
-				pDC->TabbedTextOut(PosX, PosY,
-									LPCTSTR(pLine->GetText()) + m_FirstPosSeen,
-									pLine->GetLength() - m_FirstPosSeen, 1, & nTabWidth, 0);
+				CString s;
+				DWORD TextColor = pApp->m_NormalTextColor;
+				if (NULL == pPair->pFirstLine)
+				{
+					s.Format("%d", pPair->pSecondLine->GetLineNumber());
+					TextColor = pApp->m_AddedTextColor;
+				}
+				else if (NULL == pPair->pSecondLine)
+				{
+					s.Format("(%d)", pPair->pFirstLine->GetLineNumber());
+					TextColor = pApp->m_ErasedTextColor;
+				}
+				else
+				{
+					s.Format("%d", pPair->pSecondLine->GetLineNumber());
+				}
+				pDC->MoveTo(m_LineNumberMarginWidth - 1, PosY);
+				pDC->SetTextAlign(TA_RIGHT | TA_TOP | TA_UPDATECP);
+				pDC->SetTextColor(TextColor);
+				pDC->SetBkColor(pApp->m_TextBackgroundColor);
+				pDC->SelectObject( & pApp->m_NormalFont);
+				pDC->TextOut(0, 0, s);
+				pDC->SetTextAlign(TA_LEFT | TA_TOP |TA_UPDATECP);
+
 			}
 		}
+		else
+		{
+			Section.pBegin = NULL;
+			Section.Length = 0;
+		}
+		DrawStringSections(pDC, CPoint(PosX, PosY),
+							pSection, m_FirstPosSeen, nCharsInView, nTabIndent,
+							nSelBegin, nSelEnd);
 	}
 
 	pDC->SelectObject(pOldFont);
@@ -467,22 +455,52 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	{
 	case VK_DOWN:
 		TRACE("VK_DOWN\n");
-		MoveCaretBy(0, 1, bCancelSelection);
+		if (CtrlPressed)
+		{
+		}
+		else
+		{
+			MoveCaretBy(0, 1, bCancelSelection);
+		}
 		break;
 
 	case VK_UP:
 		TRACE("VK_UP\n");
-		MoveCaretBy(0, -1, bCancelSelection);
+		if (CtrlPressed)
+		{
+		}
+		else
+		{
+			MoveCaretBy(0, -1, bCancelSelection);
+		}
 		break;
 
 	case VK_LEFT:
 		TRACE("VK_LEFT\n");
-		MoveCaretBy(-1, 0, bCancelSelection);
+		if (CtrlPressed)
+		{
+			// move to one word left
+			GetDocument()->CaretLeftToWord(bCancelSelection);
+			MakeCaretVisible();
+		}
+		else
+		{
+			MoveCaretBy(-1, 0, bCancelSelection);
+		}
 		break;
 
 	case VK_RIGHT:
 		TRACE("VK_RIGHT\n");
-		MoveCaretBy(1, 0, bCancelSelection);
+		if (CtrlPressed)
+		{
+			// move to one word right
+			GetDocument()->CaretRightToWord(bCancelSelection);
+			MakeCaretVisible();
+		}
+		else
+		{
+			MoveCaretBy(1, 0, bCancelSelection);
+		}
 		break;
 
 	case VK_HOME:
@@ -855,7 +873,6 @@ void CDiffFileView::SetCaretPosition(int pos, int line, int flags)
 	{
 		MakeCaretCentered();
 	}
-	CreateAndShowCaret();
 }
 
 void CDiffFileView::CreateAndShowCaret()
@@ -919,6 +936,11 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 	}
 	else
 	{
+		if (nFlags & MK_CONTROL)
+		{
+			// select a word
+			TextPos Begin, End;
+		}
 		if (0 == (nFlags & MK_SHIFT))
 		{
 			flags |= SetPositionCancelSelection;
@@ -926,6 +948,18 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 		SetCaretPosition(m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth(),
 						nLine,
 						flags);
+	}
+	if ((nFlags & MK_CONTROL)
+		&& 0 == (nFlags & MK_SHIFT))
+	{
+		// select a word
+		TextPos Begin, End;
+		CFilePairDoc * pDoc = GetDocument();
+		if (pDoc->GetWordUnderCaret(Begin, End))
+		{
+			pDoc->SetSelection(End, Begin);
+			MakeCaretVisible();
+		}
 	}
 }
 
@@ -1088,7 +1122,6 @@ void CDiffFileView::OnEditGotonextdiff()
 	CFilePairDoc * pDoc = GetDocument();
 	pDoc->OnEditGotonextdiff();
 	MakeCaretCentered();
-	CreateAndShowCaret();
 }
 
 void CDiffFileView::OnEditGotoprevdiff()
@@ -1096,7 +1129,6 @@ void CDiffFileView::OnEditGotoprevdiff()
 	CFilePairDoc * pDoc = GetDocument();
 	pDoc->OnEditGotoprevdiff();
 	MakeCaretCentered();
-	CreateAndShowCaret();
 }
 
 void CDiffFileView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
@@ -1183,20 +1215,19 @@ void CDiffFileView::BringPositionToBounds(TextPos textpos, const CRect & Allowed
 	{
 		DoHScroll(CaretPos - BringToBounds.right);
 	}
+	CreateAndShowCaret();
 }
 
 void CDiffFileView::CaretToHome(int flags)
 {
 	GetDocument()->CaretToHome(flags);
 	MakeCaretVisible();
-	CreateAndShowCaret();
 }
 
 void CDiffFileView::CaretToEnd(int flags)
 {
 	GetDocument()->CaretToEnd(flags);
 	MakeCaretVisible();
-	CreateAndShowCaret();
 }
 
 void CDiffFileView::OnViewShowLineNumbers()
@@ -1209,4 +1240,71 @@ void CDiffFileView::OnViewShowLineNumbers()
 void CDiffFileView::OnUpdateViewShowLineNumbers(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_ShowLineNumbers);
+}
+
+void CDiffFileView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* pDeactivateView)
+{
+	CView::OnActivateView(bActivate, pActivateView, pDeactivateView);
+	TRACE("bActivate=%d, this=%08X, pActivateView=%08X\n", bActivate, this, pActivateView);
+	if (GetApp()->m_AutoReloadChangedFiles)
+	{
+		if (bActivate && this == pActivateView)
+		{
+			GetDocument()->OnViewRefresh();
+		}
+	}
+}
+
+void CDiffFileView::OnEditFind()
+{
+	// TODO: Add your command handler code here
+
+}
+
+void CDiffFileView::OnEditFindNext()
+{
+	CThisApp * pApp = GetApp();
+	if (GetDocument()->FindTextString(pApp->m_FindString, false, pApp->m_bCaseSensitive))
+	{
+		MakeCaretCentered();
+	}
+}
+
+void CDiffFileView::OnEditFindPrev()
+{
+	CThisApp * pApp = GetApp();
+	if (GetDocument()->FindTextString(pApp->m_FindString, true, pApp->m_bCaseSensitive))
+	{
+		MakeCaretCentered();
+	}
+}
+
+void CDiffFileView::OnEditFindWordNext()
+{
+	if (GetDocument()->FindWordOrSelection(false))
+	{
+		MakeCaretCentered();
+	}
+}
+
+void CDiffFileView::OnEditFindWordPrev()
+{
+	if (GetDocument()->FindWordOrSelection(true))
+	{
+		MakeCaretCentered();
+	}
+}
+
+
+void CDiffFileView::OnLButtonDblClk(UINT nFlags, CPoint point)
+{
+	CView::OnLButtonDblClk(nFlags, point);
+	// select a word
+	TextPos Begin, End;
+	CFilePairDoc * pDoc = GetDocument();
+	if (pDoc->GetWordUnderCaret(Begin, End))
+	{
+		pDoc->SetSelection(End, Begin);
+		MakeCaretVisible();
+	}
 }

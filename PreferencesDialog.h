@@ -27,6 +27,7 @@ public:
 	CString	m_sCppFilesFilter;
 	CString	m_sIgnoreFilesFilter;
 	UINT	m_nTabIndent;
+	BOOL	m_AutoReloadChangedFiles;
 	//}}AFX_DATA
 
 	LOGFONT m_NormalLogFont;

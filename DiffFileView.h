@@ -11,12 +11,6 @@
 /////////////////////////////////////////////////////////////////////////////
 // CDiffFileView view
 
-enum {
-	SetPositionMakeVisible = 1,
-	SetPositionMakeCentered = 2,
-	SetPositionCancelSelection = 4,
-};
-
 class CDiffFileView : public CView
 {
 protected:
@@ -114,6 +108,7 @@ protected:
 
 	// Generated message map functions
 protected:
+	void OnActivateView(BOOL bActivate, CView* pActivateView, CView*);
 	//{{AFX_MSG(CDiffFileView)
 	afx_msg void OnWindowCloseDiff();
 	afx_msg void OnDestroy();
@@ -133,6 +128,12 @@ protected:
 	afx_msg void OnEditGotoprevdiff();
 	afx_msg void OnViewShowLineNumbers();
 	afx_msg void OnUpdateViewShowLineNumbers(CCmdUI* pCmdUI);
+	afx_msg void OnEditFind();
+	afx_msg void OnEditFindNext();
+	afx_msg void OnEditFindPrev();
+	afx_msg void OnEditFindWordNext();
+	afx_msg void OnEditFindWordPrev();
+	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

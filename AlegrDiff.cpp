@@ -23,8 +23,11 @@
 #include "DirectoryFingerpringCreateDlg.h"
 #include "CheckFingerprintDlg.h"
 #include "DirectoryFingerprintCheckDlg.h"
+
+#include "PathEx.h"
 #include <Shlwapi.h>
 #include <atlbase.h>
+
 #include "FileDialogWithHistory.h"
 
 #ifdef _DEBUG
@@ -1572,20 +1575,24 @@ void CAlegrDiffApp::OnFileCheckDirectoryFingerprint()
 		return;
 	}
 
-	{
-		CString title = dlg.m_sFilename;
-		title += _T(" - ");
-		title += dlg.m_sDirectory;
-		title += '\\';
-		pDoc->SetTitle(title);
-	}
+	CPathEx path(dlg.m_sDirectory);
 
-	pDoc->m_sSecondDir = dlg.m_sDirectory;
+	path.MakeFullPath();
+	path.Canonicalize();
+	path.AddBackslash();
+
+	pDoc->m_sSecondDir = (CString&)path;
+
+	CString title = dlg.m_sFilename;
+	title += _T(" - ");
+	title += path;
+	pDoc->SetTitle(title);
+
 	pDoc->m_bCheckingFingerprint = true;
 
 	CDirectoryFingerprintCheckDlg dlg1(pDoc);
 
-	dlg1.m_sDirectory = dlg.m_sDirectory;
+	dlg1.m_sDirectory = pDoc->m_sSecondDir;
 	dlg1.m_FingerprintFilename = dlg.m_sFilename;
 
 	if (IDOK != dlg1.DoModal())

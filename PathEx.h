@@ -30,30 +30,7 @@ public:
 	}
 	CPathExT( ) throw( ) {}
 
-	bool MakeFullPath()
-	{
-		StringType tmp;
-		typename StringType::XCHAR tmpchar[2];
-		typename StringType::XCHAR * pFilePart;
-
-		DWORD Length = GetFullPathNameT(*this, 2, tmpchar, & pFilePart);
-		typename StringType::XCHAR * pBuf = tmp.GetBuffer(Length + 1);
-		if (NULL != pBuf)
-		{
-			DWORD ExpandedLength = GetFullPathNameT(*this, Length + 1, pBuf, & pFilePart);
-			if (ExpandedLength <= Length)
-			{
-				tmp.ReleaseBuffer(ExpandedLength);
-				static_cast<StringType &>(*this) = tmp;
-				return true;
-			}
-			else
-			{
-				tmp.ReleaseBuffer(0);
-			}
-		}
-		return false;
-	}
+	bool MakeFullPath();
 	CPathExT & operator =(StringType const & src)
 	{
 		m_strPath = src;
@@ -61,6 +38,31 @@ public:
 	}
 };
 
+template<typename StringType>
+bool CPathExT<StringType>::MakeFullPath()
+{
+	StringType tmp;
+	typename StringType::XCHAR tmpchar[2];
+	typename StringType::XCHAR * pFilePart;
+
+	DWORD Length = GetFullPathNameT(*this, 2, tmpchar, & pFilePart);
+	typename StringType::XCHAR * pBuf = tmp.GetBuffer(Length + 1);
+	if (NULL != pBuf)
+	{
+		DWORD ExpandedLength = GetFullPathNameT(*this, Length + 1, pBuf, & pFilePart);
+		if (ExpandedLength <= Length)
+		{
+			tmp.ReleaseBuffer(ExpandedLength);
+			static_cast<StringType &>(*this) = tmp;
+			return true;
+		}
+		else
+		{
+			tmp.ReleaseBuffer(0);
+		}
+	}
+	return false;
+}
 typedef CPathExT<CString> CPathEx;
 typedef CPathExT<CStringW> CPathExW;
 typedef CPathExT<CStringA> CPathExA;

@@ -286,10 +286,22 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 			&& NULL != pPair->pSecondFile
 			&& ! pPair->pFirstFile->IsFolder()
 			&& ! pPair->pSecondFile->IsFolder()
-			&& pPair->pFirstFile->GetFileLength() == pPair->pSecondFile->GetFileLength()
 			)
 		{
-			m_TotalDataSize += 0x2000 + pPair->pFirstFile->GetFileLength();
+			ULONGLONG Length1 = pPair->pFirstFile->GetFileLength();
+			ULONGLONG Length2 = pPair->pSecondFile->GetFileLength();
+			if (Length1 < Length2)
+			{
+				pPair->m_ComparisionResult = FilePair::SecondFileLonger;
+			}
+			else if (Length1 > Length2)
+			{
+				pPair->m_ComparisionResult = FilePair::FirstFileLonger;
+			}
+			else
+			{
+				m_TotalDataSize += 0x2000 + pPair->pFirstFile->GetFileLength();
+			}
 		}
 	}
 
@@ -311,7 +323,7 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 				if (pPair->pSecondFile->CalculateHashes( & HashCalc, this))
 				{
 					if (0 == memcmp(pPair->pFirstFile->GetDigest(),
-									pPair->pSecondFile->GetDigest(), 16))
+									pPair->pSecondFile->GetDigest(), pPair->pFirstFile->GetDigestLength()))
 					{
 						pPair->m_ComparisionResult = FilePair::FilesIdentical;
 					}
@@ -323,22 +335,10 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 
 				AddDoneItem(pPair->pSecondFile->GetFileLength());
 			}
-			else if (pPair->pFirstFile->GetFileLength() < pPair->pSecondFile->GetFileLength())
-			{
-				pPair->m_ComparisionResult = FilePair::SecondFileLonger;
-			}
-			else
-			{
-				pPair->m_ComparisionResult = FilePair::FirstFileLonger;
-			}
 		}
 
 	}
 
-
-	if (NULL != m_hWnd)
-	{
-		::PostMessage(m_hWnd, WM_COMMAND, IDOK, NULL);
-	}
+	SignalDialogEnd(IDOK);
 	return 0;
 }

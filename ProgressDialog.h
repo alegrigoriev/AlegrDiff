@@ -31,12 +31,13 @@ public:
 	void AddDoneItem(LONGLONG size);
 	void SetNextItem(LPCTSTR Name, LONGLONG size, DWORD ItemOverhead);
 
-	void SignalDialogEnd(UINT Command);
+	UINT SignalDialogEnd(UINT Command);
 
 	CWinThread m_Thread;
 	virtual unsigned ThreadProc();
 	BOOL volatile m_StopRunThread;
 	HANDLE m_hThreadEvent;
+	UINT m_DialogResult;
 
 	CSimpleCriticalSection m_cs;
 	CString m_CurrentItemName;

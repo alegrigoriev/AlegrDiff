@@ -47,6 +47,7 @@ CAlegrDiffDoc::CAlegrDiffDoc()
 	: m_nFilePairs(0),
 	m_bRecurseSubdirs(false),
 	m_bCheckingFingerprint(false)
+	, m_bNeedUpdateViews(false)
 {
 	m_NextPairToRefresh = m_PairList.Head();
 	m_NextPairToCompare = m_PairList.Head();
@@ -103,8 +104,13 @@ bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
 	m_NextPairToCompare = m_PairList.Head();
 
 	int result = dlg.DoModal();
+	if (IDOK == result)
+	{
+		UpdateAllViews(NULL);
+		return true;
+	}
 
-	return true;
+	return false;
 }
 
 bool operator ==(const FILETIME & time1, const FILETIME & time2)
@@ -128,7 +134,6 @@ bool CAlegrDiffDoc::RebuildFilePairList(CProgressDialog * pDlg)
 			CString s;
 			s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sFirstDir));
 			pDlg->SetNextItem(s, 0, 0);
-			pDlg->SignalDialogEnd(IDYES);
 		}
 		return false;
 	}
@@ -141,7 +146,6 @@ bool CAlegrDiffDoc::RebuildFilePairList(CProgressDialog * pDlg)
 			CString s;
 			s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sSecondDir));
 			pDlg->SetNextItem(s, 0, 0);
-			pDlg->SignalDialogEnd(IDYES);
 		}
 		return false;
 	}
@@ -399,11 +403,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 	FileList2.Detach();
 
 	pDlg->SetTotalDataSize(TotalFilesSize);
-
-	if (NeedUpdateViews)
-	{
-		//UpdateAllViews(NULL);
-	}
+	m_bNeedUpdateViews = NeedUpdateViews;
 
 	return true;
 }
@@ -994,8 +994,15 @@ void CAlegrDiffDoc::OnViewRefresh()
 	}
 
 	// rescan the directories again
+	m_bNeedUpdateViews = false;
+
 	CComparisonProgressDlg dlg;
+
 	dlg.DoModalDelay();
+	if (m_bNeedUpdateViews)
+	{
+		UpdateAllViews(NULL);
+	}
 }
 
 void CFilePairDoc::OnViewRefresh()
@@ -2146,8 +2153,7 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 	if ( ! RebuildFilePairList(pDlg))
 	{
 		// TODO
-		pDlg->SignalDialogEnd(IDABORT);
-		return -1;
+		return IDABORT;
 	}
 	// preload first of binary files in pair (calculate MD5 digest)
 
@@ -2228,7 +2234,7 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 		m_NextPairToCompare = m_PairList.Head();
 	}
 //    ::PostMessage(NotifyWnd, WM_KICKIDLE, 0, 0);
-	return 0;
+	return IDOK;
 }
 
 void CAlegrDiffDoc::OnIdle()

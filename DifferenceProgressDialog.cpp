@@ -45,10 +45,7 @@ BOOL CDifferenceProgressDialog::OnInitDialog()
 unsigned CDifferenceProgressDialog::ThreadProc()
 {
 	m_pDoc->FindDataProc(this);
-	if (NULL != m_hWnd)
-	{
-		::PostMessage(m_hWnd, WM_COMMAND, IDOK, 0);
-	}
+	SignalDialogEnd(IDOK);
 	return 0;
 }
 

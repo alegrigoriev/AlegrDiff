@@ -34,11 +34,8 @@ unsigned CComparisonProgressDlg::ThreadProc()
 {
 	if (NULL != m_pDoc)
 	{
-		m_pDoc->CompareDirectoriesFunction(this);
-	}
-	if (NULL != m_hWnd)
-	{
-		::PostMessage(m_hWnd, WM_COMMAND, IDYES, 0);
+		UINT result = m_pDoc->CompareDirectoriesFunction(this);
+		return SignalDialogEnd(result);
 	}
 	return 0;
 }

@@ -24,6 +24,7 @@ CProgressDialog::CProgressDialog(UINT id, CWnd* pParent /*=NULL*/)
 	, m_TickCountStarted(0)
 	, m_LastTickCount(0)
 	, m_LastDone(0)
+	, m_DialogResult(-1)
 	, m_hThreadEvent(CreateEvent(NULL, FALSE, FALSE, NULL))
 {
 	m_Thread.m_bAutoDelete = false;
@@ -108,6 +109,11 @@ INT_PTR CProgressDialog::DoModalDelay(int Delay)
 	CloseHandle(m_Thread.m_hThread);
 	m_Thread.m_hThread = NULL;
 
+	if (m_DialogResult != -1)
+	{
+		return m_DialogResult;
+	}
+
 	return result;
 }
 
@@ -135,6 +141,11 @@ INT_PTR CProgressDialog::DoModal()
 	}
 	CloseHandle(m_Thread.m_hThread);
 	m_Thread.m_hThread = NULL;
+
+	if (m_DialogResult != -1)
+	{
+		return m_DialogResult;
+	}
 
 	return result;
 }
@@ -206,12 +217,12 @@ LRESULT CProgressDialog::OnKickIdle(WPARAM, LPARAM)
 			{
 				// just started, don't use smoothing
 				m_DonePerSec = DWORD(double(Done - m_LastDone) * 1000. / TicksPassed);
-				TRACE("Just started, Done per sec = %I64d\n", m_DonePerSec);
+				//TRACE("Just started, Done per sec = %I64d\n", m_DonePerSec);
 			}
 			else
 			{
 				m_DonePerSec = DWORD(m_DonePerSec * 0.9 + 100. * double(Done - m_LastDone) / TicksPassed);
-				TRACE("Done per sec = %I64d\n", m_DonePerSec);
+				//TRACE("Done per sec = %I64d\n", m_DonePerSec);
 			}
 
 			if (0 != m_DonePerSec
@@ -338,12 +349,13 @@ void CProgressDialog::OnAbort()
 	}
 }
 
-void CProgressDialog::SignalDialogEnd(UINT Command)
+UINT CProgressDialog::SignalDialogEnd(UINT Command)
 {
-	if (NULL == m_hWnd)
+	m_DialogResult = Command;
+	if (NULL != m_hWnd)
 	{
-		return;
+		::PostMessage(m_hWnd, WM_COMMAND, Command, 0);
 	}
-	::PostMessage(m_hWnd, WM_COMMAND, Command, 0);
+	return Command;
 }
 

@@ -180,12 +180,6 @@ void CCompareDirsDialog::OnButtonBrowseSecondDir()
 	}
 }
 
-void CCompareDirsDialog::OnCancel()
-{
-	GetApp()->Profile.RemoveSection(_T("History"));
-	CDialog::OnCancel();
-}
-
 void CCompareDirsDialog::OnButtonAdvanced()
 {
 	EndDialog(IDC_BUTTON_ADVANCED);

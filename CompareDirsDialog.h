@@ -57,7 +57,6 @@ protected:
 	//{{AFX_MSG(CCompareDirsDialog)
 	afx_msg void OnButtonBrowseFirstDir();
 	afx_msg void OnButtonBrowseSecondDir();
-	virtual void OnCancel();
 	afx_msg void OnButtonAdvanced();
 	afx_msg void OnCheckBinary();
 	afx_msg void OnCheckBinaryFiles();

@@ -21,6 +21,7 @@ IMPLEMENT_DYNCREATE(CAlegrDiffView, CListView)
 BEGIN_MESSAGE_MAP(CAlegrDiffView, CListView)
 	//{{AFX_MSG_MAP(CAlegrDiffView)
 	ON_NOTIFY_REFLECT(LVN_COLUMNCLICK, OnColumnclick)
+	ON_NOTIFY_REFLECT(LVN_GETDISPINFO, OnGetdispinfo)
 	//}}AFX_MSG_MAP
 	// Standard printing commands
 	ON_COMMAND(ID_FILE_PRINT, CView::OnFilePrint)
@@ -111,18 +112,99 @@ void CAlegrDiffView::OnInitialUpdate()
 	// set style, header columns
 	CListCtrl * pList = &GetListCtrl();
 	CHeaderCtrl * pHeader = pList->GetHeaderCtrl();
-	pList->InsertColumn(0, "File 1", LVCFMT_LEFT, 100, 0);
-	pList->InsertColumn(1, "Modified", LVCFMT_LEFT, 100, 1);
-	pList->InsertColumn(2, "File 2", LVCFMT_LEFT, 100, 2);
-	pList->InsertColumn(3, "Modified", LVCFMT_LEFT, 100, 3);
-	pList->InsertColumn(4, "Comparision result", LVCFMT_LEFT, 100, 4);
+	pList->InsertColumn(0, "File Name", LVCFMT_LEFT, 200, 0);
+	pList->InsertColumn(1, "Subdirectory", LVCFMT_LEFT, 200, 1);
+	pList->InsertColumn(2, "1st Modified at", LVCFMT_LEFT, 150, 2);
+	pList->InsertColumn(3, "2nd Modified at", LVCFMT_LEFT, 150, 3);
+	pList->InsertColumn(4, "Comparision result", LVCFMT_LEFT, 400, 4);
 	pList->SetExtendedStyle(pList->GetExtendedStyle() | LVS_EX_FULLROWSELECT);
 }
 
 void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
-	// TODO: Add your control notification handler code here
+	// change sort order
 
+	*pResult = 0;
+}
+
+CString FileTimeToStr(FILETIME FileTime, LCID locale = LOCALE_USER_DEFAULT)
+{
+	int const TimeBufSize = 256;
+	TCHAR str[TimeBufSize] = {0};
+	SYSTEMTIME SystemTime;
+	SYSTEMTIME LocalTime;
+	memset( & LocalTime, 0, sizeof LocalTime);
+	FileTimeToSystemTime( & FileTime, & SystemTime);
+	SystemTimeToTzSpecificLocalTime(NULL, & SystemTime, & LocalTime);
+
+	GetDateFormat(locale, DATE_SHORTDATE, & LocalTime, NULL, str, TimeBufSize - 1);
+	CString result = str;
+	result += ' ';
+
+	GetTimeFormat(locale, TIME_NOSECONDS, & LocalTime, NULL, str, TimeBufSize - 1);
+	result += str;
+	return result;
+}
+
+void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
+{
+	// fill the list control
+	LockWindowUpdate();
+	CListCtrl * pListCtrl = &GetListCtrl();
+	pListCtrl->DeleteAllItems();
+	CAlegrDiffDoc * pDoc = GetDocument();
+
+	FilePair * pPair = pDoc->m_pPairList;
+
+	for (int item = 0; NULL != pPair; item++, pPair = pPair->pNext)
+	{
+		FileItem * pFileItem = pPair->pFirstFile;
+		if (NULL == pFileItem)
+		{
+			pFileItem = pPair->pSecondFile;
+		}
+		LVITEM lvi;
+		lvi.mask = LVIF_TEXT | LVIF_PARAM;
+		lvi.iItem = item;
+		lvi.iSubItem = 0;
+		lvi.pszText = (LPTSTR)pFileItem->GetName();
+		lvi.lParam = LPARAM(pFileItem);
+		pListCtrl->InsertItem(& lvi);
+
+		pListCtrl->SetItemText(item, 1, (LPTSTR)pFileItem->GetSubdir());
+		// set modified time/date
+		CString datetime;
+		if (NULL != pPair->pFirstFile)
+		{
+			datetime = FileTimeToStr(pPair->pFirstFile->GetLastWriteTime());
+			pListCtrl->SetItemText(item, 2, datetime);
+		}
+		else
+		{
+			pListCtrl->SetItemText(item, 2, _T(""));
+		}
+		if (NULL != pPair->pSecondFile)
+		{
+			datetime = FileTimeToStr(pPair->pSecondFile->GetLastWriteTime());
+			pListCtrl->SetItemText(item, 3, datetime);
+		}
+		else
+		{
+			pListCtrl->SetItemText(item, 3, _T(""));
+		}
+		CString ComparisionResult = pPair->GetComparisionResult();
+		pListCtrl->SetItemText(item, 4, ComparisionResult);
+	}
+
+	UnlockWindowUpdate();
+}
+
+void CAlegrDiffView::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LV_DISPINFO* pDispInfo = (LV_DISPINFO*)pNMHDR;
+	FilePair * pPair = (FilePair *)pDispInfo->item.lParam;
+	TRACE("CAlegrDiffView::OnGetdispinfo:pPair=%x\n", pPair);
+	pDispInfo->item.pszText = _T("OK");
 	*pResult = 0;
 }

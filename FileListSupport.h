@@ -54,6 +54,8 @@ public:
 	const char * GetLine(int LineNum) const;
 	LPCTSTR GetName() const { return m_Name; }
 	LPCTSTR GetSubdir() const { return m_Subdir; }
+	LPCTSTR GetBasedir() const { return m_BaseDir; }
+	FILETIME GetLastWriteTime() const { return m_LastWriteTime; }
 	FileItem * m_pNext;
 	static int _cdecl FileItemNameSortFunc(const void * p1, const void * p2);
 	static int _cdecl FileItemDirNameSortFunc(const void * p1, const void * p2);
@@ -78,6 +80,7 @@ struct FilePair
 	FilePair * pNext;
 	FileItem * pFirstFile;
 	FileItem * pSecondFile;
+	CString GetComparisionResult();
 };
 
 class FileList

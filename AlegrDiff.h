@@ -13,7 +13,7 @@
 #endif
 
 #include "resource.h"       // main symbols
-
+#include "ApplicationProfile.h"
 /////////////////////////////////////////////////////////////////////////////
 // CAlegrDiffApp:
 // See AlegrDiff.cpp for the implementation of this class
@@ -24,6 +24,7 @@ class CAlegrDiffApp : public CWinApp
 public:
 	CAlegrDiffApp();
 
+	CApplicationProfile Profile;
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CAlegrDiffApp)
@@ -37,6 +38,11 @@ public:
 	DECLARE_MESSAGE_MAP()
 };
 
+typedef CAlegrDiffApp CThisApp;
+inline CThisApp * GetApp()
+{
+	return (CThisApp *) AfxGetApp();
+}
 
 /////////////////////////////////////////////////////////////////////////////
 

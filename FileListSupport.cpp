@@ -3005,7 +3005,7 @@ int FilePairComparePredicate::ComparisionSortBackwardsFunc(const FilePair * Pair
 	return 0;
 }
 
-CString FilePair::GetComparisionResult() const
+CString FilePair::GetComparisonResult() const
 {
 	static CString sFilesUnaccessible(MAKEINTRESOURCE(IDS_STRING_FILES_UNACCESSIBLE));
 	static CString sFilesIdentical(MAKEINTRESOURCE(IDS_STRING_FILES_IDENTICAL));
@@ -3218,15 +3218,11 @@ FilePair::eFileComparisionResult FilePair::PreCompareFiles(CMd5HashCalculator * 
 
 	if (NULL != pProgressDialog)
 	{
-		CString s;
-		s.Format(IDS_STRING_COMPARING,
-				LPCTSTR(pFirstFile->GetFullName()),
-				LPCTSTR(pSecondFile->GetFullName()));
+		m_ComparisionResult = ComparingFiles;
 
-		pProgressDialog->SetNextItem(s,
-									2 * (pFirstFile->GetFileLength()
-										+ pSecondFile->GetFileLength()),
-									0x4000);
+		pProgressDialog->SetNextItem(GetComparisonResult(),
+									2 * (pFirstFile->GetFileLength() + pSecondFile->GetFileLength()),
+									FILE_OPEN_OVERHEAD * 2);
 	}
 
 	eFileComparisionResult result = FileUnaccessible;
@@ -3648,11 +3644,21 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 		if ( ! pFirstFile->m_bMd5Calculated)
 		{
 			m_ComparisionResult = CalculatingFirstFingerprint;
+			if (NULL != pProgressDialog)
+			{
+				pProgressDialog->SetNextItem(GetComparisonResult(),
+											pFirstFile->GetFileLength(), FILE_OPEN_OVERHEAD);
+			}
 			pFirstFile->CalculateHashes(pMd5Calc, pProgressDialog);
 		}
 		if ( ! pSecondFile->m_bMd5Calculated)
 		{
 			m_ComparisionResult = CalculatingSecondFingerprint;
+			if (NULL != pProgressDialog)
+			{
+				pProgressDialog->SetNextItem(GetComparisonResult(),
+											pSecondFile->GetFileLength(), FILE_OPEN_OVERHEAD);
+			}
 			pSecondFile->CalculateHashes(pMd5Calc, pProgressDialog);
 		}
 	}

@@ -252,20 +252,6 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			else
 			{
 				pPair->m_ComparisionResult = pPair->ResultUnknown;
-				// add files to the "data to process" size
-				if (pPair->pFirstFile->m_IsBinary)
-				{
-					if (pPair->pFirstFile->GetFileLength()
-						== pPair->pSecondFile->GetFileLength())
-					{
-						TotalFilesSize += 2 * pPair->pFirstFile->GetFileLength();
-					}
-				}
-				else
-				{
-					TotalFilesSize += 2 * (pPair->pFirstFile->GetFileLength()
-											+ pPair->pSecondFile->GetFileLength());
-				}
 			}
 
 			if (0) TRACE(_T("File \"%s\" exists in both \"%s\" and \"%s\"\n"),
@@ -361,23 +347,22 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 					if (pPair->pFirstFile->GetFileLength()
 						== pPair->pSecondFile->GetFileLength())
 					{
-						// todo: check which files need MD5
 						if ( ! pPair->pFirstFile->m_bMd5Calculated)
 						{
-							// overhead is ox2000
-							TotalFilesSize += 0x2000 + pPair->pFirstFile->GetFileLength();
+							// overhead is 0x2000
+							TotalFilesSize += FILE_OPEN_OVERHEAD + pPair->pFirstFile->GetFileLength();
 						}
 						if ( ! pPair->pSecondFile->m_bMd5Calculated)
 						{
-							TotalFilesSize += 0x2000 + pPair->pSecondFile->GetFileLength();
+							TotalFilesSize += FILE_OPEN_OVERHEAD + pPair->pSecondFile->GetFileLength();
 						}
 					}
 				}
 				else
 				{
 					// text files
-					TotalFilesSize += 0x4000 + 2 * (pPair->pFirstFile->GetFileLength()
-													+ pPair->pSecondFile->GetFileLength());
+					TotalFilesSize += FILE_OPEN_OVERHEAD * 2 + 2 * (pPair->pFirstFile->GetFileLength()
+										+ pPair->pSecondFile->GetFileLength());
 				}
 			}
 		}
@@ -544,7 +529,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 		}
 
 		m_TotalLines = pPair->m_LinePairs.size();
-		_tcsncpy(m_ComparisonResult, pPair->GetComparisionResult(),
+		_tcsncpy(m_ComparisonResult, pPair->GetComparisonResult(),
 				countof(m_ComparisonResult));
 		m_ComparisonResult[countof(m_ComparisonResult) - 1] = 0;
 		((CFrameWnd*)AfxGetMainWnd())->PostMessage(WM_SETMESSAGESTRING_POST, 0, (LPARAM)m_ComparisonResult);
@@ -2184,7 +2169,7 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 //      pPair->m_bChanged = true;
 		CString s;
 		s.Format(IDS_STRING_CALC_FINGERPRINT, LPCTSTR(pPair->pFirstFile->GetFullName()));
-		pDlg->SetNextItem(s, pPair->pFirstFile->GetFileLength(), 0x2000);
+		pDlg->SetNextItem(s, pPair->pFirstFile->GetFileLength(), FILE_OPEN_OVERHEAD);
 
 		if (pPair->pFirstFile->CalculateHashes( & HashCalc, pDlg)
 			|| pDlg->m_StopRunThread)

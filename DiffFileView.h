@@ -41,7 +41,7 @@ protected:
 public:
 
 	int m_FirstLineSeen;
-	short m_FirstPosSeen;
+	int m_FirstPosSeen;
 	int m_NumberMarginWidth;
 	int m_NumberOfPanes;
 	int m_PaneWithFocus;
@@ -109,8 +109,8 @@ public:
 	void CaretToHome(int flags);
 	void CaretToEnd(int flags);
 
-	short PointToPaneNumber(int x);
-	int PointToPaneOffset(int x, short nPane = -1);
+	int PointToPaneNumber(int x);
+	int PointToPaneOffset(int x, int nPane = -1);
 	int GetPaneWidth();
 	bool OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvokeDialog);
 
@@ -162,14 +162,14 @@ protected:
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnEditCopy();
 	afx_msg void OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI);
+	afx_msg void OnViewSideBySide();
+	afx_msg void OnUpdateViewSideBySide(CCmdUI *pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 public:
 protected:
 	virtual void OnActivateFrame(UINT nState, CFrameWnd* pDeactivateFrame);
 public:
-	afx_msg void OnViewSideBySide();
-	afx_msg void OnUpdateViewSideBySide(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

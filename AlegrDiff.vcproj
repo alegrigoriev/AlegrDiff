@@ -482,6 +482,9 @@
 				RelativePath="BinaryCompareView.cpp">
 			</File>
 			<File
+				RelativePath=".\BinaryGoToDlg.cpp">
+			</File>
+			<File
 				RelativePath="CHeckFingerprintDlg.cpp">
 			</File>
 			<File
@@ -619,6 +622,9 @@
 			</File>
 			<File
 				RelativePath="BinaryCompareView.h">
+			</File>
+			<File
+				RelativePath=".\BinaryGoToDlg.h">
 			</File>
 			<File
 				RelativePath="CHeckFingerprintDlg.h">
@@ -1121,5 +1127,8 @@ echo.
 		</File>
 	</Files>
 	<Globals>
+		<Global
+			Name="RESOURCE_FILE"
+			Value="AlegrDiff.rc"/>
 	</Globals>
 </VisualStudioProject>

@@ -1,7 +1,6 @@
 TODO:
 
-No option for file size format (in kilobytes or in bytes).
-
+Add option for file size format (in kilobytes or in bytes).
 Customizable number of MRU items
 Make more robust argorithm of version info detection (if it is version line, don't include version data to a normalized CRC).
 Detect Log: (as comment sequence)
@@ -44,6 +43,10 @@ Directory dialog allows to select network host. It won't return anything then.
 Estimated time left is not shown while calculating a fingerpring of a big file  (???)
 
 Fixed:
+Vertical scroll to end on large files: file end may not be shown.
+Ctrl+End on large files: may not go to end.
+Vertical scrollbar may not be shown 
+If one directory is dropped, the comparison starts by itself
 "C:\\" shown in the list view title when checking a fingerprint
 Doesn't refresh if one file changed on list view refresh
 Fix tested:
@@ -104,6 +107,9 @@ screen move in two directions may corrupt the image (??)
 
 Done:
 
+Increased number of MRU items to 30
+Show/hide file classes
+With binary comparison, progress update is done more often
 Difference in file size in bytes reported in comparson result.
 Side-by-side viewing for binary files
 It shows the dialog with parameters instead of running the comparison for 

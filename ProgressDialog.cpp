@@ -103,7 +103,7 @@ INT_PTR CProgressDialog::DoModalDelay(int Delay)
 
 		if (WAIT_TIMEOUT == WaitForSingleObject(m_Thread.m_hThread, 5000))
 		{
-			TerminateThread(m_Thread.m_hThread, -1);
+			TerminateThread(m_Thread.m_hThread, (unsigned)-1);
 		}
 	}
 	CloseHandle(m_Thread.m_hThread);
@@ -130,14 +130,14 @@ INT_PTR CProgressDialog::DoModal()
 	{
 		return -1;
 	}
-	UINT_PTR result = CDialog::DoModal();
+	INT_PTR result = CDialog::DoModal();
 
 	m_StopRunThread = TRUE;
 	SetEvent(m_hThreadEvent);
 
 	if (WAIT_TIMEOUT == WaitForSingleObject(m_Thread.m_hThread, 5000))
 	{
-		TerminateThread(m_Thread.m_hThread, -1);
+		TerminateThread(m_Thread.m_hThread, (unsigned)-1);
 	}
 	CloseHandle(m_Thread.m_hThread);
 	m_Thread.m_hThread = NULL;
@@ -380,7 +380,7 @@ void CProgressDialog::OnAbort()
 	}
 }
 
-UINT CProgressDialog::SignalDialogEnd(UINT Command)
+INT_PTR CProgressDialog::SignalDialogEnd(INT_PTR Command)
 {
 	m_DialogResult = Command;
 	if (NULL != m_hWnd)

@@ -298,7 +298,7 @@ CApplicationProfileItemDouble::CApplicationProfileItemDouble(CApplicationProfile
 
 void CApplicationProfileItemDouble::ReadData()
 {
-	CString s = m_pProfile->GetProfileString(Section, Name, "");
+	CString s = m_pProfile->GetProfileString(Section, Name, _T(""));
 	double val;
 	TCHAR * endptr;
 
@@ -323,7 +323,7 @@ void CApplicationProfileItemDouble::WriteData(BOOL bForceWrite)
 	if (bForceWrite || DoubleRef != InitialData)
 	{
 		CString s;
-		s.Format("%g", DoubleRef);
+		s.Format(_T("%g"), DoubleRef);
 		m_pProfile->WriteProfileString(Section, Name, s);
 	}
 }
@@ -947,7 +947,7 @@ CString CApplicationProfile::GetProfileString(LPCTSTR lpszSection, LPCTSTR lpszE
 		ASSERT(ProfileName != NULL);
 
 		if (lpszDefault == NULL)
-			lpszDefault = "";    // don't pass in NULL
+			lpszDefault = _T("");    // don't pass in NULL
 		TCHAR szT[4096];
 		DWORD dw = ::GetPrivateProfileString(lpszSection, lpszEntry,
 											lpszDefault, szT, 4096, ProfileName);

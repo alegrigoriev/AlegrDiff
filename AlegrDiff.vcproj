@@ -21,14 +21,19 @@
 			ConfigurationType="1"
 			UseOfMFC="1"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="2">
+			CharacterSet="1">
 			<Tool
 				Name="VCCLCompilerTool"
+				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="1"
+				EnableIntrinsicFunctions="TRUE"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
 				PreprocessorDefinitions="NDEBUG,WIN32,_WINDOWS,_WIN32_WINNT=0x0500,DEMO_VERSION=1"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
+				BufferSecurityCheck="FALSE"
 				EnableFunctionLevelLinking="TRUE"
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="3"
@@ -45,10 +50,12 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/MACHINE:I386"
+				AdditionalOptions="/MACHINE:I386 /nodefaultlib:kernel32.lib /nodefaultlib:advapi32.lib /nodefaultlib:user32.lib /nodefaultlib:gdi32.lib /nodefaultlib:shell32.lib /nodefaultlib:comdlg32.lib /nodefaultlib:version.lib /nodefaultlib:mpr.lib /nodefaultlib:rasapi32.lib /nodefaultlib:winmm.lib /nodefaultlib:winspool.lib /nodefaultlib:vfw32.lib /nodefaultlib:secur32.lib /nodefaultlib:oleacc.lib /nodefaultlib:oledlg.lib /nodefaultlib:sensapi.lib"
+				AdditionalDependencies="unicows.lib kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib"
 				OutputFile=".\AlegrDiff___Win32_DEMO_Release/AlegrDiff.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib"
 				ProgramDatabaseFile=".\AlegrDiff___Win32_DEMO_Release/AlegrDiff.pdb"
 				GenerateMapFile="TRUE"
 				MapFileName=".\AlegrDiff___Win32_DEMO_Release/AlegrDiff.map"
@@ -81,7 +88,8 @@
 			IntermediateDirectory=".\Debug"
 			ConfigurationType="1"
 			UseOfMFC="1"
-			ATLMinimizesCRunTimeLibraryUsage="FALSE">
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="1">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
@@ -103,11 +111,12 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="winmm.lib"
+				AdditionalOptions="/MACHINE:I386 /nodefaultlib:kernel32.lib /nodefaultlib:advapi32.lib /nodefaultlib:user32.lib /nodefaultlib:gdi32.lib /nodefaultlib:shell32.lib /nodefaultlib:comdlg32.lib /nodefaultlib:version.lib /nodefaultlib:mpr.lib /nodefaultlib:rasapi32.lib /nodefaultlib:winmm.lib /nodefaultlib:winspool.lib /nodefaultlib:vfw32.lib /nodefaultlib:secur32.lib /nodefaultlib:oleacc.lib /nodefaultlib:oledlg.lib /nodefaultlib:sensapi.lib"
+				AdditionalDependencies="unicows.lib winmm.lib kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib"
 				OutputFile=".\Debug/AlegrDiff.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/AlegrDiff.pdb"
 				GenerateMapFile="TRUE"
@@ -141,7 +150,8 @@
 			IntermediateDirectory=".\AlegrDiff___Win32_DEMO_Debug"
 			ConfigurationType="1"
 			UseOfMFC="1"
-			ATLMinimizesCRunTimeLibraryUsage="FALSE">
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="1">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
@@ -163,11 +173,12 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="winmm.lib"
+				AdditionalOptions="/MACHINE:I386 "
+				AdditionalDependencies="unicows.lib winmm.lib kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib"
 				OutputFile=".\AlegrDiff___Win32_DEMO_Debug/AlegrDiff.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\AlegrDiff___Win32_DEMO_Debug/AlegrDiff.pdb"
 				GenerateMapFile="TRUE"
@@ -202,14 +213,19 @@
 			ConfigurationType="1"
 			UseOfMFC="1"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="2">
+			CharacterSet="1">
 			<Tool
 				Name="VCCLCompilerTool"
+				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="1"
+				EnableIntrinsicFunctions="TRUE"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
 				PreprocessorDefinitions="NDEBUG,WIN32,_WINDOWS,_WIN32_WINNT=0x0500,RETAIL_VERSION"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
+				BufferSecurityCheck="FALSE"
 				EnableFunctionLevelLinking="TRUE"
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="3"
@@ -226,10 +242,12 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/MACHINE:I386"
+				AdditionalOptions="/MACHINE:I386 /nodefaultlib:kernel32.lib /nodefaultlib:advapi32.lib /nodefaultlib:user32.lib /nodefaultlib:gdi32.lib /nodefaultlib:shell32.lib /nodefaultlib:comdlg32.lib /nodefaultlib:version.lib /nodefaultlib:mpr.lib /nodefaultlib:rasapi32.lib /nodefaultlib:winmm.lib /nodefaultlib:winspool.lib /nodefaultlib:vfw32.lib /nodefaultlib:secur32.lib /nodefaultlib:oleacc.lib /nodefaultlib:oledlg.lib /nodefaultlib:sensapi.lib"
+				AdditionalDependencies="unicows.lib kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib"
 				OutputFile=".\Release/AlegrDiff.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib"
 				ProgramDatabaseFile=".\Release/AlegrDiff.pdb"
 				GenerateMapFile="TRUE"
 				MapFileName=".\Release/AlegrDiff.map"

@@ -1,6 +1,7 @@
 TODO:
 
 Add Copy 1st file text, copy 2nd file text
+Add 1st file size, 2nd file size (with exact size tooltips?)
 Add extensions from the recent files to the browse for file dialog
 Remove "Use Binary filter", "Use Ignore Filter" etc checkboxes,
   replace those edit controls with comboboxes

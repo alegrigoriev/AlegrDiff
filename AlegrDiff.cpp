@@ -204,14 +204,14 @@ BOOL CAlegrDiffApp::InitInstance()
 	for (int i = 0; i < sizeof m_sFindHistory / sizeof m_sFindHistory[0]; i++)
 	{
 		CString s;
-		s.Format("find%d", i);
+		s.Format(_T("find%d"), i);
 		Profile.AddItem(_T("History"), s, m_sFindHistory[i]);
 	}
 
 	for (i = 0; i < sizeof m_RecentFolders / sizeof m_RecentFolders[0]; i++)
 	{
 		CString s;
-		s.Format("dir%d", i);
+		s.Format(_T("dir%d"), i);
 		Profile.AddItem(_T("History"), s, m_RecentFolders[i]);
 		m_RecentFolders[i].TrimLeft();
 		m_RecentFolders[i].TrimRight();
@@ -220,7 +220,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	for (i = 0; i < sizeof m_RecentFiles / sizeof m_RecentFiles[0]; i++)
 	{
 		CString s;
-		s.Format("file%d", i);
+		s.Format(_T("file%d"), i);
 		Profile.AddItem(_T("History"), s, m_RecentFiles[i]);
 		m_RecentFiles[i].TrimLeft();
 		m_RecentFiles[i].TrimRight();
@@ -230,7 +230,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	for (i = 0; i < sizeof m_sFilters / sizeof m_sFilters[0]; i++)
 	{
 		CString s;
-		s.Format("filter%d", i);
+		s.Format(_T("filter%d"), i);
 		Profile.AddItem(_T("History"), s, m_sFilters[i]);
 		m_sFilters[i].TrimLeft();
 		m_sFilters[i].TrimRight();
@@ -574,7 +574,7 @@ static void AFXAPI _AfxAbbreviateName(LPTSTR lpszCanon, int cchMax, BOOL bAtLeas
 	// If cchMax isn't enough to hold at least the basename, we're done
 	if (cchMax < cchFileName)
 	{
-		lstrcpy(lpszCanon, (bAtLeastName) ? lpszFileName : "");
+		lstrcpy(lpszCanon, (bAtLeastName) ? lpszFileName : _T(""));
 		return;
 	}
 
@@ -871,7 +871,7 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 		{
 			return;
 		}
-		pDoc->SetTitle("");
+		pDoc->SetTitle(_T(""));
 
 		if (pDoc->BuildFilePairList(dlg.m_sFirstDir, dlg.m_sSecondDir,
 									m_bRecurseSubdirs, m_BinaryComparision))
@@ -935,7 +935,7 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 		|| NULL == hFind)
 	{
 		CString s;
-		s.Format("Couldn't open \"%s\"", LPCTSTR(Name1));
+		s.Format(IDS_STRING_CANT_OPEN_FILE, LPCTSTR(Name1));
 		AfxMessageBox(s);
 		return;
 	}
@@ -946,7 +946,7 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 		|| NULL == hFind)
 	{
 		CString s;
-		s.Format("Couldn't open \"%s\"", LPCTSTR(Name2));
+		s.Format(IDS_STRING_CANT_OPEN_FILE, LPCTSTR(Name2));
 		AfxMessageBox(s);
 		return;
 	}
@@ -1586,8 +1586,8 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder)
 	LPTSTR pFilter = OfnCustomFilter;
 	// skip first string (it's usually of sero length
 	while (*(pFilter++) != 0) {}
-	if (0 != strcmp(pFilter, "*")
-		&& 0 != strcmp(pFilter, "*.*"))
+	if (0 != _tcscmp(pFilter, _T("*"))
+		&& 0 != _tcscmp(pFilter, _T("*.*")))
 	{
 		int len = _tcslen(pFilter);
 		// file open dialog adds an asterisk to the filter:
@@ -1597,8 +1597,8 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder)
 			&& '*' == pFilter[len-1])
 		{
 			pFilter[len-1] = 0;
-			if (NULL == strchr(pFilter, '*')
-				&& NULL == strchr(pFilter, '?'))
+			if (NULL == _tcschr(pFilter, '*')
+				&& NULL == _tcschr(pFilter, '?'))
 			{
 				// put the asterisk back
 				pFilter[len-1] = '*';

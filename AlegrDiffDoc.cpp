@@ -306,7 +306,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 		}
 		else
 		{
-			SetTitle("");
+			SetTitle(_T(""));
 		}
 
 		if (pPair->m_LinePairs.empty())
@@ -555,7 +555,7 @@ void CFilePairDoc::OnUpdateEditCopy(CCmdUI* pCmdUI)
 	pCmdUI->Enable(m_CaretPos != m_SelectionAnchor && ! m_CopyDisabled);
 }
 
-ULONG CFilePairDoc::CopyTextToMemory(PUCHAR pBuf, ULONG BufLen, TextPos pFrom, TextPos pTo)
+ULONG CFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen, TextPos pFrom, TextPos pTo)
 {
 	ULONG TotalChars = 0;
 	CThisApp * pApp = GetApp();
@@ -661,6 +661,7 @@ void CFilePairDoc::OnEditCopy()
 	{
 		return;
 	}
+	// todo: perform UNICODE or ANSI copy?
 	// calculate length of the selection
 	ULONG Len = CopyTextToMemory(NULL, 0, m_SelectionAnchor, m_CaretPos);
 	if (0 == Len)
@@ -668,12 +669,12 @@ void CFilePairDoc::OnEditCopy()
 		return;
 	}
 	//	allocate memory
-	HGLOBAL hMem = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, Len + 1);
+	HGLOBAL hMem = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, sizeof (TCHAR) * (Len + 1));
 	if (NULL == hMem)
 	{
 		return;
 	}
-	PUCHAR pMem = PUCHAR(GlobalLock(hMem));
+	LPTSTR pMem = LPTSTR(GlobalLock(hMem));
 	// Open and erase clipboard
 	if (NULL != pMem
 		&& AfxGetMainWnd()->OpenClipboard())
@@ -682,7 +683,7 @@ void CFilePairDoc::OnEditCopy()
 		CopyTextToMemory(pMem, Len, m_SelectionAnchor, m_CaretPos);
 		GlobalUnlock(hMem);
 
-		SetClipboardData(CF_TEXT, hMem);
+		SetClipboardData(CF_UNICODETEXT, hMem);
 		// set text to clipboard
 		CloseClipboard();
 	}
@@ -708,7 +709,7 @@ void CAlegrDiffDoc::OnFileSave()
 void CFilePairDoc::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
 {
 	CString s;
-	s.Format("Ln %d, Col %d", m_CaretPos.line + 1, m_CaretPos.pos + 1);
+	s.Format(_T("Ln %d, Col %d"), m_CaretPos.line + 1, m_CaretPos.pos + 1);
 	pCmdUI->SetText(s);
 }
 
@@ -882,7 +883,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 		int StrLen = 0;
 		pStr = GetLineText(nSearchLine, line, sizeof line / sizeof line[0], & StrLen);
 
-		int nPatternLen = strlen(pStrToFind);
+		int nPatternLen = _tcslen(pStrToFind);
 		if ( ! bBackward)
 		{
 			for ( ;nSearchPos <= StrLen - nPatternLen; nSearchPos++)
@@ -1565,8 +1566,9 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 
 BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags)
 {
+	// TODO: save ANSI or UNICODE
 #ifndef DEMO_VERSION
-	FILE * file = fopen(Name, "wt");
+	FILE * file = _tfopen(Name, _T("wt"));
 	if (NULL == file)
 	{
 		return FALSE;

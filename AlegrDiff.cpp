@@ -1554,8 +1554,8 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 		if (pExt)
 		{
 			CurrentCustomFilterString = CreateCustomFilter(pExt);
-			if ( ! Filters.empty()
-				&& 0 != Filters[0].CompareNoCase(CurrentCustomFilterString))
+			if (Filters.empty()
+				|| 0 != Filters[0].CompareNoCase(CurrentCustomFilterString))
 			{
 				Filters.push_back(CurrentCustomFilterString);
 			}
@@ -1580,7 +1580,7 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 					unsigned j;
 					for (j = 0; j < Filters.size(); j++)
 					{
-						if (0 == Filters[0].CompareNoCase(CurrentCustomFilterString))
+						if (0 == Filters[j].CompareNoCase(CurrentCustomFilterString))
 						{
 							break;
 						}
@@ -1600,8 +1600,11 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 		Filter += Filters[j];
 	}
 
+	Filter += AllFilesFilter;
+
 	COpenDiffDialog dlg(TRUE, NULL, NULL,
-						OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLETEMPLATE,
+						OFN_HIDEREADONLY | OFN_FILEMUSTEXIST
+						| OFN_NOCHANGEDIR | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLETEMPLATE,
 						Filter);
 	// copy initial file name
 	_tcsncpy(dlg.m_ofn.lpstrFile, LastFileName, dlg.m_ofn.nMaxFile - 1);

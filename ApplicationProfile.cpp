@@ -89,7 +89,133 @@ CApplicationProfileItemInt::CApplicationProfileItemInt(CApplicationProfile * pPr
 	InitialData = Ref;
 }
 
-CApplicationProfileItemBool::CApplicationProfileItemBool(CApplicationProfile * pProfile,
+void CApplicationProfileItemInt::ReadData()
+{
+	Ref = m_pProfile->GetProfileInt(Section, Name, m_Default);
+}
+
+void CApplicationProfileItemInt::WriteData(BOOL bForceWrite)
+{
+	if (bForceWrite || Ref != InitialData)
+	{
+		m_pProfile->WriteProfileInt(Section, Name, Ref);
+	}
+}
+
+void CApplicationProfileItemInt::ResetToInitial()
+{
+	Ref = InitialData;
+}
+
+void CApplicationProfileItemInt::ResetToDefault()
+{
+	Ref = m_Default;
+}
+
+CApplicationProfileItemShort::CApplicationProfileItemShort(
+															CApplicationProfile * pProfile,
+															LPCTSTR szSection, LPCTSTR szName,
+															short & RefValue, short Default, short MinVal, short MaxVal)
+	: CApplicationProfileItemInt(pProfile, szSection, szName, m_TempInt, Default, MinVal, MaxVal),
+	ShortRef(RefValue)
+{
+	// data is read in parent class constructor
+	ShortRef = m_TempInt;
+}
+
+void CApplicationProfileItemShort::ReadData()
+{
+	CApplicationProfileItemInt::ReadData();
+	ShortRef = m_TempInt;
+}
+
+void CApplicationProfileItemShort::WriteData(BOOL bForceWrite)
+{
+	m_TempInt = ShortRef;
+	CApplicationProfileItemInt::WriteData(bForceWrite);
+}
+
+void CApplicationProfileItemShort::ResetToInitial()
+{
+	ShortRef = InitialData;
+}
+
+void CApplicationProfileItemShort::ResetToDefault()
+{
+	ShortRef = m_Default;
+}
+
+CApplicationProfileItemUint::CApplicationProfileItemUint(CApplicationProfile * pProfile,
+														LPCTSTR szSection, LPCTSTR szName,
+														unsigned int & Reference,
+														unsigned int Default, unsigned int MinVal, unsigned int MaxVal)
+	: CApplicationProfileItem(pProfile, szSection, szName),
+	Ref(Reference), m_Default(Default), m_MinVal(MinVal), m_MaxVal(MaxVal)
+{
+	// read value
+	ReadData();
+	InitialData = Ref;
+}
+
+void CApplicationProfileItemUint::ReadData()
+{
+	Ref = m_pProfile->GetProfileInt(Section, Name, m_Default);
+}
+
+void CApplicationProfileItemUint::WriteData(BOOL bForceWrite)
+{
+	if (bForceWrite || Ref != InitialData)
+	{
+		m_pProfile->WriteProfileInt(Section, Name, Ref);
+	}
+}
+
+void CApplicationProfileItemUint::ResetToInitial()
+{
+	Ref = InitialData;
+}
+
+void CApplicationProfileItemUint::ResetToDefault()
+{
+	Ref = m_Default;
+}
+
+CApplicationProfileItemUshort::CApplicationProfileItemUshort(
+															CApplicationProfile * pProfile,
+															LPCTSTR szSection, LPCTSTR szName,
+															unsigned short & RefValue, unsigned short Default,
+															unsigned short MinVal, unsigned short MaxVal)
+	: CApplicationProfileItemUint(pProfile, szSection, szName, m_TempInt, Default, MinVal, MaxVal),
+	ShortRef(RefValue)
+{
+	// data is read in parent class constructor
+	ShortRef = m_TempInt;
+}
+
+void CApplicationProfileItemUshort::ReadData()
+{
+	CApplicationProfileItemUint::ReadData();
+	ShortRef = m_TempInt;
+}
+
+void CApplicationProfileItemUshort::WriteData(BOOL bForceWrite)
+{
+	m_TempInt = ShortRef;
+	CApplicationProfileItemUint::WriteData(bForceWrite);
+}
+
+void CApplicationProfileItemUshort::ResetToInitial()
+{
+	ShortRef = InitialData;
+}
+
+void CApplicationProfileItemUshort::ResetToDefault()
+{
+	ShortRef = m_Default;
+}
+
+CApplicationProfileItemBool::CApplicationProfileItemBool(
+														CApplicationProfile * pProfile,
 														LPCTSTR szSection, LPCTSTR szName,
 														bool & RefValue,
 														bool Default)
@@ -101,39 +227,16 @@ CApplicationProfileItemBool::CApplicationProfileItemBool(CApplicationProfile * p
 	InitialData = Ref;
 }
 
-void CApplicationProfileItemInt::ReadData()
-{
-	Ref = m_pProfile->GetProfileInt(Section, Name, m_Default);
-}
-
 void CApplicationProfileItemBool::ReadData()
 {
 	CApplicationProfileItemInt::ReadData();
 	Ref = (m_TempVal != 0);
 }
 
-void CApplicationProfileItemInt::WriteData(BOOL bForceWrite)
-{
-	if (bForceWrite || Ref != InitialData)
-	{
-		m_pProfile->WriteProfileInt(Section, Name, Ref);
-	}
-}
-
 void CApplicationProfileItemBool::WriteData(BOOL bForceWrite)
 {
 	m_TempVal = Ref;
 	CApplicationProfileItemInt::WriteData(bForceWrite);
-}
-
-void CApplicationProfileItemInt::ResetToInitial()
-{
-	Ref = InitialData;
-}
-
-void CApplicationProfileItemInt::ResetToDefault()
-{
-	Ref = m_Default;
 }
 
 void CApplicationProfileItemBool::ResetToInitial()
@@ -310,6 +413,16 @@ void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, LONG & val,
 	pItems = pTmp;
 }
 
+void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, ULONG & val,
+								ULONG nDefault, ULONG nMin, ULONG nMax)
+{
+	CApplicationProfileItem * pTmp;
+	RemoveItem(szSection, szName);
+	pTmp = new CApplicationProfileItemUlong(this, szSection, szName, val, nDefault, nMin, nMax);
+	pTmp->Next = pItems;
+	pItems = pTmp;
+}
+
 void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, int & val,
 								int nDefault, int nMin, int nMax)
 {
@@ -320,12 +433,32 @@ void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, int & val,
 	pItems = pTmp;
 }
 
-void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, ULONG & val,
-								ULONG nDefault, ULONG nMin, ULONG nMax)
+void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, unsigned int & val,
+								unsigned int nDefault, unsigned int nMin, unsigned int nMax)
 {
 	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemUlong(this, szSection, szName, val, nDefault, nMin, nMax);
+	pTmp = new CApplicationProfileItemUint(this, szSection, szName, val, nDefault, nMin, nMax);
+	pTmp->Next = pItems;
+	pItems = pTmp;
+}
+
+void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, short & val,
+								short nDefault, short nMin, short nMax)
+{
+	CApplicationProfileItem * pTmp;
+	RemoveItem(szSection, szName);
+	pTmp = new CApplicationProfileItemShort(this, szSection, szName, val, nDefault, nMin, nMax);
+	pTmp->Next = pItems;
+	pItems = pTmp;
+}
+
+void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, unsigned short & val,
+								unsigned short nDefault, unsigned short nMin, unsigned short nMax)
+{
+	CApplicationProfileItem * pTmp;
+	RemoveItem(szSection, szName);
+	pTmp = new CApplicationProfileItemUshort(this, szSection, szName, val, nDefault, nMin, nMax);
 	pTmp->Next = pItems;
 	pItems = pTmp;
 }

@@ -56,11 +56,19 @@ public:
 				double nDefault = 0., double nMin = 0., double nMax=0.);
 	void AddItem(LPCTSTR szSection, LPCTSTR szName, double & val,
 				double nDefault = 0., double nMin = 0., double nMax=0.);
-	BOOL RemoveItem(LPCTSTR szSection, LPCTSTR szName);
 
+	// delete the value or key
 	void RemoveFromRegistry(LPCTSTR szSection, LPCTSTR szName);
 
+	// remove from list
 	void RemoveSection(LPCTSTR szSection);
+	BOOL RemoveItem(LPCTSTR szSection, LPCTSTR szName);
+	void RemoveAllItems()
+	{
+		RemoveSection(NULL);
+	}
+
+
 	BOOL ResetItemToDefault(LPCTSTR szSection, LPCTSTR szName);
 	void ResetSectionToDefault(LPCTSTR szSection);
 	void ResetAllToDefault()
@@ -83,6 +91,7 @@ public:
 	{
 		FlushSection(NULL);
 	}
+
 	// Unload is Flush item and Remove() it from the list
 	BOOL UnloadItem(LPCTSTR szSection, LPCTSTR szName);
 	void UnloadSection(LPCTSTR szSection);

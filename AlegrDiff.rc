@@ -125,6 +125,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON    DISCARDABLE     "res\\AlegrDiff.ico"
 IDR_ALEGRDTYPE          ICON    DISCARDABLE     "res\\AlegrDiffDoc.ico"
+IDR_FILEDIFFTYPE        ICON    DISCARDABLE     "res\\icon1.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -238,20 +239,21 @@ END
 
 IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
 BEGIN
-    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL
-    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL
-    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL
-    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL
-    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL
-    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL
-    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL
-    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL
-    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT
-    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT
-    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL
-    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT
-    VK_F6,          ID_NEXT_PANE,           VIRTKEY 
-    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT
+    27,             ID_WINDOW_CLOSE_DIFF,   ASCII,  NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
 END
 
 
@@ -351,6 +353,7 @@ STRINGTABLE PRELOAD DISCARDABLE
 BEGIN
     IDR_MAINFRAME           "AlegrDiff"
     IDR_ALEGRDTYPE          "\nAlegrD\nAlegrD\n\n\nAlegrDiff.Document\nAlegrD Document"
+    IDR_FILEDIFFTYPE        "\nAlegrD\nAlegrD\n\n\nAlegrDiff.Document\nAlegrD Document"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 

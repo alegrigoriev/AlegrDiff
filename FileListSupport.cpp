@@ -7,6 +7,7 @@
 #undef toupper
 static DWORD CalculateHash(const char * data, int len);
 
+
 void MiltiSzToCString(CString & str, LPCTSTR pMsz)
 {
 	// find string length
@@ -125,7 +126,11 @@ void FileItem::Unload()
 		delete m_Lines[i];
 	}
 	m_Lines.RemoveAll();
+	m_NonBlankLines.RemoveAll();
 	m_HashSortedLines.RemoveAll();
+	m_HashSortedLineGroups.RemoveAll();
+	m_NormalizedHashSortedLines.RemoveAll();
+	m_NormalizedHashSortedLineGroups.RemoveAll();
 }
 
 FileItem::~FileItem()
@@ -253,6 +258,7 @@ bool FileItem::Load()
 		return false;
 	}
 	char line[2048];
+	m_Lines.SetSize(0, 1000);
 	for (int LinNum =0; NULL != fgets(line, sizeof line - 1, file); LinNum++)
 	{
 		// remove last \n char
@@ -796,8 +802,12 @@ const FileLine * FileItem::FindMatchingLine(const FileLine * pLine, int nStartLi
 		}
 	}
 #endif
+	if (nFoundIndex >= m_NormalizedHashSortedLines.GetSize())
+	{
+		return NULL;
+	}
 	FileLine * pFoundLine = *(FileLine **) ppLine;
-	if (pFoundLine->GetLineNumber() <= nEndLineNum
+	if (pFoundLine->GetLineNumber() < nEndLineNum
 		&& pFoundLine->IsNormalizedEqual(pLine))
 	{
 		return pFoundLine;
@@ -872,6 +882,10 @@ const FileLine * FileItem::FindMatchingLineGroupLine(const FileLine * pLine, int
 		}
 	}
 #endif
+	if (nFoundIndex >= m_NormalizedHashSortedLines.GetSize())
+	{
+		return NULL;
+	}
 	FileLine * pFoundLine = *(FileLine **) ppLine;
 	if (pFoundLine->GetLineNumber() <= nEndLineNum
 		&& pFoundLine->IsNormalizedEqual(pLine))
@@ -1293,7 +1307,7 @@ static void RemoveExtraWhitespaces(CString & Dst, const CString & Src)
 		// strings also must be kept intact.
 		// Can remove extra spaces between alpha and non-alpha
 		c = Src[SrcIdx];
-		bool c_IsAlpha = (0 != isalpha(c));
+		bool c_IsAlpha = (0 != isalnum(c));
 		if(c_IsAlpha)
 		{
 			if (PrevCharAlpha)
@@ -1309,7 +1323,7 @@ static void RemoveExtraWhitespaces(CString & Dst, const CString & Src)
 				SrcIdx++;
 				DstIdx++;
 				c = Src[SrcIdx];
-			} while (isalpha(c));
+			} while (isalnum(c));
 
 			PrevCharAlpha = true;
 			CanRemoveWhitespace = true;
@@ -1422,7 +1436,7 @@ static void RemoveExtraWhitespaces(CString & Dst, const CString & Src)
 			} while (c != 0
 					&& c != ' '
 					&& c != '\t'
-					&& ! isalpha(c));
+					&& ! isalnum(c));
 			PrevCharAlpha = false;
 		}
 		// remove whitespaces
@@ -1437,8 +1451,123 @@ static void RemoveExtraWhitespaces(CString & Dst, const CString & Src)
 
 // find difference in the strings, and build the array of inserts and
 // and deleted chars
-void MatchStrings(LPCTSTR str1, LPCTSTR str2, DWORD Results[])
+void MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2,
+				StringSection Results[], int nSectionCount, int nMinMatchingChars)
 {
+	int nSectionIndex = 0;
+	LPCTSTR str1 = pStr1;
+	LPCTSTR str2 = pStr2;
+	LPCTSTR pEqualStrBegin = str1;
+	while (str1[0] != 0
+			&& str2[0] != 0)
+	{
+		if (str1[0] == str2[0])
+		{
+			str1++;
+			str2++;
+			continue;
+		}
+		if (str1 != pEqualStrBegin)
+		{
+			if (nSectionIndex >= nSectionCount)
+			{
+				return;
+			}
+			Results[nSectionIndex].pBegin = pEqualStrBegin;
+			Results[nSectionIndex].Length = str1 - pEqualStrBegin;
+			Results[nSectionIndex].Attr = StringSection::Identical;
+			nSectionIndex++;
+		}
+		// difference found, starting from str1, str2
+
+		bool found = false;
+		for (int idx1 = 1, idx2 = 1; ! found; )
+		{
+			// check if str1+i ( i < idx1) equal str2+idx2
+			for (int i = 0; i < idx1; i++)
+			{
+				LPCTSTR tmp1 = str1 + i;
+				LPCTSTR tmp2 = str2 + idx2;
+				int j;
+				for (j = 0; j < nMinMatchingChars; j++)
+				{
+					if (tmp1[j] != tmp2[j]
+						//|| tmp1[j] == 0 // no need to test both, because they are the same
+						|| tmp2[j] == 0)
+					{
+						break;
+					}
+				}
+				if (j == nMinMatchingChars
+					|| (tmp2[j] == 0 && tmp1[j] == 0))
+				{
+					// create new section
+					idx1 = i;
+					found = true;
+					break;
+				}
+			}
+			if ( ! found)
+			{
+				// check if str2+i ( i < idx2) equal str1+idx1
+				for (i = 0; i < idx2; i++)
+				{
+					LPCTSTR tmp1 = str1 + idx1;
+					LPCTSTR tmp2 = str2 + i;
+					int j;
+					for (j = 0; j < nMinMatchingChars; j++)
+					{
+						if (tmp1[j] != tmp2[j]
+							//|| tmp1[j] == 0 // no need to test both, because they are the same
+							|| tmp2[j] == 0)
+						{
+							break;
+						}
+					}
+					if (j == nMinMatchingChars
+						|| (tmp2[j] == 0 && tmp1[j] == 0))
+					{
+						// create new section
+						idx2 = i;
+						found = true;
+						break;
+					}
+				}
+			}
+			// only increment the distance index, if they don't go beyound the string
+			if (str1[idx1] != 0)
+			{
+				idx1++;
+			}
+			if (str2[idx2] != 0)
+			{
+				idx2++;
+			}
+		}
+		// create new section
+		if (idx1 != 0)
+		{
+			if (nSectionIndex >= nSectionCount)
+			{
+				return;
+			}
+			Results[nSectionIndex].pBegin = str1;
+			Results[nSectionIndex].Length = idx1;
+			Results[nSectionIndex].Attr = StringSection::Inserted;
+			nSectionIndex++;
+		}
+		if (idx2 != 0)
+		{
+			if (nSectionIndex >= nSectionCount)
+			{
+				return;
+			}
+			Results[nSectionIndex].pBegin = str2;
+			Results[nSectionIndex].Length = idx2;
+			Results[nSectionIndex].Attr = StringSection::Erased;
+			nSectionIndex++;
+		}
+	}
 }
 
 FileLine::FileLine(const char * src, bool MakeNormalizedString)
@@ -1455,7 +1584,7 @@ FileLine::FileLine(const char * src, bool MakeNormalizedString)
 	char TmpBuf[2048];
 	m_NormalizedStringLength = RemoveExtraWhitespaces(TmpBuf, src, sizeof TmpBuf);
 
-	m_pAllocatedBuf = new char[m_Length + m_NormalizedStringLength + 2];
+	m_pAllocatedBuf = ::new char[m_Length + m_NormalizedStringLength + 2];
 	if (NULL != m_pAllocatedBuf)
 	{
 		m_pString = m_pAllocatedBuf;
@@ -1491,6 +1620,22 @@ FileLine::~FileLine()
 bool FileLine::LooksLike(const FileLine * pOtherLine, int PercentsDifferent) const
 {
 	return false;
+}
+
+FilePair::FilePair()
+	: pNext(NULL),
+	pFirstFile(NULL),
+	pSecondFile(NULL),
+	ComparisionResult(0)
+{
+}
+
+FilePair::~FilePair()
+{
+	for (int i = 0; i < m_LinePairs.GetSize(); i++)
+	{
+		delete m_LinePairs[i];
+	}
 }
 
 int _cdecl FilePair::Time1SortFunc(const void * p1, const void * p2)
@@ -1664,24 +1809,50 @@ bool FileLine::IsNormalizedEqual(const FileLine * pOtherLine) const
 	return 0 == memcmp(m_pNormalizedString, pOtherLine->m_pNormalizedString, m_NormalizedStringLength);
 }
 
-DWORD FilePair::CompareFiles(bool bCompareAll)
+bool FilePair::LoadFiles()
 {
-	if (NULL == pFirstFile
-		|| NULL == pSecondFile)
+	bool result = true;
+	if (NULL != pFirstFile)
 	{
-		return 0;
+		result = (pFirstFile->Load() && result);
 	}
-	// TODO: different function for binary comparision
-	if (! pFirstFile->Load()
-		|| ! pSecondFile->Load())
+	if (NULL != pSecondFile)
+	{
+		result = (pSecondFile->Load() && result);
+	}
+	return result;
+}
+
+void FilePair::UnloadFiles()
+{
+	if (NULL != pFirstFile)
 	{
 		pFirstFile->Unload();
+	}
+	if (NULL != pSecondFile)
+	{
+		pSecondFile->Unload();
+	}
+}
+
+DWORD FilePair::CompareFiles(bool bCompareAll, bool bUnload)
+{
+	// TODO: different function for binary comparision
+	if (! LoadFiles())
+	{
 		return 0;
 	}
+	DWORD result = 0;
+	if (NULL != pFirstFile
+		&& NULL != pSecondFile)
+	{
+		result = CompareTextFiles(bCompareAll);
+	}
 	// different comparision for different modes
-	DWORD result = CompareTextFiles(bCompareAll);
-	pFirstFile->Unload();
-	pSecondFile->Unload();
+	if (bUnload)
+	{
+		UnloadFiles();
+	}
 	return result;
 }
 
@@ -1705,20 +1876,36 @@ DWORD FilePair::CompareTextFiles(bool bCompareAll)
 		// find the beginning of the section
 		// find a few identical lines
 		TRACE("nLine1 = %d, nLine2 = %d, looking for identical section\n", nLine1, nLine2);
-		while (nLine1 < NumLines1
-				&& nLine2 < NumLines2)
+		int Line1Begin = nLine1;
+		int Line2Begin = nLine2;
+		// remember number of line with a found match and number of matched line
+		int Line1Found = -1;
+		int Line1MatchIn2 = NumLines2;  // number of line that matches it
+		int Line2Found = -1;
+		int Line2MatchIn1 = NumLines1;
+
+		while (nLine1 < Line2MatchIn1
+				&& nLine2 < Line1MatchIn2)
 		{
+			// Suppose, there are two pieces of code swapped. We need to find,
+			// which file gives the nearest group of lines, that is less lines will be
+			// reported as added or deleted.
 			const FileLine * Line1 = pFirstFile->GetLine(nLine1);
 			if ( ! Line1->IsBlank())
 			{
 				// check the lines in file2 in range Line2 to Line2+dist
-				const FileLine * pFoundLine = pSecondFile->FindMatchingLine(Line1, nLine2, NumLines2);
+				const FileLine * pFoundLine;
+#if 0
+				pFoundLine = pSecondFile->FindMatchingLine(Line1, nLine2, Line1MatchIn2);
+#else
+				pFoundLine = pSecondFile->FindMatchingLineGroupLine(Line1, nLine2, Line1MatchIn2);
+#endif
 				if (NULL != pFoundLine)
 				{
-					nLine2 = pFoundLine->GetLineNumber();
+					Line1MatchIn2 = pFoundLine->GetLineNumber();
+					Line1Found = nLine1;
 					TRACE("Found Line1=%d, Line2=%d, \"%s\"\n",
-						nLine1, nLine2, pFoundLine->GetText());
-					break;
+						Line1Found, Line1MatchIn2, pFoundLine->GetText());
 				}
 				// there is no equivalent line for this one from nLine2 to end
 			}
@@ -1727,19 +1914,66 @@ DWORD FilePair::CompareTextFiles(bool bCompareAll)
 			if ( ! Line2->IsBlank())
 			{
 				// check the lines in file1 in range Line2 to Line2+dist
-				const FileLine * pFoundLine = pFirstFile->FindMatchingLine(Line2, nLine1, NumLines1);
+				const FileLine * pFoundLine;
+#if 0
+				pFoundLine = pFirstFile->FindMatchingLine(Line2, nLine1, Line2MatchIn1);
+#else
+				pFoundLine = pFirstFile->FindMatchingLineGroupLine(Line2, nLine1, Line2MatchIn1);
+#endif
 				if (NULL != pFoundLine)
 				{
-					nLine1 = pFoundLine->GetLineNumber();
-					TRACE("Found Line1=%d, Line2=%d, \"%s\"\n",
-						nLine1, nLine2, pFoundLine->GetText());
-					break;
+					Line2MatchIn1 = pFoundLine->GetLineNumber();
+					Line2Found = nLine2;
+					TRACE("Found Line2=%d, Line1=%d, \"%s\"\n",
+						Line2Found, Line2MatchIn1, pFoundLine->GetText());
 				}
 			}
 			nLine2++;
 		}
-		int Line1Begin = nLine1;
-		int Line2Begin = nLine2;
+		// there are two pairs of lines found
+		// choose one
+		if (-1 == Line1Found)
+		{
+			if (-1 == Line2Found)
+			{
+				// no identical lines found
+				TRACE("No more identical lines found\n");
+				break;
+			}
+			nLine1 = Line2MatchIn1;
+			nLine2 = Line2Found;
+			TRACE("Found first line %d in file2 and matching line %d in file1\n",
+				nLine2, nLine1);
+		}
+		else if (-1 == Line2Found)
+		{
+			nLine2 = Line1MatchIn2;
+			nLine1 = Line1Found;
+			TRACE("Found first line %d in file1 and matching line %d in file2\n",
+				nLine1, nLine2);
+		}
+		else
+		{
+			TRACE("Found first line %d in file1 and matching line %d in file2\n",
+				Line1Found, Line1MatchIn2);
+			TRACE("Found first line %d in file2 and matching line %d in file1\n",
+				Line2Found, Line2MatchIn1);
+			// choose the one with less distance
+			if (Line1MatchIn2 - Line2Found < Line2MatchIn1 - Line1Found)
+			{
+				nLine1 = Line1Found;
+				nLine2 = Line1MatchIn2;
+			}
+			else
+			{
+				nLine1 = Line2MatchIn1;
+				nLine2 = Line2Found;
+			}
+			TRACE("Chosen line %d in file1 and line %d in file2\n",
+				nLine1, nLine2);
+		}
+		Line1Begin = nLine1;
+		Line2Begin = nLine2;
 		nLine1++;
 		nLine2++;
 
@@ -1790,3 +2024,6 @@ DWORD FilePair::CompareTextFiles(bool bCompareAll)
 	return 1;
 }
 
+CSmallAllocator FileLine::m_Allocator(sizeof FileLine);
+CSmallAllocator StringSection::m_Allocator(sizeof StringSection);
+CSmallAllocator LinePair::m_Allocator(sizeof LinePair);

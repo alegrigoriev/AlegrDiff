@@ -6,6 +6,7 @@
 
 #include "AlegrDiffDoc.h"
 #include "AlegrDiffView.h"
+#include "DiffFileView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -295,10 +296,25 @@ void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 	{
 		if (pNmlv->iItem >= 0 && pNmlv->iItem < m_PairArray.GetSize())
 		{
-			m_PairArray[pNmlv->iItem]->CompareFiles(true);
+			// try to find if a view is already open
+			// view not found, create a new
+			m_PairArray[pNmlv->iItem]->CompareFiles(true, false);
+			CDocTemplate * pTemplate = GetApp()->m_pFileDiffTemplate;
+			CFrameWnd * pFrame = pTemplate->CreateNewFrame(GetDocument(), NULL);
+			CDiffFileView * pView = dynamic_cast<CDiffFileView *>(pFrame->GetWindow(GW_CHILD));
+
+			if (NULL != pView)
+			{
+				pView->m_pFilePair = m_PairArray[pNmlv->iItem];
+			}
+			if (NULL != pFrame)
+			{
+				pTemplate->InitialUpdateFrame(pFrame, GetDocument(), TRUE);
+			}
 		}
 	}
 
 //    int nItem = p;
 	*pResult = 0;
 }
+

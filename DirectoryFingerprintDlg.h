@@ -44,4 +44,5 @@ public:
 	virtual BOOL OnInitDialog();
 
 	CApplicationProfile m_Profile;
+	afx_msg void OnBnClickedOk();
 };

@@ -64,6 +64,7 @@ void CDirectoryFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CDirectoryFingerprintDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_FIRST_DIR, OnBnClickedButtonBrowseDir)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_SAVE_FILENAME, OnBnClickedButtonBrowseSaveFilename)
+	ON_BN_CLICKED(IDOK, OnBnClickedOk)
 END_MESSAGE_MAP()
 
 
@@ -91,7 +92,7 @@ void CDirectoryFingerprintDlg::OnBnClickedButtonBrowseSaveFilename()
 	m_SaveFilename.GetWindowText(m_sSaveFilename);
 
 	CFileDialog dlg(FALSE, _T("md5fp"), m_sSaveFilename,
-					OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+					OFN_HIDEREADONLY,
 					Filter);
 	dlg.m_ofn.lpstrTitle = Title;
 
@@ -134,4 +135,12 @@ BOOL CDirectoryFingerprintDlg::OnInitDialog()
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CDirectoryFingerprintDlg::OnBnClickedOk()
+{
+	// check if the fingerprint file exists
+	m_SaveFilename.GetWindowText(m_sSaveFilename);
+
+	OnOK();
 }

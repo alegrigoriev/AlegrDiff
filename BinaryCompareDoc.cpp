@@ -39,6 +39,8 @@ CBinaryCompareDoc::~CBinaryCompareDoc()
 
 BEGIN_MESSAGE_MAP(CBinaryCompareDoc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
+	ON_COMMAND(ID_EDIT_GOTONEXTDIFF, OnEditGotonextdiff)
+	ON_COMMAND(ID_EDIT_GOTOPREVDIFF, OnEditGotoprevdiff)
 END_MESSAGE_MAP()
 
 
@@ -159,3 +161,13 @@ void CBinaryCompareDoc::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
 	pCmdUI->SetText(s);
 }
 
+
+void CBinaryCompareDoc::OnEditGotonextdiff()
+{
+	// TODO: Add your command handler code here
+}
+
+void CBinaryCompareDoc::OnEditGotoprevdiff()
+{
+	// TODO: Add your command handler code here
+}

@@ -112,6 +112,7 @@ public:
 	afx_msg void OnUpdateBindiffShowfirstfile(CCmdUI *pCmdUI);
 	afx_msg void OnBindiffShow2ndfile();
 	afx_msg void OnUpdateBindiffShow2ndfile(CCmdUI *pCmdUI);
+	afx_msg void OnSetFocus(CWnd* pOldWnd);
 };
 
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp

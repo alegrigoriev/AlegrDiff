@@ -500,6 +500,9 @@
 			<File
 				RelativePath=".\res\icon1.ico">
 			</File>
+			<File
+				RelativePath="res\idr_aleg.ico">
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\ReadMe.txt">

@@ -1451,40 +1451,62 @@ static void RemoveExtraWhitespaces(CString & Dst, const CString & Src)
 
 // find difference in the strings, and build the array of inserts and
 // and deleted chars
-void MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2,
-				StringSection Results[], int nSectionCount, int nMinMatchingChars)
+// returns number of different characters.
+// if ppSections is not NULL, builds a list of sections
+int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int nMinMatchingChars)
 {
-	int nSectionIndex = 0;
+	int nDifferentChars = 0;
 	LPCTSTR str1 = pStr1;
 	LPCTSTR str2 = pStr2;
 	LPCTSTR pEqualStrBegin = str1;
-	while (str1[0] != 0
-			&& str2[0] != 0)
+	StringSection * pLastSection = NULL;
+	// zero the sections list
+	if (ppSections != NULL)
 	{
-		if (str1[0] == str2[0])
+		*ppSections = NULL;
+	}
+	while (1)
+	{
+		if (str1[0] == str2[0]
+			&& str1[0] != 0)
 		{
 			str1++;
 			str2++;
 			continue;
 		}
-		if (str1 != pEqualStrBegin)
+		if (str1 != pEqualStrBegin
+			&& ppSections != NULL)
 		{
-			if (nSectionIndex >= nSectionCount)
+			StringSection * pSection = new StringSection;
+			if (NULL != pSection)
 			{
-				return;
+				pSection->pBegin = pEqualStrBegin;
+				pSection->Length = str1 - pEqualStrBegin;
+				pSection->Attr = StringSection::Identical;
+				pSection->pNext = NULL;
+				if (NULL != pLastSection)
+				{
+					pLastSection->pNext = pSection;
+				}
+				else
+				{
+					* ppSections = pSection;
+				}
+				pLastSection = pSection;
 			}
-			Results[nSectionIndex].pBegin = pEqualStrBegin;
-			Results[nSectionIndex].Length = str1 - pEqualStrBegin;
-			Results[nSectionIndex].Attr = StringSection::Identical;
-			nSectionIndex++;
+		}
+		if (str1[0] == 0
+			&& str2[0] == 0)
+		{
+			break;
 		}
 		// difference found, starting from str1, str2
 
 		bool found = false;
-		for (int idx1 = 1, idx2 = 1; ! found; )
+		for (int idx1 = 0, idx2 = 0; (str1[idx1] != 0 || str2[idx2] != 0) && ! found; )
 		{
 			// check if str1+i ( i < idx1) equal str2+idx2
-			for (int i = 0; i < idx1; i++)
+			for (int i = 0; i <= idx1; i++)
 			{
 				LPCTSTR tmp1 = str1 + i;
 				LPCTSTR tmp2 = str2 + idx2;
@@ -1499,7 +1521,8 @@ void MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2,
 					}
 				}
 				if (j == nMinMatchingChars
-					|| (tmp2[j] == 0 && tmp1[j] == 0))
+					//|| (tmp2[j] == 0 && tmp1[j] == 0)
+					)
 				{
 					// create new section
 					idx1 = i;
@@ -1510,7 +1533,7 @@ void MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2,
 			if ( ! found)
 			{
 				// check if str2+i ( i < idx2) equal str1+idx1
-				for (i = 0; i < idx2; i++)
+				for (i = 0; i <= idx2; i++)
 				{
 					LPCTSTR tmp1 = str1 + idx1;
 					LPCTSTR tmp2 = str2 + i;
@@ -1525,7 +1548,8 @@ void MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2,
 						}
 					}
 					if (j == nMinMatchingChars
-						|| (tmp2[j] == 0 && tmp1[j] == 0))
+						//|| (tmp2[j] == 0 && tmp1[j] == 0)
+						)
 					{
 						// create new section
 						idx2 = i;
@@ -1533,6 +1557,10 @@ void MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2,
 						break;
 					}
 				}
+			}
+			if (found)
+			{
+				break;
 			}
 			// only increment the distance index, if they don't go beyound the string
 			if (str1[idx1] != 0)
@@ -1545,29 +1573,79 @@ void MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2,
 			}
 		}
 		// create new section
-		if (idx1 != 0)
+		// if end reached, check if there are identical characters in the end of the line
+		if (0 == str1[idx1]
+			&& 0 == str2[idx2])
 		{
-			if (nSectionIndex >= nSectionCount)
+			for (int i = 0; i < nMinMatchingChars && idx1 > 0 && idx2 > 0; i++)
 			{
-				return;
+				if (str1[idx1 - 1] == str2[idx2 - 1])
+				{
+					idx1--;
+					idx2--;
+				}
 			}
-			Results[nSectionIndex].pBegin = str1;
-			Results[nSectionIndex].Length = idx1;
-			Results[nSectionIndex].Attr = StringSection::Inserted;
-			nSectionIndex++;
 		}
-		if (idx2 != 0)
+
+		if (idx1 != 0
+			&& ppSections != NULL)
 		{
-			if (nSectionIndex >= nSectionCount)
+			StringSection * pSection = new StringSection;
+			if (NULL != pSection)
 			{
-				return;
+				pSection->pBegin = str1;
+				pSection->Length = idx1;
+				pSection->Attr = StringSection::Inserted;
+				pSection->pNext = NULL;
+				if (NULL != pLastSection)
+				{
+					pLastSection->pNext = pSection;
+				}
+				else
+				{
+					* ppSections = pSection;
+				}
+				pLastSection = pSection;
 			}
-			Results[nSectionIndex].pBegin = str2;
-			Results[nSectionIndex].Length = idx2;
-			Results[nSectionIndex].Attr = StringSection::Erased;
-			nSectionIndex++;
 		}
+
+		if (idx2 != 0
+			&& ppSections != NULL)
+		{
+			StringSection * pSection = new StringSection;
+			if (NULL != pSection)
+			{
+				pSection->pBegin = str2;
+				pSection->Length = idx2;
+				pSection->Attr = StringSection::Erased;
+				pSection->pNext = NULL;
+				if (NULL != pLastSection)
+				{
+					pLastSection->pNext = pSection;
+				}
+				else
+				{
+					* ppSections = pSection;
+				}
+				pLastSection = pSection;
+			}
+		}
+
+		// number of different chars is the greater of different string length
+		if (idx1 > idx2)
+		{
+			nDifferentChars += idx1;
+		}
+		else
+		{
+			nDifferentChars += idx2;
+		}
+
+		str1 += idx1;
+		str2 += idx2;
+		pEqualStrBegin = str1;
 	}
+	return nDifferentChars;
 }
 
 FileLine::FileLine(const char * src, bool MakeNormalizedString)
@@ -1619,7 +1697,15 @@ FileLine::~FileLine()
 
 bool FileLine::LooksLike(const FileLine * pOtherLine, int PercentsDifferent) const
 {
-	return false;
+	int nCharsDifferent = MatchStrings(GetNormalizedText(),
+										pOtherLine->GetNormalizedText(), NULL, 3);
+
+	int nLength = GetNormalizedLength();
+	if (nLength < pOtherLine->GetNormalizedLength())
+	{
+		nLength = pOtherLine->GetNormalizedLength();
+	}
+	return (nLength * PercentsDifferent / 100) >= nCharsDifferent;
 }
 
 FilePair::FilePair()
@@ -1860,6 +1946,10 @@ DWORD FilePair::CompareTextFiles(bool bCompareAll)
 {
 	// find similar lines
 	CThisApp * pApp = GetApp();
+	FileSection * pFirstSection = NULL;
+	FileSection * pLastSection = NULL;
+	FileSection * pSection;
+
 	int nLine1 = 0;
 	int nLine2 = 0;
 
@@ -2001,7 +2091,7 @@ DWORD FilePair::CompareTextFiles(bool bCompareAll)
 				// check if the lines are similar enough
 				// the lines can be considered similar if < 1/4 of the characters is different,
 				// or the only difference is in whitespaces
-				if (Line1->LooksLike(Line2, 25))
+				if (Line1->LooksLike(Line2, 15))
 				{
 					nLine1++;
 					nLine2++;
@@ -2012,14 +2102,51 @@ DWORD FilePair::CompareTextFiles(bool bCompareAll)
 				}
 			}
 		}
-#if 0
+
 		FileSection * pSection = new FileSection;
 		pSection->File1LineBegin = Line1Begin;
 
 		pSection->File2LineBegin = Line2Begin;
-		pSection->File1LineEnd = nLine1 - 1;
-		pSection->File2LineEnd = nLine2 - 1;
-#endif
+		pSection->File1LineEnd = nLine1;
+		pSection->File2LineEnd = nLine2;
+		pSection->pNext = NULL;
+		if (pLastSection == NULL)
+		{
+			pFirstSection = pSection;
+		}
+		else
+		{
+			pLastSection->pNext = pSection;
+		}
+		pLastSection = pSection;
+	}
+	// scan list of sections and try to expand them downwards with looking like lines
+	int nPrevSectionEnd1 = 0;
+	int nPrevSectionEnd2 = 0;
+	for (pSection = pFirstSection; pSection != NULL; pSection = pSection->pNext)
+	{
+		while (pSection->File1LineBegin > nPrevSectionEnd1
+				&& pSection->File2LineBegin > nPrevSectionEnd2
+				&& pFirstFile->GetLine(pSection->File1LineBegin - 1)->
+				LooksLike(pSecondFile->GetLine(pSection->File2LineBegin - 1), 15))
+		{
+			// expand the section down, to include alike lines
+			pSection->File1LineBegin--;
+			pSection->File2LineBegin--;
+		}
+
+		nPrevSectionEnd1 = pSection->File1LineEnd;
+		nPrevSectionEnd2 = pSection->File2LineEnd;
+	}
+	// build the array of line pairs
+	// calculate number of line pairs
+
+	// deallocate the sections, don't need them anymore
+	for (pSection = pFirstSection; pSection != NULL; )
+	{
+		FileSection * tmp = pSection;
+		pSection = pSection->pNext;
+		delete tmp;
 	}
 	return 1;
 }

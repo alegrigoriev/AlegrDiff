@@ -239,4 +239,5 @@ public:
 bool MatchWildcard(LPCTSTR name, LPCTSTR pattern);
 bool MultiPatternMatches(LPCTSTR name, LPCTSTR sPattern);
 void MiltiSzToCString(CString & str, LPCTSTR pMsz);
+int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int nMinMatchingChars);
 #endif

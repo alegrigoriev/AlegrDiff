@@ -53,6 +53,7 @@ protected:
 	int m_ResizeItemsCount;
 
 	virtual INT_PTR DoModal();
+
 	//{{AFX_MSG(CResizableFileDialog)
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	//}}AFX_MSG
@@ -104,6 +105,9 @@ public:
 							CWnd* pParentWnd = NULL);
 
 	virtual INT_PTR DoModal();
+
+	CString m_LastFolder;
+	CString GetLastFolder() const { return m_LastFolder; }
 
 protected:
 	CApplicationProfile m_Profile;

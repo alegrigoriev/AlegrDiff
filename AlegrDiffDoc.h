@@ -35,9 +35,6 @@ protected: // create from serialization only
 
 	unsigned CompareDirectoriesFunction(class CComparisonProgressDlg * pDlg);
 
-	FilePair * m_NextPairToRefresh;
-	FilePair * volatile m_NextPairToCompare;
-
 public:
 	CString m_sInclusionPattern;
 	CString m_sExclusionPattern;
@@ -85,7 +82,6 @@ protected:
 
 // Generated message map functions
 protected:
-	virtual void OnIdle();
 	//{{AFX_MSG(CAlegrDiffDoc)
 	afx_msg void OnFileSave();
 	afx_msg void OnViewRefresh();

@@ -57,7 +57,7 @@ INT_PTR CDirectoryFingerpringCreateDlg::DoModal()
 
 unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 {
-	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
+	//SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 	// load the directory
 	FileList FileList1;
 	unsigned i;
@@ -90,7 +90,6 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 								InclusionPattern, ExclusionPattern, PatternToMultiCString(_T("")),
 								PatternToMultiCString(_T(""))))
 	{
-		//DWORD error = GetLastError();
 		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, FullDirectoryName);
 
 		SetNextItem(s, 0, 0);

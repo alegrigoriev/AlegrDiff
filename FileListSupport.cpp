@@ -2530,32 +2530,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 			}
 		}
 	}
-#if 0
-	// try to reduce whitespace difference sections, when a difference is inserted
-	if (NULL != ppSections)
-	{
-		for (StringSection * pSection = ppSections->First();
-			pSection->NotEnd(ppSections); pSection = pSection->Next())
-		{
-			StringSection * pNextSection = pSection->Next();
-			if (pSection->Attr & StringSection::Whitespace
-				&& pNextSection->NotEnd(ppSections))
-			{
-				StringSection * pSecondSection = pNextSection->Next();
-				if (pSecondSection->NotEnd(ppSections))
-				{
-					if (pSection->Attr & StringSection::File1Only)
-					{
-						StringSection * pNextSection = pSection->Next();
-					}
-					else if (pSection->Attr & StringSection::File2Only)
-					{
-					}
-				}
-			}
-		}
-	}
-#endif
+
 	while ( ! DiffSections.IsEmpty())
 	{
 		delete DiffSections.RemoveHead();

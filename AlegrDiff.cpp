@@ -213,6 +213,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("MinMatchingChars"), m_MinMatchingChars, 3, 1, 32);
 	Profile.AddItem(_T("Settings"), _T("MinPercentWeakIdenticalLines"), m_MinPercentWeakIdenticalLines, 10, 0, 99);
 	Profile.AddItem(_T("Settings"), _T("GoToLineFileSelection"), m_GoToLineFileSelection, 0, 0, 2);
+	Profile.AddItem(_T("Settings"), _T("SearchScope"), m_SearchScope, 0, 0, 2);
 
 	Profile.AddItem(_T("Settings"), _T("BinaryFiles"), m_sBinaryFilesFilter,
 					_T("*.exe;*.dll;*.sys;*.obj;*.pdb;*.zip"));

@@ -135,6 +135,7 @@ public:
 	int m_MinPercentWeakIdenticalLines; // default 10
 	int m_TabIndent;
 	int m_GoToLineFileSelection;
+	int m_SearchScope;
 
 	LOGFONT m_NormalLogFont;
 	CFont m_NormalFont;

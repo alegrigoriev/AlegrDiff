@@ -157,6 +157,8 @@
 #define IDC_PROGRESS2                   1078
 #define IDC_TIME_LEFT                   1079
 #define IDC_STATIC_PERCENT_ITEM         1080
+#define IDC_RADIO1                      1081
+#define IDC_BUTTON1                     1082
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -272,7 +274,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        179
 #define _APS_NEXT_COMMAND_VALUE         32888
-#define _APS_NEXT_CONTROL_VALUE         1081
+#define _APS_NEXT_CONTROL_VALUE         1083
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

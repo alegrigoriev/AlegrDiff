@@ -1124,7 +1124,7 @@ void CFilePairDoc::OnFileEditSecond()
 	}
 }
 
-bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive, bool WholeWord)
+bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive, bool WholeWord, int SearchScope)
 {
 	// find from the current position
 	if (NULL == m_pFilePair
@@ -1468,6 +1468,15 @@ bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvok
 		dlg.m_bCaseSensitive = pApp->m_bCaseSensitive;
 		dlg.m_FindDown =  ! pApp->m_bFindBackward;
 		dlg.m_bWholeWord = pApp->m_bFindWholeWord;
+		dlg.m_SearchScope = pApp->m_SearchScope;
+		// if only one file, disable search scope
+		if (NULL == m_pFilePair->pFirstFile
+			|| m_pFilePair->pFirstFile->m_bIsPhantomFile
+			|| NULL == m_pFilePair->pSecondFile
+			|| m_pFilePair->pSecondFile->m_bIsPhantomFile)
+		{
+			dlg.m_SearchScope = -1;
+		}
 
 		if (IDOK != dlg.DoModal())
 		{
@@ -1477,13 +1486,18 @@ bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvok
 		pApp->m_bCaseSensitive = ( 0 != dlg.m_bCaseSensitive);
 		pApp->m_bFindBackward = ! dlg.m_FindDown;
 		bBackwards = pApp->m_bFindBackward;
+		if (-1 != dlg.m_SearchScope)
+		{
+			pApp->m_SearchScope = dlg.m_SearchScope;
+		}
+
 		pApp->m_bFindWholeWord = (0 != dlg.m_bWholeWord);
 	}
 	// update MRU, case sensitive
 	pApp->m_FindHistory.AddString(pApp->m_FindString);
 
 	return FindTextString(pApp->m_FindString, bBackwards,
-						pApp->m_bCaseSensitive, pApp->m_bFindWholeWord);
+						pApp->m_bCaseSensitive, pApp->m_bFindWholeWord, pApp->m_SearchScope);
 }
 
 // returns a pointer to a line text

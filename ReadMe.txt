@@ -2,7 +2,6 @@ TODO:
 
 Find full word only
 Use OnActivateApp to refresh the files
-Use dotted filenames in the progress dialog
 Make radio buttons in file compare dialog: Binary Text Default
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
 Add Copy 1st file text, copy 2nd file text
@@ -13,7 +12,6 @@ Add folder picture under the fingerprint picture
 make word by word comparison in MatchStrings
 Make HTML help
 
-Import font settings from Visual C/VisualStudio
 Maybe different color for selected accepted/declined
 add option to keep the caret on one line during F3 and F7
 
@@ -78,6 +76,7 @@ insufficient space allocated for copying files
 
 Done:
 
+Use dotted filenames in the progress dialog
 Remove file result (change to "Ready" when the file window is deactivated)
 Switch from binary view to text view
 Switch from text view to binary view

@@ -441,6 +441,7 @@ void CBinaryCompareView::OnInitialUpdate()
 	CView::OnInitialUpdate();
 
 	OnMetricsChange();
+
 }
 
 void CBinaryCompareView::OnWindowCloseDiff()
@@ -878,7 +879,7 @@ void CBinaryCompareView::UpdateHScrollBar()
 void CBinaryCompareView::SetCaretPosition(LONGLONG Addr, int flags)
 {
 	CBinaryCompareDoc * pDoc = GetDocument();
-	pDoc->SetCaretPosition(Addr, flags);
+	pDoc->SetCaretPosition(Addr, flags & ~(SetPositionMakeVisible | SetPositionMakeCentered));
 
 	if (flags & SetPositionMakeVisible)
 	{
@@ -889,8 +890,6 @@ void CBinaryCompareView::SetCaretPosition(LONGLONG Addr, int flags)
 		MakeCaretCentered();
 	}
 }
-
-
 
 void CBinaryCompareView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 {
@@ -965,13 +964,21 @@ void CBinaryCompareView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHi
 			InvalidateRange(begin, end);
 		}
 	}
+	else if (lHint == CBinaryCompareDoc::UpdateMakeCaretCentered)
+	{
+		MakeCaretCentered();
+	}
+	else if (lHint == CBinaryCompareDoc::UpdateMakeCaretVisible)
+	{
+		MakeCaretVisible();
+	}
 	else if (lHint == UpdateViewsFilePairChanged)
 	{
 		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
 		if (NULL != pArg
 			&& pArg->pPair == pDoc->GetFilePair())
 		{
-			if (FilesDeleted == pDoc->GetFilePair()->m_ComparisionResult)
+			if (FilesDeleted == pDoc->GetFilePair()->m_ComparisonResult)
 			{
 				return;
 			}

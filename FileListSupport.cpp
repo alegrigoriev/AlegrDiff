@@ -234,6 +234,9 @@ FileItem::FileItem(LPCTSTR name)
 void FileItem::Unload()
 {
 	TRACE(_T("FileItem %s Unloaded\n"), LPCTSTR(GetFullName()));
+
+	CSimpleCriticalSectionLock lock(m_Cs);
+
 	for (unsigned i = 0; i < m_Lines.size(); i++)
 	{
 		delete m_Lines[i];
@@ -800,8 +803,12 @@ FileCheckResult FileItem::ReloadIfChanged()
 	return FileUnchanged;
 }
 
+CSimpleCriticalSection FileItem::m_Cs;
+
 size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 {
+	CSimpleCriticalSectionLock lock(m_Cs);
+
 	if (NULL == m_hFile)
 	{
 		// Open the file with FILE_SHARE_DELETE, to allow other applications
@@ -974,7 +981,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 
 PairCheckResult FilePair::CheckForFilesChanged()
 {
-	if (MemoryFile == m_ComparisionResult)
+	if (MemoryFile == m_ComparisonResult)
 	{
 		return FilesUnchanged;
 	}
@@ -1006,7 +1013,7 @@ PairCheckResult FilePair::CheckForFilesChanged()
 
 PairCheckResult FilePair::ReloadIfChanged()
 {
-	if (MemoryFile == m_ComparisionResult)
+	if (MemoryFile == m_ComparisonResult)
 	{
 		return FilesUnchanged;
 	}
@@ -1041,7 +1048,7 @@ PairCheckResult FilePair::ReloadIfChanged()
 		{
 			delete pFirstFile;
 			pFirstFile = NULL;
-			m_ComparisionResult = OnlySecondFile;
+			m_ComparisonResult = OnlySecondFile;
 		}
 	}
 	if (NULL != pSecondFile)
@@ -1055,13 +1062,13 @@ PairCheckResult FilePair::ReloadIfChanged()
 		{
 			delete pSecondFile;
 			pSecondFile = NULL;
-			m_ComparisionResult = OnlyFirstFile;
+			m_ComparisonResult = OnlyFirstFile;
 		}
 	}
 	if (FileDeleted == res1
 		&& FileDeleted == res2)
 	{
-		m_ComparisionResult = FileUnaccessible;
+		m_ComparisonResult = FileUnaccessible;
 		return FilesDeleted;
 	}
 	return FilesTimeChanged;
@@ -2633,8 +2640,7 @@ FilePair::FilePair()
 	m_bHideFromListView(false),
 	m_bSelected(false),
 	m_bDeleted(false),
-	m_CompletedPercent(0),
-	m_ComparisionResult(ResultUnknown)
+	m_ComparisonResult(ResultUnknown)
 {
 }
 
@@ -2847,7 +2853,7 @@ int FilePair::ComparisionResultPriority() const
 	// the following order:
 	// ResultUnknown, FilesDifferent, VersionInfoDifferent, DifferentInSpaces, FilesIdentical,
 	// OnlyFirstFile, OnlySecondFile
-	switch (m_ComparisionResult)
+	switch (m_ComparisonResult)
 	{
 	case ErrorReadingFirstFile:
 		return 0;
@@ -3027,7 +3033,7 @@ CString FilePair::GetComparisonResult() const
 	static CString sComparingFiles(MAKEINTRESOURCE(IDS_STRING_COMPARING));
 
 	CString s;
-	switch(m_ComparisionResult)
+	switch(m_ComparisonResult)
 	{
 	case ResultUnknown:
 		break;
@@ -3092,21 +3098,9 @@ CString FilePair::GetComparisonResult() const
 		break;
 	case CalculatingFirstFingerprint:
 		s.Format(sCalculatingFingerprint, LPCTSTR(pFirstFile->GetFullName()));
-		if (m_CompletedPercent != 0)
-		{
-			CString Percent;
-			Percent.Format(_T(" %d%%"), m_CompletedPercent);
-			s += Percent;
-		}
 		break;
 	case CalculatingSecondFingerprint:
 		s.Format(sCalculatingFingerprint, LPCTSTR(pSecondFile->GetFullName()));
-		if (m_CompletedPercent != 0)
-		{
-			CString Percent;
-			Percent.Format(_T(" %d%%"), m_CompletedPercent);
-			s += Percent;
-		}
 		break;
 	case ComparingFiles:
 		s.Format(sComparingFiles,
@@ -3222,7 +3216,7 @@ FilePair::eFileComparisionResult FilePair::PreCompareFiles(CMd5HashCalculator * 
 
 	if (NULL != pProgressDialog)
 	{
-		m_ComparisionResult = ComparingFiles;
+		m_ComparisonResult = ComparingFiles;
 
 		pProgressDialog->SetNextItem(GetComparisonResult(),
 									2 * (pFirstFile->GetFileLength() + pSecondFile->GetFileLength()),
@@ -3313,7 +3307,7 @@ FilePair::eFileComparisionResult FilePair::CompareFiles(class CProgressDialog * 
 			}
 		}
 	}
-	if (MemoryFile == m_ComparisionResult)
+	if (MemoryFile == m_ComparisonResult)
 	{
 		return MemoryFile;
 	}
@@ -3637,11 +3631,11 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 	{
 		if (pFirstFile->GetFileLength() > pSecondFile->GetFileLength())
 		{
-			return m_ComparisionResult = FirstFileLonger;
+			return m_ComparisonResult = FirstFileLonger;
 		}
 		else
 		{
-			return m_ComparisionResult = SecondFileLonger;
+			return m_ComparisonResult = SecondFileLonger;
 		}
 	}
 	if (pApp->m_bUseMd5)
@@ -3651,7 +3645,7 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 
 		if ( ! pFirstFile->m_bMd5Calculated)
 		{
-			m_ComparisionResult = CalculatingFirstFingerprint;
+			m_ComparisonResult = CalculatingFirstFingerprint;
 
 			if (NULL != pProgressDialog)
 			{
@@ -3668,7 +3662,7 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 		}
 		if ( ! pSecondFile->m_bMd5Calculated)
 		{
-			m_ComparisionResult = CalculatingSecondFingerprint;
+			m_ComparisonResult = CalculatingSecondFingerprint;
 
 			if (NULL != pProgressDialog)
 			{
@@ -3691,12 +3685,12 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 		if (memcmp(pFirstFile->m_Md5, pSecondFile->m_Md5,
 					sizeof pFirstFile->m_Md5))
 		{
-			return m_ComparisionResult = FilesDifferent;
+			return m_ComparisonResult = FilesDifferent;
 		}
-		return m_ComparisionResult = FilesIdentical;
+		return m_ComparisonResult = FilesIdentical;
 	}
 
-	return m_ComparisionResult = ResultUnknown;
+	return m_ComparisonResult = ResultUnknown;
 }
 
 FilePair::eFileComparisionResult FilePair::CompareTextFiles(CProgressDialog * pProgressDialog)

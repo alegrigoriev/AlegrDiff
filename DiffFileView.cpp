@@ -1767,3 +1767,4 @@ void CDiffFileView::OnTimer(UINT nIDEvent)
 	}
 	CView::OnTimer(nIDEvent);
 }
+

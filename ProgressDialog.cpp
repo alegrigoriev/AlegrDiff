@@ -206,6 +206,12 @@ LRESULT CProgressDialog::OnKickIdle(WPARAM, LPARAM)
 			{
 				m_Progress.SetPos(Percent);
 			}
+			if (m_ProgressPercent.m_hWnd != NULL)
+			{
+				CString s;
+				s.Format(IDS_STRING_PERCENTS_DONE, Percent);
+				m_ProgressPercent.SetWindowText(s);
+			}
 			m_TotalPercentDoneShown = Percent;
 		}
 		// calculate time left
@@ -346,6 +352,10 @@ void CProgressDialog::OnAbort()
 	{
 		pCancel->SetDlgCtrlID(IDABORT);
 		pCancel->SetWindowText(_T("OK"));
+	}
+	else
+	{
+		EndDialog(IDABORT);
 	}
 }
 

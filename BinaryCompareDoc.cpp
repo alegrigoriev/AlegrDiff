@@ -12,7 +12,7 @@ IMPLEMENT_DYNCREATE(CBinaryCompareDoc, CAlegrDiffBaseDoc)
 CBinaryCompareDoc::CBinaryCompareDoc()
 	: m_pFilePair(NULL)
 	, m_CaretPos(0)
-	,m_SelectionAnchor(0)
+	, m_SelectionAnchor(0)
 	, m_OriginalSelectionAnchor(0)
 {
 }
@@ -132,7 +132,27 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 	arg.pPair = pPair;
 	UpdateAllViews(NULL, UpdateViewsFilePairChanged, & arg);
 
-	SetCaretPosition(0, SetPositionCancelSelection);
+	SetCaretPosition(0, SetPositionCancelSelection | SetPositionMakeVisible);
+
+	if (pPair->ResultUnknown == pPair->m_ComparisonResult)
+	{
+		CDifferenceProgressDialog dlg;
+		dlg.m_pDoc = this;
+		dlg.BeginAddr = m_CaretPos;
+		dlg.EndAddr = GetFileSize();
+
+		int result = dlg.DoModalDelay(200);
+
+		if (IDOK == result)
+		{
+			SetCaretPosition(dlg.BeginAddr,
+							SetPositionCancelSelection | SetPositionMakeVisible);
+		}
+		else
+		{
+			SetCaretPosition(0, SetPositionCancelSelection | SetPositionMakeVisible);
+		}
+	}
 }
 
 LONGLONG CBinaryCompareDoc::GetFileSize() const
@@ -177,6 +197,15 @@ void CBinaryCompareDoc::SetCaretPosition(LONGLONG Addr, int flags)
 		// if canceling selection, check for word mode reset
 	}
 	UpdateAllViews(NULL, CaretPositionChanged, NULL);
+
+	if (flags & SetPositionMakeVisible)
+	{
+		UpdateAllViews(NULL, UpdateMakeCaretVisible);
+	}
+	if (flags & SetPositionMakeCentered)
+	{
+		UpdateAllViews(NULL, UpdateMakeCaretCentered);
+	}
 }
 
 void CBinaryCompareDoc::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
@@ -337,6 +366,10 @@ unsigned CBinaryCompareDoc::FindDataProc(CDifferenceProgressDialog * pDlg)
 	}
 	delete[] File1Buffer;
 	delete[] File2Buffer;
+	if (pDlg->m_StopRunThread)
+	{
+		return IDCANCEL;
+	}
 
 	return IDOK;
 }

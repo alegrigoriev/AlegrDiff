@@ -259,6 +259,8 @@
 #define IDS_TIME_LEFT_MINUTES           32883
 #define IDS_STRING_LOADING_DIRECTORY    32884
 #define IDS_STRING_NO_FILES_TO_COMPARE  32885
+#define IDS_STRING_PERCENTS_DONE        32886
+#define ID_VIEW_AS_BINARY               32887
 #define IDS_UNABLE_TO_CREATE_FILE       57608
 #define ID_INDICATOR_CARET_POS          0xE705
 
@@ -268,7 +270,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        178
-#define _APS_NEXT_COMMAND_VALUE         32827
+#define _APS_NEXT_COMMAND_VALUE         32888
 #define _APS_NEXT_CONTROL_VALUE         1081
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

@@ -106,7 +106,7 @@ bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
 		for (FilePair * pPair = m_PairList.First();
 			m_PairList.NotEnd(pPair); pPair = pPair->Next())
 		{
-			if (pPair->FilesIdentical != pPair->m_ComparisionResult
+			if (pPair->FilesIdentical != pPair->m_ComparisonResult
 				|| ! pPair->pFirstFile->IsFolder())
 			{
 				HasFiles = true;
@@ -212,11 +212,11 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			pPair->pSecondFile = Files2[idx2];
 			if (pPair->pSecondFile->IsFolder())
 			{
-				pPair->m_ComparisionResult = FilePair::OnlySecondDirectory;
+				pPair->m_ComparisonResult = FilePair::OnlySecondDirectory;
 			}
 			else
 			{
-				pPair->m_ComparisionResult = FilePair::OnlySecondFile;
+				pPair->m_ComparisonResult = FilePair::OnlySecondFile;
 			}
 			idx2++;
 
@@ -234,22 +234,22 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 				// reading fingerprint
 				if (pPair->pFirstFile->IsFolder())
 				{
-					pPair->m_ComparisionResult = FilePair::DirectoryInFingerprintFileOnly;
+					pPair->m_ComparisonResult = FilePair::DirectoryInFingerprintFileOnly;
 				}
 				else
 				{
-					pPair->m_ComparisionResult = FilePair::FileInFingerprintFileOnly;
+					pPair->m_ComparisonResult = FilePair::FileInFingerprintFileOnly;
 				}
 			}
 			else
 			{
 				if (pPair->pFirstFile->IsFolder())
 				{
-					pPair->m_ComparisionResult = FilePair::OnlyFirstDirectory;
+					pPair->m_ComparisonResult = FilePair::OnlyFirstDirectory;
 				}
 				else
 				{
-					pPair->m_ComparisionResult = FilePair::OnlyFirstFile;
+					pPair->m_ComparisonResult = FilePair::OnlyFirstFile;
 				}
 			}
 			idx1++;
@@ -266,11 +266,11 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			idx2++;
 			if (pPair->pFirstFile->IsFolder())
 			{
-				pPair->m_ComparisionResult = pPair->FilesIdentical;
+				pPair->m_ComparisonResult = pPair->FilesIdentical;
 			}
 			else
 			{
-				pPair->m_ComparisionResult = pPair->ResultUnknown;
+				pPair->m_ComparisonResult = pPair->ResultUnknown;
 			}
 
 			if (0) TRACE(_T("File \"%s\" exists in both \"%s\" and \"%s\"\n"),
@@ -338,7 +338,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			pInsertBefore->InsertTail(pPair);
 			m_nFilePairs++;
 
-			if (pPair->ResultUnknown == pPair->m_ComparisionResult)
+			if (pPair->ResultUnknown == pPair->m_ComparisonResult)
 			{
 				// add files to the "data to process" size
 				if (pPair->NeedBinaryComparison())
@@ -514,7 +514,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 			//UpdateAllViews(NULL, 0);    // erase the views
 			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(_T("Loading and comparing files..."));
 
-			pPair->m_ComparisionResult = pPair->CompareFiles(NULL);
+			pPair->m_ComparisonResult = pPair->CompareFiles(NULL);
 		}
 
 		m_TotalLines = pPair->m_LinePairs.size();
@@ -724,6 +724,7 @@ BEGIN_MESSAGE_MAP(CFilePairDoc, CAlegrDiffBaseDoc)
 	ON_UPDATE_COMMAND_UI(ID_MERGE_INCLUDE, OnUpdateMergeInclude)
 	ON_COMMAND(ID_MERGE_EXCLUDE, OnMergeExclude)
 	ON_UPDATE_COMMAND_UI(ID_MERGE_EXCLUDE, OnUpdateMergeExclude)
+	ON_COMMAND(ID_VIEW_AS_BINARY, OnViewAsBinary)
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
 END_MESSAGE_MAP()
@@ -998,7 +999,7 @@ void CAlegrDiffDoc::OnViewRefresh()
 		}
 		else
 		{
-			if (pPair->FilesIdentical != pPair->m_ComparisionResult
+			if (pPair->FilesIdentical != pPair->m_ComparisonResult
 				|| ! pPair->pFirstFile->IsFolder())
 			{
 				HasFiles = true;
@@ -2203,8 +2204,8 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 		m_PairList.NotEnd(pPair) && (NULL == pDlg || ! pDlg->m_StopRunThread);
 		pPair = pPair->Next())
 	{
-		TRACE("First pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisionResult);
-		if (pPair->m_ComparisionResult != FilePair::ResultUnknown
+		TRACE("First pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisonResult);
+		if (pPair->m_ComparisonResult != FilePair::ResultUnknown
 			|| NULL == pPair->pFirstFile
 			|| NULL == pPair->pSecondFile
 			|| ! pPair->NeedBinaryComparison()
@@ -2213,7 +2214,7 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 			continue;
 		}
 
-		pPair->m_ComparisionResult = pPair->CalculatingFirstFingerprint;
+		pPair->m_ComparisonResult = pPair->CalculatingFirstFingerprint;
 
 		pDlg->SetNextItem(pPair->GetComparisonResult(),
 						pPair->pFirstFile->GetFileLength(), FILE_OPEN_OVERHEAD);
@@ -2221,11 +2222,11 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 		if (pPair->pFirstFile->CalculateHashes( & HashCalc, pDlg)
 			|| pDlg->m_StopRunThread)
 		{
-			pPair->m_ComparisionResult = FilePair::ResultUnknown;
+			pPair->m_ComparisonResult = FilePair::ResultUnknown;
 		}
 		else
 		{
-			pPair->m_ComparisionResult = FilePair::ErrorReadingFirstFile;
+			pPair->m_ComparisonResult = FilePair::ErrorReadingFirstFile;
 		}
 
 		pDlg->AddDoneItem(pPair->pFirstFile->GetFileLength());
@@ -2238,13 +2239,13 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 		m_PairList.NotEnd(pPair) && (NULL == pDlg || ! pDlg->m_StopRunThread);
 		pPair = pPair->Next())
 	{
-		TRACE("Second pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisionResult);
-		if (FilePair::ResultUnknown != pPair->m_ComparisionResult)
+		TRACE("Second pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisonResult);
+		if (FilePair::ResultUnknown != pPair->m_ComparisonResult)
 		{
 			continue;
 		}
 
-		pPair->m_ComparisionResult = pPair->PreCompareFiles( & HashCalc, pDlg);
+		pPair->m_ComparisonResult = pPair->PreCompareFiles( & HashCalc, pDlg);
 		pPair->m_bChanged = true;
 
 	}
@@ -2360,4 +2361,26 @@ void CFilePairDoc::OnUpdateMergeExclude(CCmdUI* pCmdUI)
 void CAlegrDiffDoc::OnUpdateViewRefresh(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable( ! m_sFirstDir.IsEmpty());
+}
+
+void CFilePairDoc::OnViewAsBinary()
+{
+	FilePair * pPair = GetFilePair();
+
+	pPair->Reference();
+	OnCloseDocument();
+
+	pPair->m_ComparisonResult = pPair->ResultUnknown;
+
+	if (NULL != pPair->pFirstFile)
+	{
+		pPair->pFirstFile->m_IsBinary = true;
+	}
+	if (NULL != pPair->pSecondFile)
+	{
+		pPair->pSecondFile->m_IsBinary = true;
+	}
+
+	GetApp()->OpenFilePairView(pPair);
+	pPair->Dereference();
 }

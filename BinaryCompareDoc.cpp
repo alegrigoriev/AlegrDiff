@@ -132,7 +132,7 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 
 	SetCaretPosition(0, SetPositionCancelSelection | SetPositionMakeVisible);
 
-	if (pPair->ResultUnknown == pPair->m_ComparisonResult)
+	if (pPair->ResultUnknown == pPair->GetComparisonResult())
 	{
 		CDifferenceProgressDialog dlg;
 		dlg.m_pDoc = this;
@@ -161,7 +161,7 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 			SetCaretPosition(0, SetPositionCancelSelection | SetPositionMakeVisible);
 		}
 	}
-	_tcsncpy(m_ComparisonResult, pPair->GetComparisonResult(),
+	_tcsncpy(m_ComparisonResult, pPair->GetComparisonResultStr(),
 			countof(m_ComparisonResult));
 	m_ComparisonResult[countof(m_ComparisonResult) - 1] = 0;
 	((CFrameWnd*)AfxGetMainWnd())->PostMessage(WM_SETMESSAGESTRING_POST, 0, (LPARAM)m_ComparisonResult);

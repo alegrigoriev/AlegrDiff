@@ -49,7 +49,7 @@ CFilesPropertiesDialog::CFilesPropertiesDialog(class FilePair * pPair, CWnd* pPa
 								LPCTSTR(UlonglongToStr(m_pPair->pSecondFile->GetFileLength())));
 		}
 
-		m_ComparisonResult = m_pPair->GetComparisonResult();
+		m_ComparisonResult = m_pPair->GetComparisonResultStr();
 	}
 }
 

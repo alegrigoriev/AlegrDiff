@@ -120,7 +120,7 @@ bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
 		for (FilePair * pPair = m_PairList.First();
 			m_PairList.NotEnd(pPair); pPair = pPair->Next())
 		{
-			if (pPair->FilesIdentical != pPair->m_ComparisonResult
+			if (pPair->FilesIdentical != pPair->GetComparisonResult()
 				|| ! pPair->pFirstFile->IsFolder())
 			{
 				HasFiles = true;
@@ -362,7 +362,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			pInsertBefore->InsertAsPrevItem(pPair);
 			m_nFilePairs++;
 
-			if (pPair->ResultUnknown == pPair->m_ComparisonResult)
+			if (pPair->ResultUnknown == pPair->GetComparisonResult())
 			{
 				// add files to the "data to process" size
 				if (pPair->NeedBinaryComparison())
@@ -544,7 +544,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 		}
 
 		m_TotalLines = pPair->m_LinePairs.size();
-		_tcsncpy(m_ComparisonResult, pPair->GetComparisonResult(),
+		_tcsncpy(m_ComparisonResult, pPair->GetComparisonResultStr(),
 				countof(m_ComparisonResult));
 		m_ComparisonResult[countof(m_ComparisonResult) - 1] = 0;
 		((CFrameWnd*)AfxGetMainWnd())->PostMessage(WM_SETMESSAGESTRING_POST, 0, (LPARAM)m_ComparisonResult);
@@ -1053,7 +1053,7 @@ void CAlegrDiffDoc::OnViewRefresh()
 		}
 		else
 		{
-			if (pPair->FilesIdentical != pPair->m_ComparisonResult
+			if (pPair->FilesIdentical != pPair->GetComparisonResult()
 				|| ! pPair->pFirstFile->IsFolder())
 			{
 				HasFiles = true;
@@ -2329,7 +2329,7 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 
 		pPair->m_ComparisonResult = pPair->CalculatingFirstFingerprint;
 
-		pDlg->SetNextItem(pPair->GetComparisonResult(),
+		pDlg->SetNextItem(pPair->GetComparisonResultStr(),
 						pPair->pFirstFile->GetFileLength(), FILE_OPEN_OVERHEAD);
 
 		if (pPair->pFirstFile->CalculateHashes( & HashCalc, pDlg)
@@ -2352,8 +2352,8 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 		m_PairList.NotEnd(pPair) && (NULL == pDlg || ! pDlg->m_StopRunThread);
 		pPair = pPair->Next())
 	{
-		TRACE("Second pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisonResult);
-		if (FilePair::ResultUnknown != pPair->m_ComparisonResult)
+		TRACE("Second pass, pPair=%p, result=%d\n", pPair, pPair->GetComparisonResult());
+		if (FilePair::ResultUnknown != pPair->GetComparisonResult())
 		{
 			continue;
 		}

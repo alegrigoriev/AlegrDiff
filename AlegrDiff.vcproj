@@ -3,6 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.00"
 	Name="AlegrDiff"
+	ProjectGUID="{0EB4547D-98C6-492C-A45A-42E4A6002F33}"
 	SccProjectName="&quot;$/AlegrDiff&quot;, QOAAAAAA"
 	SccAuxPath=""
 	SccLocalPath="."

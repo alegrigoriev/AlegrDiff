@@ -5,7 +5,8 @@
 CMd5HashCalculator::CMd5HashCalculator()
 {
 	m_HashBuf = (PBYTE)VirtualAlloc(NULL, BufferSize, MEM_COMMIT, PAGE_READWRITE);
-	Initialize(PROV_RSA_FULL, NULL, MS_DEF_PROV, CRYPT_VERIFYCONTEXT);
+
+	CryptAcquireContextA( & m_hProv, NULL, MS_DEF_PROV_A, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
 }
 
 CMd5HashCalculator::~CMd5HashCalculator()

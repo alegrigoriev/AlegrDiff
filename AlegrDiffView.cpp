@@ -110,16 +110,8 @@ CAlegrDiffView::CAlegrDiffView()
 		m_ColumnWidthArray[i] = pApp->m_ColumnWidthArray[i];
 		TRACE("Column %d width=%d\n", i, m_ColumnWidthArray[i]);
 
-		m_SortColumns[i] = MaxColumns;
-		m_AscendingSortOrder[i] = false;
-	}
-
-	if (pApp->m_FileListSort >= 0)
-	{
-		m_SortColumns[0] = eColumns(0xFF & pApp->m_FileListSort);
-		m_AscendingSortOrder[0] = ! (0xFF00 & pApp->m_FileListSort);
-		m_SortColumns[1] = eColumns((0xFF0000 & pApp->m_FileListSort) >> 16);
-		m_AscendingSortOrder[1] = ! (0xFF000000 & pApp->m_FileListSort);
+		m_SortColumns[i] = eColumns(pApp->m_ColumnSort[i] & 0x7F);
+		m_AscendingSortOrder[i] = 0 == (pApp->m_ColumnSort[i] & 0x80);
 	}
 }
 
@@ -280,26 +272,25 @@ void CAlegrDiffView::ResetColumnsArray()
 
 }
 
-void CAlegrDiffView::SetSortColumn(eColumns nColumn, bool AscendingOrder, bool InvertOrder)
+void CAlegrDiffView::SetSortColumn(eColumns nColumn, eSetSortColumnOrder Order)
 {
 	if (nColumn >= MaxColumns)
 	{
 		return;
 	}
 
-	if (InvertOrder
-		&& m_SortColumns[0] == nColumn)
+	if (m_SortColumns[0] == nColumn)
 	{
-		// if the same column, just invert its order
+		if (Order != SetSortColumnMouseClick
+			&& (Order == SetSortColumnAscending) == m_AscendingSortOrder[0])
+		{
+			// sort order remains the same
+			return;
+		}
 		m_AscendingSortOrder[0] = ! m_AscendingSortOrder[0];
 	}
 	else
 	{
-		if (m_SortColumns[0] == nColumn
-			&& AscendingOrder == m_AscendingSortOrder[0])
-		{
-			return;
-		}
 		// remove the column from the array
 		int i, j;
 		for (i = 0, j = 0; i < countof (m_SortColumns); i++)
@@ -310,6 +301,18 @@ void CAlegrDiffView::SetSortColumn(eColumns nColumn, bool AscendingOrder, bool I
 				m_AscendingSortOrder[j] = m_AscendingSortOrder[i];
 				j++;
 			}
+			else if (Order == SetSortColumnMouseClick)
+			{
+				// if column header was clicked, retain previous sort order
+				if (m_AscendingSortOrder[i])
+				{
+					Order = SetSortColumnAscending;
+				}
+				else
+				{
+					Order = SetSortColumnDescending;
+				}
+			}
 		}
 
 		for (i = MaxColumns - 1; i > 0; i--)
@@ -319,7 +322,7 @@ void CAlegrDiffView::SetSortColumn(eColumns nColumn, bool AscendingOrder, bool I
 		}
 
 		m_SortColumns[0] = eColumns(nColumn);
-		m_AscendingSortOrder[0] = AscendingOrder;
+		m_AscendingSortOrder[0] = (Order != SetSortColumnDescending);
 	}
 
 	UpdateAppSort();
@@ -337,7 +340,7 @@ void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
 		return;
 	}
 
-	SetSortColumn(m_ColumnToItem[nColumn], true, true);
+	SetSortColumn(m_ColumnToItem[nColumn], SetSortColumnMouseClick);
 
 	*pResult = 0;
 }
@@ -1084,22 +1087,19 @@ void CAlegrDiffView::UpdateAppSort()
 {
 	CThisApp * pApp = GetApp();
 
-	pApp->m_FileListSort = (m_SortColumns[0] & 0xFF)
-							| ((m_SortColumns[1] & 0xFF) << 16);
-
-	if ( ! m_AscendingSortOrder[0])
+	for (int i = 0; i < MaxColumns; i++)
 	{
-		pApp->m_FileListSort |= 0x100;
-	}
-	if ( ! m_AscendingSortOrder[1])
-	{
-		pApp->m_FileListSort |= 0x1000000;
+		pApp->m_ColumnSort[i] = m_SortColumns[i];
+		if ( ! m_AscendingSortOrder[i])
+		{
+			pApp->m_ColumnSort[i] |= 0x80;
+		}
 	}
 }
 
 void CAlegrDiffView::OnListviewSortby1stlength()
 {
-	SetSortColumn(ColumnLength1, true);
+	SetSortColumn(ColumnLength1, SetSortColumnAscending);
 }
 
 void CAlegrDiffView::OnUpdateListviewSortby1stlength(CCmdUI *pCmdUI)
@@ -1109,7 +1109,7 @@ void CAlegrDiffView::OnUpdateListviewSortby1stlength(CCmdUI *pCmdUI)
 
 void CAlegrDiffView::OnListviewSortby1stmodificationdate()
 {
-	SetSortColumn(ColumnDate1, true);
+	SetSortColumn(ColumnDate1, SetSortColumnAscending);
 }
 
 void CAlegrDiffView::OnUpdateListviewSortby1stmodificationdate(CCmdUI *pCmdUI)
@@ -1119,7 +1119,7 @@ void CAlegrDiffView::OnUpdateListviewSortby1stmodificationdate(CCmdUI *pCmdUI)
 
 void CAlegrDiffView::OnListviewSortby2ndlength()
 {
-	SetSortColumn(ColumnLength2, true);
+	SetSortColumn(ColumnLength2, SetSortColumnAscending);
 }
 
 void CAlegrDiffView::OnUpdateListviewSortby2ndlength(CCmdUI *pCmdUI)
@@ -1129,7 +1129,7 @@ void CAlegrDiffView::OnUpdateListviewSortby2ndlength(CCmdUI *pCmdUI)
 
 void CAlegrDiffView::OnListviewSortbyComparisonresult()
 {
-	SetSortColumn(ColumnComparisionResult, true);
+	SetSortColumn(ColumnComparisionResult, SetSortColumnAscending);
 }
 
 void CAlegrDiffView::OnUpdateListviewSortbyComparisonresult(CCmdUI *pCmdUI)
@@ -1139,7 +1139,7 @@ void CAlegrDiffView::OnUpdateListviewSortbyComparisonresult(CCmdUI *pCmdUI)
 
 void CAlegrDiffView::OnListviewSortbyFolder()
 {
-	SetSortColumn(ColumnSubdir, true);
+	SetSortColumn(ColumnSubdir, SetSortColumnAscending);
 }
 
 void CAlegrDiffView::OnUpdateListviewSortbyFolder(CCmdUI *pCmdUI)
@@ -1149,7 +1149,7 @@ void CAlegrDiffView::OnUpdateListviewSortbyFolder(CCmdUI *pCmdUI)
 
 void CAlegrDiffView::OnListviewSortbyName()
 {
-	SetSortColumn(ColumnName, true);
+	SetSortColumn(ColumnName, SetSortColumnAscending);
 }
 
 void CAlegrDiffView::OnUpdateListviewSortbyName(CCmdUI *pCmdUI)
@@ -1159,7 +1159,7 @@ void CAlegrDiffView::OnUpdateListviewSortbyName(CCmdUI *pCmdUI)
 
 void CAlegrDiffView::OnListviewSortbyDescendingorder()
 {
-	SetSortColumn(m_SortColumns[0], true, true);
+	SetSortColumn(m_SortColumns[0], SetSortColumnDescending);
 }
 
 void CAlegrDiffView::OnUpdateListviewSortbyDescendingorder(CCmdUI *pCmdUI)
@@ -1169,7 +1169,7 @@ void CAlegrDiffView::OnUpdateListviewSortbyDescendingorder(CCmdUI *pCmdUI)
 
 void CAlegrDiffView::OnListviewSortby2ndmodificationdate()
 {
-	SetSortColumn(ColumnDate2, true);
+	SetSortColumn(ColumnDate2, SetSortColumnAscending);
 }
 
 void CAlegrDiffView::OnUpdateListviewSortby2ndmodificationdate(CCmdUI *pCmdUI)

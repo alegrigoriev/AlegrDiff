@@ -33,6 +33,7 @@ enum eColumns
 
 class CAlegrDiffApp : public CWinApp
 {
+	bool m_bIsWin9x;
 public:
 	void OpenPairOfPathnames(LPTSTR path1, LPTSTR path2);
 	void CompareFiles(LPCTSTR name1, LPCTSTR name2);
@@ -42,6 +43,8 @@ public:
 	void NotifyFilePairChanged(FilePair * pPair);
 	CAlegrDiffApp();
 	~CAlegrDiffApp();
+
+	bool IsWindows9x() const { return m_bIsWin9x; }
 
 	CApplicationProfile Profile;
 
@@ -94,9 +97,8 @@ public:
 	CString m_RecentFiles[15];
 
 	UCHAR m_ColumnArray[MaxColumns];
+	UCHAR m_ColumnSort[MaxColumns];
 	SHORT m_ColumnWidthArray[MaxColumns];
-
-	DWORD m_FileListSort;
 
 	CString m_sFilenameFilter;
 	CString m_sBinaryFilesFilter;

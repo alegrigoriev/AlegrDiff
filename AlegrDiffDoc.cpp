@@ -690,9 +690,50 @@ void CFilePairDoc::OnEditCopy()
 	{
 		EmptyClipboard();
 		CopyTextToMemory(pMem, Len, m_SelectionAnchor, m_CaretPos);
+#ifndef _UNICODE
 		GlobalUnlock(hMem);
+		SetClipboardData(CF_TEXT, hMem);
+#else
 
-		SetClipboardData(CF_UNICODETEXT, hMem);
+		if ( ! GetApp()->IsWindows9x())
+		{
+			// if UNICODE OS, set CF_UNICODETEXT data
+			GlobalUnlock(hMem);
+			SetClipboardData(CF_UNICODETEXT, hMem);
+		}
+		else
+		{
+			// if non-UNICODE OS, set CF_TEXT data
+			size_t MbcsBufSize = WideCharToMultiByte(CP_ACP, 0, pMem, Len, NULL, 0, NULL, 0);
+			TRACE("UNICODE chars=%d, Requered MBCS buffer size = %d\n", Len, MbcsBufSize);
+
+			HGLOBAL hMbcsMem = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, MbcsBufSize);
+			if (NULL != hMbcsMem)
+			{
+				LPSTR pMbcsMem = LPSTR(GlobalLock(hMbcsMem));
+				if (NULL != pMbcsMem)
+				{
+					if (0 != WideCharToMultiByte(CP_ACP, 0, pMem, Len,
+												pMbcsMem, MbcsBufSize, NULL, 0))
+					{
+						GlobalUnlock(hMbcsMem);
+						SetClipboardData(CF_TEXT, hMbcsMem);
+					}
+					else
+					{
+						GlobalUnlock(hMbcsMem);
+						GlobalFree(hMbcsMem);
+					}
+				}
+				else
+				{
+					GlobalFree(hMbcsMem);
+				}
+			}
+			GlobalUnlock(hMem);
+			GlobalFree(hMem);
+		}
+#endif
 		// set text to clipboard
 		CloseClipboard();
 	}

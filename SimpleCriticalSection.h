@@ -12,20 +12,20 @@ public:
 	{
 		DeleteCriticalSection( & m_cs);
 	}
-	void Lock() throw()
+	void Lock() volatile throw()
 	{
-		EnterCriticalSection( & m_cs);
+		EnterCriticalSection(const_cast<CRITICAL_SECTION *>( & m_cs));
 	}
-	void Unlock() throw()
+	void Unlock() volatile throw()
 	{
-		LeaveCriticalSection( & m_cs);
+		LeaveCriticalSection(const_cast<CRITICAL_SECTION *>( & m_cs));
 	}
 };
 class CSimpleCriticalSectionLock
 {
-	CSimpleCriticalSection & m_cs;
+	CSimpleCriticalSection volatile & m_cs;
 public:
-	CSimpleCriticalSectionLock(CSimpleCriticalSection & cs)
+	CSimpleCriticalSectionLock(CSimpleCriticalSection volatile & cs)
 		: m_cs(cs)
 	{
 		cs.Lock();

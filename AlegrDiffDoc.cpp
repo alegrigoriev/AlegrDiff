@@ -1691,7 +1691,7 @@ public:
 	DECLARE_MESSAGE_MAP()
 };
 
-BEGIN_MESSAGE_MAP(CMergedFilesSaveDlg, CFileDialog)
+BEGIN_MESSAGE_MAP(CMergedFilesSaveDlg, CFileDialogWithHistory)
 	//{{AFX_MSG_MAP(CMergedFilesSaveDlg)
 	ON_BN_CLICKED(IDC_CHECK_UNICODE, OnCheckUnicode)
 	//}}AFX_MSG_MAP

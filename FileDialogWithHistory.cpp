@@ -145,17 +145,45 @@ void CFileDialogWithHistory::OnComboSelendOK()
 			{
 				pTmp->GetWindowText(name);
 			}
+#ifdef _UNICODE
+			OSVERSIONINFO vi;
+			ZeroMemory(&vi, sizeof(OSVERSIONINFO));
+			vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+			::GetVersionEx(&vi);
 
-			pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(str)));
-			pParent->SendMessage(WM_COMMAND, IDOK, 0);
-
-			if (m_bOpenFileDialog)
+			if (vi.dwPlatformId != VER_PLATFORM_WIN32_NT)
 			{
-				pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR("")));
+				CStringA nameA(name);
+				CStringA strA(str);
+				pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCSTR(strA)));
+				CString newText;
+				pParent->GetDlgItem(edt1)->GetWindowText(newText);
+
+				pParent->SendMessage(WM_COMMAND, IDOK, 0);
+
+				if (m_bOpenFileDialog)
+				{
+					pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCSTR("")));
+				}
+				else
+				{
+					pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCSTR(nameA)));
+				}
 			}
 			else
+#endif
 			{
-				pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(name)));
+				pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(str)));
+				pParent->SendMessage(WM_COMMAND, IDOK, 0);
+
+				if (m_bOpenFileDialog)
+				{
+					pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(_T(""))));
+				}
+				else
+				{
+					pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(name)));
+				}
 			}
 			if (NULL != pTmp)
 			{
@@ -170,8 +198,8 @@ INT_PTR CFileDialogWithHistory::DoModal()
 {
 	m_RecentFolders.Load();
 	// if there is no initial directory set, extract it from the name or get from the history
-	if (0 && (NULL == m_ofn.lpstrInitialDir
-			|| 0 == m_ofn.lpstrInitialDir[0]))
+	if (NULL == m_ofn.lpstrInitialDir
+		|| 0 == m_ofn.lpstrInitialDir[0])
 	{
 		// get the initial dir from the name, if any specified, or the first from the history
 		TCHAR Buf[512];

@@ -1482,6 +1482,8 @@ BEGIN
     IDS_STRING_FINGERPRINT_CREATED 
                             "Directory ""%s"" fingerprint calculated and saved as file ""%s"""
     IDS_STRING_OPEN_FINGERPRINT_TITLE "Open Fingerprint File"
+    IDS_STRING_COLUMN_1ST_LENGTH "1st Legth"
+    IDS_STRING_COLUMN_2ND_LENGTH "2nd Length"
 END
 
 STRINGTABLE 

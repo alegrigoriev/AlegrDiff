@@ -67,7 +67,7 @@ int CFolderDialog::DoModal()
 		::EnableWindow(m_bi.hwndOwner, FALSE);
 	}
 
-	OleInitialize(NULL);
+	HRESULT hr = OleInitialize(NULL);
 //#if 0
 	_AFX_THREAD_STATE* pThreadState = AfxGetThreadState();
 	ASSERT(pThreadState->m_pAlternateWndInit == NULL);
@@ -97,7 +97,11 @@ int CFolderDialog::DoModal()
 			pMalloc = NULL;
 		}
 	}
-	OleUninitialize();
+
+	if (SUCCEEDED(hr))
+	{
+		OleUninitialize();
+	}
 
 //#if 0
 	//if (lpResult)

@@ -94,8 +94,7 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 		int i, j;
 		for (i = 0, j = 0; i < sizeof m_sHistory / sizeof m_sHistory[0]; i++)
 		{
-			if (0 == m_sFirstDir.CompareNoCase(m_sHistory[i])
-				|| 0 == m_sSecondDir.CompareNoCase(m_sHistory[i]))
+			if (0 == m_sSecondDir.CompareNoCase(m_sHistory[i]))
 			{
 				continue;
 			}
@@ -105,13 +104,31 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 			}
 			j++;
 		}
-		// remove two last dirs from the list
-		for (i = (sizeof m_sHistory / sizeof m_sHistory[0]) - 1; i >= 2; i--)
+		// remove last dir from the list
+		for (i = (sizeof m_sHistory / sizeof m_sHistory[0]) - 1; i >= 1; i--)
 		{
-			m_sHistory[i] = m_sHistory[i - 2];
+			m_sHistory[i] = m_sHistory[i - 1];
+		}
+		m_sHistory[0] = m_sSecondDir;
+
+		for (i = 0, j = 0; i < sizeof m_sHistory / sizeof m_sHistory[0]; i++)
+		{
+			if (0 == m_sFirstDir.CompareNoCase(m_sHistory[i]))
+			{
+				continue;
+			}
+			if (i != j)
+			{
+				m_sHistory[j] = m_sHistory[i];
+			}
+			j++;
+		}
+		// remove last dir from the list
+		for (i = (sizeof m_sHistory / sizeof m_sHistory[0]) - 1; i >= 1; i--)
+		{
+			m_sHistory[i] = m_sHistory[i - 1];
 		}
 		m_sHistory[0] = m_sFirstDir;
-		m_sHistory[1] = m_sSecondDir;
 		// write last dirs to the registry
 		pApp->Profile.UnloadSection(_T("History"));
 	}
@@ -133,8 +150,10 @@ END_MESSAGE_MAP()
 void CCompareDirsDialog::OnButtonBrowseFirstDir()
 {
 	m_FirstDirCombo.GetWindowText(m_sFirstDir);
-	CFolderDialog dlg("Select First Folder To Compare",
-					m_sFirstDir);
+	CString DlgTitle;
+	DlgTitle.LoadString(IDS_FIRST_FOLDER_DLG_TITLE);
+	CFolderDialog dlg(DlgTitle, m_sFirstDir);
+
 	if (IDOK == dlg.DoModal())
 	{
 		m_FirstDirCombo.SetWindowText(dlg.GetFolderPath());
@@ -144,8 +163,10 @@ void CCompareDirsDialog::OnButtonBrowseFirstDir()
 void CCompareDirsDialog::OnButtonBrowseSecondDir()
 {
 	m_SecondDirCombo.GetWindowText(m_sSecondDir);
-	CFolderDialog dlg("Select Second Folder To Compare",
-					m_sSecondDir);
+	CString DlgTitle;
+	DlgTitle.LoadString(IDS_SECOND_FOLDER_DLG_TITLE);
+	CFolderDialog dlg(DlgTitle, m_sSecondDir);
+
 	if (IDOK == dlg.DoModal())
 	{
 		m_SecondDirCombo.SetWindowText(dlg.GetFolderPath());

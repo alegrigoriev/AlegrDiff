@@ -54,6 +54,8 @@ public:
 	CString m_FileDir1;
 	CString m_FileDir2;
 	CString m_LastSaveMergedDir;
+	CString m_CopyFilesDir;
+
 	int m_UsedFilenameFilter;
 
 	CString m_sFilenameFilter;
@@ -95,6 +97,10 @@ public:
 	afx_msg void OnFileComparedirectories();
 	afx_msg void OnFileComparefiles();
 	afx_msg void OnFilePreferences();
+	afx_msg void OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateViewShowLineNumbers(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateEditAccept(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateEditDecline(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

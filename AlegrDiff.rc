@@ -102,16 +102,18 @@ BEGIN
     BUTTON      ID_FILE_PREFERENCES
     BUTTON      ID_FILE_MERGE_SAVE
     SEPARATOR
-    BUTTON      ID_VIEW_SHOW_LINE_NUMBERS
-    BUTTON      ID_EDIT_GOTONEXTDIFF
-    BUTTON      ID_EDIT_GOTOPREVDIFF
     BUTTON      ID_EDIT_COPY
     SEPARATOR
-    BUTTON      ID_FILE_PRINT
-    SEPARATOR
-    BUTTON      ID_APP_ABOUT
+    BUTTON      ID_EDIT_GOTONEXTDIFF
+    BUTTON      ID_EDIT_GOTOPREVDIFF
     BUTTON      ID_EDIT_ACCEPT
     BUTTON      ID_EDIT_DECLINE
+    SEPARATOR
+    BUTTON      ID_VIEW_SHOW_LINE_NUMBERS
+    BUTTON      ID_VIEW_IGNORE_WHITESPACES
+    SEPARATOR
+    BUTTON      ID_FILE_PRINT
+    BUTTON      ID_APP_ABOUT
 END
 
 
@@ -162,6 +164,8 @@ BEGIN
         MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_APP_EXIT
+        MENUITEM "Copy Files From 1st Folder",  ID_FILE_COPY_FIRST_DIR
+        MENUITEM "Copy Files From 2nd Folder",  ID_FILE_COPY_SECOND_DIR
     END
     POPUP "&Edit"
     BEGIN
@@ -232,7 +236,6 @@ END
 
 IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
 BEGIN
-    27,             ID_WINDOW_CLOSE_DIFF,   ASCII,  NOINVERT
     "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
     "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     "F",            ID_EDIT_FIND,           VIRTKEY, CONTROL, NOINVERT
@@ -244,6 +247,7 @@ BEGIN
     "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
     VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
     VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_ESCAPE,      ID_WINDOW_CLOSE_DIFF,   VIRTKEY, NOINVERT
     VK_F3,          ID_EDIT_FIND_NEXT,      VIRTKEY, NOINVERT
     VK_F3,          ID_EDIT_FIND_WORD_NEXT, VIRTKEY, CONTROL, NOINVERT
     VK_F3,          ID_EDIT_FIND_PREV,      VIRTKEY, SHIFT, NOINVERT
@@ -256,6 +260,7 @@ BEGIN
     VK_F7,          ID_EDIT_GOTOPREVDIFF,   VIRTKEY, SHIFT, NOINVERT
     VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    "W",            ID_VIEW_IGNORE_WHITESPACES, VIRTKEY, CONTROL, NOINVERT
     "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
 END
@@ -294,10 +299,10 @@ BEGIN
     LTEXT           "&First directory:",IDC_STATIC,7,7,43,8
     COMBOBOX        IDC_COMBO_FIRST_DIR,7,25,167,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_DIR,183,24,17,14
     LTEXT           "&Second directory:",IDC_STATIC,7,43,54,8
     COMBOBOX        IDC_COMBO_SECOND_DIR,7,59,167,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_DIR,183,24,17,14
     PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SECOND_DIR,183,58,17,14
     CONTROL         "Include &subdirectories",IDC_CHECK_INCLUDE_SUBDIRS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,122,10
@@ -364,10 +369,10 @@ BEGIN
     LTEXT           "&First directory:",IDC_STATIC,7,7,43,8
     COMBOBOX        IDC_COMBO_FIRST_DIR,7,25,167,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_DIR,183,24,17,14
     LTEXT           "&Second directory:",IDC_STATIC,7,43,54,8
     COMBOBOX        IDC_COMBO_SECOND_DIR,7,59,167,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_DIR,183,24,17,14
     PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SECOND_DIR,183,58,17,14
     CONTROL         "Include &subdirectories",IDC_CHECK_INCLUDE_SUBDIRS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,122,10
@@ -457,7 +462,7 @@ BEGIN
                     ES_AUTOHSCROLL
 END
 
-IDD_PROPPAGE_VIEW_PREFERENCES DIALOG DISCARDABLE  0, 0, 195, 127
+IDD_PROPPAGE_VIEW_PREFERENCES DIALOG DISCARDABLE  0, 0, 208, 118
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "View"
 FONT 8, "MS Sans Serif"
@@ -468,15 +473,20 @@ BEGIN
     CONTROL         "Spin1",IDC_SPIN1,"msctls_updown32",UDS_SETBUDDYINT | 
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
                     UDS_NOTHOUSANDS,87,15,10,14
-    PUSHBUTTON      "Font...",IDC_BUTTON_NORMAL_FONT,140,35,36,17
-    PUSHBUTTON      "Font...",IDC_BUTTON_INSERTED_FONT,140,56,36,17
-    PUSHBUTTON      "Font...",IDC_BUTTON_ERASED_FONT,139,77,37,17
-    CTEXT           " Normal Text",IDC_STATIC_NORMAL_TEXT,8,36,113,16,
+    PUSHBUTTON      "Font...",IDC_BUTTON_NORMAL_FONT,102,35,36,17
+    PUSHBUTTON      "Font...",IDC_BUTTON_INSERTED_FONT,102,56,36,17
+    PUSHBUTTON      "Font...",IDC_BUTTON_ERASED_FONT,101,77,37,17
+    CTEXT           " Normal Text",IDC_STATIC_NORMAL_TEXT,8,36,89,16,
                     SS_CENTERIMAGE
-    CTEXT           " Added Text",IDC_STATIC_ADDED_TEXT,8,57,113,16,
+    CTEXT           " Added Text",IDC_STATIC_ADDED_TEXT,8,57,89,16,
                     SS_CENTERIMAGE
-    CTEXT           " Deleted Text",IDC_STATIC_DELETED_TEXT,8,77,113,16,
+    CTEXT           " Deleted Text",IDC_STATIC_DELETED_TEXT,8,77,89,16,
                     SS_CENTERIMAGE
+    PUSHBUTTON      "Background...",IDC_BUTTON_NORMAL_BACKGROUND,145,35,50,
+                    17
+    PUSHBUTTON      "Background...",IDC_BUTTON_ADDED_BACKGROUND,145,56,50,17
+    PUSHBUTTON      "Background...",IDC_BUTTON_ERASED_BACKGROUND,145,77,50,
+                    17
 END
 
 IDD_DIALOG_ACCEPT_OR_DECLINE_ALL DIALOG DISCARDABLE  0, 0, 179, 82
@@ -621,9 +631,9 @@ BEGIN
     IDD_PROPPAGE_VIEW_PREFERENCES, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 188
+        RIGHTMARGIN, 201
         TOPMARGIN, 7
-        BOTTOMMARGIN, 120
+        BOTTOMMARGIN, 111
     END
 
     IDD_DIALOG_ACCEPT_OR_DECLINE_ALL, DIALOG
@@ -814,6 +824,8 @@ BEGIN
     ID_VIEW_IGNORE_WHITESPACES 
                             "Hide or show whitespace-only difference\nIgnore whitespaces"
     ID_FILE_MERGE_SAVE      "Merge differences from both files and save the result\nMerge files"
+    ID_FILE_COPY_FIRST      "Copy the selected files from first folder to another folder\nCopy from first folder"
+    ID_FILE_COPY_SECOND     "Copy the selected files from second folder to another folder\nCopy from second folder"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -827,6 +839,20 @@ BEGIN
     IDS_ALL_FILES           "|All Files (*.*)|*||"
     IDS_SAVE_MERGED_DIALOG_TITLE "Merge Files And Save"
     IDS_STRING_COULDNT_SAVE_MERGED "Could not save the merged file"
+    IDS_COPY_FROM_DIR_FORMAT "Copy From ""%s""..."
+    IDS_STRING_FILES_UNACCESSIBLE "Files could not be read"
+    IDS_STRING_FILES_IDENTICAL "Files are identical"
+    IDS_VERSION_INFO_DIFFERENT "Different only in version stamp"
+    IDS_DIFFERENT_IN_SPACES "Different in spaces only"
+    IDS_FILES_DIFFERENT     "Files are DIFFERENT"
+    IDS_STRING_ONLY_ONE_EXISTS "File exists only in ""%s%s"""
+    IDS_COPY_FILES_TITLE    "Select Folder To Copy Files To"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FIRST_FOLDER_DLG_TITLE "Select First Folder To Compare"
+    IDS_SECOND_FOLDER_DLG_TITLE "Select Second Folder To Compare"
 END
 
 #endif    // English (U.S.) resources

@@ -111,6 +111,7 @@
 #define IDC_CHECK_USE_MD5               1073
 #define IDC_CHECK1                      1074
 #define IDC_CHECK_UNICODE               1074
+#define IDC_CHECK_SAVE_AS_UNICODE       1074
 #define IDC_PROGRESS1                   1075
 #define IDC_STATIC_PERCENT              1076
 #define IDC_STATIC_FILENAME             1077
@@ -168,6 +169,8 @@
 #define IDS_STRING_COLUMN_2ND_MODIFIED  32832
 #define IDS_STRING_COLUMN_COMPARISON_RESULT 32833
 #define IDS_STRING_UNABLE_TO_CREATE_FILE 32834
+#define IDS_STRING32835                 32835
+#define IDS_STRING_FINGERPRINT_CREATED  32835
 #define IDS_DIRECTORY_ACCESS_DENIED     32848
 #define IDS_DIRECTORY_NOT_FOUND         32849
 #define IDS_PREFERENCES                 32850

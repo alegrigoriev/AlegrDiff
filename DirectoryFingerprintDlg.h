@@ -25,6 +25,7 @@ public:
 
 	BOOL m_bIncludeDirectoryStructure;
 	BOOL m_bIncludeSubdirectories;
+	BOOL m_bSaveAsUnicode;
 
 	CComboBox m_DirCombo;
 	CString m_sDirectory;

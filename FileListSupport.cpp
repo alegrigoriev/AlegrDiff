@@ -2377,13 +2377,13 @@ void FilePair::FreeLinePairData()
 
 }
 
-FilePair::eFileComparisionResult FilePair::PreCompareFiles(BOOL volatile & bStopOperation)
+FilePair::eFileComparisionResult FilePair::PreCompareFiles(CMd5HashCalculator * pMd5Calc, BOOL volatile & bStopOperation)
 {
 	// TODO: different function for binary comparision
 	if ((pFirstFile != NULL && pFirstFile->m_IsBinary)
 		|| (pSecondFile != NULL && pSecondFile->m_IsBinary))
 	{
-		return PreCompareBinaryFiles(bStopOperation);
+		return PreCompareBinaryFiles(pMd5Calc, bStopOperation);
 	}
 	if (! LoadFiles())
 	{
@@ -2750,7 +2750,7 @@ FilePair::eFileComparisionResult FilePair::CompareBinaryFiles(BOOL volatile & bS
 	return ResultUnknown;
 }
 
-FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(BOOL volatile & bStopOperation)
+FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalculator * pMd5Calc, BOOL volatile & bStopOperation)
 {
 	CThisApp * pApp = GetApp();
 	// comparison can be done through CRC, or direct comparison
@@ -2771,12 +2771,12 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(BOOL volatile &
 		if ( ! pFirstFile->m_bMd5Calculated)
 		{
 			m_ComparisionResult = CalculatingFirstFingerprint;
-			pFirstFile->CalculateHashes(bStopOperation);
+			pFirstFile->CalculateHashes(pMd5Calc, bStopOperation);
 		}
 		if ( ! pSecondFile->m_bMd5Calculated)
 		{
 			m_ComparisionResult = CalculatingSecondFingerprint;
-			pSecondFile->CalculateHashes(bStopOperation);
+			pSecondFile->CalculateHashes(pMd5Calc, bStopOperation);
 		}
 	}
 	// if files have MD5 calculated, use it
@@ -3681,71 +3681,9 @@ int LinePair::DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces)
 	return position + adj;
 }
 
-BOOL FileItem::InitHashCalculation()
+BOOL FileItem::CalculateHashes(CMd5HashCalculator * pMd5Calc, BOOL volatile & bStopOperation)
 {
-	DeinitHashCalculation();
-	m_HashBuf = (PBYTE)VirtualAlloc(NULL, 0x10000, MEM_COMMIT, PAGE_READWRITE);
-	CryptAcquireContext( & m_CryptProvider, NULL, MS_DEF_PROV, PROV_RSA_FULL,
-						CRYPT_VERIFYCONTEXT);
-	return NULL != m_HashBuf
-			&& NULL != m_CryptProvider;
-}
-
-void FileItem::DeinitHashCalculation()
-{
-	if (NULL != m_CryptProvider)
-	{
-		CryptReleaseContext(m_CryptProvider, 0);
-		m_CryptProvider = NULL;
-	}
-	if (NULL != m_HashBuf)
-	{
-		VirtualFree(m_HashBuf, 0, MEM_RELEASE);
-		m_HashBuf = NULL;
-	}
-}
-
-BOOL FileItem::CalculateHashes(BOOL volatile & bStopOperation)
-{
-	if (NULL == m_HashBuf
-		|| NULL == m_CryptProvider)
-	{
-		return FALSE;
-	}
-	HCRYPTHASH hash = NULL;
-	HANDLE hFile = NULL;
-	BOOL res = TRUE;
-	hFile = CreateFile(GetFullName(), GENERIC_READ, FILE_SHARE_READ, NULL,
-						OPEN_EXISTING, FILE_FLAG_NO_BUFFERING, NULL);
-	if (NULL == hFile || INVALID_HANDLE_VALUE == hFile)
-	{
-		return FALSE;
-	}
-
-	if (CryptCreateHash(m_CryptProvider, CALG_MD5, NULL, NULL, & hash))
-	{
-		for (ULONGLONG BytesLeft = m_Length; BytesLeft != 0 && ! bStopOperation; )
-		{
-			DWORD ToRead = 0x10000;
-			if (ToRead > BytesLeft)
-			{
-				ToRead = BytesLeft;
-			}
-			DWORD BytesRead;
-			if ( ! ReadFile(hFile, m_HashBuf, 0x10000, & BytesRead, NULL)
-				|| BytesRead != ToRead)
-			{
-				res = FALSE;
-				break;
-			}
-			CryptHashData(hash, m_HashBuf, BytesRead, 0);
-			BytesLeft -= BytesRead;
-		}
-		DWORD HashLen = 20;
-		CryptGetHashParam(hash, HP_HASHVAL, m_Md5, & HashLen, 0);
-		CryptDestroyHash(hash);
-	}
-	CloseHandle(hFile);
+	BOOL res = pMd5Calc->CalculateFileMd5Hash(GetFullName(), m_Md5, bStopOperation);
 	if (res)
 	{
 		m_bMd5Calculated = true;
@@ -3759,5 +3697,3 @@ CSmallAllocator LinePair::m_Allocator(sizeof LinePair);
 CSmallAllocator FileDiffSection::m_Allocator(sizeof FileDiffSection);
 
 //CSimpleCriticalSection FileItem::m_Cs;
-BYTE * FileItem::m_HashBuf = NULL;
-HCRYPTPROV FileItem::m_CryptProvider = NULL;

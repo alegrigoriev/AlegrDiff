@@ -19,15 +19,32 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CSaveFileListDlg)
 	enum { IDD = IDD_DIALOG_SAVE_FILE_LIST };
-	// NOTE: the ClassWizard will add data members here
+	CEdit	m_eFilename;
+	BOOL	m_bIncludeComparisonResult;
+	BOOL	m_bIncludeDifferentFiles;
+	BOOL	m_bIncludeDifferentInBlanksFiles;
+	BOOL	m_bIncludeFolder1OnlyFiles;
+	BOOL	m_bIncludeFolder2OnlyFiles;
+	BOOL	m_bIncludeFullPath;
+	BOOL	m_bIncludeIdenticalFiles;
+	BOOL	m_bIncludeSubdirectoryName;
+	BOOL	m_bIncludeTimestamp;
+	CString	m_sFilename;
+	int		m_IncludeFilesSelect;
 	//}}AFX_DATA
 
-
+	bool m_bNeedUpdateControls;
+	CApplicationProfile m_Profile;
 // Overrides
 	// ClassWizard generated virtual function overrides
+	LRESULT OnKickIdle(WPARAM, LPARAM);
+	void OnUpdateOk(CCmdUI * pCmdUI);
+	void OnUpdateCheckSubdirectory(CCmdUI * pCmdUI);
+	void OnUpdateCheckIncludeGroup(CCmdUI * pCmdUI);
 	//{{AFX_VIRTUAL(CSaveFileListDlg)
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -35,7 +52,8 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CSaveFileListDlg)
-	// NOTE: the ClassWizard will add member functions here
+	afx_msg void OnButtonBrowse();
+	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

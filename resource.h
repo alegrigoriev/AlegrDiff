@@ -26,6 +26,7 @@
 #define IDD_DIALOG_FIND                 142
 #define IDD_DIALOG_PROPERTIES           143
 #define IDD_DIALOG_COMPARE_FILES        144
+#define IDD_DIALOG_SAVE_FILE_LIST       145
 #define IDC_CURSOR_BEAM                 150
 #define IDC_COMBO_FIRST_DIR             1000
 #define IDC_COMBO_SECOND_DIR            1001
@@ -81,6 +82,19 @@
 #define IDC_RADIO_FIRST_FILE            1051
 #define IDC_RADIO2                      1052
 #define IDC_RADIO3                      1053
+#define IDC_RADIO_INCLUDE_FILES         1054
+#define IDC_CHECK_IDENTICAL             1055
+#define IDC_CHECK_DIFFERENT             1056
+#define IDC_CHECK_DIFFERENT_IN_BLANKS   1057
+#define IDC_CHECK_FOLDER1_ONLY          1058
+#define IDC_CHECK_FOLDER2_ONLY          1059
+#define IDC_CHECK_FULL_PATH             1060
+#define IDC_CHECK_SUBDIRECTORY          1061
+#define IDC_CHECK_TIMESTAMP             1062
+#define IDC_CHECK_COMPARISON_RESULT     1063
+#define IDC_EDIT_FILENAME               1064
+#define IDC_BUTTON_BROWSE               1065
+#define IDC_RADIO_SELECTED_GROUPS       1066
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -102,7 +116,9 @@
 #define ID_FILE_COPY_FIRST_DIR          32801
 #define ID_FILE_COPY_SECOND_DIR         32802
 #define ID_VIEW_IGNORE_WHITESPACES      32803
+#define IDS_SAVE_LIST_TITLE             32804
 #define ID_FILE_MERGE_SAVE              32805
+#define IDS_SAVE_LIST_FILENAME_FILTER   32806
 #define ID_FILE_COPY_FIRST              32807
 #define ID_FILE_COPY_SECOND             32808
 #define ID_VIEW_FILE1_VERSION           32809
@@ -113,6 +129,7 @@
 #define ID_LISTVIEW_OPEN1               32814
 #define ID_MERGE_INCLUDE                32815
 #define ID_MERGE_EXCLUDE                32816
+#define ID_FILE_SAVE_LIST               32817
 #define IDS_DIRECTORY_ACCESS_DENIED     32848
 #define IDS_DIRECTORY_NOT_FOUND         32849
 #define IDS_PREFERENCES                 32850
@@ -138,6 +155,7 @@
 #define IDS_COPY_FILE_TO_FOLDER         32870
 #define IDS_COPY_FIRST_FILE_MENU_DISABLED 32871
 #define IDS_COPY_SECOND_FILE_MENU_DISABLED 32872
+#define IDS_UNABLE_TO_CREATE_FILE       57608
 #define ID_INDICATOR_CARET_POS          0xE705
 
 // Next default values for new objects
@@ -145,9 +163,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        144
-#define _APS_NEXT_COMMAND_VALUE         32817
-#define _APS_NEXT_CONTROL_VALUE         1054
+#define _APS_NEXT_RESOURCE_VALUE        146
+#define _APS_NEXT_COMMAND_VALUE         32818
+#define _APS_NEXT_CONTROL_VALUE         1067
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

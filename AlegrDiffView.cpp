@@ -9,6 +9,7 @@
 #include "DiffFileView.h"
 #include <functional>
 #include <algorithm>
+#include "SaveFileListDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -39,6 +40,8 @@ BEGIN_MESSAGE_MAP(CAlegrDiffView, CListView)
 	ON_COMMAND(ID_FILE_COPY_FIRST_DIR, OnFileCopyFirstDir)
 	ON_UPDATE_COMMAND_UI(ID_FILE_COPY_SECOND_DIR, OnUpdateFileCopySecondDir)
 	ON_COMMAND(ID_FILE_COPY_SECOND_DIR, OnFileCopySecondDir)
+	ON_COMMAND(ID_FILE_SAVE_LIST, OnFileSaveList)
+	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE_LIST, OnUpdateFileSaveList)
 	//}}AFX_MSG_MAP
 	// Standard printing commands
 	ON_UPDATE_COMMAND_UI(ID_LISTVIEW_OPEN1, OnUpdateListviewOpen)
@@ -626,4 +629,39 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 	}
 	CString ComparisionResult = pPair->GetComparisionResult();
 	pListCtrl->SetItemText(item, ColumnComparisionResult - ! m_bSubdirColumnPresent, ComparisionResult);
+}
+
+void CAlegrDiffView::OnFileSaveList()
+{
+	CSaveFileListDlg dlg;
+	if (IDOK != dlg.DoModal())
+	{
+		return;
+	}
+	FILE * file = fopen(dlg.m_sFilename, "wt");
+	if (NULL == file)
+	{
+		CString s;
+		s.Format(IDS_UNABLE_TO_CREATE_FILE, LPCTSTR(dlg.m_sFilename));
+		AfxMessageBox(s);
+		return;
+	}
+	for (vector<FilePair *>::iterator ii = m_PairArray.begin(); ii < m_PairArray.end(); ii++)
+	{
+		FilePair * pFilePair = *ii;
+		if (1 == dlg.m_IncludeFilesSelect)  // selected files
+		{
+
+		}
+		else if (2 == dlg.m_IncludeFilesSelect) // include groups
+		{
+		}
+		// else: all files
+	}
+	fclose(file);
+}
+
+void CAlegrDiffView::OnUpdateFileSaveList(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(m_PairArray.size() != 0);
 }

@@ -242,6 +242,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Copy Files From 1st Folder",  ID_FILE_COPY_FIRST_DIR
         MENUITEM "Copy Files From 2nd Folder",  ID_FILE_COPY_SECOND_DIR
+        MENUITEM "Save File List...",           ID_FILE_SAVE_LIST
         MENUITEM SEPARATOR
         MENUITEM "Preferences...",              ID_FILE_PREFERENCES
         MENUITEM SEPARATOR
@@ -589,6 +590,45 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,133,92,50,14
 END
 
+IDD_DIALOG_SAVE_FILE_LIST DIALOG DISCARDABLE  0, 0, 228, 182
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Save list of files"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&File name:",IDC_STATIC,7,7,58,9
+    EDITTEXT        IDC_EDIT_FILENAME,7,21,189,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE,203,21,18,14
+    GROUPBOX        "Attributes to save: ",IDC_STATIC,7,40,101,64
+    CONTROL         "Full &path",IDC_CHECK_FULL_PATH,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,51,93,10
+    CONTROL         "S&ubdirectory name",IDC_CHECK_SUBDIRECTORY,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,63,93,10
+    CONTROL         "Files &modification time",IDC_CHECK_TIMESTAMP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,75,93,10
+    CONTROL         "&Comparison result",IDC_CHECK_COMPARISON_RESULT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,87,93,10
+    GROUPBOX        "Include to list: ",IDC_STATIC,120,40,101,114
+    CONTROL         "&All files",IDC_RADIO_INCLUDE_FILES,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,126,51,88,10
+    CONTROL         "&Selected files",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,
+                    126,63,88,10
+    CONTROL         "Selected &groups:",IDC_RADIO_SELECTED_GROUPS,"Button",
+                    BS_AUTORADIOBUTTON,126,75,88,10
+    CONTROL         "&Identical files",IDC_CHECK_IDENTICAL,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,126,89,88,10
+    CONTROL         "&Different files",IDC_CHECK_DIFFERENT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,126,101,88,10
+    CONTROL         "Different in &blanks only",
+                    IDC_CHECK_DIFFERENT_IN_BLANKS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,126,113,88,10
+    CONTROL         "Folder &1 only files",IDC_CHECK_FOLDER1_ONLY,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,126,125,88,10
+    CONTROL         "Folder &2 only files",IDC_CHECK_FOLDER2_ONLY,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,126,137,88,10
+    DEFPUSHBUTTON   "OK",IDOK,56,161,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,122,161,50,14
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -747,6 +787,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 106
     END
+
+    IDD_DIALOG_SAVE_FILE_LIST, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 221
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 175
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -802,6 +850,7 @@ BEGIN
     ID_FILE_PAGE_SETUP      "Change the printing options\nPage Setup"
     ID_FILE_PRINT_SETUP     "Change the printer and printing options\nPrint Setup"
     ID_FILE_PRINT           "Print the active document\nPrint"
+    IDS_UNABLE_TO_CREATE_FILE "Unable to create file ""%s"""
     ID_FILE_PRINT_PREVIEW   "Display full pages\nPrint Preview"
 END
 
@@ -921,7 +970,10 @@ BEGIN
     ID_FILE_COPY_SECOND_DIR "Copy selected files from the second dir\nCopy from second dir"
     ID_VIEW_IGNORE_WHITESPACES 
                             "Hide or show whitespace-only difference\nIgnore whitespaces"
+    IDS_SAVE_LIST_TITLE     "Save file list"
     ID_FILE_MERGE_SAVE      "Merge differences from both files and save the result\nMerge files"
+    IDS_SAVE_LIST_FILENAME_FILTER 
+                            "Text files (*.txt)|*.txt|All files (*.*)|*||"
     ID_FILE_COPY_FIRST      "Copy the selected files from first folder to another folder\nCopy from first folder"
     ID_FILE_COPY_SECOND     "Copy the selected files from second folder to another folder\nCopy from second folder"
     ID_VIEW_FILE1_VERSION   "Show first file text\nFile 1 text"
@@ -972,6 +1024,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     ID_MERGE_EXCLUDE        "Exclude the selected text from the merged file\nExclude text"
+    ID_FILE_SAVE_LIST       "Save list of files as a text file\nSave file list"
 END
 
 #endif    // English (U.S.) resources

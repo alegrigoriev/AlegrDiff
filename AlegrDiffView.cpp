@@ -118,6 +118,8 @@ void CAlegrDiffView::OnInitialUpdate()
 	// set style, header columns
 	CListCtrl * pList = &GetListCtrl();
 	CHeaderCtrl * pHeader = pList->GetHeaderCtrl();
+	CAlegrDiffDoc * pDoc = GetDocument();
+
 	pList->InsertColumn(ColumnName, "File Name", LVCFMT_LEFT, 200, ColumnName);
 	pList->InsertColumn(ColumnSubdir, "Subdirectory", LVCFMT_LEFT, 200, ColumnSubdir);
 	pList->InsertColumn(ColumnDate1, "1st Modified at", LVCFMT_LEFT, 150, ColumnDate1);
@@ -249,7 +251,10 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		lvi.lParam = LPARAM(pFileItem);
 		pListCtrl->InsertItem(& lvi);
 
-		pListCtrl->SetItemText(item, ColumnSubdir, (LPTSTR)pFileItem->GetSubdir());
+		if (pDoc->m_bRecurseSubdirs)
+		{
+			pListCtrl->SetItemText(item, ColumnSubdir, (LPTSTR)pFileItem->GetSubdir());
+		}
 		// set modified time/date
 		CString datetime;
 		if (NULL != pPair->pFirstFile)
@@ -273,20 +278,14 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		CString ComparisionResult = pPair->GetComparisionResult();
 		pListCtrl->SetItemText(item, ColumnComparisionResult, ComparisionResult);
 	}
+	if (! pDoc->m_bRecurseSubdirs)
+	{
+		// Hide the subdirectory column
+		pListCtrl->SetColumnWidth(ColumnSubdir, 0);
+	}
 
 	UnlockWindowUpdate();
 }
-
-#if 0
-void CAlegrDiffView::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
-{
-	LV_DISPINFO* pDispInfo = (LV_DISPINFO*)pNMHDR;
-	FilePair * pPair = (FilePair *)pDispInfo->item.lParam;
-	TRACE("CAlegrDiffView::OnGetdispinfo:pPair=%x\n", pPair);
-	pDispInfo->item.pszText = _T("OK");
-	*pResult = 0;
-}
-#endif
 
 void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 {

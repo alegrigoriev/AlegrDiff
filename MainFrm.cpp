@@ -23,12 +23,13 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_WM_CREATE()
 	ON_COMMAND(ID_WINDOW_NEW, OnWindowNew)
 	//}}AFX_MSG_MAP
+	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
 {
 	ID_SEPARATOR,           // status line indicator
-	//ID_INDICATOR_CAPS,
+	ID_INDICATOR_CARET_POS,
 	//ID_INDICATOR_NUM,
 	//ID_INDICATOR_SCRL,
 };
@@ -131,5 +132,10 @@ void CMainFrame::OnWindowNew()
 	{
 		GetApp()->OpenFilePairView(pView->GetDocument()->GetFilePair());
 	}
+}
+
+void CMainFrame::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetText("           ");
 }
 

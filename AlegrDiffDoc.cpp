@@ -22,6 +22,7 @@ IMPLEMENT_DYNCREATE(CAlegrDiffDoc, CDocument)
 BEGIN_MESSAGE_MAP(CAlegrDiffDoc, CDocument)
 	//{{AFX_MSG_MAP(CAlegrDiffDoc)
 	ON_COMMAND(ID_FILE_SAVE, OnFileSave)
+	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -30,6 +31,7 @@ END_MESSAGE_MAP()
 
 CAlegrDiffDoc::CAlegrDiffDoc()
 	: m_nFilePairs(0),
+	m_bRecurseSubdirs(false),
 	m_pPairList(NULL)
 {
 	// TODO: add one-time construction code here
@@ -73,18 +75,20 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 {
 	// look through all files in the directory and subdirs
 
-	FreeFilePairList();
+	m_bRecurseSubdirs = bRecurseSubdirs;
 	FileList FileList1;
 	FileList FileList2;
 	if (! FileList1.LoadFolder(dir1, bRecurseSubdirs,
 								m_sInclusionPattern, m_sExclusionPattern))
 	{
 		DWORD error = GetLastError();
+		FreeFilePairList();
 		return false;
 	}
 	if (! FileList2.LoadFolder(dir2, bRecurseSubdirs,
 								m_sInclusionPattern, m_sExclusionPattern))
 	{
+		FreeFilePairList();
 		return false;
 	}
 	{
@@ -101,6 +105,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 	FileList2.GetSortedList(Files2, FileList::SortDirFirst | FileList::SortBackwards);
 
 
+	FreeFilePairList();
 	for (int idx1 = 0, idx2 = 0; idx1 < Files1.GetSize() || idx2 < Files2.GetSize(); )
 	{
 		FilePair * pPair = new FilePair;
@@ -294,27 +299,18 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 			pPair->CompareFiles();
 			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(AFX_IDS_IDLEMESSAGE);
 		}
-		// build the line pair array
-		if (pPair->m_LinePairs.GetSize() != 0)
-		{
-			m_UseLinePairArray = true;
-			m_TotalLines = pPair->m_LinePairs.GetSize();
-		}
-		else
-		{
-			m_UseLinePairArray = false;
-			FileItem * pFile = pPair->pFirstFile;
-			if (NULL == pFile
-				|| (! m_BaseOnFirstFile && NULL != pPair->pSecondFile))
-			{
-				pFile = pPair->pSecondFile;
-			}
 
-			m_TotalLines = pFile->GetNumLines();
-		}
+		m_UseLinePairArray = true;
+		m_TotalLines = pPair->m_LinePairs.GetSize();
 	}
 	UpdateAllViews(NULL, FileLoaded);
 	SetCaretPosition(0, 0, SetPositionCancelSelection);
+}
+
+void CFilePairDoc::SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags)
+{
+	m_SelectionAnchor = AnchorPos;
+	SetCaretPosition(CaretPos.pos, CaretPos.line, flags & ~SetPositionCancelSelection);
 }
 
 void CFilePairDoc::SetCaretPosition(int pos, int line, int flags)
@@ -443,7 +439,13 @@ BEGIN_MESSAGE_MAP(CFilePairDoc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, OnUpdateEditCopy)
 	ON_COMMAND(ID_EDIT_COPY, OnEditCopy)
 	ON_COMMAND(ID_FILE_SAVE, OnFileSave)
+	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
+	ON_UPDATE_COMMAND_UI(ID_FILE_EDIT_FIRST, OnUpdateFileEditFirst)
+	ON_COMMAND(ID_FILE_EDIT_FIRST, OnFileEditFirst)
+	ON_UPDATE_COMMAND_UI(ID_FILE_EDIT_SECOND, OnUpdateFileEditSecond)
+	ON_COMMAND(ID_FILE_EDIT_SECOND, OnFileEditSecond)
 	//}}AFX_MSG_MAP
+	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -631,4 +633,494 @@ void CAlegrDiffDoc::OnFileSave()
 {
 	// TODO: Add your command handler code here
 
+}
+
+void CFilePairDoc::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
+{
+	CString s;
+	s.Format("Ln %d, Col %d", m_CaretPos.line, m_CaretPos.pos);
+	pCmdUI->SetText(s);
+}
+
+
+void CAlegrDiffDoc::OnViewRefresh()
+{
+	// TODO: Add your command handler code here
+	// rescan the directories again
+}
+
+void CFilePairDoc::OnViewRefresh()
+{
+	if (NULL == m_pFilePair)
+	{
+		return;
+	}
+	PairCheckResult res1 = m_pFilePair->ReloadIfChanged();
+	if (FilesDeleted == res1)
+	{
+		// close this document
+		OnCloseDocument();
+		return;
+	}
+	if (FilesUnchanged != res1)
+	{
+		TRACE("Reloading the files\n");
+		TextPos caretpos = m_CaretPos;
+		m_pFilePair->Reference();
+		SetFilePair(m_pFilePair);
+		m_pFilePair->Dereference();
+		SetCaretPosition(caretpos.pos, caretpos.line, SetPositionCancelSelection);
+		//UpdateAllViews(NULL, FileLoaded);
+	}
+}
+
+void CFilePairDoc::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
+{
+	if (m_pFilePair != NULL && m_pFilePair->pFirstFile != NULL)
+	{
+		CString s(_T("&1 Open "));
+		CString name(m_pFilePair->pFirstFile->GetFullName());
+		// duplicate all '&' in name
+		for (int i = 0; i < name.GetLength(); i++)
+		{
+			if (name[i] == '&')
+			{
+				name.Insert(i, '&');
+				i++;
+			}
+		}
+
+		s += name;
+		pCmdUI->SetText(s);
+		pCmdUI->Enable(TRUE);
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+	}
+}
+
+void CFilePairDoc::OnFileEditFirst()
+{
+	if (m_pFilePair != NULL && m_pFilePair->pFirstFile != NULL)
+	{
+		CString name = m_pFilePair->pFirstFile->GetFullName();
+		SHELLEXECUTEINFO shex;
+		memset( & shex, 0, sizeof shex);
+		shex.cbSize = sizeof shex;
+		shex.hwnd = AfxGetMainWnd()->m_hWnd;
+		//shex.lpVerb = _T("Open");
+		shex.lpFile = name;
+		shex.nShow = SW_SHOWDEFAULT;
+		ShellExecuteEx( & shex);
+	}
+}
+
+void CFilePairDoc::OnUpdateFileEditSecond(CCmdUI* pCmdUI)
+{
+	if (m_pFilePair != NULL && m_pFilePair->pSecondFile != NULL)
+	{
+		CString s(_T("&2 Open "));
+		CString name(m_pFilePair->pSecondFile->GetFullName());
+		// duplicate all '&' in name
+		for (int i = 0; i < name.GetLength(); i++)
+		{
+			if (name[i] == '&')
+			{
+				name.Insert(i, '&');
+				i++;
+			}
+		}
+
+		s += name;
+		pCmdUI->SetText(s);
+		pCmdUI->Enable(TRUE);
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+	}
+}
+
+void CFilePairDoc::OnFileEditSecond()
+{
+	if (m_pFilePair != NULL && m_pFilePair->pSecondFile != NULL)
+	{
+		CString name = m_pFilePair->pSecondFile->GetFullName();
+		SHELLEXECUTEINFO shex;
+		memset( & shex, 0, sizeof shex);
+		shex.cbSize = sizeof shex;
+		shex.hwnd = AfxGetMainWnd()->m_hWnd;
+		//shex.lpVerb = _T("Open");
+		shex.lpFile = name;
+		shex.nShow = SW_SHOWDEFAULT;
+		ShellExecuteEx( & shex);
+	}
+}
+
+bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive)
+{
+	// find from the current position
+	if (NULL == m_pFilePair
+		|| NULL == pStrToFind
+		|| 0 == pStrToFind[0]
+		|| 0 == m_pFilePair->m_LinePairs.GetSize())
+	{
+		return false;
+	}
+	TCHAR line[2048];
+	int nSearchPos;
+	int nSearchLine;
+	if (bBackward)
+	{
+		if (m_CaretPos > m_SelectionAnchor)
+		{
+			nSearchPos = m_CaretPos.pos - 1;
+			nSearchLine = m_CaretPos.line;
+		}
+		else if (m_CaretPos < m_SelectionAnchor)
+		{
+			nSearchPos = m_SelectionAnchor.pos - 1;
+			nSearchLine = m_SelectionAnchor.line;
+		}
+		else
+		{
+			nSearchPos = m_CaretPos.pos;
+			nSearchLine = m_CaretPos.line;
+		}
+		if (nSearchLine >= m_pFilePair->m_LinePairs.GetSize())
+		{
+			nSearchLine--;
+			nSearchPos = INT_MAX;
+		}
+	}
+	else
+	{
+		if (m_CaretPos < m_SelectionAnchor)
+		{
+			nSearchPos = m_CaretPos.pos + 1;
+			nSearchLine = m_CaretPos.line;
+		}
+		else if (m_CaretPos > m_SelectionAnchor)
+		{
+			nSearchPos = m_SelectionAnchor.pos + 1;
+			nSearchLine = m_SelectionAnchor.line;
+		}
+		else
+		{
+			nSearchPos = m_CaretPos.pos;
+			nSearchLine = m_CaretPos.line;
+		}
+		if (nSearchLine >= m_pFilePair->m_LinePairs.GetSize())
+		{
+			nSearchLine = 0;
+			nSearchPos = 0;
+		}
+	}
+
+	int nStartSearchPos = nSearchPos;
+	int nStartSearchLine = nSearchLine;
+
+	while(1)
+	{
+		LPCTSTR pStr = NULL;
+		int StrLen = 0;
+		pStr = GetLineText(nSearchLine, line, sizeof line / sizeof line[0], & StrLen);
+
+		int nPatternLen = strlen(pStrToFind);
+		if ( ! bBackward)
+		{
+			for ( ;nSearchPos < StrLen - nPatternLen; nSearchPos++)
+			{
+				if (bCaseSensitive)
+				{
+					if (0 == _tcsncmp(pStr + nSearchPos, pStrToFind, nPatternLen))
+					{
+						// found
+						SetSelection(TextPos(nSearchLine, nSearchPos + nPatternLen), TextPos(nSearchLine, nSearchPos));
+						return true;
+					}
+				}
+				else
+				{
+					if (0 ==_tcsnicmp(pStr + nSearchPos, pStrToFind, nPatternLen))
+					{
+						// found
+						SetSelection(TextPos(nSearchLine, nSearchPos + nPatternLen), TextPos(nSearchLine, nSearchPos));
+						return true;
+					}
+				}
+			}
+			if (nSearchLine == nStartSearchLine)
+			{
+				if (-2 == nStartSearchPos)
+				{
+					break;
+				}
+				nStartSearchPos = -2;
+			}
+			nSearchLine++;
+			nSearchPos = 0;
+			if (nSearchLine >= m_pFilePair->m_LinePairs.GetSize())
+			{
+				// wraparound
+				nSearchLine = 0;
+			}
+		}
+		else
+		{
+			// search the line backwards
+			if (nSearchPos > StrLen)
+			{
+				nSearchPos = StrLen;
+			}
+			for (nSearchPos -= nPatternLen; nSearchPos >= 0; nSearchPos--)
+			{
+				if (bCaseSensitive)
+				{
+					if (0 == _tcsncmp(pStr + nSearchPos, pStrToFind, nPatternLen))
+					{
+						// found
+						SetSelection(TextPos(nSearchLine, nSearchPos + nPatternLen), TextPos(nSearchLine, nSearchPos));
+						return true;
+					}
+				}
+				else
+				{
+					if (0 ==_tcsnicmp(pStr + nSearchPos, pStrToFind, nPatternLen))
+					{
+						// found
+						SetSelection(TextPos(nSearchLine, nSearchPos + nPatternLen), TextPos(nSearchLine, nSearchPos));
+						return true;
+					}
+				}
+			}
+			if (nSearchLine == nStartSearchLine)
+			{
+				if (-2 == nStartSearchPos)
+				{
+					break;
+				}
+				nStartSearchPos = -2;
+			}
+			nSearchPos = INT_MAX;
+			if (nSearchLine == 0)
+			{
+				nSearchLine = m_pFilePair->m_LinePairs.GetSize();
+			}
+			nSearchLine--;
+		}
+	}
+	// end of file
+	return false;
+}
+
+bool CFilePairDoc::GetWordUnderCaret(TextPos &Start, TextPos &End)
+{
+	if (m_CaretPos.line >= m_pFilePair->m_LinePairs.GetSize())
+	{
+		return false;
+	}
+	LinePair * pPair = m_pFilePair->m_LinePairs[m_CaretPos.line];
+	if (NULL == pPair)
+	{
+		return false;
+	}
+
+	Start.line = m_CaretPos.line;
+	End.line = m_CaretPos.line;
+
+	int nPos = 0;
+	int CaretPos = m_CaretPos.pos;
+	for (StringSection * pSection = pPair->pFirstSection
+		; pSection != NULL; nPos += pSection->Length, pSection = pSection->pNext)
+	{
+		if (CaretPos < nPos + pSection->Length)
+		{
+			// get a word under the caret and to the right, or take a single non-alpha char
+			TCHAR c = pSection->pBegin[CaretPos - nPos];
+			if (_istalnum(c) || '_' == c)
+			{
+				for (Start.pos = CaretPos; Start.pos > nPos; Start.pos--)
+				{
+					c = pSection->pBegin[Start.pos - nPos - 1];
+					if (! _istalnum(c) && '_' != c)
+					{
+						break;
+					}
+				}
+				for (End.pos = CaretPos + 1; End.pos < nPos + pSection->Length; End.pos++)
+				{
+					c = pSection->pBegin[End.pos - nPos];
+					if (! _istalnum(c) && '_' != c)
+					{
+						break;
+					}
+				}
+			}
+			else
+			{
+				if (' ' == c)
+				{
+					// todo: look for the next non-space char
+					return false;
+				}
+				// get one char under the cursor
+				Start.pos = CaretPos;
+				End.pos = CaretPos + 1;
+			}
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool CFilePairDoc::OnEditFind()
+{
+	// TODO: Add your command handler code here
+	return false;
+}
+
+bool CFilePairDoc::OnEditFindNext()
+{
+	CThisApp * pApp = GetApp();
+	return FindTextString(pApp->m_FindString, false, pApp->m_bCaseSensitive);
+}
+
+bool CFilePairDoc::OnEditFindPrev()
+{
+	CThisApp * pApp = GetApp();
+	return FindTextString(pApp->m_FindString, true, pApp->m_bCaseSensitive);
+}
+
+bool CFilePairDoc::OnEditFindWordNext()
+{
+	return FindWordOrSelection(false);
+}
+
+bool CFilePairDoc::OnEditFindWordPrev()
+{
+	return FindWordOrSelection(true);
+}
+
+bool CFilePairDoc::FindWordOrSelection(bool bBackwards)
+{
+	CThisApp * pApp = GetApp();
+	int nBeginOffset;
+	int nLength;
+	if (m_CaretPos == m_SelectionAnchor
+		|| m_CaretPos.line != m_SelectionAnchor.line)
+	{
+		TextPos Begin, End;
+		if ( ! GetWordUnderCaret(Begin, End))
+		{
+			return false;
+		}
+		nBeginOffset = Begin.pos;
+		nLength = End.pos - Begin.pos;
+	}
+	else
+	{
+		if (m_CaretPos.pos < m_SelectionAnchor.pos)
+		{
+			nBeginOffset = m_CaretPos.pos;
+			nLength = m_SelectionAnchor.pos - m_CaretPos.pos;
+		}
+		else
+		{
+			nBeginOffset = m_SelectionAnchor.pos;
+			nLength = m_CaretPos.pos - m_SelectionAnchor.pos;
+		}
+	}
+	TCHAR line[2048];
+	int StrLen;
+	LPCTSTR pStr = GetLineText(m_CaretPos.line, line, sizeof line / sizeof line[0], & StrLen);
+	if (NULL == pStr)
+	{
+		return false;
+	}
+	if (nBeginOffset >= StrLen)
+	{
+		return false;
+	}
+	if (nBeginOffset + nLength > StrLen)
+	{
+		nLength = StrLen - nBeginOffset;
+	}
+	LPTSTR StrBuf = pApp->m_FindString.GetBuffer(nLength);
+	if (NULL == StrBuf)
+	{
+		return false;
+	}
+	_tcsncpy(StrBuf, pStr + nBeginOffset, nLength);
+	pApp->m_FindString.ReleaseBuffer(nLength);
+	return FindTextString(pApp->m_FindString, bBackwards, pApp->m_bCaseSensitive);
+}
+
+// returns a pointer to a line text
+// buf is used to assembly the string if it is fragmented
+LPCTSTR CFilePairDoc::GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int *pStrLen)
+{
+	LinePair * pPair = m_pFilePair->m_LinePairs[nLineNum];
+	if (NULL == pPair)
+	{
+		return NULL;
+	}
+	return pPair->GetText(buf, BufChars, pStrLen);
+}
+
+void CFilePairDoc::CaretLeftToWord(bool bCancelSelection)
+{
+	return;
+	TextPos Begin, End;
+	// if the caret is on the begin of the line, go to the previous line
+	TCHAR linebuf[2048];
+	int StrLen;
+	int CaretPos = m_CaretPos.pos;
+	int CaretLine = m_CaretPos.line;
+
+	LPCTSTR pLine = NULL;
+	do
+	{
+		if (0 == CaretPos)
+		{
+			break;
+		}
+		pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen);
+		if (NULL == pLine)
+		{
+			break;
+		}
+		if (CaretPos > StrLen)
+		{
+			CaretPos = StrLen;
+		}
+		// check if there are any non-space characters before caret
+		for ( ; CaretPos > 0 && ' ' == pLine[CaretPos - 1]; CaretPos--)
+		{
+		}
+		if (0 == CaretPos)
+		{
+			pLine = NULL;
+			break;
+		}
+	}
+	while (0);
+	if (NULL == pLine)
+	{
+		// get previous line
+		if (CaretLine > 0)
+		{
+			CaretLine--;
+			pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen);
+			if (CaretPos > StrLen)
+			{
+				CaretPos = StrLen;
+			}
+		}
+	}
+}
+void CFilePairDoc::CaretRightToWord(bool bCancelSelection)
+{
 }

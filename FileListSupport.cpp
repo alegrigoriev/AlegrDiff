@@ -322,7 +322,7 @@ int _cdecl FileLine::NormalizedGroupHashAndLineNumberCompareFunc(const void * p1
 bool FileItem::Load()
 {
 	CThisApp * pApp = GetApp();
-	FILE * file = fopen(LPCTSTR(GetFullName()), "rt");
+	FILE * file = fopen(LPCTSTR(GetFullName()), "r");
 	if (NULL == file)
 	{
 		return false;
@@ -622,6 +622,138 @@ int FileItem::TimeCompare(FileItem * Item1, FileItem * Item2)
 		return -1;
 	}
 	return 0;
+}
+
+FileCheckResult FileItem::CheckForFileChanged()
+{
+	CString s = GetFullName();
+	WIN32_FIND_DATA wfd;
+	HANDLE hFind = FindFirstFile(s, & wfd);
+	if (INVALID_HANDLE_VALUE == hFind
+		|| NULL == hFind)
+	{
+		return FileDeleted;
+	}
+	FindClose(hFind);
+	if (wfd.ftLastWriteTime.dwHighDateTime != m_LastWriteTime.dwHighDateTime
+		|| wfd.ftLastWriteTime.dwLowDateTime != m_LastWriteTime.dwLowDateTime)
+	{
+		return FileTimeChanged;
+	}
+	return FileUnchanged;
+}
+
+FileCheckResult FileItem::ReloadIfChanged()
+{
+	CString s = GetFullName();
+	WIN32_FIND_DATA wfd;
+	HANDLE hFind = FindFirstFile(s, & wfd);
+	if (INVALID_HANDLE_VALUE == hFind
+		|| NULL == hFind)
+	{
+		Unload();
+		return FileDeleted;
+	}
+	FindClose(hFind);
+	if (wfd.ftLastWriteTime.dwHighDateTime != m_LastWriteTime.dwHighDateTime
+		|| wfd.ftLastWriteTime.dwLowDateTime != m_LastWriteTime.dwLowDateTime)
+	{
+		Unload();
+		m_LastWriteTime = wfd.ftLastWriteTime;
+		if (Load())
+		{
+			return FileTimeChanged;
+		}
+		else
+		{
+			return FileDeleted;
+		}
+	}
+	return FileUnchanged;
+}
+
+PairCheckResult FilePair::CheckForFilesChanged()
+{
+	FileCheckResult res1 = FileDeleted;
+	FileCheckResult res2 = FileDeleted;
+	if (NULL != pFirstFile)
+	{
+		res1 = pFirstFile->CheckForFileChanged();
+	}
+
+	if (NULL != pSecondFile)
+	{
+		res2 = pSecondFile->CheckForFileChanged();
+	}
+	if (FileDeleted == res1
+		&& FileDeleted == res2)
+	{
+		return FilesDeleted;
+	}
+	if (NULL != pFirstFile
+		&& res1 != FileUnchanged
+		|| NULL != pSecondFile
+		&& res2 != FileUnchanged)
+	{
+		return FilesTimeChanged;
+	}
+	return FilesUnchanged;
+}
+
+PairCheckResult FilePair::ReloadIfChanged()
+{
+	FileCheckResult res1 = FileDeleted;
+	FileCheckResult res2 = FileDeleted;
+	if (NULL != pFirstFile)
+	{
+		res1 = pFirstFile->CheckForFileChanged();
+	}
+
+	if (NULL != pSecondFile)
+	{
+		res2 = pSecondFile->CheckForFileChanged();
+	}
+	if ((NULL == pFirstFile
+			|| res1 == FileUnchanged)
+		&& (NULL == pSecondFile
+			|| res2 == FileUnchanged))
+	{
+		return FilesUnchanged;
+	}
+
+	FreeLinePairData();
+	if (NULL != pFirstFile)
+	{
+		if (res1 != FileDeleted)
+		{
+			res1 = pFirstFile->ReloadIfChanged();
+		}
+
+		if (FileDeleted == res1)
+		{
+			delete pFirstFile;
+			pFirstFile = NULL;
+		}
+	}
+	if (NULL != pSecondFile)
+	{
+		if (res2 != FileDeleted)
+		{
+			res2 = pSecondFile->ReloadIfChanged();
+		}
+
+		if (FileDeleted == res2)
+		{
+			delete pSecondFile;
+			pSecondFile = NULL;
+		}
+	}
+	if (FileDeleted == res1
+		&& FileDeleted == res2)
+	{
+		return FilesDeleted;
+	}
+	return FilesTimeChanged;
 }
 
 void FileList::GetSortedList(CArray<FileItem *, FileItem *> & ItemArray, DWORD SortFlags)
@@ -1433,7 +1565,7 @@ static void RemoveExtraWhitespaces(CString & Dst, const CString & Src)
 		// strings also must be kept intact.
 		// Can remove extra spaces between alpha and non-alpha
 		c = Src[SrcIdx];
-		bool c_IsAlpha = (0 != isalnum(c));
+		bool c_IsAlpha = (_istalnum(c) || '_' == c);
 		if(c_IsAlpha)
 		{
 			if (PrevCharAlpha)
@@ -1449,7 +1581,7 @@ static void RemoveExtraWhitespaces(CString & Dst, const CString & Src)
 				SrcIdx++;
 				DstIdx++;
 				c = Src[SrcIdx];
-			} while (isalnum(c));
+			} while (_istalnum(c) || '_' == c);
 
 			PrevCharAlpha = true;
 			CanRemoveWhitespace = true;
@@ -1562,7 +1694,7 @@ static void RemoveExtraWhitespaces(CString & Dst, const CString & Src)
 			} while (c != 0
 					&& c != ' '
 					&& c != '\t'
-					&& ! isalnum(c));
+					&& ! (_istalnum(c) || '_' == c));
 			PrevCharAlpha = false;
 		}
 		// remove whitespaces
@@ -1862,7 +1994,7 @@ void FilePair::Dereference()
 FilePair::~FilePair()
 {
 	m_LoadedCount = 0;
-	UnloadFiles();
+	UnloadFiles(true);
 	if (NULL != pFirstFile)
 	{
 		delete pFirstFile;
@@ -2137,13 +2269,28 @@ bool FilePair::LoadFiles()
 	return result;
 }
 
-void FilePair::UnloadFiles()
+void FilePair::UnloadFiles(bool ForceUnload)
 {
 	m_LoadedCount--;
-	if (m_LoadedCount > 0)
+	if (m_LoadedCount > 0 && ! ForceUnload)
 	{
 		return;
 	}
+	m_LoadedCount = 0;
+	FreeLinePairData();
+
+	if (NULL != pFirstFile)
+	{
+		pFirstFile->Unload();
+	}
+	if (NULL != pSecondFile)
+	{
+		pSecondFile->Unload();
+	}
+}
+
+void FilePair::FreeLinePairData()
+{
 	int i;
 	for (i = 0; i < m_LinePairs.GetSize(); i++)
 	{
@@ -2163,14 +2310,6 @@ void FilePair::UnloadFiles()
 	}
 	m_DiffSections.RemoveAll();
 
-	if (NULL != pFirstFile)
-	{
-		pFirstFile->Unload();
-	}
-	if (NULL != pSecondFile)
-	{
-		pSecondFile->Unload();
-	}
 }
 
 FilePair::eFileComparisionResult FilePair::PreCompareFiles()
@@ -2210,6 +2349,41 @@ FilePair::eFileComparisionResult FilePair::CompareFiles()
 		&& NULL != pSecondFile)
 	{
 		result = CompareTextFiles();
+	}
+	else
+	{
+		// just build the line array
+		FileItem * pFile = pFirstFile;
+		if (NULL == pFile)
+		{
+			pFile = pSecondFile;
+		}
+		if (NULL != pFile)
+		{
+			m_LinePairs.SetSize(pFile->GetNumLines());
+			for (int i = 0; i < m_LinePairs.GetSize(); i++)
+			{
+				LinePair * pPair = new LinePair;
+				StringSection * pSection = new StringSection;
+				if (pPair != NULL
+					&& pSection != NULL)
+				{
+					pPair->pFirstLine = pFile->GetLine(i);
+					pPair->pSecondLine = pPair->pFirstLine;
+					pSection->pNext = NULL;
+					pSection->Attr = pSection->Identical;
+					pSection->pBegin = pPair->pFirstLine->GetText();
+					pSection->Length = pPair->pFirstLine->GetLength();
+					pPair->pFirstSection = pSection;
+				}
+				else
+				{
+					delete pPair;
+					delete pSection;
+				}
+				m_LinePairs.SetAt(i, pPair);
+			}
+		}
 	}
 	// different comparision for different modes
 	return result;
@@ -2745,6 +2919,40 @@ TextPos FilePair::PrevDifference(TextPos PosFrom)
 		return ppSection[1]->m_Begin;
 	}
 	return pSection->m_Begin;
+}
+
+LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen)
+{
+	if (NULL == pFirstLine)
+	{
+		*pStrLen = pSecondLine->GetLength();
+		return pSecondLine->GetText();
+	}
+	else if (NULL == pSecondLine)
+	{
+		*pStrLen = pFirstLine->GetLength();
+		return pFirstLine->GetText();
+	}
+	else
+	{
+		// make a string of string sections
+		int StrLen = 0;
+		for (StringSection * pSection = pFirstSection
+			; pSection != NULL && StrLen < nBufChars - 1; pSection = pSection->pNext)
+		{
+			int len = pSection->Length;
+			if (StrLen + len > nBufChars - 1)
+			{
+				len = nBufChars - 1 - StrLen;
+			}
+			_tcsncpy(buf + StrLen, pSection->pBegin, len);
+			StrLen += len;
+		}
+		buf[StrLen] = 0;
+		*pStrLen = StrLen;
+		return buf;
+	}
+
 }
 
 CSmallAllocator FileLine::m_Allocator(sizeof FileLine);

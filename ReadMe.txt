@@ -1,14 +1,18 @@
 TODO:
-Add Line Numbers at the left margin
 Make Word Left, Word Right, Word selection.
 Make Go To Line
-Make search
+Make search dialog
+Open files for editing in file list view
+Check difference area of the file for identical lines
+in InvalidateRange, add for letter overlap.
 Add context menu to list view
 Add context menu to file view
+Make MRU folders list for file compare dialog
+Make Binary compare checkbox for file compare dialog
+Make combobox for last file filters
 Add progress to File list view and file diff view
 Check file dates for change, when the app is activated
 Add Merge function
-Add "Refresh" function
 Add Save differences
 Add save file list
 Add Copy files
@@ -20,6 +24,7 @@ Make background thread for comparision
 UNICODE file support
 
 Problems:
+Identical lines in the beginning of the file may be shown different
 
 Fixed:
 If two files are completely different, only first file is shown
@@ -28,6 +33,16 @@ File with differences: last lines not drawn
 Wrong status for inserted and removed parts of strings
 
 Done:
+Word selection
+Find word or selection
+allow files with only LF delimiters
+Open files for editing
+Auto reload for file view
+Add "Refresh" function
+Don't show "Subdirectory" column if not comparing subdirs
+Show cursor position in the status bar
+Draw selection for the single file
+Add Line Numbers at the left margin (add for single file)
 Added buffering to file read
 Remember Used file filter 
 Add font selection

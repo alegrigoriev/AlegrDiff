@@ -44,6 +44,7 @@ protected:  // control bar embedded members
 
 // Generated message map functions
 protected:
+	void OnUpdateCaretPosIndicator(CCmdUI* pCmdUI);
 	//{{AFX_MSG(CMainFrame)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnWindowNew();

@@ -36,6 +36,7 @@
 #define IDC_STATIC_NORMAL_TEXT          1019
 #define IDC_STATIC_ADDED_TEXT           1020
 #define IDC_STATIC_DELETED_TEXT         1021
+#define IDC_CHECK_AUTO_RELOAD           1022
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -47,6 +48,13 @@
 #define ID_EDIT_GOTOLINE                32785
 #define ID_VIEW_REFRESH                 32787
 #define ID_VIEW_SHOW_LINE_NUMBERS       32789
+#define ID_FILE_EDIT_FIRST              32794
+#define ID_FILE_EDIT_SECOND             32795
+#define ID_EDIT_FIND_NEXT               32796
+#define ID_EDIT_FIND_PREV               32797
+#define ID_EDIT_FIND_WORD_PREV          32798
+#define ID_EDIT_FIND_WORD_NEXT          32799
+#define ID_INDICATOR_CARET_POS          0xE705
 
 // Next default values for new objects
 //
@@ -54,8 +62,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        134
-#define _APS_NEXT_COMMAND_VALUE         32790
-#define _APS_NEXT_CONTROL_VALUE         1022
+#define _APS_NEXT_COMMAND_VALUE         32800
+#define _APS_NEXT_CONTROL_VALUE         1023
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -26,6 +26,7 @@ CDiffFileView::CDiffFileView()
 	m_PreferredRect(0, 0, 0, 0),
 	m_NumberMarginWidth(0),
 	m_ShowLineNumbers(false),
+	m_LineNumberMarginWidth(0),
 	m_DrawnSelEnd(0, 0)
 {
 	// init font size, to avoid zero divide
@@ -258,6 +259,15 @@ void CDiffFileView::OnDraw(CDC* pDC)
 	}
 
 	//pDC->SetTextAlign
+	int PosX = 0;
+	if (m_ShowLineNumbers)
+	{
+		CGdiObject * pOldPen = pDC->SelectStockObject(BLACK_PEN);
+		pDC->MoveTo(m_LineNumberMarginWidth - 1, ur.bottom);
+		pDC->LineTo(m_LineNumberMarginWidth - 1, ur.top);
+		pDC->SelectObject(pOldPen);
+		PosX = m_LineNumberMarginWidth;
+	}
 	int nLineHeight = LineHeight();
 
 	if (pDoc->UseLinePairArray())
@@ -326,7 +336,35 @@ void CDiffFileView::OnDraw(CDC* pDC)
 
 			if (NULL != pPair)
 			{
-				DrawStringSections(pDC, CPoint(0, PosY),
+				// draw line number
+				if (m_ShowLineNumbers)
+				{
+					CString s;
+					DWORD TextColor = pApp->m_NormalTextColor;
+					if (NULL == pPair->pFirstLine)
+					{
+						s.Format("%d", pPair->pSecondLine->GetLineNumber());
+						TextColor = pApp->m_AddedTextColor;
+					}
+					else if (NULL == pPair->pSecondLine)
+					{
+						s.Format("(%d)", pPair->pFirstLine->GetLineNumber());
+						TextColor = pApp->m_ErasedTextColor;
+					}
+					else
+					{
+						s.Format("%d", pPair->pSecondLine->GetLineNumber());
+					}
+					pDC->MoveTo(m_LineNumberMarginWidth - 1, PosY);
+					pDC->SetTextAlign(TA_RIGHT | TA_TOP | TA_UPDATECP);
+					pDC->SetTextColor(TextColor);
+					pDC->SetBkColor(pApp->m_TextBackgroundColor);
+					pDC->SelectObject( & pApp->m_NormalFont);
+					pDC->TextOut(0, 0, s);
+					pDC->SetTextAlign(TA_LEFT | TA_TOP |TA_UPDATECP);
+
+				}
+				DrawStringSections(pDC, CPoint(PosX, PosY),
 									pPair->pFirstSection, m_FirstPosSeen, nCharsInView, nTabIndent,
 									nSelBegin, nSelEnd);
 			}
@@ -334,6 +372,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 	}
 	else
 	{
+		pDC->SetBkColor(pApp->m_TextBackgroundColor);
 		int nTabWidth = GetApp()->m_TabIndent * CharWidth();
 		for (int nLine = m_FirstLineSeen,
 			PosY = cr.top;
@@ -343,7 +382,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 			const FileLine * pLine = pFile->GetLine(nLine);
 			if (pLine->GetLength() > m_FirstPosSeen)
 			{
-				pDC->TabbedTextOut(0, PosY,
+				pDC->TabbedTextOut(PosX, PosY,
 									LPCTSTR(pLine->GetText()) + m_FirstPosSeen,
 									pLine->GetLength() - m_FirstPosSeen, 1, & nTabWidth, 0);
 			}
@@ -513,10 +552,19 @@ void CDiffFileView::HScrollToThePos(int nPos)
 		return;
 	}
 	// need to scroll the view
-	int ndx = (nPos - m_FirstPosSeen) * CharWidth();
+
+	CRect cr;
+
+	GetClientRect( & cr);
+
+	cr.left = m_LineNumberMarginWidth;
+	if (cr.left < cr.right)
+	{
+		int ndx = (nPos - m_FirstPosSeen) * CharWidth();
+		ScrollWindowEx( -ndx, 0, & cr, & cr, NULL, NULL,
+						SW_INVALIDATE);
+	}
 	m_FirstPosSeen = nPos;
-	ScrollWindowEx( -ndx, 0, NULL, NULL, NULL, NULL,
-					SW_INVALIDATE | SW_ERASE);
 
 	UpdateHScrollBar();
 	CreateAndShowCaret();
@@ -750,8 +798,8 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 		{
 			end.pos = nCharsInView;
 		}
-		r.left = begin.pos * CharWidth();
-		r.right = end.pos * CharWidth();
+		r.left = begin.pos * CharWidth() + m_LineNumberMarginWidth;
+		r.right = end.pos * CharWidth() + m_LineNumberMarginWidth;
 		InvalidateRect( & r);
 	}
 	else
@@ -764,8 +812,8 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 			}
 			r.top = begin.line * LineHeight();
 			r.bottom = r.top + LineHeight();
-			r.left = begin.pos * CharWidth();
-			r.right = (nCharsInView + 1) * CharWidth();
+			r.left = begin.pos * CharWidth() + m_LineNumberMarginWidth;
+			r.right = (nCharsInView + 1) * CharWidth() + m_LineNumberMarginWidth;
 			InvalidateRect( & r);
 		}
 		if (end.line <= nLinesInView + 1 && end.pos > 0)
@@ -776,8 +824,8 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 			}
 			r.top = end.line * LineHeight();
 			r.bottom = r.top + LineHeight();
-			r.right = end.pos * CharWidth();
-			r.left = 0;
+			r.right = end.pos * CharWidth() + m_LineNumberMarginWidth;
+			r.left = m_LineNumberMarginWidth;
 			InvalidateRect( & r);
 		}
 		if (end.line > nLinesInView + 1)
@@ -786,8 +834,8 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 		}
 		if (end.line > begin.line + 1)
 		{
-			r.left = 0;
-			r.right = (nCharsInView + 1) * CharWidth();
+			r.left = m_LineNumberMarginWidth;
+			r.right = (nCharsInView + 1) * CharWidth() + m_LineNumberMarginWidth;
 			r.top = (begin.line + 1) * LineHeight();
 			r.bottom = end.line * LineHeight();
 			InvalidateRect( & r);
@@ -823,13 +871,19 @@ void CDiffFileView::CreateAndShowCaret()
 		TRACE("CDiffFileView::CreateAndShowCaret - 0 == GetDocument()->GetTotalLines()\n");
 		return;
 	}
-	CPoint p((pDoc->m_CaretPos.pos - m_FirstPosSeen) * CharWidth(),
+	CPoint p((pDoc->m_CaretPos.pos - m_FirstPosSeen) * CharWidth() + m_LineNumberMarginWidth,
 			(pDoc->m_CaretPos.line - m_FirstLineSeen) * LineHeight());
-
-	CreateSolidCaret(2, LineHeight());
-	TRACE("CDiffFileView::CreateAndShowCaret %d %d\n", p.x, p.y);
-	SetCaretPos(p);
-	ShowCaret();
+	if (pDoc->m_CaretPos.pos >= m_FirstPosSeen)
+	{
+		CreateSolidCaret(2, LineHeight());
+		TRACE("CDiffFileView::CreateAndShowCaret %d %d\n", p.x, p.y);
+		SetCaretPos(p);
+		ShowCaret();
+	}
+	else
+	{
+		DestroyCaret();
+	}
 }
 
 void CDiffFileView::OnSetFocus(CWnd* pOldWnd)
@@ -844,13 +898,35 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 	CView::OnLButtonDown(nFlags, point);
 	m_LButtonDown = true;
 	int flags = SetPositionMakeVisible;
-	if (0 == (nFlags & MK_SHIFT))
+	// if the left margin is clicked, the whole line is selected
+	point.x -= m_LineNumberMarginWidth;
+	int nLine = point.y / LineHeight() + m_FirstLineSeen;
+
+	if (point.x < 0)
 	{
-		flags |= SetPositionCancelSelection;
+		if (0 == (nFlags & MK_SHIFT))
+		{
+			SetCaretPosition(0, nLine);
+		}
+		if (GetDocument()->m_SelectionAnchor.line <= nLine)
+		{
+			SetCaretPosition(0, nLine + 1, SetPositionMakeVisible);
+		}
+		else
+		{
+			SetCaretPosition(0, nLine, SetPositionMakeVisible);
+		}
 	}
-	SetCaretPosition(m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth(),
-					point.y / LineHeight() + m_FirstLineSeen,
-					flags);
+	else
+	{
+		if (0 == (nFlags & MK_SHIFT))
+		{
+			flags |= SetPositionCancelSelection;
+		}
+		SetCaretPosition(m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth(),
+						nLine,
+						flags);
+	}
 }
 
 void CDiffFileView::OnLButtonUp(UINT nFlags, CPoint point)
@@ -872,9 +948,25 @@ void CDiffFileView::OnMouseMove(UINT nFlags, CPoint point)
 	}
 	if (m_TrackingSelection)
 	{
-		SetCaretPosition(m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth(),
-						point.y / LineHeight() + m_FirstLineSeen,
-						SetPositionMakeVisible);
+		point.x -= m_LineNumberMarginWidth;
+		int nLine = point.y / LineHeight() + m_FirstLineSeen;
+
+		if (point.x < 0)
+		{
+			if (GetDocument()->m_SelectionAnchor.line <= nLine)
+			{
+				SetCaretPosition(0, nLine + 1, SetPositionMakeVisible);
+			}
+			else
+			{
+				SetCaretPosition(0, nLine, SetPositionMakeVisible);
+			}
+		}
+		else
+		{
+			SetCaretPosition(m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth(),
+							nLine, SetPositionMakeVisible);
+		}
 	}
 	CView::OnMouseMove(nFlags, point);
 }
@@ -909,14 +1001,63 @@ void CDiffFileView::OnSize(UINT nType, int cx, int cy)
 
 	UpdateVScrollBar();
 	UpdateHScrollBar();
+}
 
+void CDiffFileView::OnMetricsChange()
+{
+	TRACE("CDiffFileView::OnMetricsChange\n");
+
+	CRect cr;
+	GetClientRect( & cr);
+
+	if (m_ShowLineNumbers)
+	{
+		int nNumChars = 6;
+		if (GetDocument()->GetTotalLines() > 9999)
+		{
+			nNumChars = 8;
+		}
+		m_LineNumberMarginWidth = CharWidth() * nNumChars + 1;
+	}
+	else
+	{
+		m_LineNumberMarginWidth = 0;
+	}
+
+	m_VisibleRect.bottom = cr.Height() / LineHeight() - 1;
+	m_PreferredRect.bottom = m_VisibleRect.bottom / 4;
+	m_PreferredRect.top = m_VisibleRect.bottom - m_VisibleRect.bottom / 4;
+
+	m_VisibleRect.right =  (cr.Width() - m_LineNumberMarginWidth) / CharWidth();
+	if (m_VisibleRect.right < 0)
+	{
+		m_VisibleRect.right = 0;
+	}
+
+	m_PreferredRect.left = m_VisibleRect.right / 3;
+	m_PreferredRect.right = m_VisibleRect.right - m_VisibleRect.right / 3;
+
+	UpdateVScrollBar();
+	UpdateHScrollBar();
 }
 
 BOOL CDiffFileView::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 {
 	if (HTCLIENT == nHitTest)
 	{
-		SetCursor(GetApp()->LoadCursor(IDC_CURSOR_BEAM));
+		CPoint p;
+
+		GetCursorPos( & p);
+		ScreenToClient( & p);
+
+		if (p.x >= m_LineNumberMarginWidth)
+		{
+			SetCursor(GetApp()->LoadCursor(IDC_CURSOR_BEAM));
+		}
+		else
+		{
+			SetCursor(GetApp()->LoadCursor(IDC_CURSOR_LEFT_ARROW));
+		}
 		return TRUE;
 	}
 
@@ -1061,6 +1202,7 @@ void CDiffFileView::CaretToEnd(int flags)
 void CDiffFileView::OnViewShowLineNumbers()
 {
 	m_ShowLineNumbers = ! m_ShowLineNumbers;
+	OnMetricsChange();
 	OnUpdate(NULL, 0, NULL);
 }
 

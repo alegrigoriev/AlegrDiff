@@ -57,6 +57,7 @@ public:
 	bool m_LButtonDown;
 	bool m_TrackingSelection;
 	bool m_ShowLineNumbers;
+	int m_LineNumberMarginWidth;
 
 	TEXTMETRIC m_FontMetric;
 
@@ -96,6 +97,7 @@ public:
 	// < 0 - scroll right (to see chars to the begin of the line)
 	void HScrollToThePos(int nPos);
 	void UpdateHScrollBar();
+	void OnMetricsChange();
 	void CaretToHome(int flags);
 	void CaretToEnd(int flags);
 

@@ -79,6 +79,9 @@ public:
 #endif
 
 protected:
+	static UINT AFX_CDECL _FindDataProc(PVOID param);
+	UINT FindDataProc(class CDifferenceProgressDialog * pContext);
+
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnWindowCloseDiff();
 public:
@@ -113,6 +116,8 @@ public:
 	afx_msg void OnBindiffShow2ndfile();
 	afx_msg void OnUpdateBindiffShow2ndfile(CCmdUI *pCmdUI);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnEditGotonextdiff();
+	afx_msg void OnEditGotoprevdiff();
 };
 
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp

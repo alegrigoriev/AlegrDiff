@@ -316,6 +316,9 @@
 				RelativePath=".\DiffFileView.cpp">
 			</File>
 			<File
+				RelativePath="DifferenceProgressDialog.cpp">
+			</File>
+			<File
 				RelativePath="DirectoryFingerpringCreateDlg.cpp">
 			</File>
 			<File
@@ -423,6 +426,9 @@
 			</File>
 			<File
 				RelativePath=".\DiffFileView.h">
+			</File>
+			<File
+				RelativePath="DifferenceProgressDialog.h">
 			</File>
 			<File
 				RelativePath="DirectoryFingerpringCreateDlg.h">

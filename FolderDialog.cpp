@@ -222,7 +222,7 @@ int CFolderDialog::OnInitDone()
 	return 0;
 }
 
-int CFolderDialog::OnFolderChange(LPITEMIDLIST lpItem)
+int CFolderDialog::OnFolderChange(LPITEMIDLIST /*lpItem*/)
 {
 	return 0;
 }
@@ -277,12 +277,12 @@ void CFolderDialog::SetStatusText(LPCTSTR Text)
 	SendMessage(BFFM_SETSTATUSTEXT, 0, LPARAM(Text));
 }
 
-void CFolderDialog::OnIUnknown(IUnknown * pUnknown)
+void CFolderDialog::OnIUnknown(IUnknown * /*pUnknown*/)
 {
 }
 
 #ifdef _DEBUG
-void CFolderDialog::Dump(CDumpContext& dc) const
+void CFolderDialog::Dump(CDumpContext& /*dc*/) const
 {
 }
 #endif

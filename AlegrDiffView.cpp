@@ -307,6 +307,7 @@ void CAlegrDiffView::SetSortColumn(eColumns nColumn, bool AscendingOrder, bool I
 			if (m_SortColumns[i] != nColumn)
 			{
 				m_SortColumns[j] = m_SortColumns[i];
+				m_AscendingSortOrder[j] = m_AscendingSortOrder[i];
 				j++;
 			}
 		}
@@ -453,6 +454,25 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
 				m_ColumnToItem[col] = eColumns(i);
 				m_ItemToColumn[i] = col;
+
+				// set sort direction
+				if (i == m_SortColumns[0])
+				{
+					HDITEM hdi;
+					hdi.mask = HDI_FORMAT;
+					pHeader->GetItem(col, & hdi);
+					if (m_AscendingSortOrder[0])
+					{
+						hdi.fmt &= ~HDF_SORTUP;
+						hdi.fmt |= HDF_SORTDOWN;
+					}
+					else
+					{
+						hdi.fmt &= ~HDF_SORTDOWN;
+						hdi.fmt |= HDF_SORTUP;
+					}
+					pHeader->SetItem(col, & hdi);
+				}
 
 				col++;
 				break;

@@ -2339,7 +2339,7 @@ int FilePairComparePredicate::NameCompare(const FilePair * Pair1, const FilePair
 	{
 		Item2 = Pair2->pSecondFile;
 	}
-	return FileItem::LengthCompare(Item1, Item2);
+	return FileItem::NameCompare(Item1, Item2);
 }
 
 int FilePairComparePredicate::NameCompareBackward(const FilePair * Pair1, const FilePair * Pair2)
@@ -2378,36 +2378,43 @@ int FilePair::ComparisionResultPriority() const
 	// OnlyFirstFile, OnlySecondFile
 	switch (m_ComparisionResult)
 	{
-	default:
 	case ErrorReadingFirstFile:
-	case ErrorReadingSecondFile:
-	case ResultUnknown:
 		return 0;
-	case FileUnaccessible:
+	case ErrorReadingSecondFile:
 		return 1;
-	case FilesDifferent:
+	case FileUnaccessible:
 		return 2;
-	case FirstFileLonger:
+	case FilesDifferent:
 		return 3;
-	case SecondFileLonger:
+	case FirstFileLonger:
 		return 4;
-	case DifferentInSpaces:
+	case SecondFileLonger:
 		return 5;
-	case VersionInfoDifferent:
+	case DifferentInSpaces:
 		return 6;
-	case FilesIdentical:
+	case VersionInfoDifferent:
 		return 7;
-	case DirectoryInFingerprintFileOnly:
-	case FileInFingerprintFileOnly:
-	case OnlyFirstDirectory:
-	case OnlyFirstFile:
+	case FilesIdentical:
 		return 8;
-	case OnlySecondDirectory:
-	case OnlySecondFile:
+	case DirectoryInFingerprintFileOnly:
 		return 9;
-	case ReadingFirstFile:
-	case ReadingSecondFile:
+	case FileInFingerprintFileOnly:
 		return 10;
+	case OnlyFirstFile:
+		return 11;
+	case OnlySecondFile:
+		return 12;
+	case OnlyFirstDirectory:
+		return 13;
+	case OnlySecondDirectory:
+		return 14;
+	case ReadingFirstFile:
+		return 15;
+	case ReadingSecondFile:
+		return 16;
+	default:
+	case ResultUnknown:
+		return 17;
 	}
 }
 
@@ -2418,7 +2425,7 @@ bool FilePairComparePredicate::operator ()(const FilePair * Pair1, const FilePai
 		int result = Functions[i](Pair1, Pair2);
 		if (result != 0)
 		{
-			return result > 0;
+			return result < 0;
 		}
 	}
 	return 0;

@@ -201,6 +201,9 @@ struct StringSection
 		Whitespace = 0x100,
 	};
 	USHORT Attr;
+	bool IsAccepted() const { return 0 != (Attr & Accepted); }
+	bool IsDeclined() const { return 0 != (Attr & Declined); }
+	bool IsWhitespace() const { return 0 != (Attr & Whitespace); }
 private:
 	static CSmallAllocator m_Allocator;
 };

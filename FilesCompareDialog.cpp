@@ -135,22 +135,7 @@ BOOL CFilesCompareDialog::OnInitDialog()
 	pApp->m_RecentFiles.LoadCombo( & m_SecondCombo);
 
 	DragAcceptFiles();
-
-	HICON hIcon = (HICON) LoadImage(AfxFindResourceHandle
-									(MAKEINTRESOURCE(IDI_COMPARE_FILES), RT_GROUP_ICON),
-									MAKEINTRESOURCE(IDI_COMPARE_FILES),
-									IMAGE_ICON,
-									GetSystemMetrics(SM_CXICON),
-									GetSystemMetrics(SM_CYICON), 0);
-	SetIcon(hIcon, TRUE);			// Set big icon
-
-	hIcon = (HICON) LoadImage(AfxFindResourceHandle
-							(MAKEINTRESOURCE(IDI_COMPARE_FILES), RT_GROUP_ICON),
-							MAKEINTRESOURCE(IDI_COMPARE_FILES),
-							IMAGE_ICON,
-							GetSystemMetrics(SM_CXSMICON),
-							GetSystemMetrics(SM_CYSMICON), 0);
-	SetIcon(hIcon, FALSE);			// Set small icon
+	SetWindowIcons(this, IDI_COMPARE_FILES);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE

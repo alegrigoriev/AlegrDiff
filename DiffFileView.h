@@ -19,7 +19,7 @@ protected:
 
 // Attributes
 public:
-	CAlegrDiffDoc* GetDocument();
+	CFilePairDoc* GetDocument();
 
 // Operations
 public:
@@ -36,14 +36,10 @@ protected:
 
 // Implementation
 public:
-	FilePair * m_pFilePair;
-	bool m_UseLinePairArray;
-	bool m_BaseOnFirstFile;
 	int m_FirstLineSeen;
 	int m_FirstPosSeen;
 	int m_CaretLine;
 	int m_CaretPos;
-	int m_TotalLines;
 	CFont m_NormalFont;
 	CFont m_UnderlineFont;
 	CFont m_StrikeoutFont;
@@ -102,8 +98,8 @@ protected:
 
 /////////////////////////////////////////////////////////////////////////////
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp
-inline CAlegrDiffDoc* CDiffFileView::GetDocument()
-{ return (CAlegrDiffDoc*)m_pDocument; }
+inline CFilePairDoc* CDiffFileView::GetDocument()
+{ return (CFilePairDoc*)m_pDocument; }
 #endif
 
 //{{AFX_INSERT_LOCATION}}

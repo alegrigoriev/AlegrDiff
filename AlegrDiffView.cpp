@@ -300,7 +300,7 @@ void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 		{
 			// try to find if a view is already open
 			// view not found, create a new
-			GetDocument()->OpenFilePairView(m_PairArray[pNmlv->iItem]);
+			GetApp()->OpenFilePairView(m_PairArray[pNmlv->iItem]);
 		}
 	}
 
@@ -321,7 +321,7 @@ void CAlegrDiffView::OnReturn(NMHDR* pNMHDR, LRESULT* pResult)
 	{
 		if (nItem < m_PairArray.GetSize())
 		{
-			GetDocument()->OpenFilePairView(m_PairArray[nItem]);
+			GetApp()->OpenFilePairView(m_PairArray[nItem]);
 		}
 		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
 	}

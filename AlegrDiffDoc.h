@@ -22,18 +22,14 @@ public:
 	CString m_sExclusionPattern;
 	CString m_sCFilesPattern;
 	CString m_sBinaryFilesPattern;
-	bool m_bRecurseSubdirs;
-	FileList m_FileList1;
-	FileList m_FileList2;
 	CString	m_sFirstDir;
 	CString	m_sSecondDir;
 	FilePair * m_pPairList;
 	int m_nFilePairs;
 // Operations
 public:
-	bool BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2);
+	bool BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseSubdirs);
 	void FreeFilePairList();
-	void OpenFilePairView(FilePair * pPair);
 	//bool BuildFileList(LPCTSTR dir);
 
 
@@ -58,13 +54,59 @@ protected:
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CAlegrDiffDoc)
-	afx_msg void OnFileComparedirectories();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
 
 /////////////////////////////////////////////////////////////////////////////
 
+/////////////////////////////////////////////////////////////////////////////
+// CFilePairDoc document
+
+class CFilePairDoc : public CDocument
+{
+protected:
+	CFilePairDoc();           // protected constructor used by dynamic creation
+	DECLARE_DYNCREATE(CFilePairDoc)
+
+// Attributes
+public:
+
+// Operations
+public:
+	void SetFilePair(FilePair * pPair);
+	FilePair * GetFilePair() const { return m_pFilePair; }
+	int GetTotalLines() const { return m_TotalLines; }
+	bool UseLinePairArray() const { return m_UseLinePairArray; }
+	bool BaseOnFirstFile() const { return m_BaseOnFirstFile; }
+// Overrides
+	// ClassWizard generated virtual function overrides
+	//{{AFX_VIRTUAL(CFilePairDoc)
+public:
+	virtual void Serialize(CArchive& ar);   // overridden for document i/o
+protected:
+	virtual BOOL OnNewDocument();
+	//}}AFX_VIRTUAL
+
+// Implementation
+	bool m_BaseOnFirstFile;
+	int m_TotalLines;
+	bool m_UseLinePairArray;
+	FilePair * m_pFilePair;
+public:
+	virtual ~CFilePairDoc();
+#ifdef _DEBUG
+	virtual void AssertValid() const;
+	virtual void Dump(CDumpContext& dc) const;
+#endif
+
+	// Generated message map functions
+protected:
+	//{{AFX_MSG(CFilePairDoc)
+	// NOTE - the ClassWizard will add and remove member functions here.
+	//}}AFX_MSG
+	DECLARE_MESSAGE_MAP()
+};
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 

@@ -7,22 +7,29 @@
 #undef toupper
 static DWORD CalculateHash(const char * data, int len);
 
-
-void MiltiSzToCString(CString & str, LPCTSTR pMsz)
+CString PatternToMultiCString(LPCTSTR src)
 {
+	// all ';', ',' are replaced with 0, another 0 is appended
+	return "";
+}
+
+CString MiltiSzToCString(LPCTSTR pMsz)
+{
+	CString str;
 	// find string length
-	int l;
+	int len;
 	// limit the string length to 64K
-	for (l = 0; ('\0' != pMsz[l] || '\0' != pMsz[l + 1]) && l < 65536; l++)
+	for (len = 0; ('\0' != pMsz[len] || '\0' != pMsz[len + 1]) && len < 65536; len++)
 	{
 	}
-	l += 2;
-	LPTSTR pBuf = str.GetBuffer(l);
+	len += 2;
+	LPTSTR pBuf = str.GetBuffer(len);
 	if (NULL != pBuf)
 	{
-		memcpy(pBuf, pMsz, l);
-		str.ReleaseBuffer(l - 1);
+		memcpy(pBuf, pMsz, len);
+		str.ReleaseBuffer(len - 1);
 	}
+	return str;
 }
 bool MatchWildcard(LPCTSTR name, LPCTSTR pattern)
 {
@@ -1753,6 +1760,14 @@ FilePair::~FilePair()
 {
 	m_LoadedCount = 0;
 	UnloadFiles();
+	if (NULL != pFirstFile)
+	{
+		delete pFirstFile;
+	}
+	if (NULL != pSecondFile)
+	{
+		delete pSecondFile;
+	}
 }
 
 int _cdecl FilePair::Time1SortFunc(const void * p1, const void * p2)
@@ -1935,6 +1950,37 @@ int _cdecl FilePair::ComparisionSortFunc(const void * p1, const void * p2)
 int _cdecl FilePair::ComparisionSortBackwardsFunc(const void * p1, const void * p2)
 {
 	return - ComparisionSortFunc(p1, p2);
+}
+
+CString FilePair::GetComparisionResult()
+{
+	CString s;
+	switch(ComparisionResult)
+	{
+	case ResultUnknown:
+		break;
+	case FilesIdentical:
+		s = "Files are identical";
+		break;
+	case VersionInfoDifferent:
+		s = "Different only in version stamp";
+		break;
+	case DifferentInSpaces:
+		s = "Different in spaces only";
+		break;
+	case FilesDifferent:
+		s = "Files are different";
+		break;
+	case OnlyFirstFile:
+		s.Format("File exists only in \"%s%s\"",
+				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
+		break;
+	case OnlySecondFile:
+		s.Format("File exists only in \"%s%s\"",
+				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
+		break;
+	}
+	return s;
 }
 
 bool FileLine::IsEqual(const FileLine * pOtherLine) const

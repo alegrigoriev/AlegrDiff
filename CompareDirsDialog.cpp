@@ -23,6 +23,7 @@ CCompareDirsDialog::CCompareDirsDialog(CWnd* pParent /*=NULL*/)
 	m_bIncludeSubdirs = FALSE;
 	m_sSecondDir = _T("");
 	m_sFirstDir = _T("");
+	m_FilenameFilter = _T("");
 	//}}AFX_DATA_INIT
 }
 
@@ -49,6 +50,7 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_FIRST_DIR, m_FirstDirCombo);
 	DDX_Control(pDX, IDC_COMBO_SECOND_DIR, m_SecondDirCombo);
 	DDX_Check(pDX, IDC_CHECK_INCLUDE_SUBDIRS, m_bIncludeSubdirs);
+	DDX_Text(pDX, IDC_EDITFILENAME_FILTER, m_FilenameFilter);
 	//}}AFX_DATA_MAP
 	DDX_CBString(pDX, IDC_COMBO_FIRST_DIR, m_sFirstDir);
 	DDX_CBString(pDX, IDC_COMBO_SECOND_DIR, m_sSecondDir);

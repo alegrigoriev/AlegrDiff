@@ -22,6 +22,7 @@ public:
 	CComboBox	m_FirstDirCombo;
 	CComboBox	m_SecondDirCombo;
 	BOOL	m_bIncludeSubdirs;
+	CString	m_FilenameFilter;
 	//}}AFX_DATA
 	CString	m_sFirstDir;
 	CString	m_sSecondDir;

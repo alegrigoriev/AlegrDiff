@@ -7,12 +7,22 @@
 #define IDR_ALEGRDTYPE                  129
 #define IDD_DIALOG_COMPARE_DIRS         130
 #define IDR_FILEDIFFTYPE                131
+#define IDS_FILENAME_FILTER             132
+#define IDD_DIALOG_PREFERENCES          132
 #define IDC_CURSOR_BEAM                 150
 #define IDC_COMBO_FIRST_DIR             1000
 #define IDC_COMBO_SECOND_DIR            1001
 #define IDC_BUTTON_BROWSE_FIRST_DIR     1002
 #define IDC_BUTTON_BROWSE_SECOND_DIR    1003
 #define IDC_CHECK_INCLUDE_SUBDIRS       1004
+#define IDC_CHECK_BINARY_FILES          1005
+#define IDC_EDIT_BINARY_FILES           1006
+#define IDC_CHECK_C_CPP                 1007
+#define IDC_EDIT_C_CPP                  1008
+#define IDC_CHECK_IGNORE                1009
+#define IDC_EDIT_IGNORE                 1010
+#define IDC_EDIT_TAB_INDENT             1011
+#define IDC_EDITFILENAME_FILTER         1012
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -25,9 +35,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        132
+#define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32783
-#define _APS_NEXT_CONTROL_VALUE         1005
+#define _APS_NEXT_CONTROL_VALUE         1013
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -137,6 +137,10 @@ SOURCE=.\MainFrm.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\PreferencesDialog.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\SmallAllocator.cpp
 # End Source File
 # Begin Source File
@@ -187,6 +191,10 @@ SOURCE=.\FolderDialog.h
 # Begin Source File
 
 SOURCE=.\MainFrm.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\PreferencesDialog.h
 # End Source File
 # Begin Source File
 

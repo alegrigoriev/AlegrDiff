@@ -1,17 +1,18 @@
 TODO:
+Show correct title for list view
+Show title for file view
 Open list view only after directory names are entered
 Check file dates for change, when the app is activated
 Allow two-file comparision
 Add Options dialog
 Add Line Numbers at the left margin
 Add "Refresh" function
-Show correct title for list view
-Show title for file view
 Expand tabs during file loading
 Make "Move to next diff", Move to prev diff functions
 Make "Home", "End" functions
 Add context menu to list view
 Add context menu to file view
+Open directories or files from the command line
 
 Problems:
 

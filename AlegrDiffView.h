@@ -52,7 +52,6 @@ protected:
 	CArray<FilePair *,FilePair *> m_PairArray;
 
 	void BuildSortedPairArray(CArray<FilePair *,FilePair *> & PairArray, FilePair * pPairs, int nCount);
-	void OpenFilePairView(FilePair * pPair);
 
 // Generated message map functions
 protected:

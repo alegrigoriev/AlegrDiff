@@ -19,7 +19,13 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CPreferencesDialog)
 	enum { IDD = IDD_DIALOG_PREFERENCES };
-	// NOTE: the ClassWizard will add data members here
+	BOOL	m_bUseBinaryFilesFilter;
+	BOOL	m_bUseCppFilter;
+	BOOL	m_bUseIgnoreFilter;
+	CString	m_sBinaryFilesFilter;
+	CString	m_sCppFilesFilter;
+	CString	m_sIgnoreFilesFilter;
+	UINT	m_nTabIndent;
 	//}}AFX_DATA
 
 
@@ -35,7 +41,9 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CPreferencesDialog)
-	// NOTE: the ClassWizard will add member functions here
+	afx_msg void OnCheckBinaryFiles();
+	afx_msg void OnCheckCCpp();
+	afx_msg void OnCheckIgnore();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -185,25 +185,6 @@ void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
-CString FileTimeToStr(FILETIME FileTime, LCID locale = LOCALE_USER_DEFAULT)
-{
-	int const TimeBufSize = 256;
-	TCHAR str[TimeBufSize] = {0};
-	SYSTEMTIME SystemTime;
-	SYSTEMTIME LocalTime;
-	memset( & LocalTime, 0, sizeof LocalTime);
-	FileTimeToSystemTime( & FileTime, & SystemTime);
-	SystemTimeToTzSpecificLocalTime(NULL, & SystemTime, & LocalTime);
-
-	GetDateFormat(locale, DATE_SHORTDATE, & LocalTime, NULL, str, TimeBufSize - 1);
-	CString result = str;
-	result += ' ';
-
-	GetTimeFormat(locale, TIME_NOSECONDS, & LocalTime, NULL, str, TimeBufSize - 1);
-	result += str;
-	return result;
-}
-
 		// TEMPLATE STRUCT binary_function
 template<class _A1, class _A2, class _A3, class _R>
 struct ternary_function {
@@ -213,12 +194,13 @@ struct ternary_function {
 	typedef _R result_type;
 };
 
-template <typename F>
-struct TernaryFunc : public ternary_function
+template <class R, class T, class A>
+struct TernaryFunc : public ternary_function<T, T, A, R>
 {
-	TernaryFunc(F __f): f(__f) {}
-	F f;
-	bool operator()(first_argument_type A1, second_argument_type A2, third_argument_type A3)
+	TernaryFunc(R (* __f)(T, T, A)): f(__f) {}
+
+	R (* f)(T, T, A);
+	bool operator()(first_argument_type A1, second_argument_type A2, third_argument_type A3) const
 	{ return f(A1, A2, A3); }
 };
 
@@ -251,6 +233,8 @@ inline binder3rd<_Operation>
 	return binder3rd<_Operation>(__fn, _Arg3_type(__x));
 }
 
+typedef TernaryFunc<bool, const FilePair *, FilePair::CompareParam > FilePairSortFunc;
+
 void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, FilePair * pPairs, int nCount)
 {
 	PairArray.resize(nCount);
@@ -260,53 +244,51 @@ void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, FilePa
 	}
 	PairArray.resize(i);
 
-	int (_cdecl * SortFunc)(const void * , const void * );
-	if (m_bAscendingOrder)
+	FilePair::CompareParam comp;
+	comp.PrimaryBackward = ! m_bAscendingOrder;
+	comp.SecondaryBackward = ! m_bPrevAscendingOrder;
+
+	switch (m_SortColumn)
 	{
-		switch (m_SortColumn)
-		{
-		case ColumnName:
-			SortFunc = FilePair::NameSortFunc;
-			break;
-		default:
-		case ColumnSubdir:
-			SortFunc = FilePair::DirNameSortFunc;
-			break;
-		case ColumnDate1:
-			SortFunc = FilePair::Time1SortFunc;
-			break;
-		case ColumnDate2:
-			SortFunc = FilePair::Time2SortFunc;
-			break;
-		case ColumnComparisionResult:
-			SortFunc = FilePair::ComparisionSortFunc;
-			break;
-		}
+	case ColumnName:
+		comp.PrimarySort = FilePair::CompareSubitemName;
+		break;
+	default:
+	case ColumnSubdir:
+		comp.PrimarySort = FilePair::CompareSubitemDir;
+		break;
+	case ColumnDate1:
+		comp.PrimarySort = FilePair::CompareSubitemDate1;
+		break;
+	case ColumnDate2:
+		comp.PrimarySort = FilePair::CompareSubitemDate2;
+		break;
+	case ColumnComparisionResult:
+		comp.PrimarySort = FilePair::CompareSubitemResult;
+		break;
 	}
-	else
+
+	switch (m_PrevSortColumn)
 	{
-		switch (m_SortColumn)
-		{
-		case ColumnName:
-			SortFunc = FilePair::NameSortBackwardsFunc;
-			break;
-		default:
-		case ColumnSubdir:
-			SortFunc = FilePair::DirNameSortBackwardsFunc;
-			break;
-		case ColumnDate1:
-			SortFunc = FilePair::Time1SortBackwardsFunc;
-			break;
-		case ColumnDate2:
-			SortFunc = FilePair::Time2SortBackwardsFunc;
-			break;
-		case ColumnComparisionResult:
-			SortFunc = FilePair::ComparisionSortBackwardsFunc;
-			break;
-		}
+	case ColumnName:
+		comp.SecondarySort = FilePair::CompareSubitemName;
+		break;
+	default:
+	case ColumnSubdir:
+		comp.SecondarySort = FilePair::CompareSubitemDir;
+		break;
+	case ColumnDate1:
+		comp.SecondarySort = FilePair::CompareSubitemDate1;
+		break;
+	case ColumnDate2:
+		comp.SecondarySort = FilePair::CompareSubitemDate2;
+		break;
+	case ColumnComparisionResult:
+		comp.SecondarySort = FilePair::CompareSubitemResult;
+		break;
 	}
-	const int nSort[4] = { m_SortColumn, m_bAscendingOrder, m_PrevSortColumn, m_bPrevAscendingOrder};
-	sort(PairArray.begin(), PairArray.end(), bind3rd(FilePair::Compare, nSort));
+
+	sort(PairArray.begin(), PairArray.end(), bind3rd(FilePairSortFunc(FilePair::Compare), comp));
 }
 
 void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)

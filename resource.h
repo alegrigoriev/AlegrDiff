@@ -24,6 +24,8 @@
 #define IDD_DIALOG_ACCEPT_OR_DECLINE_ALL 140
 #define IDD_DIALOG_SAVE_MERGED_TEMPLATE 141
 #define IDD_DIALOG_FIND                 142
+#define IDD_DIALOG_PROPERTIES           143
+#define IDD_DIALOG_COMPARE_FILES        144
 #define IDC_CURSOR_BEAM                 150
 #define IDC_COMBO_FIRST_DIR             1000
 #define IDC_COMBO_SECOND_DIR            1001
@@ -64,6 +66,16 @@
 #define IDC_RADIO_DOWN                  1036
 #define IDC_CHECK_WHOLE_WORD            1037
 #define IDC_CHECK_CASE                  1038
+#define IDC_EDIT_FIRST_FILENAME         1038
+#define IDC_EDIT_SECOND_FILENAME        1039
+#define IDC_STATIC_COMPARISON_RESULT    1042
+#define IDC_EDIT_FIRST_LAST_MODIFIED    1043
+#define IDC_EDIT_SECOND_LAST_MODIFIED   1044
+#define IDC_COMBO_FIRST_FILE            1044
+#define IDC_COMBO_SECOND_FILE           1045
+#define IDC_BUTTON_BROWSE_FIRST_FILE    1046
+#define IDC_BUTTON_BROWSE_SECOND_FILE   1047
+#define IDC_CHECK_COMPARE_C_CPP         1048
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -92,6 +104,7 @@
 #define ID_VIEW_FILE_2_VERSION          32810
 #define ID_FILE_COPY_FIRST_DIR_FILE     32811
 #define ID_FILE_COPY_SECOND_DIR_FILE    32812
+#define ID_FILE_PROPERTIES              32813
 #define IDS_DIRECTORY_ACCESS_DENIED     32848
 #define IDS_DIRECTORY_NOT_FOUND         32849
 #define IDS_PREFERENCES                 32850
@@ -124,9 +137,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        143
-#define _APS_NEXT_COMMAND_VALUE         32813
-#define _APS_NEXT_CONTROL_VALUE         1038
+#define _APS_NEXT_RESOURCE_VALUE        144
+#define _APS_NEXT_COMMAND_VALUE         32814
+#define _APS_NEXT_CONTROL_VALUE         1049
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

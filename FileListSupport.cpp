@@ -184,6 +184,7 @@ FileItem::FileItem(const WIN32_FIND_DATA * pWfd,
 
 void FileItem::Unload()
 {
+	TRACE("FileItem %s Unloaded\n", LPCTSTR(GetFullName()));
 	for (int i = 0; i < m_Lines.GetSize(); i++)
 	{
 		delete m_Lines[i];
@@ -2032,30 +2033,8 @@ FilePair::~FilePair()
 	}
 }
 
-int _cdecl FilePair::Time1SortFunc(const void * p1, const void * p2)
+int FilePair::Time1SortFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
-	FilePair * Pair1 = *(FilePair * const *) p1;
-	FilePair * Pair2 = *(FilePair * const *) p2;
-
-	FileItem * Item1 = Pair1->pFirstFile;
-	FileItem * Item2 = Pair2->pFirstFile;
-
-	if (NULL == Item1)
-	{
-		return NULL != Item2;
-	}
-	if (NULL == Item2)
-	{
-		return -1;
-	}
-	return FileItem::TimeCompare(Item1, Item2);
-}
-
-int _cdecl FilePair::Time1SortBackwardsFunc(const void * p1, const void * p2)
-{
-	FilePair * Pair1 = *(FilePair * const *) p1;
-	FilePair * Pair2 = *(FilePair * const *) p2;
-
 	FileItem * Item1 = Pair1->pFirstFile;
 	FileItem * Item2 = Pair2->pFirstFile;
 
@@ -2070,13 +2049,10 @@ int _cdecl FilePair::Time1SortBackwardsFunc(const void * p1, const void * p2)
 	return FileItem::TimeCompare(Item2, Item1);
 }
 
-int _cdecl FilePair::Time2SortFunc(const void * p1, const void * p2)
+int FilePair::Time1SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
-	FilePair * Pair1 = *(FilePair * const *) p1;
-	FilePair * Pair2 = *(FilePair * const *) p2;
-
-	FileItem * Item1 = Pair1->pSecondFile;
-	FileItem * Item2 = Pair2->pSecondFile;
+	FileItem * Item1 = Pair1->pFirstFile;
+	FileItem * Item2 = Pair2->pFirstFile;
 
 	if (NULL == Item1)
 	{
@@ -2089,11 +2065,8 @@ int _cdecl FilePair::Time2SortFunc(const void * p1, const void * p2)
 	return FileItem::TimeCompare(Item1, Item2);
 }
 
-int _cdecl FilePair::Time2SortBackwardsFunc(const void * p1, const void * p2)
+int FilePair::Time2SortFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
-	FilePair * Pair1 = *(FilePair * const *) p1;
-	FilePair * Pair2 = *(FilePair * const *) p2;
-
 	FileItem * Item1 = Pair1->pSecondFile;
 	FileItem * Item2 = Pair2->pSecondFile;
 
@@ -2108,17 +2081,23 @@ int _cdecl FilePair::Time2SortBackwardsFunc(const void * p1, const void * p2)
 	return FileItem::TimeCompare(Item2, Item1);
 }
 
-int _cdecl FilePair::NameSortFunc(const void * p1, const void * p2)
+int FilePair::Time2SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
-	return NameCompare(*(FilePair * const *) p1, *(FilePair * const *) p2);
+	FileItem * Item1 = Pair1->pSecondFile;
+	FileItem * Item2 = Pair2->pSecondFile;
+
+	if (NULL == Item1)
+	{
+		return NULL != Item2;
+	}
+	if (NULL == Item2)
+	{
+		return -1;
+	}
+	return FileItem::TimeCompare(Item1, Item2);
 }
 
-int _cdecl FilePair::NameSortBackwardsFunc(const void * p1, const void * p2)
-{
-	return NameCompare(*(FilePair * const *) p2, *(FilePair * const *) p1);
-}
-
-int FilePair::NameCompare(FilePair * Pair1, FilePair * Pair2)
+int FilePair::NameCompare(const FilePair * Pair1, const FilePair * Pair2)
 {
 	FileItem * Item1;
 	FileItem * Item2;
@@ -2137,17 +2116,7 @@ int FilePair::NameCompare(FilePair * Pair1, FilePair * Pair2)
 	return FileItem::NameCompare(Item1, Item2);
 }
 
-int _cdecl FilePair::DirNameSortFunc(const void * p1, const void * p2)
-{
-	return DirNameCompare(*(FilePair * const *) p1, *(FilePair * const *) p2);
-}
-
-int _cdecl FilePair::DirNameSortBackwardsFunc(const void * p1, const void * p2)
-{
-	return DirNameCompare(*(FilePair * const *) p2, *(FilePair * const *) p1);
-}
-
-int FilePair::DirNameCompare(FilePair * Pair1, FilePair * Pair2)
+int FilePair::DirNameCompare(const FilePair * Pair1, const FilePair * Pair2)
 {
 	FileItem * Item1;
 	FileItem * Item2;
@@ -2166,7 +2135,7 @@ int FilePair::DirNameCompare(FilePair * Pair1, FilePair * Pair2)
 	return FileItem::DirNameCompare(Item1, Item2);
 }
 
-int FilePair::ComparisionResultPriority()
+int FilePair::ComparisionResultPriority() const
 {
 	// the following order:
 	// ResultUnknown, FilesDifferent, VersionInfoDifferent, DifferentInSpaces, FilesIdentical,
@@ -2193,10 +2162,63 @@ int FilePair::ComparisionResultPriority()
 	}
 }
 
-int _cdecl FilePair::ComparisionSortFunc(const void * p1, const void * p2)
+bool FilePair::Compare(const FilePair * Pair1, const FilePair * Pair2, const CompareParam comp)
 {
-	FilePair * Pair1 = *(FilePair * const *) p1;
-	FilePair * Pair2 = *(FilePair * const *) p2;
+	int result = 0;
+	switch (comp.PrimarySort)
+	{
+	case CompareSubitemName:
+		result = NameCompare(Pair1, Pair2);
+		break;
+	default:
+	case CompareSubitemDir:
+		result = DirNameCompare(Pair1, Pair2);
+		break;
+	case CompareSubitemDate1:
+		if (comp.PrimaryBackward)
+		{
+			return Time1SortBackwardsFunc(Pair1, Pair2) <= 0;
+		}
+		else
+		{
+			return Time1SortFunc(Pair1, Pair2) <= 0;
+		}
+		break;
+	case CompareSubitemDate2:
+		if (comp.PrimaryBackward)
+		{
+			return Time2SortBackwardsFunc(Pair1, Pair2) <= 0;
+		}
+		else
+		{
+			return Time2SortFunc(Pair1, Pair2) <= 0;
+		}
+		break;
+	case CompareSubitemResult:
+		result = ComparisionSortFunc(Pair1, Pair2);
+		if (0 == result)
+		{
+			CompareParam comp1;
+			comp1.PrimarySort = comp.SecondarySort;
+			comp1.PrimaryBackward = comp.SecondaryBackward;
+			comp1.SecondaryBackward =0;
+			comp1.SecondarySort = CompareSubitemName;
+			return Compare(Pair1, Pair2, comp1);
+		}
+		break;
+	}
+	if (comp.PrimaryBackward)
+	{
+		return result >= 0;
+	}
+	else
+	{
+		return result <= 0;
+	}
+}
+
+int FilePair::ComparisionSortFunc(const FilePair * Pair1, const FilePair * Pair2)
+{
 	int priority1 = Pair1->ComparisionResultPriority();
 	int priority2 = Pair2->ComparisionResultPriority();
 
@@ -2209,14 +2231,10 @@ int _cdecl FilePair::ComparisionSortFunc(const void * p1, const void * p2)
 		return -1;
 	}
 
-	return NameCompare(Pair1, Pair2);
-}
-int _cdecl FilePair::ComparisionSortBackwardsFunc(const void * p1, const void * p2)
-{
-	return - ComparisionSortFunc(p1, p2);
+	return 0;
 }
 
-CString FilePair::GetComparisionResult()
+CString FilePair::GetComparisionResult() const
 {
 	static CString sFilesUnaccessible;
 	static CString sFilesIdentical;
@@ -2327,6 +2345,7 @@ void FilePair::UnloadFiles(bool ForceUnload)
 		return;
 	}
 	m_LoadedCount = 0;
+	TRACE("Unloading file pair\n");
 	FreeLinePairData();
 
 	if (NULL != pFirstFile)
@@ -2739,6 +2758,28 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 
 			pSection->pNext = pFirstSection;
 			pFirstSection = pSection;
+		}
+	}
+	// add the final section
+	pSection = pFirstSection;
+	while (NULL != pSection->pNext)
+	{
+		pSection = pSection->pNext;
+	}
+	if (pSection->File1LineEnd < pFirstFile->GetNumLines()
+		|| pSection->File2LineEnd < pSecondFile->GetNumLines())
+	{
+		FileSection * pLastSection = new FileSection;
+		if (NULL != pLastSection)
+		{
+			pLastSection->File1LineBegin = pFirstFile->GetNumLines();
+			pLastSection->File1LineEnd = pLastSection->File1LineBegin;
+
+			pLastSection->File2LineBegin = pSecondFile->GetNumLines();
+			pLastSection->File2LineEnd = pLastSection->File2LineBegin;
+
+			pSection->pNext = pLastSection;
+			pLastSection->pNext = NULL;
 		}
 	}
 	// try to match single lines inside the difference areas, but limit the lookup

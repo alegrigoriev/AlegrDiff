@@ -129,6 +129,14 @@ SOURCE=.\FileListSupport.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\FilesCompareDialog.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\FilesPropertiesDialog.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\FindDialog.cpp
 # End Source File
 # Begin Source File
@@ -191,6 +199,14 @@ SOURCE=.\DiffFileView.h
 # Begin Source File
 
 SOURCE=.\FileListSupport.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\FilesCompareDialog.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\FilesPropertiesDialog.h
 # End Source File
 # Begin Source File
 

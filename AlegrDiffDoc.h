@@ -196,6 +196,7 @@ public:
 	afx_msg void OnFileCopyFirstDirFile();
 	afx_msg void OnUpdateFileCopySecondDirFile(CCmdUI* pCmdUI);
 	afx_msg void OnFileCopySecondDirFile();
+	afx_msg void OnFileProperties();
 	//}}AFX_MSG
 protected:
 	DECLARE_MESSAGE_MAP()

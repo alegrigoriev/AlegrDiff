@@ -1,6 +1,5 @@
 TODO:
 
-Remember last custom filter for comparing the files. Create a filter from the current file extension. Get file type from the registry
 Refresh list view
 make word by word comparison in MatchStrings
 show version of file1, file2 of the line
@@ -32,6 +31,7 @@ When there are much different areas, they may be randomly interlaced.
    Solution: if there is little common, just ignore it.
 
 Done:
+Remember last custom filter for comparing the files. Create a filter from the current file extension. Get file type from the registry
 Cancel selection on Accept/Decline commands (to see the result immediately). ???
 Use GetFileAttributes rather than FindFirst to check whether it's file or directory
 make DEMO version (merged file not saved, open for viewing only, Copy disabled)

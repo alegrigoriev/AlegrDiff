@@ -151,6 +151,7 @@ void CopyFilesToFolder(FileItem ** ppFiles, int nCount, bool bAddSubdirToTarget)
 CString FileTimeToStr(FILETIME FileTime, LCID locale = LOCALE_USER_DEFAULT);
 void AddStringToHistory(const CString & str, CString history[], int NumItems, bool CaseSensitive = false);
 CString CreateCustomFilter(LPCTSTR Extension);
+int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder);
 /////////////////////////////////////////////////////////////////////////////
 
 //{{AFX_INSERT_LOCATION}}

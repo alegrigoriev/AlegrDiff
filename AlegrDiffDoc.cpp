@@ -1508,9 +1508,7 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 	CString filter;
 	if ( ! FileExt.IsEmpty())
 	{
-		filter = '*' + FileExt;
-		filter += _T(" Files|*");
-		filter += FileExt;
+		Filter += CreateCustomFilter(FileExt);
 	}
 	CString AllFilter;
 	AllFilter.LoadString(IDS_ALL_FILES);

@@ -26,6 +26,7 @@ public:
 	BOOL m_bIncludeDirectoryStructure;
 	BOOL m_bIncludeSubdirectories;
 	BOOL m_bSaveAsUnicode;
+	BOOL m_bNeedUpdateControls;
 
 	CComboBox m_DirCombo;
 	CString m_sDirectory;
@@ -44,5 +45,10 @@ public:
 	virtual BOOL OnInitDialog();
 
 	CApplicationProfile m_Profile;
-	afx_msg void OnBnClickedOk();
+	LRESULT OnKickIdle(WPARAM, LPARAM);
+	afx_msg void OnCbnEditchangeComboFirstDir();
+	afx_msg void OnCbnSelchangeComboFirstDir();
+	afx_msg void OnCbnEditchangeComboSaveFilename();
+	afx_msg void OnCbnSelchangeComboSaveFilename();
+	void OnUpdateOk(CCmdUI * pCmdUI);
 };

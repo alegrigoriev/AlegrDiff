@@ -55,6 +55,11 @@ BEGIN_MESSAGE_MAP(CBinaryCompareView, CView)
 	ON_UPDATE_COMMAND_UI(ID_WORDSIZE_4BYTES, OnUpdateWordsize4bytes)
 	ON_COMMAND(ID_WORDSIZE_8BYTES, OnWordsize8bytes)
 	ON_UPDATE_COMMAND_UI(ID_WORDSIZE_8BYTES, OnUpdateWordsize8bytes)
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_BINDIFF_SHOWFIRSTFILE, OnBindiffShowfirstfile)
+	ON_UPDATE_COMMAND_UI(ID_BINDIFF_SHOWFIRSTFILE, OnUpdateBindiffShowfirstfile)
+	ON_COMMAND(ID_BINDIFF_SHOW2NDFILE, OnBindiffShow2ndfile)
+	ON_UPDATE_COMMAND_UI(ID_BINDIFF_SHOW2NDFILE, OnUpdateBindiffShow2ndfile)
 END_MESSAGE_MAP()
 
 
@@ -1269,4 +1274,76 @@ void CBinaryCompareView::OnWordsize8bytes()
 void CBinaryCompareView::OnUpdateWordsize8bytes(CCmdUI *pCmdUI)
 {
 	pCmdUI->SetRadio(m_WordSize == 8);
+}
+
+void CBinaryCompareView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
+{
+	// make sure window is active
+	GetParentFrame()->ActivateFrame();
+
+	CMenu menu;
+	if (menu.LoadMenu(IDR_BINARYDIFF_CONTEXT))
+	{
+		CMenu* pPopup = menu.GetSubMenu(0);
+		if(pPopup != NULL)
+		{
+			pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_LEFTBUTTON,
+									point.x, point.y,
+									AfxGetMainWnd()); // use main window for cmds
+		}
+	}
+}
+
+void CBinaryCompareView::OnBindiffShowfirstfile()
+{
+	FilePair * pPair = GetDocument()->GetFilePair();
+	if (NULL != pPair->pFirstFile
+		&& NULL != pPair->pSecondFile)
+	{
+		m_bShowSecondFile = FALSE;
+		Invalidate();
+	}
+}
+
+void CBinaryCompareView::OnUpdateBindiffShowfirstfile(CCmdUI *pCmdUI)
+{
+	FilePair * pPair = GetDocument()->GetFilePair();
+	if (NULL != pPair->pFirstFile
+		&& NULL != pPair->pSecondFile)
+	{
+		pCmdUI->Enable(TRUE);
+		pCmdUI->SetRadio( ! m_bShowSecondFile);
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+		pCmdUI->SetRadio(NULL != pPair->pFirstFile);
+	}
+}
+
+void CBinaryCompareView::OnBindiffShow2ndfile()
+{
+	FilePair * pPair = GetDocument()->GetFilePair();
+	if (NULL != pPair->pFirstFile
+		&& NULL != pPair->pSecondFile)
+	{
+		m_bShowSecondFile = TRUE;
+		Invalidate();
+	}
+}
+
+void CBinaryCompareView::OnUpdateBindiffShow2ndfile(CCmdUI *pCmdUI)
+{
+	FilePair * pPair = GetDocument()->GetFilePair();
+	if (NULL != pPair->pFirstFile
+		&& NULL != pPair->pSecondFile)
+	{
+		pCmdUI->Enable(TRUE);
+		pCmdUI->SetRadio(m_bShowSecondFile);
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+		pCmdUI->SetRadio(NULL != pPair->pSecondFile);
+	}
 }

@@ -5,15 +5,20 @@
 
 class CDirectoryFingerprintCheckDlg : public CProgressDialog
 {
+	typedef CProgressDialog BaseClass;
 	DECLARE_DYNAMIC(CDirectoryFingerprintCheckDlg)
 
 public:
-	CDirectoryFingerprintCheckDlg(class CAlegrDiffDoc * pDoc, CWnd* pParent = NULL);   // standard constructor
+	CDirectoryFingerprintCheckDlg(class CAlegrDiffDoc * pDoc,
+								LPCTSTR DirectoryToCheck,
+								LPCTSTR FingerprintFilename,
+								CWnd* pParent = NULL);   // standard constructor
 	virtual ~CDirectoryFingerprintCheckDlg();
 
 // Dialog Data
 	enum { IDD = IDD_DIALOG_FINGERPRINT_CHECK_PROGRESS };
 
+protected:
 	class CAlegrDiffDoc * m_pDocument;
 	BOOL m_bSaveAsUnicode;
 	// percents complete
@@ -28,7 +33,7 @@ public:
 
 	FILE * m_pFile;
 	virtual unsigned ThreadProc();
-
+public:
 	virtual BOOL OnInitDialog();
 	virtual INT_PTR DoModal();
 protected:

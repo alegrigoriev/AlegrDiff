@@ -509,6 +509,7 @@ BEGIN_MESSAGE_MAP(CFilePairDoc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_FILE_COPY_SECOND_DIR_FILE, OnUpdateFileCopySecondDirFile)
 	ON_COMMAND(ID_FILE_COPY_SECOND_DIR_FILE, OnFileCopySecondDirFile)
 	ON_COMMAND(ID_FILE_PROPERTIES, OnFileProperties)
+	ON_UPDATE_COMMAND_UI(ID_FILE_MERGE_SAVE, OnUpdateFileMergeSave)
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
 END_MESSAGE_MAP()
@@ -1812,4 +1813,11 @@ void CFilePairDoc::OnFileProperties()
 
 		dlg.DoModal();
 	}
+}
+
+void CFilePairDoc::OnUpdateFileMergeSave(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(m_pFilePair != NULL
+					&& m_pFilePair->pFirstFile != NULL
+					&& m_pFilePair->pSecondFile != NULL);
 }

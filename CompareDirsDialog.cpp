@@ -19,7 +19,7 @@ static char THIS_FILE[] = __FILE__;
 CCompareDirsDialog::CCompareDirsDialog(CWnd* pParent /*=NULL*/)
 	: CDialog(CCompareDirsDialog::IDD, pParent),
 	m_bAdvanced(false),
-	m_bUseBinaryFilesFilter(true),
+	m_bUseBinaryFilesFilter(false),
 	m_bUseCppFilter(true),
 	m_bUseIgnoreFilter(true),
 	m_nTabIndent(4)

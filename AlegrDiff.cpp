@@ -366,28 +366,32 @@ CDocument * CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 			}
 			return pDoc;
 		}
-		else
+	}
+
+	position = m_pBinaryDiffTemplate->GetFirstDocPosition();
+	while(position)
+	{
+		CDocument * pJustDoc = m_pFileDiffTemplate->GetNextDoc(position);
+		CBinaryCompareDoc * pDoc =
+			dynamic_cast<CBinaryCompareDoc *>(pJustDoc);
+		if (NULL != pDoc
+			&& pDoc->GetFilePair() == pPair)
 		{
-			CBinaryCompareDoc * pDoc =
-				dynamic_cast<CBinaryCompareDoc *>(pJustDoc);
-			if (NULL != pDoc
-				&& pDoc->GetFilePair() == pPair)
+			POSITION viewpos = pDoc->GetFirstViewPosition();
+			if (viewpos)
 			{
-				POSITION viewpos = pDoc->GetFirstViewPosition();
-				if (viewpos)
-				{
-					CView * pView = pDoc->GetNextView(viewpos);
-					((CMDIChildWnd*)pView->GetParentFrame())->MDIActivate();
-				}
-				return pDoc;
+				CView * pView = pDoc->GetNextView(viewpos);
+				((CMDIChildWnd*)pView->GetParentFrame())->MDIActivate();
 			}
+			return pDoc;
 		}
 	}
 
 	if (pPair->pFirstFile->m_IsBinary
 		|| pPair->pSecondFile->m_IsBinary)
 	{
-		CBinaryCompareDoc * pDoc = (CBinaryCompareDoc *)m_pBinaryDiffTemplate->OpenDocumentFile(NULL);
+		CBinaryCompareDoc * pDoc = dynamic_cast<CBinaryCompareDoc *>
+									(m_pBinaryDiffTemplate->OpenDocumentFile(NULL));
 
 		if (NULL != pDoc)
 		{
@@ -397,7 +401,8 @@ CDocument * CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 	}
 	else
 	{
-		CFilePairDoc * pDoc = (CFilePairDoc *)m_pFileDiffTemplate->OpenDocumentFile(NULL);
+		CFilePairDoc * pDoc = dynamic_cast<CFilePairDoc *>
+							(m_pFileDiffTemplate->OpenDocumentFile(NULL));
 
 		if (NULL != pDoc)
 		{
@@ -519,6 +524,19 @@ void CAlegrDiffApp::NotifyFilePairChanged(FilePair *pPair)
 			&& pPair == pDoc->GetFilePair())
 		{
 			pDoc->UpdateAllViews(NULL, CFilePairDoc::FileLoaded);
+			return;
+		}
+	}
+
+	position = m_pBinaryDiffTemplate->GetFirstDocPosition();
+	while(position)
+	{
+		CBinaryCompareDoc * pDoc =
+			dynamic_cast<CBinaryCompareDoc *>(m_pBinaryDiffTemplate->GetNextDoc(position));
+		if (NULL != pDoc
+			&& pPair == pDoc->GetFilePair())
+		{
+			pDoc->UpdateAllViews(NULL, CBinaryCompareDoc::FileLoaded);
 		}
 	}
 }
@@ -530,6 +548,17 @@ void CAlegrDiffApp::UpdateAllDiffViews(LPARAM lHint, CObject* pHint)
 	{
 		CFilePairDoc * pDoc =
 			dynamic_cast<CFilePairDoc *>(m_pFileDiffTemplate->GetNextDoc(position));
+		if (NULL != pDoc)
+		{
+			pDoc->UpdateAllViews(NULL, lHint, pHint);
+		}
+	}
+
+	position = m_pBinaryDiffTemplate->GetFirstDocPosition();
+	while(position)
+	{
+		CBinaryCompareDoc * pDoc =
+			dynamic_cast<CBinaryCompareDoc *>(m_pBinaryDiffTemplate->GetNextDoc(position));
 		if (NULL != pDoc)
 		{
 			pDoc->UpdateAllViews(NULL, lHint, pHint);
@@ -972,7 +1001,7 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 
 	if (bFilesBinary)
 	{
-		CBinaryCompareDoc * pDoc = (CBinaryCompareDoc *)m_pFileDiffTemplate->OpenDocumentFile(NULL);
+		CBinaryCompareDoc * pDoc = (CBinaryCompareDoc *)m_pBinaryDiffTemplate->OpenDocumentFile(NULL);
 		if (NULL != pDoc)
 		{
 			pDoc->SetFilePair(pPair);

@@ -181,55 +181,79 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 		pDC->SetTextColor(pApp->m_NormalTextColor);
 		pDC->TextOut(0, CurrentY, buf, _tcslen(buf));
 
-		for (unsigned offset = 0;
-			offset < m_BytesPerLine && (offset < Buf1Filled || offset < Buf2Filled);
-			offset += m_WordSize)
+		for (int DrawTextChars = 0; DrawTextChars <= 1; DrawTextChars++)
 		{
-			for (int ByteNum = 1; ByteNum <= m_WordSize; ByteNum++)
+			for (unsigned offset = 0;
+				offset < m_BytesPerLine && (offset < Buf1Filled || offset < Buf2Filled);
+				offset += m_WordSize)
 			{
-				DWORD color = TextColor;
-				if (Buf1Filled > offset + m_WordSize - ByteNum)
+				for (int ByteNum = 1; ByteNum <= m_WordSize; ByteNum++)
 				{
-					_stprintf(buf, _T("%02X"), FileBuf1[offset + m_WordSize - ByteNum]);
-					if (Buf2Filled <= offset + m_WordSize - ByteNum
-						|| FileBuf1[offset + m_WordSize - ByteNum]
-						!= FileBuf2[offset + m_WordSize - ByteNum])
+					UCHAR CurrChar = 0;
+					DWORD color = TextColor;
+					if (Buf1Filled > offset + m_WordSize - ByteNum)
 					{
-						color = OtherColor;
+						CurrChar = FileBuf1[offset + m_WordSize - ByteNum];
+						_stprintf(buf, _T("%02X"), CurrChar);
+						if (Buf2Filled <= offset + m_WordSize - ByteNum
+							|| CurrChar != FileBuf2[offset + m_WordSize - ByteNum])
+						{
+							color = OtherColor;
+						}
 					}
-				}
-				else if (Buf2Filled > offset + m_WordSize - ByteNum)
-				{
-					_stprintf(buf, _T("%02X"), FileBuf2[offset + m_WordSize - ByteNum]);
-					color = AlternateColor;
-				}
-				else
-				{
-					buf[0] = '?';
-					buf[1] = '?';
-					buf[2] = 0;
-				}
-				int chars = 2;
-				if (ByteNum == m_WordSize)
-				{
-					buf[2] = ' ';
-					buf[3] = 0;
-					chars = 3;
-				}
+					else if (Buf2Filled > offset + m_WordSize - ByteNum)
+					{
+						CurrChar = FileBuf2[offset + m_WordSize - ByteNum];
+						_stprintf(buf, _T("%02X"), CurrChar);
+						color = AlternateColor;
+					}
+					else
+					{
+						CurrChar = '?';
+						buf[0] = '?';
+						buf[1] = '?';
+						buf[2] = 0;
+					}
+					int chars = 2;
 
-				DWORD BackgroundColor = pApp->m_TextBackgroundColor;
-				if (CurrentAddr + offset < SelEnd
-					&& CurrentAddr + offset >= SelBegin)
-				{
-					color = pApp->m_SelectedTextColor;
-					BackgroundColor = 0x000000;
-				}
+					DWORD BackgroundColor = pApp->m_TextBackgroundColor;
+					if (CurrentAddr + offset < SelEnd
+						&& CurrentAddr + offset >= SelBegin)
+					{
+						color = pApp->m_SelectedTextColor;
+						BackgroundColor = 0x000000;
+					}
 
-				pDC->SetBkColor(BackgroundColor);
-				pDC->SetTextColor(color);
-				pDC->TextOut(0, 0, buf, chars);
+					pDC->SetBkColor(BackgroundColor);
+					pDC->SetTextColor(color);
+
+					if ( ! DrawTextChars)
+					{
+						if (ByteNum == m_WordSize)
+						{
+							buf[2] = ' ';
+							buf[3] = 0;
+							chars = 3;
+						}
+					}
+					else
+					{
+						// convert the byte to unicode
+						char tmp = CurrChar;
+						if ( ! isprint(CurrChar)
+							|| 1 != mbtowc(buf, & tmp, 1))
+						{
+							buf[0] = '.';
+							buf[1] = 0;
+						}
+						chars = 1;
+					}
+					pDC->TextOut(0, 0, buf, chars);
+				}
 			}
-
+			CPoint pos(pDC->GetCurrentPosition());
+			pos.Offset(CharWidth() * 2, 0);
+			pDC->MoveTo(pos);
 		}
 		CurrentAddr += m_BytesPerLine;
 	}

@@ -5,6 +5,7 @@
 
 #undef tolower
 #undef toupper
+static DWORD CalculateHash(const char * data, int len);
 
 void MiltiSzToCString(CString & str, LPCTSTR pMsz)
 {
@@ -195,6 +196,54 @@ int _cdecl FileLine::NormalizedHashAndLineNumberCompareFunc(const void * p1, con
 	return 0;
 }
 
+int _cdecl FileLine::GroupHashAndLineNumberCompareFunc(const void * p1, const void * p2)
+{
+	FileLine const * pLine1 = *(FileLine **) p1;
+	FileLine const * pLine2 = *(FileLine **) p2;
+	if (pLine1->GetGroupHash() > pLine2->GetGroupHash())
+	{
+		return 1;
+	}
+	if (pLine1->GetGroupHash() < pLine2->GetGroupHash())
+	{
+		return -1;
+	}
+	// if hash is the same, compare line numbers
+	if (pLine1->GetLineNumber() > pLine2->GetLineNumber())
+	{
+		return 1;
+	}
+	if (pLine1->GetLineNumber() < pLine2->GetLineNumber())
+	{
+		return -1;
+	}
+	return 0;
+}
+
+int _cdecl FileLine::NormalizedGroupHashAndLineNumberCompareFunc(const void * p1, const void * p2)
+{
+	FileLine const * pLine1 = *(FileLine **) p1;
+	FileLine const * pLine2 = *(FileLine **) p2;
+	if (pLine1->GetNormalizedGroupHash() > pLine2->GetNormalizedGroupHash())
+	{
+		return 1;
+	}
+	if (pLine1->GetNormalizedGroupHash() < pLine2->GetNormalizedGroupHash())
+	{
+		return -1;
+	}
+	// if hash is the same, compare line numbers
+	if (pLine1->GetLineNumber() > pLine2->GetLineNumber())
+	{
+		return 1;
+	}
+	if (pLine1->GetLineNumber() < pLine2->GetLineNumber())
+	{
+		return -1;
+	}
+	return 0;
+}
+
 #undef new
 bool FileItem::Load()
 {
@@ -204,8 +253,16 @@ bool FileItem::Load()
 		return false;
 	}
 	char line[2048];
-	for (int LinNum =0; NULL != fgets(line, sizeof line, file); LinNum++)
+	for (int LinNum =0; NULL != fgets(line, sizeof line - 1, file); LinNum++)
 	{
+		// remove last \n char
+		int len = strlen(line);
+		if (len > 0
+			&& '\n' == line[len - 1])
+		{
+			line[len - 1] = 0;
+		}
+
 		FileLine * pLine = new FileLine(line, true);
 		if (pLine)
 		{
@@ -217,25 +274,51 @@ bool FileItem::Load()
 
 	int i, j;
 	// make sorted array of the string hash values
-	m_HashSortedLines.SetSize(LinNum);
+	m_NonBlankLines.SetSize(LinNum);
 	for (i = 0, j = 0; i < LinNum; i++)
 	{
 		if ( ! m_Lines[i]->IsBlank())
 		{
-			m_HashSortedLines[j] = m_Lines[i];
+			m_NonBlankLines[j] = m_Lines[i];
 			j++;
 		}
 	}
-	if (j != m_HashSortedLines.GetSize())
+	if (j != m_NonBlankLines.GetSize())
 	{
-		m_HashSortedLines.SetSize(j);
+		m_NonBlankLines.SetSize(j);
 	}
-	m_NormalizedHashSortedLines.Copy(m_HashSortedLines);
+	LinNum = j;
+	// before we sorted the arrays, make hash codes for groups of lines
+	CThisApp * pApp = GetApp();
+	for (i = 0; i < LinNum; i++)
+	{
+		DWORD GroupHash[MaxLineGroupSize];
+		DWORD NormGroupHash[MaxLineGroupSize];
+		for (j = 0; j < MaxLineGroupSize && j < pApp->m_MinIdenticalLines && j + i < LinNum; j++)
+		{
+			GroupHash[j] = m_NonBlankLines[i + j]->GetHash();
+			NormGroupHash[j] = m_NonBlankLines[i + j]->GetNormalizedHash();
+		}
+		m_NonBlankLines[i]->SetGroupHash(CalculateHash((char *)GroupHash, j * sizeof GroupHash[0]));
+		m_NonBlankLines[i]->SetNormalizedGroupHash(
+													CalculateHash((char *)NormGroupHash, j * sizeof NormGroupHash[0]));
+	}
 
-	qsort(m_HashSortedLines.GetData(), LinNum,
+	m_HashSortedLines.Copy(m_NonBlankLines);
+	qsort(m_HashSortedLines.GetData(), m_HashSortedLines.GetSize(),
 		sizeof m_HashSortedLines[0], FileLine::HashAndLineNumberCompareFunc);
-	qsort(m_NormalizedHashSortedLines.GetData(), LinNum,
+
+	m_NormalizedHashSortedLines.Copy(m_NonBlankLines);
+	qsort(m_NormalizedHashSortedLines.GetData(), m_NormalizedHashSortedLines.GetSize(),
 		sizeof m_NormalizedHashSortedLines[0], FileLine::NormalizedHashAndLineNumberCompareFunc);
+
+	m_HashSortedLineGroups.Copy(m_NonBlankLines);
+	qsort(m_HashSortedLineGroups.GetData(), m_HashSortedLineGroups.GetSize(),
+		sizeof m_HashSortedLineGroups[0], FileLine::GroupHashAndLineNumberCompareFunc);
+
+	m_NormalizedHashSortedLineGroups.Copy(m_NonBlankLines);
+	qsort(m_NormalizedHashSortedLineGroups.GetData(), m_NormalizedHashSortedLineGroups.GetSize(),
+		sizeof m_NormalizedHashSortedLineGroups[0], FileLine::NormalizedGroupHashAndLineNumberCompareFunc);
 #ifdef _DEBUG
 	// check if the array is sorted correctly
 	{
@@ -261,6 +344,30 @@ bool FileItem::Load()
 				TRACE("Item %d: NormHash=%x, lineNum=%d, item %d: NormHash=%x, LineNum=%d\n",
 					i - 1, m_NormalizedHashSortedLines[i - 1]->GetNormalizedHash(), m_NormalizedHashSortedLines[i - 1]->GetLineNumber(),
 					i, m_NormalizedHashSortedLines[i]->GetNormalizedHash(), m_NormalizedHashSortedLines[i]->GetLineNumber());
+				//break;
+			}
+		}
+		for (i = 1; i < m_HashSortedLineGroups.GetSize(); i++)
+		{
+			if (m_HashSortedLineGroups[i]->GetGroupHash() < m_HashSortedLineGroups[i - 1]->GetGroupHash()
+				|| (m_HashSortedLineGroups[i]->GetGroupHash() == m_HashSortedLineGroups[i - 1]->GetGroupHash()
+					&& m_HashSortedLineGroups[i]->GetLineNumber() < m_HashSortedLineGroups[i - 1]->GetLineNumber()))
+			{
+				TRACE("Item %d: GroupHash=%x, lineNum=%d, item %d: GroupHash=%x, LineNum=%d\n",
+					i - 1, m_HashSortedLineGroups[i - 1]->GetGroupHash(), m_HashSortedLineGroups[i - 1]->GetLineNumber(),
+					i, m_HashSortedLineGroups[i]->GetGroupHash(), m_HashSortedLineGroups[i]->GetLineNumber());
+				//break;
+			}
+		}
+		for (i = 1; i < m_NormalizedHashSortedLineGroups.GetSize(); i++)
+		{
+			if (m_NormalizedHashSortedLineGroups[i]->GetNormalizedGroupHash() < m_NormalizedHashSortedLineGroups[i - 1]->GetNormalizedGroupHash()
+				|| (m_NormalizedHashSortedLineGroups[i]->GetNormalizedGroupHash() == m_NormalizedHashSortedLineGroups[i - 1]->GetNormalizedGroupHash()
+					&& m_NormalizedHashSortedLineGroups[i]->GetLineNumber() < m_NormalizedHashSortedLineGroups[i - 1]->GetLineNumber()))
+			{
+				TRACE("Item %d: GroupNormHash=%x, lineNum=%d, item %d: GroupNormHash=%x, LineNum=%d\n",
+					i - 1, m_NormalizedHashSortedLineGroups[i - 1]->GetNormalizedGroupHash(), m_NormalizedHashSortedLineGroups[i - 1]->GetLineNumber(),
+					i, m_NormalizedHashSortedLineGroups[i]->GetNormalizedGroupHash(), m_NormalizedHashSortedLineGroups[i]->GetLineNumber());
 				//break;
 			}
 		}
@@ -527,79 +634,253 @@ template<class T, class A> const T * BinLookupAbout(
 {
 	const T *lo = base;
 	const T *hi = base + (num - 1);
-	const T *mid;
-	unsigned int half;
-	unsigned int uphalf;
-	int result;
+
+	if (0) TRACE("BinLookupAbout begin: num=%d\n", num);
 
 	while (lo <= hi)
 	{
-		half = num / 2;
-		uphalf = num - half - 1;
-		if (0 != half)
+		unsigned int half = num / 2;
+		unsigned int lohalf = num - half - 1;
+		if (0 == half)
 		{
-			mid = lo + uphalf;
-			result = compare(key, mid, ComparisionContext);
-			if (0 == result)
-			{
-				return mid;
-			}
-			else if (result < 0)
-			{
-				// choose lower half
-				hi = mid - 1;
-
-				num = uphalf;
-			}
-			else
-			{
-				// choose upper half
-				lo = mid + 1;
-				num = half;
-			}
+			break;
 		}
-		else if (num)
+		const T * mid = lo + lohalf;
+
+		if (0) TRACE("lo = %d, hi = %d, mid = %d\n", lo - base, hi - base, mid - base);
+
+		int result = compare(key, mid, ComparisionContext);
+		if (0 == result)
 		{
-			result = compare(key, lo, ComparisionContext);
-			if (result <= 0)
-			{
-				return lo;
-			}
-			else
-			{
-				return hi;
-			}
+			return mid;
+		}
+		else if (result < 0)
+		{
+			// choose lower half
+			if (0) TRACE("Lower half chosen\n");
+			hi = mid - 1;
+
+			num = lohalf;
 		}
 		else
 		{
-			break;
+			// choose upper half
+			if (0) TRACE("Upper half chosen\n");
+			lo = mid + 1;
+			num = half;
+		}
+	}
+	if (num)
+	{
+		if (compare(key, lo, ComparisionContext) > 0)
+		{
+			return lo + 1;
 		}
 	}
 	return lo;
 }
 
-// find the line with the same hash and same and greater number, return -1 if not found
-int FileItem::FindMatchingLineIndex(const FileLine * pLine, int nStartLineIndex)
+
+static int LineHashComparisionFunc(const FileLine * const * ppKeyLine,
+									const FileLine * const * ppLine2, int LineNum)
 {
-	void const * key = pLine;
-	void * pFound = bsearch( & key, m_HashSortedLines.GetData(), m_HashSortedLines.GetSize(),
-							sizeof m_HashSortedLines[0], FileLine::HashCompareFunc);
-	if (NULL == pFound)
+	// use hash from *ppKeyLine, and LineNum as line number
+	if (0) TRACE("Key = %X %d, comparing with %X %d\n",
+				(*ppKeyLine)->GetNormalizedHash(), LineNum,
+				(*ppLine2)->GetNormalizedHash(), (*ppLine2)->GetLineNumber());
+
+	if ((*ppKeyLine)->GetNormalizedHash() > (*ppLine2)->GetNormalizedHash())
+	{
+		return 1;
+	}
+	if ((*ppKeyLine)->GetNormalizedHash() < (*ppLine2)->GetNormalizedHash())
 	{
 		return -1;
 	}
-	if (pFound < m_HashSortedLines.GetData()
-		|| pFound >= m_HashSortedLines.GetData() + m_HashSortedLines.GetSize())
+	if (LineNum > (*ppLine2)->GetLineNumber())
 	{
-		TRACE("Inconsistent address returned from bsearch\n");
+		return 1;
+	}
+	if (LineNum < (*ppLine2)->GetLineNumber())
+	{
 		return -1;
 	}
-	//int SortedIndex =
-	FileLine * pFoundLine = *(FileLine **) pFound;
-	// todo: there can be several lines with the same number
-	return pFoundLine->GetLineNumber();
+	return 0;
 }
 
+static int LineGroupHashComparisionFunc(const FileLine * const * ppKeyLine,
+										const FileLine * const * ppLine2, int LineNum)
+{
+	// use hash from *ppKeyLine, and LineNum as line number
+	if ((*ppKeyLine)->GetNormalizedGroupHash() > (*ppLine2)->GetNormalizedGroupHash())
+	{
+		return 1;
+	}
+	if ((*ppKeyLine)->GetNormalizedGroupHash() < (*ppLine2)->GetNormalizedGroupHash())
+	{
+		return -1;
+	}
+	if (LineNum > (*ppLine2)->GetLineNumber())
+	{
+		return 1;
+	}
+	if (LineNum < (*ppLine2)->GetLineNumber())
+	{
+		return -1;
+	}
+	return 0;
+}
+
+// find the line with the same hash and same and greater number, return -1 if not found
+const FileLine * FileItem::FindMatchingLine(const FileLine * pLine, int nStartLineNum, int nEndLineNum)
+{
+	FileLine const * const* ppLine = BinLookupAbout<const FileLine *, int>( & pLine,
+		nStartLineNum,
+		(FileLine *const *) m_NormalizedHashSortedLines.GetData(),
+		m_NormalizedHashSortedLines.GetSize(),
+		LineHashComparisionFunc);
+
+	if (ppLine < m_NormalizedHashSortedLines.GetData()
+		|| ppLine > m_NormalizedHashSortedLines.GetData() + m_NormalizedHashSortedLines.GetSize())
+	{
+		TRACE("Inconsistent address returned from BinLookupAbout\n");
+		return NULL;
+	}
+	int nFoundIndex = ppLine - m_NormalizedHashSortedLines.GetData();
+#ifdef _DEBUG
+	{
+		// verify that the correct position found
+		if (nFoundIndex < 0 || nFoundIndex > m_NormalizedHashSortedLines.GetSize())
+		{
+			TRACE("Wrong pointer %d in m_NormalizedHashSortedLines array (size=%d)\n",
+				nFoundIndex, m_NormalizedHashSortedLines.GetSize());
+			DebugBreak();
+		}
+		else
+		{
+			// the item should be >= than the key,
+			// and the previous item should be < than key
+			if (nFoundIndex < m_NormalizedHashSortedLines.GetSize())
+			{
+				const FileLine * pFoundLine = *ppLine;
+				if (pFoundLine->GetNormalizedHash() < pLine->GetNormalizedHash()
+					|| (pFoundLine->GetNormalizedHash() == pLine->GetNormalizedHash()
+						&& pFoundLine->GetLineNumber() < nStartLineNum))
+				{
+					TRACE("Found index: %d, total lines: %d, "
+						"Key hash=%X, LineNumber=%d  > found hash=%X, LineNumber=%d\n",
+						nFoundIndex, m_NormalizedHashSortedLines.GetSize(),
+						pLine->GetNormalizedHash(), nStartLineNum,
+						pFoundLine->GetNormalizedHash(),
+						pFoundLine->GetLineNumber());
+					__asm int 3
+				}
+			}
+			if (nFoundIndex >= 1)
+			{
+				const FileLine * pPrevLine = *(ppLine-1);
+				if ( pPrevLine->GetNormalizedHash() > pLine->GetNormalizedHash()
+					|| (pPrevLine->GetNormalizedHash() == pLine->GetNormalizedHash()
+						&& pPrevLine->GetLineNumber() >= nStartLineNum))
+				{
+					TRACE("Found index: %d, total lines: %d, "
+						"Key hash=%X, LineNumber=%d,  <= previous hash=%X, LineNumber=%d\n",
+						nFoundIndex, m_NormalizedHashSortedLines.GetSize(),
+						pLine->GetNormalizedHash(), nStartLineNum,
+						pPrevLine->GetNormalizedHash(),
+						pPrevLine->GetLineNumber());
+					__asm int 3
+				}
+			}
+
+		}
+	}
+#endif
+	FileLine * pFoundLine = *(FileLine **) ppLine;
+	if (pFoundLine->GetLineNumber() <= nEndLineNum
+		&& pFoundLine->IsNormalizedEqual(pLine))
+	{
+		return pFoundLine;
+	}
+	else
+		return NULL;
+}
+
+// find the line with the same hash and same and greater number, return -1 if not found
+const FileLine * FileItem::FindMatchingLineGroupLine(const FileLine * pLine, int nStartLineNum, int nEndLineNum)
+{
+	FileLine const * const* ppLine = BinLookupAbout<const FileLine *, int>( & pLine,
+		nStartLineNum,
+		(FileLine *const *) m_NormalizedHashSortedLineGroups.GetData(),
+		m_NormalizedHashSortedLineGroups.GetSize(),
+		LineGroupHashComparisionFunc);
+
+	if (ppLine < m_NormalizedHashSortedLineGroups.GetData()
+		|| ppLine > m_NormalizedHashSortedLineGroups.GetData() + m_NormalizedHashSortedLineGroups.GetSize())
+	{
+		TRACE("Inconsistent address returned from BinLookupAbout\n");
+		return NULL;
+	}
+	int nFoundIndex = ppLine - m_NormalizedHashSortedLineGroups.GetData();
+
+#ifdef _DEBUG
+	{
+		// verify that the correct position found
+		if (nFoundIndex < 0 || nFoundIndex > m_NormalizedHashSortedLineGroups.GetSize())
+		{
+			TRACE("Wrong pointer %d in m_NormalizedHashSortedLineGroups array (size=%d)\n",
+				nFoundIndex, m_NormalizedHashSortedLineGroups.GetSize());
+			DebugBreak();
+		}
+		else
+		{
+			// the item should be >= than the key,
+			// and the previous item should be < than key
+			if (nFoundIndex < m_NormalizedHashSortedLineGroups.GetSize())
+			{
+				const FileLine * pFoundLine = *ppLine;
+				if (pFoundLine->GetNormalizedGroupHash() < pLine->GetNormalizedGroupHash()
+					|| (pFoundLine->GetNormalizedGroupHash() == pLine->GetNormalizedGroupHash()
+						&& pFoundLine->GetLineNumber() < nStartLineNum))
+				{
+					TRACE("Found index: %d, total lines: %d, "
+						"Key hash=%X, LineNumber=%d  > found hash=%X, LineNumber=%d\n",
+						nFoundIndex, m_NormalizedHashSortedLineGroups.GetSize(),
+						pLine->GetNormalizedGroupHash(), nStartLineNum,
+						pFoundLine->GetNormalizedGroupHash(),
+						pFoundLine->GetLineNumber());
+					__asm int 3
+				}
+			}
+			if (nFoundIndex >= 1)
+			{
+				const FileLine * pPrevLine = *(ppLine-1);
+				if ( pPrevLine->GetNormalizedGroupHash() > pLine->GetNormalizedGroupHash()
+					|| (pPrevLine->GetNormalizedGroupHash() == pLine->GetNormalizedGroupHash()
+						&& pPrevLine->GetLineNumber() >= nStartLineNum))
+				{
+					TRACE("Found index: %d, total lines: %d, "
+						"Key hash=%X, LineNumber=%d,  <= previous hash=%X, LineNumber=%d\n",
+						nFoundIndex, m_NormalizedHashSortedLineGroups.GetSize(),
+						pLine->GetNormalizedGroupHash(), nStartLineNum,
+						pPrevLine->GetNormalizedGroupHash(),
+						pPrevLine->GetLineNumber());
+					__asm int 3
+				}
+			}
+
+		}
+	}
+#endif
+	FileLine * pFoundLine = *(FileLine **) ppLine;
+	if (pFoundLine->GetLineNumber() <= nEndLineNum
+		&& pFoundLine->IsNormalizedEqual(pLine))
+	{
+		return pFoundLine;
+	}
+	else
+		return NULL;
+}
 
 bool FileList::LoadFolder(const CString & BaseDir, bool bRecurseSubdirs,
 						LPCTSTR sInclusionMask, LPCTSTR sExclusionMask)
@@ -763,7 +1044,7 @@ static DWORD CRC32_Table[256] =
 	0xbcb4666d, 0xb8757bda, 0xb5365d03, 0xb1f740b4
 };
 
-DWORD CalculateHash(const char * data, int len)
+static DWORD CalculateHash(const char * data, int len)
 {
 	// CRC32
 	DWORD	crc32_val = 0xFFFFFFFF;
@@ -1161,7 +1442,14 @@ void MatchStrings(LPCTSTR str1, LPCTSTR str2, DWORD Results[])
 }
 
 FileLine::FileLine(const char * src, bool MakeNormalizedString)
-	: m_Flags(0), m_Number(-1), m_Link(NULL)
+	: m_Flags(0),
+	m_Number(-1),
+	m_Link(NULL),
+	m_HashCode(0),
+	m_GroupHashCode(0),
+	m_NormalizedHashCode(0),
+	m_NormalizedGroupHashCode(0),
+	m_FirstTokenIndex(-1)
 {
 	m_Length = strlen(src);
 	char TmpBuf[2048];
@@ -1391,34 +1679,12 @@ DWORD FilePair::CompareFiles(bool bCompareAll)
 		return 0;
 	}
 	// different comparision for different modes
-	//return CompareTextFiles(bCompareAll);
+	DWORD result = CompareTextFiles(bCompareAll);
 	pFirstFile->Unload();
 	pSecondFile->Unload();
-	return 1;
+	return result;
 }
 
-int LineHashComparisionFunc(const FileLine * const * ppKeyLine,
-							const FileLine * const * ppLine2, int LineNum)
-{
-	// use hash from *ppKeyLine, and LineNum as line number
-	if ((*ppKeyLine)->GetNormalizedHash() > (*ppLine2)->GetNormalizedHash())
-	{
-		return 1;
-	}
-	if ((*ppKeyLine)->GetNormalizedHash() < (*ppLine2)->GetNormalizedHash())
-	{
-		return -1;
-	}
-	if (LineNum > (*ppLine2)->GetLineNumber())
-	{
-		return 1;
-	}
-	if (LineNum < (*ppLine2)->GetLineNumber())
-	{
-		return -1;
-	}
-	return 0;
-}
 DWORD FilePair::CompareTextFiles(bool bCompareAll)
 {
 	// find similar lines
@@ -1442,162 +1708,47 @@ DWORD FilePair::CompareTextFiles(bool bCompareAll)
 		while (nLine1 < NumLines1
 				&& nLine2 < NumLines2)
 		{
-			for (int dist = 0; dist < pApp->m_MaxSearchDistance; dist++)
+			const FileLine * Line1 = pFirstFile->GetLine(nLine1);
+			if ( ! Line1->IsBlank())
 			{
-				const FileLine * Line1 = pFirstFile->GetLine(nLine1+dist);
-				if (Line1->IsBlank())
+				// check the lines in file2 in range Line2 to Line2+dist
+				const FileLine * pFoundLine = pSecondFile->FindMatchingLine(Line1, nLine2, NumLines2);
+				if (NULL != pFoundLine)
 				{
-					// check the lines in file2 in range Line2 to Line2+dist
-#if 0
-					for (int i = 0; i < dist && i + nLine2 < NumLines2; i++)
-					{
-						const FileLine * Line2 = pSecondFile->GetLine(nLine2 + i);
-						if (Line1->IsEqual(Line2))
-						{
-							int n1 = nLine1 + 1;
-							int n2 = nLine2 + i + 1;
-							int NumEqual = 1;
-							// check if a few non-blank lines more are the same
-							while(n1 < NumLines1 && n2 < NumLines2
-								&& NumEqual < pApp->m_MinIdenticalLines
-								&& n1 - nLine1 < pApp->m_MaxSearchDistance)
-							{
-								const FileLine * L1 = pFirstFile->GetLine(n1);
-								if (L1->IsBlank())
-								{
-									n1++;
-									continue;
-								}
-								const FileLine * L2 = pSecondFile->GetLine(n2);
-								if (L2->IsBlank())
-								{
-									n2++;
-									continue;
-								}
-								if ( ! L1->IsEqual(L2))
-								{
-									break;
-								}
-								n1++;
-								n2++;
-								NumEqual++;
-							}
-							if (NumEqual >= pApp->m_MinIdenticalLines)
-							{
-								break;
-							}
-						}
-					}
-#else
-					// find the similar string in the normalized string array
-					// the line should go on or after nLine2
-					FileLine const * const* ppLine = BinLookupAbout<const FileLine *, int>( & Line1, nLine2,
-						(FileLine *const *) pSecondFile->m_NormalizedHashSortedLines.GetData(),
-						pSecondFile->m_NormalizedHashSortedLines.GetSize(),
-						LineHashComparisionFunc);
-					int nFoundIndex = ppLine - pSecondFile->m_NormalizedHashSortedLines.GetData();
-#ifdef _DEBUG
-					{
-						// verify that the correct position found
-						if (nFoundIndex < 0 || nFoundIndex > pSecondFile->m_NormalizedHashSortedLines.GetSize())
-						{
-							TRACE("Wrong pointer %d in m_NormalizedHashSortedLines array (size=%d)\n",
-								nFoundIndex, pSecondFile->m_NormalizedHashSortedLines.GetSize());
-							DebugBreak();
-						}
-						else
-						{
-							// the item should be >= than the key,
-							// and the previous item should be < than key
-							if (nFoundIndex < pSecondFile->m_NormalizedHashSortedLines.GetSize())
-							{
-								const FileLine * pFoundLine = *ppLine;
-								if (pFoundLine->GetNormalizedHash() < Line1->GetNormalizedHash()
-									|| (pFoundLine->GetNormalizedHash() == Line1->GetNormalizedHash()
-										&& pFoundLine->GetLineNumber() < nLine2))
-								{
-									TRACE("Found index: %d, total lines: %d, "
-										"Key hash=%X, LineNumber=%d  > found hash=%x, LineNumber=%d\n",
-										nFoundIndex, pSecondFile->m_NormalizedHashSortedLines.GetSize(),
-										Line1->GetNormalizedHash(), nLine2,
-										pFoundLine->GetNormalizedHash(),
-										pFoundLine->GetLineNumber());
-									DebugBreak();
-								}
-							}
-							if (nFoundIndex >= 1)
-							{
-								const FileLine * pPrevLine = *(ppLine-1);
-								if ( pPrevLine->GetNormalizedHash() > Line1->GetNormalizedHash()
-									|| (pPrevLine->GetNormalizedHash() == Line1->GetNormalizedHash()
-										&& pPrevLine->GetLineNumber() >= nLine2))
-								{
-									TRACE("Found index: %d, total lines: %d, "
-										"Key hash=%X, LineNumber=%d,  <= previous hash=%x, LineNumber=%d\n",
-										nFoundIndex, pSecondFile->m_NormalizedHashSortedLines.GetSize(),
-										Line1->GetNormalizedHash(), nLine2,
-										pPrevLine->GetNormalizedHash(),
-										pPrevLine->GetLineNumber());
-									DebugBreak();
-								}
-							}
-
-						}
-					}
-#endif
-					// check that the exact match found
-					if (nFoundIndex < NumNonBlankLines2
-						&& Line1->IsNormalizedEqual(*ppLine))
-					{
-						// see if a few non-blank lines that follow, will match
-						int n1 = nLine1 + 1;
-						int n2 = (*ppLine)->GetLineNumber() + 1;
-						int NumEqual = 1;
-						// check if a few non-blank lines more are the same
-						while(n1 < NumLines1 && n2 < NumLines2
-							&& NumEqual < pApp->m_MinIdenticalLines
-							&& n1 - nLine1 < pApp->m_MaxSearchDistance)
-						{
-							const FileLine * L1 = pFirstFile->GetLine(n1);
-							if (L1->IsBlank())
-							{
-								n1++;
-								continue;
-							}
-							const FileLine * L2 = pSecondFile->GetLine(n2);
-							if (L2->IsBlank())
-							{
-								n2++;
-								continue;
-							}
-							if ( ! L1->IsNormalizedEqual(L2))
-							{
-								break;
-							}
-							n1++;
-							n2++;
-							NumEqual++;
-						}
-						if (NumEqual >= pApp->m_MinIdenticalLines)
-						{
-							// match found
-							break;
-						}
-					}
-#endif
-
+					nLine2 = pFoundLine->GetLineNumber();
+					TRACE("Found Line1=%d, Line2=%d, \"%s\"\n",
+						nLine1, nLine2, pFoundLine->GetText());
+					break;
+				}
+				// there is no equivalent line for this one from nLine2 to end
+			}
+			nLine1++;
+			const FileLine * Line2 = pSecondFile->GetLine(nLine2);
+			if ( ! Line2->IsBlank())
+			{
+				// check the lines in file1 in range Line2 to Line2+dist
+				const FileLine * pFoundLine = pFirstFile->FindMatchingLine(Line2, nLine1, NumLines1);
+				if (NULL != pFoundLine)
+				{
+					nLine1 = pFoundLine->GetLineNumber();
+					TRACE("Found Line1=%d, Line2=%d, \"%s\"\n",
+						nLine1, nLine2, pFoundLine->GetText());
+					break;
 				}
 			}
+			nLine2++;
 		}
 		int Line1Begin = nLine1;
 		int Line2Begin = nLine2;
+		nLine1++;
+		nLine2++;
 
 		while (nLine1 < NumLines1
 				&& nLine2 < NumLines2)
 		{
 			const FileLine * Line1 = pFirstFile->GetLine(nLine1);
 			const FileLine * Line2 = pSecondFile->GetLine(nLine2);
-			if (Line1->IsEqual(Line2))
+			if (Line1->IsNormalizedEqual(Line2))
 			{
 				nLine1++;
 				nLine2++;
@@ -1609,8 +1760,10 @@ DWORD FilePair::CompareTextFiles(bool bCompareAll)
 				{
 					// if we don't need to compare the while file (just scanning)
 					// return now
+					TRACE("Difference found at lines %d, %d, no need to compare anymore\n", nLine1, nLine2);
 					return 1;
 				}
+				TRACE("Difference found at lines %d, %d\n", nLine1, nLine2);
 				// check if the lines are similar enough
 				// the lines can be considered similar if < 1/4 of the characters is different,
 				// or the only difference is in whitespaces
@@ -1625,13 +1778,14 @@ DWORD FilePair::CompareTextFiles(bool bCompareAll)
 				}
 			}
 		}
+#if 0
 		FileSection * pSection = new FileSection;
 		pSection->File1LineBegin = Line1Begin;
 
 		pSection->File2LineBegin = Line2Begin;
 		pSection->File1LineEnd = nLine1 - 1;
 		pSection->File2LineEnd = nLine2 - 1;
-
+#endif
 	}
 	return 1;
 }

@@ -48,7 +48,7 @@ CDiffFileView::~CDiffFileView()
 
 BEGIN_MESSAGE_MAP(CDiffFileView, CView)
 	//{{AFX_MSG_MAP(CDiffFileView)
-	ON_COMMAND(ID_WINDOW_CLOSE_DIFF, OnWindowCloseDiff)
+	ON_COMMAND(ID_FILE_CANCEL, OnWindowCloseDiff)
 	ON_WM_DESTROY()
 	ON_WM_KEYDOWN()
 	ON_WM_HSCROLL()

@@ -39,8 +39,6 @@ CChildFrame::~CChildFrame()
 
 BOOL CChildFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
-	// TODO: Modify the Window class or styles here by modifying
-	//  the CREATESTRUCT cs
 
 	if( !CMDIChildWnd::PreCreateWindow(cs) )
 		return FALSE;
@@ -54,15 +52,6 @@ BOOL CChildFrame::PreCreateWindow(CREATESTRUCT& cs)
 	}
 	return TRUE;
 }
-
-void CChildFrame::ActivateFrame(int nCmdShow)
-{
-	// TODO: Modify this function to change how the frame is activated.
-
-	//nCmdShow = SW_SHOWMAXIMIZED;
-	CMDIChildWnd::ActivateFrame(nCmdShow);
-}
-
 
 /////////////////////////////////////////////////////////////////////////////
 // CChildFrame diagnostics

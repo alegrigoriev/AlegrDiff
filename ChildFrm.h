@@ -27,7 +27,6 @@ public:
 	//{{AFX_VIRTUAL(CChildFrame)
 public:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
-	virtual void ActivateFrame(int nCmdShow);
 	//}}AFX_VIRTUAL
 
 // Implementation

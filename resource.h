@@ -69,7 +69,7 @@
 #define ID_FILE_PREFERENCES             32777
 #define ID_EDIT_ACCEPT                  32778
 #define ID_EDIT_DECLINE                 32779
-#define ID_WINDOW_CLOSE_DIFF            32780
+#define ID_FILE_CANCEL                  32780
 #define ID_EDIT_GOTONEXTDIFF            32783
 #define ID_EDIT_GOTOPREVDIFF            32784
 #define ID_EDIT_GOTOLINE                32785

@@ -5,12 +5,77 @@
 #include <afxtempl.h>
 #include "SmallAllocator.h"
 
+struct TextPos
+{
+	int line;
+	int pos;
+	TextPos() {}
+	TextPos(int l, int p)
+	{
+		line = l;
+		pos = p;
+	}
+};
+
+inline int operator >(const TextPos & p1, const TextPos & p2)
+{
+	return (p1.line > p2.line)
+		|| (p1.line == p2.line && p1.pos > p2.pos);
+}
+
+inline int operator >=(const TextPos & p1, const TextPos & p2)
+{
+	return (p1.line > p2.line)
+		|| (p1.line == p2.line && p1.pos >= p2.pos);
+}
+
+inline int operator <(const TextPos & p1, const TextPos & p2)
+{
+	return (p1.line < p2.line)
+		|| (p1.line == p2.line && p1.pos < p2.pos);
+}
+
+inline int operator <=(const TextPos & p1, const TextPos & p2)
+{
+	return (p1.line < p2.line)
+		|| (p1.line == p2.line && p1.pos <= p2.pos);
+}
+
+inline int operator ==(const TextPos & p1, const TextPos & p2)
+{
+	return p1.line == p2.line && p1.pos == p2.pos;
+}
+
+inline int operator !=(const TextPos & p1, const TextPos & p2)
+{
+	return p1.line != p2.line || p1.pos != p2.pos;
+}
+
 struct TextToken
 {
 	int m_Offset;
 	int m_Len;
 	DWORD m_Hash;
 	class FileLine * m_pLine;
+};
+
+class FileDiffSection
+{
+public:
+	FileDiffSection() {}
+	~FileDiffSection() {}
+	TextPos m_Begin;
+	TextPos m_End;
+	static void * operator new(size_t size)
+	{
+		return m_Allocator.Allocate(size);
+	}
+	static void operator delete(void * ptr)
+	{
+		m_Allocator.Free(ptr);
+	}
+private:
+	static CSmallAllocator m_Allocator;
 };
 
 class FileLine
@@ -42,7 +107,7 @@ public:
 	bool IsEqual(const FileLine * pOtherLine) const;
 	bool IsNormalizedEqual(const FileLine * pOtherLine) const;
 	bool LooksLike(const FileLine * pOtherLine, int PercentsDifferent) const;
-	bool IsBlank() const { return 0 != (m_Flags & BlankString); }
+	bool IsBlank() const { return 0 == m_NormalizedStringLength; }
 
 //    bool GetNextToken(TextToken & token);
 
@@ -70,10 +135,10 @@ private:
 	DWORD m_GroupHashCode;
 	DWORD m_NormalizedHashCode;
 	DWORD m_NormalizedGroupHashCode;
-	DWORD m_Flags;
-	enum { HashValid = 1,
-		BlankString = 2,
-	};
+//    DWORD m_Flags;
+	//enum { HashValid = 1,
+	//BlankString = 2,
+	//};
 	int m_Number; // line ordinal number in the file
 	// length of the source string
 	int m_Length;
@@ -207,6 +272,9 @@ public:
 	bool LoadFiles();
 	void UnloadFiles();
 
+	TextPos NextDifference(TextPos PosFrom);
+	TextPos PrevDifference(TextPos PosFrom);
+
 	enum eFileComparisionResult
 	{
 		ResultUnknown,
@@ -228,6 +296,7 @@ public:
 
 	eFileComparisionResult ComparisionResult;
 	CArray<LinePair *, LinePair *> m_LinePairs;
+	CArray<FileDiffSection *, FileDiffSection *> m_DiffSections;
 };
 
 class FileList

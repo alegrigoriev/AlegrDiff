@@ -695,13 +695,13 @@ void * BinLookup(
 	return(NULL);
 }
 // find equal or the next greater
-template<class T, class A> const T * BinLookupAbout(
-													const T *key,
-													A ComparisionContext,
-													const T *base,
-													size_t num,
-													int (*compare)(const T * item1, const T * item2, A ComparisionContext)
-													)
+template<class T, class K, class A> const T * BinLookupAbout(
+															const K *key,
+															A ComparisionContext,
+															T const*base,
+															size_t num,
+															int (*compare)(const K * key, const T * item2, A ComparisionContext)
+															)
 {
 	const T *lo = base;
 	const T *hi = base + (num - 1);
@@ -805,9 +805,10 @@ static int LineGroupHashComparisionFunc(const FileLine * const * ppKeyLine,
 // find the line with the same hash and same and greater number, return -1 if not found
 const FileLine * FileItem::FindMatchingLine(const FileLine * pLine, int nStartLineNum, int nEndLineNum)
 {
-	FileLine const * const* ppLine = BinLookupAbout<const FileLine *, int>( & pLine,
-		nStartLineNum,
-		(FileLine *const *) m_NormalizedHashSortedLines.GetData(),
+	FileLine const * const* ppLine =
+		BinLookupAbout<const FileLine *, const FileLine *, int>
+	( & pLine, nStartLineNum,
+		m_NormalizedHashSortedLines.GetData(),
 		m_NormalizedHashSortedLines.GetSize(),
 		LineHashComparisionFunc);
 
@@ -892,9 +893,10 @@ const FileLine * FileItem::FindMatchingLine(const FileLine * pLine, int nStartLi
 // find the line with the same hash and same and greater number, return -1 if not found
 const FileLine * FileItem::FindMatchingLineGroupLine(const FileLine * pLine, int nStartLineNum, int nEndLineNum)
 {
-	FileLine const * const* ppLine = BinLookupAbout<const FileLine *, int>( & pLine,
-		nStartLineNum,
-		(FileLine *const *) m_NormalizedHashSortedLineGroups.GetData(),
+	FileLine const * const* ppLine =
+		BinLookupAbout<const FileLine *, const FileLine *, int>
+	( & pLine, nStartLineNum,
+		m_NormalizedHashSortedLineGroups.GetData(),
 		m_NormalizedHashSortedLineGroups.GetSize(),
 		LineGroupHashComparisionFunc);
 
@@ -1731,7 +1733,7 @@ int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int 
 }
 
 FileLine::FileLine(const char * src, bool MakeNormalizedString)
-	: m_Flags(0),
+	: //m_Flags(0),
 	m_Number(-1),
 //m_Link(NULL),
 //m_FirstTokenIndex(-1),
@@ -1755,10 +1757,10 @@ FileLine::FileLine(const char * src, bool MakeNormalizedString)
 		memcpy(m_pAllocatedBuf + m_Length + 1, TmpBuf, m_NormalizedStringLength + 1);
 		m_NormalizedHashCode = CalculateHash(m_pNormalizedString, m_NormalizedStringLength);
 
-		if (0 == m_NormalizedStringLength)
-		{
-			m_Flags |= BlankString;
-		}
+		//if (0 == m_NormalizedStringLength)
+		//{
+		//m_Flags |= BlankString;
+		//}
 	}
 	else
 	{
@@ -2099,7 +2101,8 @@ void FilePair::UnloadFiles()
 	{
 		return;
 	}
-	for (int i = 0; i < m_LinePairs.GetSize(); i++)
+	int i;
+	for (i = 0; i < m_LinePairs.GetSize(); i++)
 	{
 		LinePair * pPair = m_LinePairs[i];
 		while(pPair->pFirstSection != NULL)
@@ -2111,6 +2114,11 @@ void FilePair::UnloadFiles()
 		delete pPair;
 	}
 	m_LinePairs.RemoveAll();
+	for (i = 0; i < m_DiffSections.GetSize(); i++)
+	{
+		delete m_DiffSections[i];
+	}
+	m_DiffSections.RemoveAll();
 
 	if (NULL != pFirstFile)
 	{
@@ -2465,6 +2473,18 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 		int i;
 		LinePair * pPair;
 		// add lines from first file (mark as removed)
+		if (pSection->File1LineBegin > nPrevSectionEnd1)
+		{
+			FileDiffSection * pDiffSection = new FileDiffSection;
+			if (NULL != pDiffSection)
+			{
+				pDiffSection->m_Begin.line = nLineIndex;
+				pDiffSection->m_Begin.pos = 0;
+				pDiffSection->m_End.line = nLineIndex + pSection->File1LineBegin - nPrevSectionEnd1;
+				pDiffSection->m_End.pos = 0;
+				m_DiffSections.Add(pDiffSection);
+			}
+		}
 		for (i = nPrevSectionEnd1; i < pSection->File1LineBegin; i++, nLineIndex++)
 		{
 			pPair = new LinePair;
@@ -2486,6 +2506,18 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 			pPair->pFirstSection->Attr = StringSection::Erased;
 			pPair->pFirstSection->pBegin = pPair->pFirstLine->GetText();
 			pPair->pFirstSection->Length = pPair->pFirstLine->GetLength();
+		}
+		if (pSection->File2LineBegin > nPrevSectionEnd2)
+		{
+			FileDiffSection * pDiffSection = new FileDiffSection;
+			if (NULL != pDiffSection)
+			{
+				pDiffSection->m_Begin.line = nLineIndex;
+				pDiffSection->m_Begin.pos = 0;
+				pDiffSection->m_End.line = nLineIndex + pSection->File2LineBegin - nPrevSectionEnd2;
+				pDiffSection->m_End.pos = 0;
+				m_DiffSections.Add(pDiffSection);
+			}
 		}
 		// add lines from second file (mark as added)
 		for (i = nPrevSectionEnd2; i < pSection->File2LineBegin; i++, nLineIndex++)
@@ -2525,6 +2557,24 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 			pPair->pSecondLine = pSecondFile->GetLine(i + pSection->File2LineBegin);
 			MatchStrings(pPair->pFirstLine->GetText(), pPair->pSecondLine->GetText(),
 						& pPair->pFirstSection, 3);
+
+			int pos = 0;
+			for (StringSection * pSection = pPair->pFirstSection; pSection != NULL; pSection = pSection->pNext)
+			{
+				if (pSection->Identical != pSection->Attr)
+				{
+					FileDiffSection * pDiffSection = new FileDiffSection;
+					if (NULL != pDiffSection)
+					{
+						pDiffSection->m_Begin.line = nLineIndex;
+						pDiffSection->m_Begin.pos = pos;
+						pDiffSection->m_End.line = nLineIndex;
+						pDiffSection->m_End.pos = pos + pSection->Length;
+						m_DiffSections.Add(pDiffSection);
+					}
+				}
+				pos += pSection->Length;
+			}
 		}
 		nPrevSectionEnd1 = pSection->File1LineEnd;
 		nPrevSectionEnd2 = pSection->File2LineEnd;
@@ -2540,6 +2590,84 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 	return FilesDifferent;
 }
 
+inline int CompareTextPosBegin(const TextPos * pos,  FileDiffSection * const *sec, int)
+{
+	if (*pos < (*sec)->m_Begin)
+	{
+		return -1;
+	}
+	return 1;
+}
+
+inline int CompareTextPosEnd(const TextPos * pos,  FileDiffSection * const *sec, int)
+{
+	if (*pos < (*sec)->m_End)
+	{
+		return -1;
+	}
+	return 1;
+}
+
+TextPos FilePair::NextDifference(TextPos PosFrom)
+{
+	if (0 == m_DiffSections.GetSize())
+	{
+		return TextPos(-1, -1);
+	}
+	FileDiffSection const *const * ppSection =
+		BinLookupAbout<FileDiffSection *, TextPos, int>
+	(& PosFrom, 0,
+		m_DiffSections.GetData(), m_DiffSections.GetSize(),
+		CompareTextPosBegin);
+	int SectionIdx = ppSection - m_DiffSections.GetData();
+	if (SectionIdx > m_DiffSections.GetUpperBound())
+	{
+		return TextPos(-1, -1);
+	}
+	const FileDiffSection * pSection = *ppSection;
+	if (PosFrom >= pSection->m_Begin)
+	{
+		if (SectionIdx == m_DiffSections.GetUpperBound())
+		{
+			return TextPos(-1, -1);
+		}
+		pSection = ppSection[1];
+	}
+	return pSection->m_Begin;
+}
+
+TextPos FilePair::PrevDifference(TextPos PosFrom)
+{
+	if (0 == m_DiffSections.GetSize())
+	{
+		return TextPos(-1, -1);
+	}
+	FileDiffSection const *const * ppSection =
+		BinLookupAbout<FileDiffSection *, TextPos, int>
+	(& PosFrom, 0,
+		m_DiffSections.GetData(), m_DiffSections.GetSize(),
+		CompareTextPosEnd);
+	int SectionIdx = ppSection - m_DiffSections.GetData();
+	if (0 == SectionIdx)
+	{
+		return TextPos(-1, -1);
+	}
+	const FileDiffSection * pSection = *(ppSection - 1);
+	return pSection->m_Begin;
+	if (PosFrom != pSection->m_End)
+	{
+		SectionIdx--;
+		ppSection--;
+	}
+
+	if (PosFrom == pSection->m_End)
+	{
+		return ppSection[1]->m_Begin;
+	}
+	return pSection->m_Begin;
+}
+
 CSmallAllocator FileLine::m_Allocator(sizeof FileLine);
 CSmallAllocator StringSection::m_Allocator(sizeof StringSection);
 CSmallAllocator LinePair::m_Allocator(sizeof LinePair);
+CSmallAllocator FileDiffSection::m_Allocator(sizeof FileDiffSection);

@@ -34,6 +34,7 @@ void CPreferencesDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CPreferencesDialog)
+	DDX_Control(pDX, IDC_SPIN1, m_Spin);
 	DDX_Check(pDX, IDC_CHECK_BINARY_FILES, m_bUseBinaryFilesFilter);
 	DDX_Check(pDX, IDC_CHECK_C_CPP, m_bUseCppFilter);
 	DDX_Check(pDX, IDC_CHECK_IGNORE, m_bUseIgnoreFilter);
@@ -87,6 +88,8 @@ void CPreferencesDialog::OnCheckIgnore()
 BOOL CPreferencesDialog::OnInitDialog()
 {
 	CDialog::OnInitDialog();
+
+	m_Spin.SetRange(1, 32);
 
 	CWnd * pEdit = GetDlgItem(IDC_EDIT_C_CPP);
 	if (pEdit)

@@ -63,6 +63,7 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_CBString(pDX, IDC_COMBO_SECOND_DIR, m_sSecondDir);
 	if (m_bAdvanced)
 	{
+		DDX_Control(pDX, IDC_SPIN1, m_Spin);
 		DDX_Check(pDX, IDC_CHECK_BINARY_FILES, m_bUseBinaryFilesFilter);
 		DDX_Check(pDX, IDC_CHECK_C_CPP, m_bUseCppFilter);
 		DDX_Check(pDX, IDC_CHECK_IGNORE, m_bUseIgnoreFilter);
@@ -225,6 +226,11 @@ void CCompareDirsDialog::OnCheckBinary()
 BOOL CCompareDirsDialog::OnInitDialog()
 {
 	CDialog::OnInitDialog();
+
+	if (m_bAdvanced)
+	{
+		m_Spin.SetRange(1, 32);
+	}
 
 	OnCheckBinary();
 

@@ -60,12 +60,7 @@ protected:
 			if ((pActive == NULL && m_bOpenChildMaximized)
 				|| (pActive != NULL && (WS_MAXIMIZE & pActive->GetStyle())))
 			{
-				if (0 == cs.style)
-				{
-					cs.style = WS_CHILD | WS_VISIBLE | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU
-								| FWS_ADDTOTITLE | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
-				}
-				cs.style |= WS_MAXIMIZE;
+				cs.style |= WS_VISIBLE | WS_MAXIMIZE;
 			}
 		}
 		return TRUE;
@@ -94,6 +89,7 @@ protected:
 };
 
 BEGIN_MESSAGE_MAP_T(CChildFrameExT, BaseClass)
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 template<class Parameters> bool CChildFrameExT<Parameters>::m_bOpenChildMaximized = true;

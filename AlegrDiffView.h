@@ -43,19 +43,21 @@ protected:
 public:
 	void AddListViewItem(FilePair * pPair, int item);
 	BOOL CopySelectedFiles(bool bSecondDir);
-	eColumns m_SortColumn;
-	eColumns m_PrevSortColumn;
 
 	// keeps order of columns (even those non-visible)
+	//
+	eColumns m_SortColumns[MaxColumns];
+	bool m_AscendingSortOrder[MaxColumns];
+
+	void SetSortColumn(eColumns nColumn, bool AscendingOrder, bool InvertOrder = false);
+
 	UCHAR m_ColumnArray[MaxColumns];
 	//UCHAR m_SubitemArray[MaxColumns];
-	USHORT m_ColumnWidthArray[MaxColumns];
-	int m_ColumnToItem[MaxColumns];
+	SHORT m_ColumnWidthArray[MaxColumns];
+	eColumns m_ColumnToItem[MaxColumns];
 	int m_ItemToColumn[MaxColumns];
 	void ResetColumnsArray();
 
-	bool m_bAscendingOrder;
-	bool m_bPrevAscendingOrder;
 	void UpdateAppSort();
 
 	void PrintColumnOrder();

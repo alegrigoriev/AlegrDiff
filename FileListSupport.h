@@ -314,6 +314,8 @@ public:
 	static int NameCompare(FileItem * Item1, FileItem * Item2);
 	static int DirNameCompare(FileItem * Item1, FileItem * Item2);
 	static int TimeCompare(FileItem * Item1, FileItem * Item2);
+	static int LengthCompare(FileItem * Item1, FileItem * Item2);
+
 private:
 	CString m_Name;
 	CString m_Subdir;
@@ -362,32 +364,6 @@ public:
 		m_LoadedCount = 1;
 		m_ComparisionResult = MemoryFile;
 	}
-	enum CompareSubitem
-	{
-		CompareSubitemName,
-		CompareSubitemDir,
-		CompareSubitemDate1,
-		CompareSubitemDate2,
-		CompareSubitemResult,
-	};
-	struct CompareParam
-	{
-		CompareSubitem PrimarySort;
-		bool PrimaryBackward;
-		CompareSubitem SecondarySort;
-		bool SecondaryBackward;
-	};
-
-	static bool Compare(const FilePair * Pair1, const FilePair * Pair2, CompareParam comp);
-
-	static int Time1SortFunc(const FilePair * Pair1, const FilePair * Pair2);
-	static int Time1SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2);
-	static int Time2SortFunc(const FilePair * Pair1, const FilePair * Pair2);
-	static int Time2SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2);
-	static int ComparisionSortFunc(const FilePair * Pair1, const FilePair * Pair2);
-
-	static int NameCompare(const FilePair * Pair1, const FilePair * Pair2);
-	static int DirNameCompare(const FilePair * Pair1, const FilePair * Pair2);
 
 	bool LoadFiles();
 	void UnloadFiles(bool ForceUnload = false);
@@ -466,6 +442,36 @@ public:
 
 	vector<LinePair *> m_LinePairs;
 	vector<FileDiffSection *> m_DiffSections;
+};
+
+struct FilePairComparePredicate
+{
+	bool operator ()(const FilePair * Pair1, const FilePair * Pair2);
+	FilePairComparePredicate(enum eColumns Sort[], bool Ascending[], int SortNumber);
+private:
+	typedef int (*CompareFunc)(const FilePair * Pair1, const FilePair * Pair2);
+	CompareFunc Functions[6];
+
+	static int Time1SortFunc(const FilePair * Pair1, const FilePair * Pair2);
+	static int Time1SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2);
+	static int Time2SortFunc(const FilePair * Pair1, const FilePair * Pair2);
+	static int Time2SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2);
+	static int Length1SortFunc(const FilePair * Pair1, const FilePair * Pair2);
+	static int Length1SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2);
+	static int Length2SortFunc(const FilePair * Pair1, const FilePair * Pair2);
+	static int Length2SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2);
+	static int ComparisionSortFunc(const FilePair * Pair1, const FilePair * Pair2);
+	static int ComparisionSortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2);
+
+	static int NameCompare(const FilePair * Pair1, const FilePair * Pair2);
+	static int DirNameCompare(const FilePair * Pair1, const FilePair * Pair2);
+	static int NameCompareBackward(const FilePair * Pair1, const FilePair * Pair2);
+	static int DirNameCompareBackward(const FilePair * Pair1, const FilePair * Pair2);
+
+	static int NoOp(const FilePair * , const FilePair * )
+	{
+		return 0;
+	}
 };
 
 class FileList

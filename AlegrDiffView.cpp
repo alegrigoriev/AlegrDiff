@@ -160,7 +160,7 @@ CString FileTimeToStr(FILETIME FileTime, LCID locale = LOCALE_USER_DEFAULT)
 	return result;
 }
 
-void CAlegrDiffView::SortPairArray(CArray<FilePair *,FilePair *> & PairArray, FilePair * pPairs, int nCount)
+void CAlegrDiffView::BuildSortedPairArray(CArray<FilePair *,FilePair *> & PairArray, FilePair * pPairs, int nCount)
 {
 	PairArray.SetSize(nCount);
 	for (int i = 0; i < nCount && pPairs != NULL; i++, pPairs = pPairs->pNext)
@@ -226,15 +226,14 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	CAlegrDiffDoc * pDoc = GetDocument();
 
 	FilePair * pPair = pDoc->m_pPairList;
-	CArray<FilePair *,FilePair *> PairArray;
 
-	SortPairArray(PairArray, pDoc->m_pPairList, pDoc->m_nFilePairs);
+	BuildSortedPairArray(m_PairArray, pDoc->m_pPairList, pDoc->m_nFilePairs);
 
-	pListCtrl->SetItemCount(PairArray.GetSize());
+	pListCtrl->SetItemCount(m_PairArray.GetSize());
 
-	for (int item = 0; item < PairArray.GetSize(); item++)
+	for (int item = 0; item < m_PairArray.GetSize(); item++)
 	{
-		FilePair * pPair = PairArray[item];
+		FilePair * pPair = m_PairArray[item];
 		FileItem * pFileItem = pPair->pFirstFile;
 		if (NULL == pFileItem)
 		{
@@ -294,6 +293,10 @@ void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 	// compare two files
 	if (_AfxGetComCtlVersion() >= 0x00040070)
 	{
+		if (pNmlv->iItem >= 0 && pNmlv->iItem < m_PairArray.GetSize())
+		{
+			m_PairArray[pNmlv->iItem]->CompareFiles();
+		}
 	}
 
 //    int nItem = p;

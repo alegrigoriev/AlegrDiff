@@ -104,6 +104,7 @@ private:
 	CArray<FileLine *, FileLine *> m_HashSortedLines;
 	CArray<FileLine *, FileLine *> m_NormalizedHashSortedLines;
 	CArray<TextToken, TextToken> m_Tokens;
+	friend struct FilePair;
 };
 
 struct FilePair

@@ -34,13 +34,13 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-GetFileData breaks sometimes near the end of file
-Cursor up out of screen
 "Hasbani" text files make it crash (in text mode comparison).
 During binary comparison, alternate "Calculating fingerprint" and "Comparing" messages shown
 screen move in two directions may corrupt the image (??)
 
 Fixed:
+GetFileData breaks sometimes (when movind data down in the buffer)
+Cursor up out of screen
 Click on the selection margin was broken.
 TRACE statements with %s format converted to _T string
 Wrong BuildFilePairList arguments
@@ -49,6 +49,7 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+If one file is longer, show its data rather than '??'
 Goto next/prev difference in binary view
 Open Binary file difference
 Address granularity is word size. Selection granularity too.

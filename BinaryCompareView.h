@@ -38,7 +38,7 @@ public:
 	int LinesInView() const { return m_VisibleRect.bottom - m_VisibleRect.top; }
 	int CharsInView() const { return m_VisibleRect.right - m_VisibleRect.left; }
 
-	CPoint PositionToPoint(LONGLONG pos);
+	CPoint PositionToPoint(ULONGLONG pos);
 	void OnMetricsChange();
 
 	void MoveCaretBy(int dx, int dy, int flags = SetPositionCancelSelection);

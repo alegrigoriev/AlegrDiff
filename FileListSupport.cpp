@@ -1995,8 +1995,18 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 			{
 				pDiffSection->Str1 = str1;
 				pDiffSection->Len1 = idx1;
+				if (0 == idx1)
+				{
+					pDiffSection->Str1 = NULL;
+				}
+
 				pDiffSection->Str2 = str2;
 				pDiffSection->Len2 = idx2;
+				if (0 == idx2)
+				{
+					pDiffSection->Str2 = NULL;
+				}
+
 				pDiffSection->Different = true;
 				DiffSections.InsertTail(pDiffSection);
 			}
@@ -2042,12 +2052,12 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 	// text WITH whitespaces
 	LPCTSTR str1ws = pStr1->GetText();
 	LPCTSTR str1VersionBegin = _tcschr(str1ws, '$');
-	LPCTSTR const str1VersionEnd = _tcsrchr(str1ws, '$');
+	LPCTSTR str1VersionEnd = _tcsrchr(str1ws, '$');
 
 	LPCTSTR str2ws = pStr2->GetText();
 
 	LPCTSTR str2VersionBegin = _tcschr(str2ws, '$');
-	LPCTSTR const str2VersionEnd = _tcsrchr(str2ws, '$');
+	LPCTSTR str2VersionEnd = _tcsrchr(str2ws, '$');
 
 	if (NULL != str1VersionBegin
 		&& NULL != str2VersionBegin)
@@ -2081,6 +2091,8 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 			// no revision info
 			str1VersionBegin = NULL;
 			str2VersionBegin = NULL;
+			str1VersionEnd = NULL;
+			str2VersionEnd = NULL;
 		}
 	}
 
@@ -2099,6 +2111,10 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 					str1ws++;
 				}
 				str1++;
+				str1ws++;
+			}
+			while(*str1ws != *str1)
+			{
 				str1ws++;
 			}
 			pDiffSection->Str1ws = str1ws;
@@ -2121,6 +2137,10 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 					str2ws++;
 				}
 				str2++;
+				str2ws++;
+			}
+			while(*str2ws != *str2)
+			{
 				str2ws++;
 			}
 			pDiffSection->Str2ws = str2ws;
@@ -2153,7 +2173,125 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 
 	DiffSections.InsertTail(pDiffSection);
 
-	// then expand all "equal" sections to include preceding and trailing blanks
+	// Now expand all "equal" sections to include preceding and trailing blanks
+
+	// first expand them to make number of file1/file2 blanks equal
+	for (pDiffSection = DiffSections.First();
+		pDiffSection->NotEnd( & DiffSections); pDiffSection = pDiffSection->Next())
+	{
+		if (! pDiffSection->Different)
+		{
+			// find number of heading blanks
+			unsigned blanks1, blanks2;
+			for (blanks1 = 0;
+				blanks1 < pDiffSection->Len1ws && ' ' == pDiffSection->Str1ws[blanks1];
+				blanks1++)
+			{
+			}
+			for (blanks2 = 0;
+				blanks2 < pDiffSection->Len2ws && ' ' == pDiffSection->Str2ws[blanks2];
+				blanks2++)
+			{
+			}
+
+			while (blanks1 < blanks2
+					&& pDiffSection->Str1ws > str1ws
+					&& ' ' == pDiffSection->Str1ws[-1])
+			{
+				blanks1++;
+				pDiffSection->Str1ws--;
+				pDiffSection->Len1ws++;
+			}
+
+			while (blanks2 < blanks1
+					&& pDiffSection->Str2ws > str2ws
+					&& ' ' == pDiffSection->Str2ws[-1])
+			{
+				blanks2++;
+				pDiffSection->Str2ws--;
+				pDiffSection->Len2ws++;
+			}
+
+			while (pDiffSection->Str1ws > str1ws
+					&& ' ' == pDiffSection->Str1ws[-1]
+					&& pDiffSection->Str2ws > str2ws
+					&& ' ' == pDiffSection->Str2ws[-1])
+			{
+				pDiffSection->Str1ws--;
+				pDiffSection->Len1ws++;
+				pDiffSection->Str2ws--;
+				pDiffSection->Len2ws++;
+			}
+		}
+		if (NULL != pDiffSection->Str1ws)
+		{
+			str1ws = pDiffSection->Str1ws + pDiffSection->Len1ws;
+		}
+		if (NULL != pDiffSection->Str2ws)
+		{
+			str2ws = pDiffSection->Str2ws + pDiffSection->Len2ws;
+		}
+	}
+
+	str1ws = pStr1->GetText() + pStr1->GetLength();
+	str2ws = pStr2->GetText() + pStr2->GetLength();
+
+	for (pDiffSection = DiffSections.Last();
+		DiffSections.NotEnd(pDiffSection); pDiffSection = pDiffSection->Prev())
+	{
+		if (! pDiffSection->Different)
+		{
+			// find number of trailing blanks
+			unsigned blanks1, blanks2;
+			for (blanks1 = 0;
+				blanks1 < pDiffSection->Len1ws
+				&& ' ' == pDiffSection->Str1ws[pDiffSection->Len1ws - 1 - blanks1];
+				blanks1++)
+			{
+			}
+			for (blanks2 = 0;
+				blanks2 < pDiffSection->Len2ws
+				&& ' ' == pDiffSection->Str2ws[pDiffSection->Len2ws - 1 - blanks2];
+				blanks2++)
+			{
+			}
+
+			while (blanks1 < blanks2
+					&& pDiffSection->Str1ws + pDiffSection->Len1ws < str1ws
+					&& ' ' == pDiffSection->Str1ws[pDiffSection->Len1ws])
+			{
+				blanks1++;
+				pDiffSection->Len1ws++;
+			}
+			while (blanks2 < blanks1
+					&& pDiffSection->Str2ws + pDiffSection->Len2ws < str2ws
+					&& ' ' == pDiffSection->Str2ws[pDiffSection->Len2ws])
+			{
+				blanks2++;
+				pDiffSection->Len2ws++;
+			}
+
+			while (pDiffSection->Str1ws + pDiffSection->Len1ws < str1ws
+					&& ' ' == pDiffSection->Str1ws[pDiffSection->Len1ws]
+					&& pDiffSection->Str2ws + pDiffSection->Len2ws < str2ws
+					&& ' ' == pDiffSection->Str2ws[pDiffSection->Len2ws])
+			{
+				pDiffSection->Len1ws++;
+				pDiffSection->Len2ws++;
+			}
+		}
+
+		if (NULL != pDiffSection->Str1ws)
+		{
+			str1ws = pDiffSection->Str1ws;
+		}
+		if (NULL != pDiffSection->Str2ws)
+		{
+			str2ws = pDiffSection->Str2ws;
+		}
+	}
+
+	// then add the remaining blanks
 	for (pDiffSection = DiffSections.First();
 		pDiffSection->NotEnd( & DiffSections); pDiffSection = pDiffSection->Next())
 	{
@@ -2210,8 +2348,9 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 			str2ws = pDiffSection->Str2ws;
 		}
 	}
+
 	// now we have all identical sections expanded to fill all the whitespaces around them
-	// merge all neighbour identical sections
+	// merge all adjacent identical sections
 	for (pDiffSection = DiffSections.First();
 		DiffSections.NotEnd(pDiffSection); pDiffSection = pDiffSection->Next())
 	{
@@ -2244,15 +2383,14 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 			unsigned len2 = pDiffSection->Len2ws;
 			while (0 != len1 || 0 != len2)
 			{
-				unsigned idx1 = 0;
-				unsigned idx2 = 0;
-				while (idx1 < len1
-						&& idx1 < len2
-						&& str1[idx1] == str2[idx1])
+				unsigned idx = 0;
+				while (idx < len1
+						&& idx < len2
+						&& str1[idx] == str2[idx])
 				{
-					idx1++;
+					idx++;
 				}
-				if (0 != idx1)
+				if (0 != idx)
 				{
 					// equal section found
 					if (NULL != ppSections)
@@ -2261,26 +2399,25 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 						if (NULL != pNewSection)
 						{
 							pNewSection->Attr = StringSection::Identical;
-							pNewSection->Length = idx1;
+							pNewSection->Length = idx;
 							pNewSection->pBegin = str1;
 							ppSections->InsertTail(pNewSection);
 						}
 					}
-					str1 += idx1;
-					str2 += idx2;
-					len1 -= idx1;
-					len2 -= idx2;
+					str1 += idx;
+					str2 += idx;
+					len1 -= idx;
+					len2 -= idx;
 				}
 				// skip the spaces
 				ASSERT(0 == len1 || ' ' != *str1 || 0 == len2 || ' ' != *str2);
-				idx1 = 0;
-				while (idx1 < len1 && ' ' == str1[idx1])
+
+				unsigned idx1, idx2;
+				for (idx1 = 0; idx1 < len1 && ' ' == str1[idx1]; idx1++)
 				{
-					idx1++;
 				}
-				while (idx2 < len2 && ' ' == str2[idx2])
+				for (idx2 = 0; idx2 < len2 && ' ' == str2[idx2]; idx2++)
 				{
-					idx2++;
 				}
 
 				ASSERT(0 == idx1 || 0 == idx2);
@@ -2381,7 +2518,32 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 			}
 		}
 	}
-
+#if 0
+	// try to reduce whitespace difference sections, when a difference is inserted
+	if (NULL != ppSections)
+	{
+		for (StringSection * pSection = ppSections->First();
+			pSection->NotEnd(ppSections); pSection = pSection->Next())
+		{
+			StringSection * pNextSection = pSection->Next();
+			if (pSection->Attr & StringSection::Whitespace
+				&& pNextSection->NotEnd(ppSections))
+			{
+				StringSection * pSecondSection = pNextSection->Next();
+				if (pSecondSection->NotEnd(ppSections))
+				{
+					if (pSection->Attr & StringSection::File1Only)
+					{
+						StringSection * pNextSection = pSection->Next();
+					}
+					else if (pSection->Attr & StringSection::File2Only)
+					{
+					}
+				}
+			}
+		}
+	}
+#endif
 	while ( ! DiffSections.IsEmpty())
 	{
 		delete DiffSections.RemoveHead();

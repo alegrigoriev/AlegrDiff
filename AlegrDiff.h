@@ -42,33 +42,47 @@ public:
 	DWORD m_DiscardedTextBackgroundColor;
 	DWORD m_SelectedTextColor;
 
-	bool m_bRecurseSubdirs;
-	bool m_bUseBinaryFilesFilter;
-	bool m_bUseCppFilter;
-	bool m_bUseIgnoreFilter;
-	bool m_bAdvancedCompareDialog;
-	bool m_BinaryComparision;
-	bool m_AutoReloadChangedFiles;
-	bool m_bIgnoreWhitespaces;
-	bool m_bShowLineNumbers;
-	bool m_bFindBackward;
-
-	bool m_bShowToolbar;
-	bool m_bShowStatusBar;
-	bool m_bOpenMaximized;
-	bool m_bOpenChildMaximized;
+	union
+	{
+		DWORD m_PreferencesFlags;
+		struct
+		{
+			bool m_bRecurseSubdirs:1;
+			bool m_bUseBinaryFilesFilter:1;
+			bool m_bUseCppFilter:1;
+			bool m_bUseIgnoreFilter:1;
+			bool m_bAdvancedCompareDialog:1;
+			bool m_BinaryComparision:1;
+			bool m_AutoReloadChangedFiles:1;
+			bool m_bIgnoreWhitespaces:1;
+			bool m_bShowLineNumbers:1;
+			bool m_bFindBackward:1;
+			bool m_bCaseSensitive:1;
+			bool m_bCancelSelectionOnMerge:1;
+		};
+	};
+	union
+	{
+		DWORD m_StatusFlags;
+		struct
+		{
+			bool m_bShowToolbar:1;
+			bool m_bShowStatusBar:1;
+			bool m_bOpenMaximized:1;
+			bool m_bOpenChildMaximized:1;
+		};
+	};
 
 	CString m_FileDir1;
 	CString m_FileDir2;
 	CString m_LastSaveMergedDir;
 	CString m_CopyFilesDir;
+	CString m_CustomFileOpenFilter;
 
 	CString m_sFindHistory[15];
 	CString m_RecentFolders[15];
 	CString m_sFilters[10];
 	CString m_RecentFiles[15];
-
-	int m_UsedFilenameFilter;
 
 	DWORD m_FileListSort;
 
@@ -78,7 +92,6 @@ public:
 	CString m_sIgnoreFilesFilter;
 
 	CString m_FindString;
-	bool m_bCaseSensitive;
 
 	DWORD	m_MinimalLineLength;
 	DWORD	m_NumberOfIdenticalLines;
@@ -100,7 +113,7 @@ public:
 	void OnFontChanged();
 	void UpdateAllDiffViews(LPARAM lHint = 0L, CObject* pHint = NULL);
 
-	void OpenFilePairView(FilePair * pPair);
+	class CFilePairDoc * OpenFilePairView(FilePair * pPair);
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CAlegrDiffApp)
@@ -137,7 +150,7 @@ void OpenFileForEditing(class FileItem * pFile);
 void CopyFilesToFolder(FileItem ** ppFiles, int nCount, bool bAddSubdirToTarget);
 CString FileTimeToStr(FILETIME FileTime, LCID locale = LOCALE_USER_DEFAULT);
 void AddStringToHistory(const CString & str, CString history[], int NumItems, bool CaseSensitive = false);
-
+CString CreateCustomFilter(LPCTSTR Extension);
 /////////////////////////////////////////////////////////////////////////////
 
 //{{AFX_INSERT_LOCATION}}

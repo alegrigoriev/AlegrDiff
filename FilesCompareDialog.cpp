@@ -232,37 +232,68 @@ END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CFilesCompareDialog message handlers
-
-void CFilesCompareDialog::OnButtonBrowseFirstFile()
+int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder)
 {
+	CThisApp * pApp = GetApp();
+
+	// Filter string provided by the program (AllFiles (*.*))
 	CString Filter;
 	Filter.LoadString(IDS_FILENAME_FILTER);
+	// Filter string generated from the current file name
+	// it will then be stored to pApp->m_CustomFileOpenFilter
+	CString CurrentCustomFilter;
+	CString CurrentCustomFilterString;
+	// Filter string used from the previous time
+	CString PrevCustomFilterString;
+	if ( ! pApp->m_CustomFileOpenFilter.IsEmpty())
+	{
+		PrevCustomFilterString = CreateCustomFilter(pApp->m_CustomFileOpenFilter);
+	}
+	// get file name extension
+	// create custom filter
+	// check if it's the same as previous filter
 
 	CString title;
-	title.LoadString(IDS_OPEN_FIRST_TITLE);
+	title.LoadString(TitleID);
 
-	COpenDiffDialog dlg(TRUE, NULL, NULL,
-						OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLETEMPLATE,
-						Filter);
-	dlg.m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_OPEN_TEMPLATE);
-
-	CString Name;
-	m_FirstCombo.GetWindowText(Name);
 	TCHAR FullPath[MAX_PATH + 1] = {0};
 	LPTSTR FileNamePart = FullPath;
+	TCHAR OfnCustomFilter[MAX_PATH] = {0, 0};
+	CString LastFileName;
 
 	if ( ! Name.IsEmpty())
 	{
 		if (GetFullPathName(Name, MAX_PATH, FullPath, & FileNamePart))
 		{
-			_tcsncpy(dlg.m_ofn.lpstrFile, FileNamePart, dlg.m_ofn.nMaxFile - 1);
+			LastFileName = FileNamePart;
+			// find extension
+			LPCTSTR pExt = _tcsrchr(FileNamePart, '.');
+			if (pExt)
+			{
+				CurrentCustomFilter += pExt;
+				CurrentCustomFilterString = CreateCustomFilter(CurrentCustomFilter);
+			}
 			*FileNamePart = 0;
 		}
 	}
+	if ( ! CurrentCustomFilterString.CompareNoCase(PrevCustomFilterString))
+	{
+		// if both filters are the same, reset one of them
+		CurrentCustomFilterString.Empty();
+	}
+
+	Filter = CurrentCustomFilterString + PrevCustomFilterString + Filter;
+
+	COpenDiffDialog dlg(TRUE, NULL, NULL,
+						OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLETEMPLATE,
+						Filter);
+	// copy initial file name
+	_tcsncpy(dlg.m_ofn.lpstrFile, LastFileName, dlg.m_ofn.nMaxFile - 1);
+	dlg.m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_OPEN_TEMPLATE);
 
 	if (FullPath[0] == 0)
 	{
-		dlg.m_ofn.lpstrInitialDir = m_FileDir1;
+		dlg.m_ofn.lpstrInitialDir = BrowseFolder;
 	}
 	else
 	{
@@ -270,71 +301,68 @@ void CFilesCompareDialog::OnButtonBrowseFirstFile()
 	}
 
 	dlg.m_ofn.lpstrTitle = title;
-	dlg.m_ofn.nFilterIndex = m_UsedFilenameFilter;
+	dlg.m_ofn.nFilterIndex = 1;
+	dlg.m_ofn.lpstrCustomFilter = OfnCustomFilter;
+	dlg.m_ofn.nMaxCustFilter = sizeof OfnCustomFilter / sizeof OfnCustomFilter[0];
 
 	if (IDOK != dlg.DoModal())
 	{
-		return;
+		return IDCANCEL;
 	}
 
 	TCHAR CurrDir[MAX_PATH] = {0};
 	GetCurrentDirectory(MAX_PATH, CurrDir);
-	m_FileDir1 = CurrDir;
-	m_UsedFilenameFilter = dlg.m_ofn.nFilterIndex;
+	BrowseFolder = CurrDir;
 
-	m_FirstCombo.SetWindowText(dlg.GetPathName());
+	LPTSTR pFilter = OfnCustomFilter;
+	// skip first string (it's usually of sero length
+	while (*(pFilter++) != 0) {}
+	if (0 != strcmp(pFilter, "*")
+		&& 0 != strcmp(pFilter, "*.*"))
+	{
+		int len = _tcslen(pFilter);
+		// file open dialog adds an asterisk to the filter:
+		// *.c becomes *.c*
+		// we want to remove it
+		if (len > 3
+			&& '*' == pFilter[len-1])
+		{
+			pFilter[len-1] = 0;
+			if (NULL == strchr(pFilter, '*')
+				&& NULL == strchr(pFilter, '?'))
+			{
+				// put the asterisk back
+				pFilter[len-1] = '*';
+			}
+		}
+		pApp->m_CustomFileOpenFilter = pFilter;
+	}
+
+	Name = dlg.GetPathName();
+	return IDOK;
+}
+void CFilesCompareDialog::OnButtonBrowseFirstFile()
+{
+	CString Name;
+	m_FirstCombo.GetWindowText(Name);
+	if (IDOK != BrowseForFile(IDS_OPEN_FIRST_TITLE, Name, m_FileDir1))
+	{
+		return;
+	}
+
+	m_FirstCombo.SetWindowText(Name);
 }
 
 void CFilesCompareDialog::OnButtonBrowseSecondFile()
 {
-	CString Filter;
-	Filter.LoadString(IDS_FILENAME_FILTER);
-
-	CString title;
-	title.LoadString(IDS_OPEN_SECOND_TITLE);
-
-	COpenDiffDialog dlg(TRUE, NULL, NULL,
-						OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLETEMPLATE,
-						Filter);
-	dlg.m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_OPEN_TEMPLATE);
-
 	CString Name;
 	m_SecondCombo.GetWindowText(Name);
-	TCHAR FullPath[MAX_PATH + 1] = {0};
-	LPTSTR FileNamePart = FullPath;
-
-	if ( ! Name.IsEmpty())
-	{
-		if (GetFullPathName(Name, MAX_PATH, FullPath, & FileNamePart))
-		{
-			_tcsncpy(dlg.m_ofn.lpstrFile, FileNamePart, dlg.m_ofn.nMaxFile - 1);
-			*FileNamePart = 0;
-		}
-	}
-
-	if (FullPath[0] == 0)
-	{
-		dlg.m_ofn.lpstrInitialDir = m_FileDir2;
-	}
-	else
-	{
-		dlg.m_ofn.lpstrInitialDir = FullPath;
-	}
-
-	dlg.m_ofn.lpstrTitle = title;
-	dlg.m_ofn.nFilterIndex = m_UsedFilenameFilter;
-
-	if (IDOK != dlg.DoModal())
+	if (IDOK != BrowseForFile(IDS_OPEN_FIRST_TITLE, Name, m_FileDir1))
 	{
 		return;
 	}
 
-	TCHAR CurrDir[MAX_PATH] = {0};
-	GetCurrentDirectory(MAX_PATH, CurrDir);
-	m_FileDir2 = CurrDir;
-	m_UsedFilenameFilter = dlg.m_ofn.nFilterIndex;
-
-	m_SecondCombo.SetWindowText(dlg.GetPathName());
+	m_SecondCombo.SetWindowText(Name);
 }
 
 BOOL CFilesCompareDialog::OnInitDialog()

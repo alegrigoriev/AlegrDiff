@@ -27,7 +27,6 @@ public:
 	CString	m_sFirstFileName;
 	CString	m_sSecondFileName;
 
-	int m_UsedFilenameFilter;
 	CString m_FileDir1;
 	CString m_FileDir2;
 // Overrides

@@ -183,6 +183,15 @@ FileItem::FileItem(const WIN32_FIND_DATA * pWfd,
 	m_LastWriteTime = pWfd->ftLastWriteTime;
 }
 
+FileItem::FileItem(LPCTSTR name)
+	:m_Name(name),
+	m_C_Cpp(false),
+	m_pNext(NULL)
+{
+	m_LastWriteTime.dwHighDateTime = 0;
+	m_LastWriteTime.dwLowDateTime = 0;
+}
+
 void FileItem::Unload()
 {
 	TRACE("FileItem %s Unloaded\n", LPCTSTR(GetFullName()));
@@ -201,6 +210,16 @@ void FileItem::Unload()
 FileItem::~FileItem()
 {
 	Unload();
+}
+
+void FileItem::AddLine(LPCTSTR pLine)
+{
+	FileLine * pFileLine = new FileLine(pLine, true, m_C_Cpp);
+	if (pLine)
+	{
+		pFileLine->SetLineNumber(m_Lines.GetSize());
+		m_Lines.Add(pFileLine);
+	}
 }
 
 int _cdecl FileLine::HashCompareFunc(const void * p1, const void * p2)
@@ -671,6 +690,10 @@ FileCheckResult FileItem::ReloadIfChanged()
 
 PairCheckResult FilePair::CheckForFilesChanged()
 {
+	if (MemoryFile == m_ComparisionResult)
+	{
+		return FilesUnchanged;
+	}
 	FileCheckResult res1 = FileDeleted;
 	FileCheckResult res2 = FileDeleted;
 	if (NULL != pFirstFile)
@@ -699,6 +722,10 @@ PairCheckResult FilePair::CheckForFilesChanged()
 
 PairCheckResult FilePair::ReloadIfChanged()
 {
+	if (MemoryFile == m_ComparisionResult)
+	{
+		return FilesUnchanged;
+	}
 	FileCheckResult res1 = FileDeleted;
 	FileCheckResult res2 = FileDeleted;
 	if (NULL != pFirstFile)
@@ -2403,6 +2430,10 @@ FilePair::eFileComparisionResult FilePair::CompareFiles()
 				m_LinePairs.SetAt(i, pPair);
 			}
 		}
+	}
+	if (MemoryFile == m_ComparisionResult)
+	{
+		return MemoryFile;
 	}
 	// different comparision for different modes
 	return result;

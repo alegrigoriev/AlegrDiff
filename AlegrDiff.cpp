@@ -56,17 +56,7 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_AcceptedTextBackgroundColor(0x0000FFFF),  // yellow
 	m_DiscardedTextBackgroundColor(0x00C0C0C0),  // dark gray
 	m_TextBackgroundColor(0xFFFFFF),
-	m_bRecurseSubdirs(false),
 	m_FontPointSize(100),
-	m_UsedFilenameFilter(0),
-	m_AutoReloadChangedFiles(false),
-	m_bCaseSensitive(true),
-	m_bIgnoreWhitespaces(true),
-	m_bFindBackward(false),
-	m_bShowToolbar(true),
-	m_bShowStatusBar(true),
-	m_bOpenMaximized(true),
-	m_bOpenChildMaximized(true),
 	m_MinimalLineLength(2),
 	m_MinMatchingChars(3),
 	m_NumberOfIdenticalLines(5),
@@ -75,6 +65,28 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_FileListSort(CAlegrDiffView::ColumnSubdir),
 	m_MinIdenticalLines(5)
 {
+	m_PreferencesFlags = 0;
+	// then init subfields:
+	m_bRecurseSubdirs = false;
+	m_bUseBinaryFilesFilter = false;
+	m_bUseCppFilter = true;
+	m_bUseIgnoreFilter = true;
+	m_bAdvancedCompareDialog = false;
+	m_BinaryComparision = false;
+	m_AutoReloadChangedFiles = false;
+	m_bCaseSensitive = true;
+	m_bIgnoreWhitespaces = true;
+	m_bFindBackward = false;
+	m_bShowLineNumbers = true;
+	m_bCancelSelectionOnMerge = false;
+
+	m_StatusFlags = 0;
+	// then init subfields:
+	m_bShowToolbar = true;
+	m_bShowStatusBar = true;
+	m_bOpenMaximized = true;
+	m_bOpenChildMaximized = true;
+
 	m_NormalLogFont.lfCharSet = ANSI_CHARSET;
 	m_NormalLogFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
 	m_NormalLogFont.lfEscapement = 0;
@@ -141,18 +153,19 @@ BOOL CAlegrDiffApp::InitInstance()
 
 	Profile.AddItem(_T("Settings"), _T("FontPointSize"), m_FontPointSize, 100, 30, 500);
 	Profile.AddItem(_T("Settings"), _T("TabIndent"), m_TabIndent, 4, 1, 32);
-	Profile.AddItem(_T("Settings"), _T("UsedFilenameFilter"), m_UsedFilenameFilter, 0, 0, 8);
 
 	Profile.AddItem(_T("Settings"), _T("FileListSort"), m_FileListSort,
 					CAlegrDiffView::ColumnSubdir, 0, ~0);
 
-	Profile.AddItem(_T("Settings"), _T("RecurseSubdirs"), m_bRecurseSubdirs, false);
 	Profile.AddItem(_T("Settings"), _T("InitialDir1"), m_FileDir1, _T(""));
 	Profile.AddItem(_T("Settings"), _T("InitialDir2"), m_FileDir2, _T(""));
 	Profile.AddItem(_T("Settings"), _T("LastSaveMergedDir"), m_LastSaveMergedDir, _T("."));
 	Profile.AddItem(_T("Settings"), _T("CopyFilesDir"), m_CopyFilesDir, _T("."));
 
 	//Profile.AddItem(_T("Settings"), _T("FilenameFilter"), m_sFilenameFilter, _T("*"));
+#if 0
+	Profile.AddItem(_T("Settings"), _T("UsedFilenameFilter"), m_UsedFilenameFilter, 0, 0, 8);
+	Profile.AddItem(_T("Settings"), _T("RecurseSubdirs"), m_bRecurseSubdirs, false);
 	Profile.AddItem(_T("Settings"), _T("UseBinaryFilesFilter"), m_bUseBinaryFilesFilter, false);
 	Profile.AddItem(_T("Settings"), _T("UseCppFilter"), m_bUseCppFilter, true);
 	Profile.AddItem(_T("Settings"), _T("UseIgnoreFilter"), m_bUseIgnoreFilter, true);
@@ -160,12 +173,18 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("BinaryComparision"), m_BinaryComparision, false);
 	Profile.AddItem(_T("Settings"), _T("AutoReloadChangedFiles"), m_AutoReloadChangedFiles, false);
 	Profile.AddItem(_T("Settings"), _T("IgnoreWhitespaces"), m_bIgnoreWhitespaces, true);
-	Profile.AddItem(_T("Settings"), _T("bShowLineNumbers"), m_bShowLineNumbers, false);
+	Profile.AddItem(_T("Settings"), _T("ShowLineNumbers"), m_bShowLineNumbers, false);
 	Profile.AddItem(_T("Settings"), _T("FindBackward"), m_bFindBackward, false);
+	Profile.AddItem(_T("Settings"), _T("CancelSelectionOnMerge"), m_bCancelSelectionOnMerge, false);
 	Profile.AddItem(_T("Settings"), _T("ShowToolbar"), m_bShowToolbar, true);
 	Profile.AddItem(_T("Settings"), _T("ShowStatusBar"), m_bShowStatusBar, true);
 	Profile.AddItem(_T("Settings"), _T("OpenChildMaximized"), m_bOpenChildMaximized, true);
 	Profile.AddItem(_T("Settings"), _T("OpenMaximized"), m_bOpenMaximized, true);
+#else
+	Profile.AddItem(_T("Settings"), _T("m_PreferencesFlags"), m_PreferencesFlags, m_PreferencesFlags, 0, 0xFFFFFFFF);
+	Profile.AddItem(_T("Settings"), _T("m_StatusFlags"), m_StatusFlags, m_StatusFlags, 0, 0xFFFFFFFF);
+#endif
+
 
 	Profile.AddItem(_T("Settings"), _T("MinimalLineLength"), m_MinimalLineLength, 2, 1, 2048);
 	Profile.AddItem(_T("Settings"), _T("NumberOfIdenticalLines"), m_NumberOfIdenticalLines, 5, 1, 50);
@@ -335,12 +354,12 @@ void CAlegrDiffApp::OnFileComparedirectories()
 	CompareDirectories(NULL, NULL);
 }
 
-void CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
+CFilePairDoc * CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 {
 	if (pPair->m_ComparisionResult == pPair->ResultUnknown)
 	{
 		// the file not compared yet, can't open
-		return;
+		return NULL;
 	}
 	// check if there is already a CFilePairDoc
 	POSITION position = m_pFileDiffTemplate->GetFirstDocPosition();
@@ -357,7 +376,7 @@ void CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 				CView * pView = pDoc->GetNextView(viewpos);
 				((CMDIChildWnd*)pView->GetParentFrame())->MDIActivate();
 			}
-			return;
+			return pDoc;
 		}
 	}
 
@@ -367,6 +386,7 @@ void CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 	{
 		pDoc->SetFilePair(pPair);
 	}
+	return pDoc;
 }
 
 void CAlegrDiffApp::OnFileComparefiles()
@@ -399,6 +419,7 @@ void CAlegrDiffApp::OnFilePreferences()
 	dlg.m_ViewPage.m_NormalTextBackground = m_TextBackgroundColor;
 	dlg.m_ViewPage.m_AddedTextBackground = m_AcceptedTextBackgroundColor;
 	dlg.m_ViewPage.m_ErasedTextBackground = m_DiscardedTextBackgroundColor;
+	dlg.m_ViewPage.m_bCancelSelectionOnMerge = m_bCancelSelectionOnMerge;
 
 	dlg.m_ComparisionPage.m_MinimalLineLength = m_MinimalLineLength;
 	dlg.m_ComparisionPage.m_NumberOfIdenticalLines = m_NumberOfIdenticalLines;
@@ -419,6 +440,8 @@ void CAlegrDiffApp::OnFilePreferences()
 		m_AutoReloadChangedFiles = (0 != dlg.m_FilesPage.m_AutoReloadChangedFiles);
 
 		m_TabIndent = dlg.m_ViewPage.m_nTabIndent;
+		m_bCancelSelectionOnMerge = (0 != dlg.m_ViewPage.m_bCancelSelectionOnMerge);
+
 		m_MinimalLineLength = dlg.m_ComparisionPage.m_MinimalLineLength;
 		m_NumberOfIdenticalLines = dlg.m_ComparisionPage.m_NumberOfIdenticalLines;
 		m_PercentsOfLookLikeDifference = dlg.m_ComparisionPage.m_PercentsOfLookLikeDifference;
@@ -836,14 +859,12 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 		dlg.m_sFirstFileName = Name1;
 		dlg.m_sSecondFileName = Name2;
 		dlg.m_bBinaryFile = m_BinaryComparision;
-		dlg.m_UsedFilenameFilter = m_UsedFilenameFilter;
 
 		if (IDOK != dlg.DoModal())
 		{
 			return;
 		}
 
-		m_UsedFilenameFilter = dlg.m_UsedFilenameFilter;
 		m_BinaryComparision = (0 != dlg.m_bBinaryFile);
 		Name1 = dlg.m_sFirstFileName;
 		Name2 = dlg.m_sSecondFileName;
@@ -944,42 +965,27 @@ void CAlegrDiffApp::OpenPairOfPathnames(LPTSTR Arg1, LPTSTR Arg2)
 		pArg1--;
 	}
 
-	WIN32_FIND_DATA wfd;
-	HANDLE hFind = FindFirstFile(Arg1, & wfd);
-	if (NULL == hFind || INVALID_HANDLE_VALUE == hFind)
+	// check if it's folder or file
+	// don't use FildFirstFile, because it won't work for the root directory
+	DWORD FileAttr1 = GetFileAttributes(Arg1);
+	if (0xFFFFFFFF == FileAttr1)
 	{
+		// failed
 		return;
 	}
-	FindClose(hFind);
-	// check if it's folder or file
-	if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	if (FileAttr1 & FILE_ATTRIBUTE_DIRECTORY)
 	{
 		if (Arg2 != NULL && Arg2[0] != 0)
 		{
-			WIN32_FIND_DATA wfd2;
-			hFind = FindFirstFile(Arg2, & wfd2);
-			if (NULL == hFind
-				|| INVALID_HANDLE_VALUE == hFind)
+			DWORD FileAttr2 = GetFileAttributes(Arg2);
+			if (0xFFFFFFFF == FileAttr2)
 			{
-				// TODO: show error or open dialog
+				// failed
 				return;
 			}
-			FindClose(hFind);
-			if (! (wfd2.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+			if (0 == (FileAttr2 & FILE_ATTRIBUTE_DIRECTORY))
 			{
 				return;
-			}
-			if ( ! hasWildcard)
-			{
-				// find which folder is older
-				if (0) if (wfd2.ftLastWriteTime.dwHighDateTime < wfd.ftLastWriteTime.dwHighDateTime
-							|| (wfd2.ftLastWriteTime.dwHighDateTime == wfd.ftLastWriteTime.dwHighDateTime
-								&& wfd2.ftLastWriteTime.dwLowDateTime < wfd.ftLastWriteTime.dwLowDateTime))
-					{
-						LPTSTR tmp = Arg1;
-						Arg1 = Arg2;
-						Arg2 = tmp;
-					}
 			}
 		}
 		// TODO: process /B (binary) option
@@ -1201,4 +1207,54 @@ void CAlegrDiffApp::OnHelpUsing()
 	shex.nShow = SW_SHOWDEFAULT;
 	ShellExecuteEx( & shex);
 
+}
+
+CString CreateCustomFilter(LPCTSTR Extension)
+{
+	// DotExt points to "ext" string
+	if ('*' == Extension[0]
+		&& '.' == Extension[1])
+	{
+		Extension += 2;
+	}
+	else if ('.' == Extension[0])
+	{
+		Extension++;
+	}
+	CString HccrRegistryPath('.');
+	HccrRegistryPath += Extension;
+	CString WildCard("*" + HccrRegistryPath);
+	CString Filter(" (" + WildCard + ")|" + WildCard + "|");
+	CString ReturnValue(HccrRegistryPath + " file" + Filter);
+
+	HKEY hKey = NULL;
+	TCHAR data[512];
+	DWORD ValueType;
+	DWORD DataSize = sizeof data - 2;
+	if (RegOpenKeyEx(HKEY_CLASSES_ROOT, HccrRegistryPath, 0, KEY_READ,
+					&hKey) == ERROR_SUCCESS)
+	{
+		if (ERROR_SUCCESS == RegQueryValueEx(hKey, NULL, 0, & ValueType, LPBYTE(data), & DataSize)
+			&& REG_SZ == ValueType)
+		{
+			data[DataSize / sizeof data[0]] = 0;
+			HKEY hKey1 = NULL;
+			if (RegOpenKeyEx(HKEY_CLASSES_ROOT, data, 0, KEY_READ,
+							&hKey1) == ERROR_SUCCESS)
+			{
+				// read file description
+				DataSize = sizeof data - 2;
+				if (ERROR_SUCCESS == RegQueryValueEx(hKey1, NULL, 0, & ValueType, LPBYTE(data), & DataSize)
+					&& REG_SZ == ValueType)
+				{
+					data[DataSize / sizeof data[0]] = 0;
+					ReturnValue = data + Filter;
+				}
+				RegCloseKey(hKey1);
+			}
+
+		}
+		RegCloseKey(hKey);
+	}
+	return ReturnValue;
 }

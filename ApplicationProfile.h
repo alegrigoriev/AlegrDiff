@@ -341,7 +341,7 @@ class CStringHistory
 public:
 	enum { Trim = 1, CaseSensitive = 2 };
 	CStringHistory(CApplicationProfile * pProfile,
-					LPCTSTR Section, LPCTSTR KeyFormat, int NumStrings, ULONG Flags = CStringHistory::Trim);
+					LPCTSTR Section, LPCTSTR KeyFormat, int NumStrings, ULONG Flags = Trim);
 	CStringHistory(CStringHistory * pSourceHistory);
 	~CStringHistory();
 	void Load(LPCTSTR DefaultFirstString = _T(""));

@@ -3151,136 +3151,60 @@ TextPos FilePair::PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces)
 	return pSection->m_Begin;
 }
 
-int FilePair::GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, bool bIgnoreWhitespaces)
+struct ModifyFlagsStruct
 {
-	if (0 == m_DiffSections.GetSize())
-	{
-		return FileDiffSection::FlagNoDifference;
-	}
-	if (PosTo < PosFrom)
-	{
-		TextPos tmp = PosTo;
-		PosTo = PosFrom;
-		PosFrom = tmp;
-	}
-	FileDiffSection const *const * ppSection =
-		BinLookupAbout<FileDiffSection *, TextPos, int>
-	(& PosFrom, 0,
-		m_DiffSections.GetData(), m_DiffSections.GetSize(),
-		CompareTextPosEnd);
-	int SectionIdx = ppSection - m_DiffSections.GetData();
-	if (SectionIdx > m_DiffSections.GetUpperBound())
-	{
-		return FileDiffSection::FlagNoDifference;
-	}
-	const FileDiffSection * pSection = m_DiffSections[SectionIdx];
-	if (PosTo == PosFrom)
-	{
-		// if the range is of zero length, then PosTo inclusive.
-		if (PosFrom < pSection->m_Begin
-			|| PosFrom >= pSection->m_End
-			|| (pSection->IsWhitespace() && bIgnoreWhitespaces))
-		{
-			return FileDiffSection::FlagNoDifference;
-		}
-		else
-		{
-			return pSection->m_Flags;
-		}
-	}
-	if (PosTo < pSection->m_Begin
-		|| PosFrom >= pSection->m_End)
-	{
-		return FileDiffSection::FlagNoDifference;
-	}
-	// if the range is not of zero length, then PosTo not inclusize
-	int flags = FileDiffSection::FlagNoDifference;
-	for ( ; SectionIdx < m_DiffSections.GetSize(); SectionIdx++)
-	{
-		pSection = m_DiffSections[SectionIdx];
-		if (PosTo <= pSection->m_Begin)
-		{
-			break;
-		}
-		if (pSection->IsWhitespace() && bIgnoreWhitespaces)
-		{
-			continue;
-		}
-		flags |= pSection->m_Flags;
-		flags &= ~FileDiffSection::FlagNoDifference;
-	}
-	return flags;
+	int Set;
+	int Reset;
+};
+void FilePair::ModifyAcceptDeclineFlagsFunc(StringSection * pSection, void * Param)
+{
+	ModifyFlagsStruct * pmfs = (ModifyFlagsStruct *) Param;
+	pSection->Attr &= ~pmfs->Reset;
+	pSection->Attr |= pmfs->Set;
 }
 
-#if 0
-void FilePair::ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo,
-										int Set, int Reset,
-										FileDiffSection *const ** ppFirstSection, int * pNumSections)
-{
-	if (NULL != ppFirstSection)
-	{
-		* ppFirstSection = NULL;
-		* pNumSections = 0;
-	}
-	if (0 == m_DiffSections.GetSize())
-	{
-		return;
-	}
-	if (PosTo < PosFrom)
-	{
-		TextPos tmp = PosTo;
-		PosTo = PosFrom;
-		PosFrom = tmp;
-	}
-	FileDiffSection *const * ppSection =
-		BinLookupAbout<FileDiffSection *, TextPos, int>
-	(& PosFrom, 0,
-		m_DiffSections.GetData(), m_DiffSections.GetSize(),
-		CompareTextPosEnd);
-	int SectionIdx = ppSection - m_DiffSections.GetData();
-	if (SectionIdx > m_DiffSections.GetUpperBound())
-	{
-		return;
-	}
-	FileDiffSection * pSection = *ppSection;
-	if (PosFrom == PosTo)
-	{
-		if (PosFrom >= pSection->m_Begin
-			&& PosFrom < pSection->m_End)
-		{
-			if (NULL != ppFirstSection)
-			{
-				* ppFirstSection = ppSection;
-				* pNumSections = 1;
-			}
-			pSection->m_Flags &= ~Reset;
-			pSection->m_Flags |= Set;
-		}
-		return;
-	}
-	if (NULL != ppFirstSection)
-	{
-		* ppFirstSection = ppSection;
-		* pNumSections = 0;
-	}
-	// if the range is not of zero length, then PosTo not inclusize
-	for ( ; SectionIdx < m_DiffSections.GetSize(); SectionIdx++)
-	{
-		pSection = m_DiffSections[SectionIdx];
-		if (PosTo <= pSection->m_Begin)
-		{
-			break;
-		}
-		pSection->m_Flags &= ~Reset;
-		pSection->m_Flags |= Set;
-		if (NULL != ppFirstSection)
-		{
-			(* pNumSections)++;
-		}
-	}
-}
-#else
 BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int Set, int Reset)
+{
+	ModifyFlagsStruct mfs;
+	mfs.Set = Set;
+	mfs.Reset = Reset;
+	return EnumStringDiffSections(PosFrom, PosTo, ModifyAcceptDeclineFlagsFunc, & mfs);
+}
+
+struct GetFlagsStruct
+{
+	int Set;
+	int Reset;
+	BOOL bIgnoreWhitespace;
+};
+
+void FilePair::GetAcceptDeclineFlagsFunc(StringSection * pSection, void * Param)
+{
+	GetFlagsStruct * gfs = (GetFlagsStruct *) Param;
+	if (pSection->IsWhitespace() && gfs->bIgnoreWhitespace)
+	{
+		return;
+	}
+	gfs->Set |= pSection->Attr;
+	gfs->Reset &= pSection->Attr;
+}
+
+int FilePair::GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, bool bIgnoreWhitespaces)
+{
+	GetFlagsStruct gfs;
+	gfs.bIgnoreWhitespace = bIgnoreWhitespaces;
+	gfs.Set = 0;
+	gfs.Reset = ~0; // all ones
+	EnumStringDiffSections(PosFrom, PosTo, GetAcceptDeclineFlagsFunc, & gfs);
+	if (~0 == gfs.Reset)
+	{
+		return FileDiffSection::FlagNoDifference;
+	}
+	return gfs.Set;
+}
+
+BOOL FilePair::EnumStringDiffSections(TextPos & PosFrom, TextPos & PosTo,
+									void (* Func)(StringSection * pSection, void * Param), void * pParam)
 {
 	TextPos begin = PosFrom, end = PosTo;
 	if (begin == end)
@@ -3294,24 +3218,35 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 		// find first inclusive section
 
 		int pos = 0;
-		for (StringSection * pSection = pPair->pFirstSection
-			; pSection != NULL; pos += pSection->Length, pSection = pSection->pNext)
+		StringSection * pSection = pPair->pFirstSection;
+		if (pSection != NULL && NULL == pSection->pNext)
 		{
-			if (pos > begin.pos)
-			{
-				return FALSE;
-			}
+			// it's the only section
 			if (0 == (pSection->Attr & (pSection->Inserted | pSection->Erased)))
 			{
-				continue;
+				pSection = NULL;
 			}
-			if (pos + pSection->Length > begin.pos
-				|| (NULL != pSection->pNext
-					&& 0 != (pSection->pNext->Attr & (pSection->Inserted | pSection->Erased))
-					&& pos + pSection->Length + pSection->pNext->Length > begin.pos))
+		}
+		else
+		{
+			for ( ; pSection != NULL; pos += pSection->Length, pSection = pSection->pNext)
 			{
-				// section found
-				break;
+				if (pos > begin.pos)
+				{
+					return FALSE;
+				}
+				if (0 == (pSection->Attr & (pSection->Inserted | pSection->Erased)))
+				{
+					continue;
+				}
+				if (pos + pSection->Length > begin.pos
+					|| (NULL != pSection->pNext
+						&& 0 != (pSection->pNext->Attr & (pSection->Inserted | pSection->Erased))
+						&& pos + pSection->Length + pSection->pNext->Length > begin.pos))
+				{
+					// section found
+					break;
+				}
 			}
 		}
 		if (NULL == pSection)
@@ -3326,8 +3261,7 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 			end.pos = 0;
 			end.line = begin.line + 1;
 
-			pSection->Attr &= ~Reset;
-			pSection->Attr |= Set;
+			Func(pSection, pParam);
 
 			while (begin.line > 0)
 			{
@@ -3338,8 +3272,7 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 				{
 					break;
 				}
-				pSection->Attr &= ~Reset;
-				pSection->Attr |= Set;
+				Func(pSection, pParam);
 
 				begin.line--;
 			}
@@ -3353,8 +3286,7 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 				{
 					break;
 				}
-				pSection->Attr &= ~Reset;
-				pSection->Attr |= Set;
+				Func(pSection, pParam);
 
 				end.line++;
 			}
@@ -3364,8 +3296,7 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 			begin.pos = pos;
 			end.pos = pos + pSection->Length;
 
-			pSection->Attr &= ~Reset;
-			pSection->Attr |= Set;
+			Func(pSection, pParam);
 
 			pSection = pSection->pNext;
 			if (NULL != pSection
@@ -3373,8 +3304,7 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 			{
 				PosTo.pos += pSection->Length;
 
-				pSection->Attr &= ~Reset;
-				pSection->Attr |= Set;
+				Func(pSection, pParam);
 			}
 		}
 		PosFrom = begin;
@@ -3426,8 +3356,7 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 		}
 		if (0 != (pSection->Attr & (pSection->Inserted | pSection->Erased)))
 		{
-			pSection->Attr &= ~Reset;
-			pSection->Attr |= Set;
+			Func(pSection, pParam);
 			ChangeEnd.pos = pos + pSection->Length;
 		}
 	}
@@ -3445,8 +3374,7 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 			pos += pSection->Length;
 			if (0 != (pSection->Attr & (pSection->Inserted | pSection->Erased)))
 			{
-				pSection->Attr &= ~Reset;
-				pSection->Attr |= Set;
+				Func(pSection, pParam);
 				ChangeEnd.line = line;
 				ChangeEnd.pos = pos;
 			}
@@ -3460,7 +3388,6 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 	PosTo = ChangeEnd;
 	return TRUE;
 }
-#endif
 
 LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen, BOOL IgnoreWhitespaces)
 {

@@ -1,11 +1,7 @@
 TODO:
-Context menu on selection: Merge File1 version, Merge File2 version
 Ctrl+mouse selection - make full words
-mark accept/decline line by line
-make selective accept/decline, for some lines of group
 show version of file1, file2 of the line
 Show Left-only, right-only, merged line (single line only)
-Change concept to include/exclude, use file 1, use file2
 Cancel selection on Accept/Decline commands (to see the result immediately). ???
 Maybe different color for selected accepted/declined
 Add Save differences
@@ -36,6 +32,11 @@ Esc closes without prompting to save merged
 Go To next differences when whitespaces ignored
 
 Done:
+Change concept to include/exclude, use file 1, use file2
+Context menu on selection: Merge File1 version, Merge File2 version
+mark accept/decline line by line
+make selective accept/decline, for some lines of group
+Remember last sort in list view
 Make copy to folder for the open file
 Open new frame with the same size attr as active frame
 Catch Ctrl+Tab, neat processing

@@ -156,8 +156,8 @@ CFilesCompareDialog::CFilesCompareDialog(CWnd* pParent /*=NULL*/)
 {
 	//{{AFX_DATA_INIT(CFilesCompareDialog)
 	m_bBinaryFile = FALSE;
-	m_bCCppFile = FALSE;
 	//}}AFX_DATA_INIT
+	//m_bCCppFile = FALSE;
 	m_sFirstFileName = _T("");
 	m_sSecondFileName = _T("");
 }
@@ -184,8 +184,8 @@ void CFilesCompareDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_SECOND_FILE, m_SecondCombo);
 	DDX_Control(pDX, IDC_COMBO_FIRST_FILE, m_FirstCombo);
 	DDX_Check(pDX, IDC_CHECK_BINARY, m_bBinaryFile);
-	DDX_Check(pDX, IDC_CHECK_COMPARE_C_CPP, m_bCCppFile);
 	//}}AFX_DATA_MAP
+	//DDX_Check(pDX, IDC_CHECK_COMPARE_C_CPP, m_bCCppFile);
 	DDX_CBString(pDX, IDC_COMBO_FIRST_FILE, m_sFirstFileName);
 	DDX_CBString(pDX, IDC_COMBO_SECOND_FILE, m_sSecondFileName);
 	// save file names to history

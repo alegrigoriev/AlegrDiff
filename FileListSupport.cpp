@@ -812,62 +812,6 @@ void FileList::GetSortedList(CArray<FileItem *, FileItem *> & ItemArray, DWORD S
 
 }
 
-void * BinLookup(
-				const void *key,
-				const void *base,
-				size_t num,
-				size_t width,
-				int (__cdecl *compare)(const void *, const void *)
-				)
-{
-	char *lo = (char *)base;
-	char *hi = (char *)base + (num - 1) * width;
-	char *mid;
-	unsigned int half;
-	unsigned int uphalf;
-	int result;
-
-	while (lo <= hi)
-	{
-		half = num / 2;
-		uphalf = num - half - 1;
-		if (0 != half)
-		{
-			mid = lo + uphalf * width;
-			result = compare(key,mid);
-			if (0 == result)
-			{
-				return(mid);
-			}
-			else if (result < 0)
-			{
-				hi = mid - width;
-
-				num = uphalf;
-			}
-			else
-			{
-				lo = mid + width;
-				num = half;
-			}
-		}
-		else if (num)
-		{
-			result = compare(key,lo);
-			if (0 == result)
-			{
-				return lo;
-			}
-			else
-				return NULL;
-		}
-		else
-		{
-			break;
-		}
-	}
-	return(NULL);
-}
 // find equal or the next greater
 template<class T, class K, class A> const T * BinLookupAbout(
 															const K *key,
@@ -3415,7 +3359,8 @@ BOOL FilePair::EnumStringDiffSections(TextPos & PosFrom, TextPos & PosTo,
 			break;
 		}
 		if (0 != (pSection->Attr & (pSection->Inserted | pSection->Erased))
-			&& pos + pSection->Length > begin.pos)
+			&& (pos + pSection->Length > begin.pos
+				|| (pos == begin.pos && 0 == pSection->Length)))
 		{
 			// section found
 			begin.pos = pos;

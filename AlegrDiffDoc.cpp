@@ -310,7 +310,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 		{
 			//UpdateAllViews(NULL, 0);    // erase the views
 			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(_T("Loading and comparing files..."));
-			pPair->CompareFiles();
+			pPair->m_ComparisionResult = pPair->CompareFiles();
 		}
 
 		m_TotalLines = pPair->m_LinePairs.GetSize();

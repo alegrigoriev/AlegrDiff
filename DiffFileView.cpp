@@ -143,6 +143,11 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 		}
 		Length = j;
 		pText = buf;
+		if (0 == Length)
+		{
+			Length = 1;
+			pText = _T(" ");
+		}
 		// if the string is drawn started from some position, test for clipped part
 		if (Length <= nSkipChars)
 		{

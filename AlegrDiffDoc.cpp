@@ -1432,6 +1432,7 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 	int flags = GetAcceptDeclineFlags(TextPos(0, 0),
 									TextPos(GetTotalLines(), 0));
 	int DefaultFlags = 0;
+	CThisApp * pApp = GetApp();
 	if (flags & FileDiffSection::FlagUndefined)
 	{
 		CDialog dlg(IDD_DIALOG_ACCEPT_OR_DECLINE_ALL);
@@ -1450,23 +1451,29 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 			return FALSE;
 		}
 	}
-	CThisApp * pApp = GetApp();
-	LPCTSTR FileExt = NULL;
-	LPCTSTR FileName = m_pFilePair->pSecondFile->GetName();
-	for (int pos = strlen(FileName); pos > 0; pos--)
+	CString FileExt;
+	CString FileName;
+	if (DefaultFlags == FileDiffSection::FlagDecline)
+	{
+		FileName = m_pFilePair->pFirstFile->GetName();
+	}
+	else
+	{
+		FileName = m_pFilePair->pSecondFile->GetName();
+	}
+	for (int pos = FileName.GetLength(); pos > 0; pos--)
 	{
 		if ('.' == FileName[pos - 1])
 		{
-			FileExt = & FileName[pos - 1];
+			FileExt = LPCTSTR(FileName) + pos - 1;
 			break;
 		}
 	}
 	// create the filter
 	CString filter;
-	if (NULL != FileExt)
+	if ( ! FileExt.IsEmpty())
 	{
-		filter = '*';
-		filter = FileExt;
+		filter = '*' + FileExt;
 		filter += _T(" Files|*");
 		filter += FileExt;
 	}

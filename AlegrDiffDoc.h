@@ -68,6 +68,7 @@ enum {
 	SetPositionMakeVisible = 1,
 	SetPositionMakeCentered = 2,
 	SetPositionCancelSelection = 4,
+	OnUpdateAddListViewItem = 0x100,
 };
 
 class InvalidatedRange : public CObject
@@ -76,6 +77,13 @@ public:
 	TextPos begin;
 	TextPos end;
 };
+
+class AddListViewItemStruct : public CObject
+{
+public:
+	FilePair * pPair;
+};
+
 class CFilePairDoc : public CDocument
 {
 protected:
@@ -101,6 +109,7 @@ public:
 		FileLoaded,
 		InvalidateRange,
 		FontChanged,
+		MetricsChanged,
 	};
 
 	void SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags = SetPositionMakeCentered);
@@ -140,7 +149,7 @@ public:
 	// recalculates offset in the line with or without whitespaces shown to offset in the raw line
 	TextPos DisplayPosToLinePos(TextPos position);
 
-	bool GetWordUnderCaret(TextPos & Start, TextPos & End);
+	bool GetWordOnPos(TextPos OnPos, TextPos & Start, TextPos & End);
 	bool FindWordOrSelection(bool bBackwards);
 	void CaretLeftToWord(int SelectionFlags);
 	void CaretRightToWord(int SelectionFlags);

@@ -39,6 +39,7 @@ protected:
 
 // Implementation
 public:
+	void AddListViewItem(FilePair * pPair, int item);
 	BOOL CopySelectedFiles(bool bSecondDir);
 	enum eColumns {ColumnName, ColumnSubdir, ColumnDate1, ColumnDate2, ColumnComparisionResult };
 	eColumns m_SortColumn;

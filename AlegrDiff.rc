@@ -319,7 +319,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 0.85 beta",IDC_STATIC,35,14,128,8,
+    CTEXT           "AlegrDiff Version 0.87 beta",IDC_STATIC,35,14,128,8,
                     SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001\nalegr@earthlink.net",
                     IDC_STATIC,35,34,128,21
@@ -514,6 +514,27 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,13,78,10
 END
 
+IDD_DIALOG_FIND DIALOG DISCARDABLE  0, 0, 246, 72
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Find"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Find what:",IDC_STATIC,7,10,33,8
+    COMBOBOX        IDC_COMBO_FIND,47,8,133,77,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "Match &whole word only",IDC_CHECK_WHOLE_WORD,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,29,83,10
+    CONTROL         "Match &case",IDC_CHECK_CASE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,43,51,10
+    CONTROL         "&Up",IDC_RADIO_UP,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,126,39,42,10
+    CONTROL         "&Down",IDC_RADIO_DOWN,"Button",BS_AUTORADIOBUTTON,126,
+                    51,44,10
+    GROUPBOX        "Direction",IDC_STATIC,119,28,59,37,WS_GROUP
+    DEFPUSHBUTTON   "Find next",IDOK,189,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,189,24,50,14
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -522,8 +543,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,8,0,0
- PRODUCTVERSION 0,8,0,1
+ FILEVERSION 0,8,7,0
+ PRODUCTVERSION 0,8,7,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -541,14 +562,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "AleGr Software\0"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application\0"
-            VALUE "FileVersion", "0, 8, 0, 0\0"
+            VALUE "FileVersion", "0, 8, 7, 0\0"
             VALUE "InternalName", "AlegrDiff\0"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "AlegrDiff.EXE\0"
-            VALUE "PrivateBuild", "Beta 0.8\0"
+            VALUE "PrivateBuild", "Beta 0.87\0"
             VALUE "ProductName", "AlegrDiff Application\0"
-            VALUE "ProductVersion", "0, 8, 0, 1\0"
+            VALUE "ProductVersion", "0, 8, 7, 1\0"
             VALUE "SpecialBuild", "\0"
         END
     END
@@ -647,6 +668,14 @@ BEGIN
         RIGHTMARGIN, 274
         TOPMARGIN, 7
         BOTTOMMARGIN, 23
+    END
+
+    IDD_DIALOG_FIND, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 239
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 65
     END
 END
 #endif    // APSTUDIO_INVOKED

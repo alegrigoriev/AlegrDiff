@@ -6,6 +6,7 @@
 #include "DiffFileView.h"
 #include "GoToLineDialog.h"
 #include "ChildFrm.h"
+#include "FindDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -27,7 +28,6 @@ CDiffFileView::CDiffFileView()
 	m_VisibleRect(0, 0, 0, 0),
 	m_PreferredRect(0, 0, 0, 0),
 	m_NumberMarginWidth(0),
-	m_ShowLineNumbers(false),
 	m_OnActivateViewEntered(false),
 	m_LineNumberMarginWidth(0),
 	m_CharOverhang(0),
@@ -38,6 +38,7 @@ CDiffFileView::CDiffFileView()
 	m_FontMetric.tmAveCharWidth = 1;
 	m_FontMetric.tmExternalLeading = 1;
 	m_FontMetric.tmHeight = 1;
+	m_ShowLineNumbers = GetApp()->m_bShowLineNumbers;
 }
 
 CDiffFileView::~CDiffFileView()
@@ -79,6 +80,7 @@ BEGIN_MESSAGE_MAP(CDiffFileView, CView)
 	ON_COMMAND(ID_VIEW_FILE_2_VERSION, OnViewFile2Version)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_FILE1_VERSION, OnUpdateViewFile1Version)
 	ON_COMMAND(ID_VIEW_FILE1_VERSION, OnViewFile1Version)
+	ON_WM_TIMER()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -386,17 +388,17 @@ void CDiffFileView::OnDraw(CDC* pDC)
 				DWORD TextColor = pApp->m_NormalTextColor;
 				if (NULL == pPair->pFirstLine)
 				{
-					s.Format("%d", pPair->pSecondLine->GetLineNumber());
+					s.Format("%d", pPair->pSecondLine->GetLineNumber() + 1);
 					TextColor = pApp->m_AddedTextColor;
 				}
 				else if (NULL == pPair->pSecondLine)
 				{
-					s.Format("(%d)", pPair->pFirstLine->GetLineNumber());
+					s.Format("(%d)", pPair->pFirstLine->GetLineNumber() + 1);
 					TextColor = pApp->m_ErasedTextColor;
 				}
 				else
 				{
-					s.Format("%d", pPair->pSecondLine->GetLineNumber());
+					s.Format("%d", pPair->pSecondLine->GetLineNumber() + 1);
 				}
 				pDC->MoveTo(m_LineNumberMarginWidth - 1, PosY);
 				pDC->SetTextAlign(TA_RIGHT | TA_TOP | TA_UPDATECP);
@@ -459,21 +461,7 @@ void CDiffFileView::OnWindowCloseDiff()
 void CDiffFileView::OnInitialUpdate()
 {
 	CView::OnInitialUpdate();
-	UpdateTextMetrics();
-	CRect r;
-	GetClientRect( & r);
-
-	m_VisibleRect.bottom = r.Height() / LineHeight() - 1;
-	m_PreferredRect.bottom = m_VisibleRect.bottom / 4;
-	m_PreferredRect.top = m_PreferredRect.bottom; //m_VisibleRect.bottom - m_VisibleRect.bottom / 4;
-
-	m_VisibleRect.right =  r.Width() / CharWidth();
-	m_PreferredRect.left = m_VisibleRect.right / 3;
-	m_PreferredRect.right = m_VisibleRect.right - m_VisibleRect.right / 3;
-
-	UpdateVScrollBar();
-	UpdateHScrollBar();
-	CreateAndShowCaret();
+	OnMetricsChange();
 }
 
 void CDiffFileView::OnDestroy()
@@ -720,10 +708,7 @@ void CDiffFileView::VScrollToTheLine(int nLine)
 
 	if (m_LButtonDown)
 	{
-		CPoint p;
-		GetCursorPos( & p);
-		ScreenToClient( & p);
-		OnMouseMove(0, p);
+		SetTimer(1, 20, NULL);
 	}
 	UpdateVScrollBar();
 	CreateAndShowCaret();
@@ -987,30 +972,47 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 	}
 	else
 	{
-		if (nFlags & MK_CONTROL)
-		{
-			// select a word
-			TextPos Begin, End;
-		}
+		TextPos ClickPos(nLine, m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth());
 		if (0 == (nFlags & MK_SHIFT))
 		{
 			flags |= SetPositionCancelSelection;
 		}
-		SetCaretPosition(m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth(),
-						nLine,
-						flags);
-	}
-	if ((nFlags & MK_CONTROL)
-		&& 0 == (nFlags & MK_SHIFT))
-	{
-		// select a word
-		TextPos Begin, End;
-		CFilePairDoc * pDoc = GetDocument();
-		if (pDoc->GetWordUnderCaret(Begin, End))
+		if (nFlags & MK_CONTROL)
 		{
-			pDoc->SetSelection(End, Begin);
-			MakeCaretVisible();
+			TextPos Begin, End;
+			CFilePairDoc * pDoc = GetDocument();
+			if (nFlags & MK_SHIFT)
+			{
+				TextPos AnchorBegin = pDoc->m_SelectionAnchor;
+				TextPos AnchorEnd = pDoc->m_SelectionAnchor;
+				pDoc->GetWordOnPos(pDoc->m_SelectionAnchor, AnchorBegin, AnchorEnd);
+				Begin = ClickPos;
+				End = ClickPos;
+				pDoc->GetWordOnPos(ClickPos, Begin, End);
+				if (End < AnchorEnd)
+				{
+					End = AnchorEnd;
+				}
+				if (Begin > AnchorBegin)
+				{
+					Begin = AnchorBegin;
+				}
+				pDoc->SetSelection(End, Begin, 0);
+				MakeCaretVisible();
+				return;
+			}
+			else
+			{
+				if (pDoc->GetWordOnPos(ClickPos, Begin, End))
+				{
+					// select a word
+					pDoc->SetSelection(End, Begin);
+					MakeCaretVisible();
+					return;
+				}
+			}
 		}
+		SetCaretPosition(ClickPos.pos, ClickPos.line, flags);
 	}
 }
 
@@ -1049,8 +1051,31 @@ void CDiffFileView::OnMouseMove(UINT nFlags, CPoint point)
 		}
 		else
 		{
-			SetCaretPosition(m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth(),
-							nLine, SetPositionMakeVisible);
+			TextPos MousePos(nLine, m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth());
+			if (nFlags & MK_CONTROL)
+			{
+				CFilePairDoc * pDoc = GetDocument();
+				TextPos AnchorBegin = pDoc->m_SelectionAnchor;
+				TextPos AnchorEnd = pDoc->m_SelectionAnchor;
+				pDoc->GetWordOnPos(pDoc->m_SelectionAnchor, AnchorBegin, AnchorEnd);
+				TextPos Begin = MousePos;
+				TextPos End = MousePos;
+				pDoc->GetWordOnPos(MousePos, Begin, End);
+				if (End < AnchorEnd)
+				{
+					End = AnchorEnd;
+				}
+				if (Begin > AnchorBegin)
+				{
+					Begin = AnchorBegin;
+				}
+				pDoc->SetSelection(End, Begin, 0);
+				MakeCaretVisible();
+			}
+			else
+			{
+				SetCaretPosition(MousePos.pos, nLine, SetPositionMakeVisible);
+			}
 		}
 	}
 	CView::OnMouseMove(nFlags, point);
@@ -1092,6 +1117,32 @@ void CDiffFileView::OnMetricsChange()
 {
 	TRACE("CDiffFileView::OnMetricsChange\n");
 
+	// create font
+	CThisApp * pApp = GetApp();
+
+	CWindowDC wdc(this);
+	CFont * pFont =  & pApp->m_NormalFont;
+
+	CFont font;
+	if (pApp->m_NormalLogFont.lfItalic
+		|| pApp->m_AddedLogFont.lfItalic
+		|| pApp->m_ErasedLogFont.lfItalic
+		|| pApp->m_NormalLogFont.lfWeight > FW_NORMAL
+		|| pApp->m_AddedLogFont.lfWeight > FW_NORMAL
+		|| pApp->m_ErasedLogFont.lfWeight > FW_NORMAL)
+	{
+		LOGFONT lf = pApp->m_NormalLogFont;
+		lf.lfItalic = TRUE;
+		lf.lfWeight = FW_BLACK;
+		font.CreateFontIndirect( & lf);
+
+		pFont = & font;
+	}
+
+	CFont * pOldFont = wdc.SelectObject(pFont);
+	wdc.GetTextMetrics( & m_FontMetric);
+	wdc.SelectObject(pOldFont);
+
 	CRect cr;
 	GetClientRect( & cr);
 
@@ -1111,7 +1162,7 @@ void CDiffFileView::OnMetricsChange()
 
 	m_VisibleRect.bottom = cr.Height() / LineHeight() - 1;
 	m_PreferredRect.bottom = m_VisibleRect.bottom / 4;
-	m_PreferredRect.top = m_VisibleRect.bottom - m_VisibleRect.bottom / 4;
+	m_PreferredRect.top = m_PreferredRect.bottom; //m_VisibleRect.bottom - m_VisibleRect.bottom / 4;
 
 	m_VisibleRect.right =  (cr.Width() - m_LineNumberMarginWidth) / CharWidth();
 	if (m_VisibleRect.right < 0)
@@ -1124,6 +1175,7 @@ void CDiffFileView::OnMetricsChange()
 
 	UpdateVScrollBar();
 	UpdateHScrollBar();
+	CreateAndShowCaret();
 }
 
 BOOL CDiffFileView::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
@@ -1264,6 +1316,14 @@ void CDiffFileView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		UpdateVScrollBar();
 		CreateAndShowCaret();
 	}
+	else if (lHint == CFilePairDoc::MetricsChanged)
+	{
+		OnMetricsChange();
+		Invalidate(TRUE);
+		UpdateHScrollBar();
+		UpdateVScrollBar();
+		CreateAndShowCaret();
+	}
 	else
 	{
 		Invalidate(TRUE);
@@ -1313,8 +1373,9 @@ void CDiffFileView::CaretToEnd(int flags)
 void CDiffFileView::OnViewShowLineNumbers()
 {
 	m_ShowLineNumbers = ! m_ShowLineNumbers;
-	OnMetricsChange();
-	OnUpdate(NULL, 0, NULL);
+	GetApp()->m_bShowLineNumbers = m_ShowLineNumbers;
+
+	OnUpdate(NULL, CFilePairDoc::MetricsChanged, NULL);
 }
 
 void CDiffFileView::OnUpdateViewShowLineNumbers(CCmdUI* pCmdUI)
@@ -1348,8 +1409,20 @@ void CDiffFileView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* 
 
 void CDiffFileView::OnEditFind()
 {
-	// TODO: Add your command handler code here
+	CThisApp * pApp = GetApp();
+	CMyFindDialog dlg;
+	dlg.m_sFindCombo = pApp->m_FindString;
+	dlg.m_bCaseSensitive = pApp->m_bCaseSensitive;
 
+	if (IDOK == dlg.DoModal())
+	{
+		pApp->m_FindString = dlg.m_sFindCombo;
+		pApp->m_bCaseSensitive = dlg.m_bCaseSensitive;
+		if (GetDocument()->FindTextString(pApp->m_FindString, false, pApp->m_bCaseSensitive))
+		{
+			MakeCaretCentered();
+		}
+	}
 }
 
 void CDiffFileView::OnEditFindNext()
@@ -1393,7 +1466,14 @@ void CDiffFileView::OnLButtonDblClk(UINT nFlags, CPoint point)
 	// select a word
 	TextPos Begin, End;
 	CFilePairDoc * pDoc = GetDocument();
-	if (pDoc->GetWordUnderCaret(Begin, End))
+	point.x -= m_LineNumberMarginWidth;
+	if (point.x < 0)
+	{
+		return;
+	}
+	TextPos ClickPos(point.y / LineHeight() + m_FirstLineSeen,
+					m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth());
+	if (pDoc->GetWordOnPos(ClickPos, Begin, End))
 	{
 		pDoc->SetSelection(End, Begin);
 		MakeCaretVisible();
@@ -1425,7 +1505,7 @@ void CDiffFileView::OnEditGotoline()
 	dlg.m_LineNumber = GetDocument()->m_CaretPos.line;
 	if (IDOK == dlg.DoModal())
 	{
-		SetCaretPosition(0, dlg.m_LineNumber, SetPositionMakeCentered | SetPositionCancelSelection);
+		SetCaretPosition(0, dlg.m_LineNumber - 1, SetPositionMakeCentered | SetPositionCancelSelection);
 	}
 }
 
@@ -1463,36 +1543,6 @@ void CDiffFileView::OnEditSelectAll()
 }
 
 
-void CDiffFileView::UpdateTextMetrics()
-{
-	// create font
-	CThisApp * pApp = GetApp();
-
-	CWindowDC wdc(this);
-	CFont * pFont =  & pApp->m_NormalFont;
-
-	CFont font;
-	if (pApp->m_NormalLogFont.lfItalic
-		|| pApp->m_AddedLogFont.lfItalic
-		|| pApp->m_ErasedLogFont.lfItalic
-		|| pApp->m_NormalLogFont.lfWeight > FW_NORMAL
-		|| pApp->m_AddedLogFont.lfWeight > FW_NORMAL
-		|| pApp->m_ErasedLogFont.lfWeight > FW_NORMAL)
-	{
-		LOGFONT lf = pApp->m_NormalLogFont;
-		lf.lfItalic = TRUE;
-		lf.lfWeight = FW_BLACK;
-		font.CreateFontIndirect( & lf);
-
-		pFont = & font;
-	}
-
-	CFont * pOldFont = wdc.SelectObject(pFont);
-	wdc.GetTextMetrics( & m_FontMetric);
-	wdc.SelectObject(pOldFont);
-
-}
-
 void CDiffFileView::OnUpdateViewFile2Version(CCmdUI* pCmdUI)
 {
 	// TODO: Add your command update UI handler code here
@@ -1516,3 +1566,25 @@ void CDiffFileView::OnViewFile1Version()
 
 }
 
+
+void CDiffFileView::OnTimer(UINT nIDEvent)
+{
+	if (1 == nIDEvent)
+	{
+		KillTimer(1);
+		CPoint p;
+		GetCursorPos( & p);
+		ScreenToClient( & p);
+		int flags = 0;
+		if (0x8000 & GetKeyState(VK_SHIFT))
+		{
+			flags |= MK_SHIFT;
+		}
+		if (0x8000 & GetKeyState(VK_CONTROL))
+		{
+			flags |= MK_CONTROL;
+		}
+		OnMouseMove(flags, p);
+	}
+	CView::OnTimer(nIDEvent);
+}

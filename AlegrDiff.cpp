@@ -334,6 +334,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("BinaryComparision"), m_BinaryComparision, false);
 	Profile.AddItem(_T("Settings"), _T("AutoReloadChangedFiles"), m_AutoReloadChangedFiles, false);
 	Profile.AddItem(_T("Settings"), _T("IgnoreWhitespaces"), m_bIgnoreWhitespaces, true);
+	Profile.AddItem(_T("Settings"), _T("bShowLineNumbers"), m_bShowLineNumbers, false);
 
 	Profile.AddItem(_T("Settings"), _T("MinimalLineLength"), m_MinimalLineLength, 2, 1, 2048);
 	Profile.AddItem(_T("Settings"), _T("NumberOfIdenticalLines"), m_NumberOfIdenticalLines, 5, 1, 50);

@@ -19,9 +19,13 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CMyFindDialog)
 	enum { IDD = IDD_DIALOG_FIND };
-	// NOTE: the ClassWizard will add data members here
+	CComboBox	m_FindCombo;
+	BOOL	m_bCaseSensitive;
+	BOOL	m_bWholeWord;
+	int		m_FindDown;
 	//}}AFX_DATA
-
+	CString	m_sFindCombo;
+	CString m_sHistory[15];
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -35,7 +39,8 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CMyFindDialog)
-	// NOTE: the ClassWizard will add member functions here
+	afx_msg void OnEditchangeComboFind();
+	virtual void OnCancel();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

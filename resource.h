@@ -23,6 +23,7 @@
 #define IDD_PROPPAGE_VIEW_PREFERENCES   139
 #define IDD_DIALOG_ACCEPT_OR_DECLINE_ALL 140
 #define IDD_DIALOG_SAVE_MERGED_TEMPLATE 141
+#define IDD_DIALOG_FIND                 142
 #define IDC_CURSOR_BEAM                 150
 #define IDC_COMBO_FIRST_DIR             1000
 #define IDC_COMBO_SECOND_DIR            1001
@@ -58,6 +59,11 @@
 #define IDC_EDIT_PERCENT_OF_LOOKLIKE_DIFFERENCE 1031
 #define IDC_CHECK_OPEN_IN_EDITOR        1032
 #define IDC_EDIT_MIN_MATCHING_CHARS     1032
+#define IDC_COMBO_FIND                  1034
+#define IDC_RADIO_UP                    1035
+#define IDC_RADIO_DOWN                  1036
+#define IDC_CHECK_WHOLE_WORD            1037
+#define IDC_CHECK_CASE                  1038
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -118,9 +124,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        141
+#define _APS_NEXT_RESOURCE_VALUE        143
 #define _APS_NEXT_COMMAND_VALUE         32813
-#define _APS_NEXT_CONTROL_VALUE         1034
+#define _APS_NEXT_CONTROL_VALUE         1038
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

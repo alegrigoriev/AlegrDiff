@@ -261,6 +261,9 @@ public:
 	void AddLine(LPCTSTR pLine);
 	bool IsFolder() const { return m_bIsFolder; }
 
+	size_t GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes);
+	void FreeReadBuffer();
+
 	LPCTSTR GetLineString(int LineNum) const;
 	const FileLine * GetLine(int LineNum) const { return m_Lines[LineNum]; }
 	int GetNumLines() const { return m_Lines.size(); }
@@ -312,6 +315,11 @@ private:
 	LONGLONG m_Length;
 	LONGLONG m_Crc64;   // use x64 + x4 + x3 + x + 1 polynomial
 	BYTE m_Md5[16];
+	BYTE * m_pFileReadBuf;
+	size_t m_FileReadBufSize;
+	LONGLONG m_FileReadPos;
+	DWORD m_FileReadFilled;
+	HANDLE m_hFile;
 
 	vector<FileLine *> m_Lines;
 	vector<FileLine *> m_NonBlankLines;

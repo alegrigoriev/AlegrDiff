@@ -1,10 +1,12 @@
 TODO:
 
-Add extensions from the recent files to the browse for file dialog
 Open Binary file difference
 Support comparison of BIG lists
+Save columns width and order
+Make "Show columns" dialog with reset button
 Add Copy 1st file text, copy 2nd file text
 For binary comparison: show file size
+In Properties dialog: show file size
 Add 1st file size, 2nd file size (with exact size tooltips?)
 Refresh list view
 make word by word comparison in MatchStrings
@@ -29,12 +31,14 @@ During binary comparison, alternate "Calculating fingerprint" and "Comparing" me
 screen move in two directions may corrupt the image (??)
 
 Fixed:
+TRACE statements with %s format converted to _T string
 Wrong BuildFilePairList arguments
 "*." filter doesn't work
 insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+Add extensions from the recent files to the browse for file dialog
 Remove "Use Binary filter", "Use Ignore Filter" etc checkboxes,
   replace those edit controls with comboboxes
 Compare directory structure

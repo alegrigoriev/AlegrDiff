@@ -262,6 +262,8 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 
 	m_TotalDataSize = 0;
 
+	// TODO: read files, verify MD5
+
 	if (NULL != m_hWnd)
 	{
 		::PostMessage(m_hWnd, WM_COMMAND, IDOK, NULL);

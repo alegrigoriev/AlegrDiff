@@ -195,7 +195,12 @@ FileItem::FileItem(const WIN32_FIND_DATA * pWfd,
 	m_IsUnicode(false),
 	m_IsUnicodeBigEndian(false),
 	m_bMd5Calculated(false),
-	m_pNext(NULL)
+	m_pFileReadBuf(NULL)
+	, m_FileReadBufSize(0)
+	, m_FileReadPos(0)
+	, m_FileReadFilled(0)
+	, m_hFile(NULL)
+	, m_pNext(NULL)
 {
 	memzero(m_Md5);
 	m_LastWriteTime = pWfd->ftLastWriteTime;
@@ -211,7 +216,12 @@ FileItem::FileItem(LPCTSTR name)
 	m_IsUnicodeBigEndian(false),
 	m_bMd5Calculated(false),
 	m_bIsFolder(false),
-	m_pNext(NULL)
+	m_pFileReadBuf(NULL)
+	, m_FileReadBufSize(0)
+	, m_FileReadPos(0)
+	, m_FileReadFilled(0)
+	, m_hFile(NULL)
+	, m_pNext(NULL)
 {
 	memzero(m_Md5);
 	m_LastWriteTime.dwHighDateTime = 0;
@@ -231,6 +241,20 @@ void FileItem::Unload()
 	m_HashSortedLineGroups.clear();
 	m_NormalizedHashSortedLines.clear();
 	m_NormalizedHashSortedLineGroups.clear();
+
+	if (NULL != m_hFile)
+	{
+		CloseHandle(m_hFile);
+		m_hFile = NULL;
+	}
+
+	if (NULL != m_pFileReadBuf)
+	{
+		VirtualFree(m_pFileReadBuf, 0, MEM_RELEASE);
+		m_pFileReadBuf = NULL;
+		m_FileReadBufSize = 0;
+		m_FileReadFilled = 0;
+	}
 }
 
 FileItem::~FileItem()
@@ -714,6 +738,15 @@ FileCheckResult FileItem::ReloadIfChanged()
 	{
 		Unload();
 		m_LastWriteTime = wfd.ftLastWriteTime;
+		m_Length = wfd.nFileSizeLow | ((ULONGLONG) wfd.nFileSizeHigh << 32);
+		m_bMd5Calculated = false;
+		if (m_bIsFolder != (0 != (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)))
+		{
+			m_bIsFolder = 0 != (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+			return FileDeleted;
+		}
+		m_bIsFolder = 0 != (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+
 		if (Load())
 		{
 			return FileTimeChanged;
@@ -724,6 +757,168 @@ FileCheckResult FileItem::ReloadIfChanged()
 		}
 	}
 	return FileUnchanged;
+}
+
+size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
+{
+	if (NULL == m_hFile)
+	{
+		m_hFile = CreateFile(GetFullName(), GENERIC_READ, FILE_SHARE_READ, NULL,
+							OPEN_EXISTING, FILE_FLAG_NO_BUFFERING, NULL);
+		if (NULL == m_hFile
+			|| INVALID_HANDLE_VALUE == m_hFile)
+		{
+			m_hFile = NULL;
+			return 0;
+		}
+		DWORD nFileSizeLow, nFileSizeHigh;
+		SetLastError(0);
+		nFileSizeLow = GetFileSize(m_hFile, & nFileSizeHigh);
+
+		if (nFileSizeLow != INVALID_FILE_SIZE
+			|| GetLastError() == NO_ERROR)
+		{
+			m_Length = nFileSizeLow | (ULONGLONG(nFileSizeHigh) << 32);
+		}
+	}
+	if (FileOffset >= m_Length)
+	{
+		return 0;
+	}
+	if (NULL == m_pFileReadBuf)
+	{
+		m_pFileReadBuf = (BYTE *) VirtualAlloc(NULL, 0x10000, MEM_COMMIT, PAGE_READWRITE);
+		if (NULL == m_pFileReadBuf)
+		{
+			return 0;
+		}
+		m_FileReadBufSize = 0x10000;
+		m_FileReadFilled = 0;
+		m_FileReadPos = 0;
+	}
+
+	if (FileOffset + bytes > m_Length)
+	{
+		bytes = size_t(m_Length - FileOffset);
+	}
+	// beginning address rounded on the page boundary
+	LONGLONG NeedBegin = FileOffset & ~0xFFFi64;
+	// end of data wanted
+	LONGLONG NeedEnd = FileOffset + bytes;
+	// end of data rounded on the page boundary:
+	LONGLONG NeedEndBuffer = (NeedEnd + 0xFFF) & ~0xFFFi64;
+
+	DWORD NeedBeginLow = DWORD(NeedBegin);
+	LONG NeedBeginHigh = DWORD(NeedBegin >> 32);
+
+	if (DWORD(NeedEnd - NeedBegin) > m_FileReadBufSize)
+	{
+		NeedEnd = NeedBegin + m_FileReadBufSize;
+		NeedEndBuffer = NeedEnd;
+		bytes = size_t(NeedEnd - FileOffset);
+	}
+
+	DWORD BytesRead;
+	if (NeedBegin <= m_FileReadPos)
+	{
+		// need data before the buffer begin, but some of the data is in the buffer
+		if (NeedEnd > m_FileReadPos && NeedEnd <= m_FileReadPos + m_FileReadFilled)
+		{
+			// move data up, read some to the end of buffer
+			ULONG_PTR MoveBy = ULONG_PTR(m_FileReadPos - NeedBegin);
+			ULONG_PTR NewFilled = m_FileReadFilled + MoveBy;
+			ULONG_PTR ToMove = m_FileReadFilled;
+
+			if (NewFilled > m_FileReadBufSize)
+			{
+				ToMove -= NewFilled - m_FileReadBufSize;
+				NewFilled = m_FileReadBufSize;
+			}
+			memmove(m_pFileReadBuf + MoveBy,
+					m_pFileReadBuf, ToMove);
+			m_FileReadFilled = NewFilled;
+
+			SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
+			if ( ! ReadFile(m_hFile, m_pFileReadBuf, MoveBy, & BytesRead, NULL))
+			{
+				m_FileReadFilled = 0;
+				return 0;
+			}
+			m_FileReadPos = NeedBegin;
+		}
+		else
+		{
+			SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
+			if ( ! ReadFile(m_hFile, m_pFileReadBuf, m_FileReadBufSize, & BytesRead, NULL))
+			{
+				m_FileReadFilled = 0;
+				return 0;
+			}
+			m_FileReadPos = NeedBegin;
+			m_FileReadFilled = BytesRead;
+
+		}
+	}
+	else if (NeedBegin < m_FileReadPos + m_FileReadFilled)
+	{
+		// may need data after the buffer end, but some of the data is in the buffer
+		if (NeedEnd > m_FileReadPos + m_FileReadFilled)
+		{
+			// move data down, read some more data
+			ULONG_PTR MoveBy = ULONG_PTR(NeedEndBuffer - (m_FileReadPos + m_FileReadFilled));
+			if (0 != MoveBy)
+			{
+				if (m_FileReadFilled > MoveBy)
+				{
+					ULONG_PTR NewFilled = m_FileReadFilled - MoveBy;
+					ULONG_PTR ToMove = NewFilled;
+					memmove(m_pFileReadBuf, m_pFileReadBuf + MoveBy, ToMove);
+
+					m_FileReadFilled = NewFilled;
+					m_FileReadPos += MoveBy;
+					NeedBegin += NewFilled;
+
+					NeedBeginLow = DWORD(NeedBegin);
+					NeedBeginHigh = DWORD(NeedBegin >> 32);
+				}
+				else
+				{
+					m_FileReadFilled = 0;
+					m_FileReadPos = NeedBegin;
+				}
+			}
+
+			SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
+
+			if ( ! ReadFile(m_hFile, m_pFileReadBuf, m_FileReadBufSize - m_FileReadFilled, & BytesRead, NULL))
+			{
+				m_FileReadFilled = 0;
+				return 0;
+			}
+			m_FileReadFilled += BytesRead;
+		}
+	}
+	else
+	{
+		SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
+		if ( ! ReadFile(m_hFile, m_pFileReadBuf, m_FileReadBufSize, & BytesRead, NULL))
+		{
+			m_FileReadFilled = 0;
+			return 0;
+		}
+		m_FileReadPos = NeedBegin;
+		m_FileReadFilled = BytesRead;
+	}
+	// now get data from the buffer and return
+	ASSERT(FileOffset >= m_FileReadPos);
+	size_t Index = size_t(FileOffset - m_FileReadPos);
+
+	ASSERT(m_FileReadFilled <= m_FileReadBufSize);
+	ASSERT(Index + bytes <= m_FileReadBufSize);
+	ASSERT(Index + bytes <= m_FileReadFilled);
+
+	memcpy(pBuf, m_pFileReadBuf + Index, bytes);
+	return bytes;
 }
 
 PairCheckResult FilePair::CheckForFilesChanged()

@@ -477,9 +477,6 @@ void CDiffFileView::OnWindowCloseDiff()
 	pFrame->OnClose();
 	return;
 
-	// and close it
-	GetDocument()->PreCloseFrame(pFrame);
-	pFrame->DestroyWindow();
 }
 
 void CDiffFileView::OnInitialUpdate()
@@ -521,7 +518,7 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 			// if the cursor was outside boundaries, just bring it in
 			int dy = 0;
 			if (pDoc->m_CaretPos.line >= m_FirstLineSeen
-				&& pDoc->m_CaretPos.line <= m_FirstLineSeen + LinesInView())
+				&& pDoc->m_CaretPos.line <= m_FirstLineSeen + nLinesInView)
 			{
 				DoVScroll(1);
 				if (pDoc->m_CaretPos.line < m_FirstLineSeen)
@@ -545,10 +542,10 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 			// if the cursor was outside boundaries, just bring it in
 			int dy = 0;
 			if (pDoc->m_CaretPos.line >= m_FirstLineSeen
-				&& pDoc->m_CaretPos.line <= m_FirstLineSeen + LinesInView())
+				&& pDoc->m_CaretPos.line <= m_FirstLineSeen + nLinesInView)
 			{
 				DoVScroll(-1);
-				if (pDoc->m_CaretPos.line > m_FirstLineSeen + LinesInView())
+				if (pDoc->m_CaretPos.line > m_FirstLineSeen + nLinesInView)
 				{
 					dy = -1;
 				}

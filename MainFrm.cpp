@@ -6,6 +6,7 @@
 
 #include "MainFrm.h"
 #include "DiffFileView.h"
+#include <afxpriv.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -28,6 +29,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
+	ON_MESSAGE(WM_SETMESSAGESTRING_POST, OnSetMessageStringPost)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -309,4 +311,9 @@ void CMainFrame::OnDestroy()
 	GetApp()->m_bOpenMaximized = 0 != (wp.flags & WPF_RESTORETOMAXIMIZED);
 
 	CMDIFrameWnd::OnDestroy();
+}
+
+LRESULT CMainFrame::OnSetMessageStringPost(WPARAM wParam, LPARAM lParam)
+{
+	return SendMessage(WM_SETMESSAGESTRING, wParam, lParam);
 }

@@ -436,7 +436,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 		_tcsncpy(m_ComparisonResult, pPair->GetComparisionResult(),
 				countof(m_ComparisonResult));
 		m_ComparisonResult[countof(m_ComparisonResult) - 1] = 0;
-		((CFrameWnd*)AfxGetMainWnd())->PostMessage(WM_SETMESSAGESTRING, 0, (LPARAM)m_ComparisonResult);
+		((CFrameWnd*)AfxGetMainWnd())->PostMessage(WM_SETMESSAGESTRING_POST, 0, (LPARAM)m_ComparisonResult);
 	}
 	UpdateAllViews(NULL, FileLoaded);
 	SetCaretPosition(0, 0, SetPositionCancelSelection);

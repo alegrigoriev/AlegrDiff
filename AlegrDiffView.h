@@ -51,12 +51,13 @@ public:
 
 	enum eSetSortColumnOrder
 	{
+		SetSortColumnUnchanged,
 		SetSortColumnAscending,
 		SetSortColumnDescending,
 		SetSortColumnMouseClick,
 	};
 	void SetSortColumn(eColumns nColumn, eSetSortColumnOrder Order);
-
+	bool ChangeSortItem(eColumns nColumn, eSetSortColumnOrder Order);
 	// index: column type, result: column position (including hidden columns)
 	int m_ColumnArray[MaxColumns];
 	int m_ColumnWidthArray[MaxColumns];

@@ -8,32 +8,34 @@
 // ResizableDialog.h : header file
 //
 #include "UiUpdatedDlg.h"
+#include "MessageMapT.h"
 
 /////////////////////////////////////////////////////////////////////////////
-// CResizableDialog dialog
-
-class CResizableDialog : public CUiUpdatedDlg
+// CResizableDialogT dialog
+template<class Base = CUiUpdatedDlg>
+class CResizableDialogT : public Base
 {
-	typedef CUiUpdatedDlg BaseClass;
+	typedef Base BaseClass;
 	// Construction
 protected:
-	CResizableDialog(UINT id, CWnd* pParent);   // standard constructor
+	CResizableDialogT(UINT id, CWnd* pParent);   // standard constructor
 public:
 
 	// Dialog Data
-	//{{AFX_DATA(CResizableDialog)
+	//{{AFX_DATA(CResizableDialogT)
 	// NOTE: the ClassWizard will add data members here
 	//}}AFX_DATA
 
 
 	// Overrides
 	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CResizableDialog)
+	//{{AFX_VIRTUAL(CResizableDialogT)
 	//}}AFX_VIRTUAL
 	virtual INT_PTR DoModal();
 
 	// Implementation
 protected:
+
 	CSize m_PrevSize;
 	MINMAXINFO m_mmxi;
 	int m_DlgWidth;
@@ -53,8 +55,11 @@ protected:
 		UINT flags;
 	};
 
-	ResizableDlgItem const * m_pResizeItems;
-	int m_pResizeItemsCount;
+	void SetResizeableItems(ResizableDlgItem const * pItems, int count)
+	{
+		m_pResizeItems = pItems;
+		m_ResizeItemsCount = count;
+	}
 
 	virtual void OnMetricsChange();
 	// cx, cy - new size, dx, dy - size delta
@@ -63,7 +68,7 @@ protected:
 		return hdwp;
 	}
 	// Generated message map functions
-	//{{AFX_MSG(CResizableDialog)
+	//{{AFX_MSG(CResizableDialogT)
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSizing(UINT fwSide, LPRECT pRect);
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI);
@@ -73,8 +78,267 @@ protected:
 	virtual void OnOK();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+private:
+	ResizableDlgItem const * m_pResizeItems;
+	int m_ResizeItemsCount;
 };
 
+template<class Base>
+CResizableDialogT<Base>::CResizableDialogT(UINT id, CWnd* pParent)
+	: BaseClass(id, pParent)
+	, m_pResizeItems(NULL)
+	, m_ResizeItemsCount(0)
+	, m_DlgWidth(0)
+	, m_DlgHeight(0)
+{
+	//{{AFX_DATA_INIT(CResizableDialogT)
+	// NOTE: the ClassWizard will add member initialization here
+	//}}AFX_DATA_INIT
+	m_PrevSize.cx = -1;
+	m_PrevSize.cy = -1;
+
+	memzero(m_mmxi);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CResizableDialogT message handlers
+
+template<class Base>
+void CResizableDialogT<Base>::OnMetricsChange()
+{
+	// Initialize MINMAXINFO
+	CRect r;
+	SystemParametersInfo(SPI_GETWORKAREA, 0, & r, 0);
+	m_mmxi.ptMaxSize.x = r.Width();
+	m_mmxi.ptMaxTrackSize.x = m_mmxi.ptMaxSize.x;
+	m_mmxi.ptMaxSize.y = r.Height();
+	m_mmxi.ptMaxTrackSize.y = m_mmxi.ptMaxSize.y;
+	m_mmxi.ptMaxPosition.x = r.left;
+	m_mmxi.ptMaxPosition.y = r.top;
+	GetWindowRect(& r);
+	m_mmxi.ptMinTrackSize.x = r.Width();
+	m_mmxi.ptMinTrackSize.y = r.Height();
+}
+
+template<class Base>
+void CResizableDialogT<Base>::OnSize(UINT nType, int cx, int cy)
+{
+	BaseClass::OnSize(nType, cx, cy);
+
+	if (m_PrevSize.cx < 0)
+	{
+		m_PrevSize.cx = cx;
+		m_PrevSize.cy = cy;
+		return;
+	}
+
+	int dx = cx - m_PrevSize.cx;
+	int dy = cy - m_PrevSize.cy;
+	m_PrevSize.cx = cx;
+	m_PrevSize.cy = cy;
+
+	if (0 == dx && 0 == dy)
+	{
+		TRACE("Nothing to do in OnSize\n");
+		return;
+	}
+
+	if (0 != m_ResizeItemsCount)
+	{
+		HDWP hdwp = ::BeginDeferWindowPos(m_ResizeItemsCount);
+		for (int i = 0; i < m_ResizeItemsCount && NULL != hdwp; i++)
+		{
+			HWND hWnd = ::GetDlgItem(GetSafeHwnd(), m_pResizeItems[i].Id);
+			if (NULL == hWnd) continue;
+
+			CRect cr;
+			::GetWindowRect(hWnd, cr);
+			ScreenToClient(cr);
+
+			if (m_pResizeItems[i].flags & CenterHorizontally)
+			{
+				cr.right += (dx + (cx & 1)) >> 1;
+				cr.left += (dx + (cx & 1)) >> 1;
+			}
+			else
+			{
+				if (m_pResizeItems[i].flags & (ExpandRight | MoveRight))
+				{
+					cr.right += dx;
+				}
+				if (m_pResizeItems[i].flags & MoveRight)
+				{
+					cr.left += dx;
+				}
+			}
+
+			if (m_pResizeItems[i].flags & (ExpandDown | MoveDown))
+			{
+				cr.bottom += dy;
+			}
+
+			if (m_pResizeItems[i].flags & MoveDown)
+			{
+				cr.top += dy;
+			}
+
+			hdwp = ::DeferWindowPos(hdwp, hWnd, NULL, cr.left, cr.top,
+									cr.Width(), cr.Height(),
+									SWP_NOZORDER | SWP_NOOWNERZORDER// | SWP_NOACTIVATE | SWP_NOSENDCHANGING
+									);
+			if (0) TRACE("DeferWindowPos hwnd=%x dw=%d dy=%d x=%d, y=%d returned %X\n",
+						hWnd, dx, dy, cr.left, cr.top, hdwp);
+		}
+
+		hdwp = OnDeferredSize(hdwp, cx, cy, dx, dy);
+
+		if (NULL != hdwp)
+		{
+			::EndDeferWindowPos(hdwp);
+		}
+
+	}
+
+	// invalidate an area which is (after resizing)
+	// occupied by size grip
+	int size = GetSystemMetrics(SM_CXVSCROLL);
+	CRect r(cx - size, cy - size, cx, cy);
+	InvalidateRect( & r, TRUE);
+}
+
+template<class Base>
+void CResizableDialogT<Base>::OnSizing(UINT fwSide, LPRECT pRect)
+{
+	BaseClass::OnSizing(fwSide, pRect);
+
+	// invalidate an area currently (before resizing)
+	// occupied by size grip
+	CRect r;
+	GetClientRect( & r);
+	int size = GetSystemMetrics(SM_CXVSCROLL);
+	r.left = r.right - size;
+	r.top = r.bottom - size;
+	InvalidateRect( & r, FALSE);
+}
+
+template<class Base>
+void CResizableDialogT<Base>::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI)
+{
+	if (m_mmxi.ptMaxSize.x != 0)
+	{
+		*lpMMI = m_mmxi;
+	}
+	else
+	{
+		BaseClass::OnGetMinMaxInfo(lpMMI);
+	}
+}
+
+template<class Base>
+BOOL CResizableDialogT<Base>::OnEraseBkgnd(CDC* pDC)
+{
+	if (BaseClass::OnEraseBkgnd(pDC))
+	{
+		// draw size grip
+		CRect r;
+		GetClientRect( & r);
+		int size = GetSystemMetrics(SM_CXVSCROLL);
+		r.left = r.right - size;
+		r.top = r.bottom - size;
+		pDC->DrawFrameControl( & r, DFC_SCROLL, DFCS_SCROLLSIZEGRIP);
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
+template<class Base>
+UINT CResizableDialogT<Base>::OnNcHitTest(CPoint point)
+{
+	// return HTBOTTOMRIGHT for sizegrip area
+	CRect r;
+	GetClientRect( & r);
+	int size = GetSystemMetrics(SM_CXVSCROLL);
+	r.left = r.right - size;
+	r.top = r.bottom - size;
+	ScreenToClient( & point);
+
+	if (r.PtInRect(point))
+	{
+		return HTBOTTOMRIGHT;
+	}
+	else
+		return BaseClass::OnNcHitTest(point);
+}
+
+template<class Base>
+BOOL CResizableDialogT<Base>::OnInitDialog()
+{
+	BaseClass::OnInitDialog();
+
+	// init MINMAXINFO
+	OnMetricsChange();
+
+	// set dialog size
+	if (m_DlgWidth < m_mmxi.ptMinTrackSize.x)
+	{
+		m_DlgWidth = m_mmxi.ptMinTrackSize.x;
+	}
+	if (m_DlgWidth > m_mmxi.ptMaxTrackSize.x)
+	{
+		m_DlgWidth = m_mmxi.ptMaxTrackSize.x;
+	}
+	if (m_DlgHeight < m_mmxi.ptMinTrackSize.y)
+	{
+		m_DlgHeight = m_mmxi.ptMinTrackSize.y;
+	}
+	if (m_DlgHeight > m_mmxi.ptMaxTrackSize.y)
+	{
+		m_DlgHeight = m_mmxi.ptMaxTrackSize.y;
+	}
+
+	SetWindowPos(NULL, 0, 0, m_DlgWidth, m_DlgHeight,
+				SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOMOVE);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+template<class Base>
+void CResizableDialogT<Base>::OnOK()
+{
+	CRect r;
+	GetWindowRect( & r);
+	m_DlgWidth = r.Width();
+	m_DlgHeight = r.Height();
+
+	BaseClass::OnOK();
+}
+
+template<class Base>
+INT_PTR CResizableDialogT<Base>::DoModal()
+{
+	m_PrevSize.cy = -1;
+	m_PrevSize.cx = -1;
+	memzero(m_mmxi);
+
+	return BaseClass::DoModal();
+}
+
+BEGIN_MESSAGE_MAP_T(CResizableDialogT, BaseClass)
+	//{{AFX_MSG_MAP(CResizableDialog)
+	ON_WM_SIZE()
+	ON_WM_SIZING()
+	ON_WM_GETMINMAXINFO()
+	ON_WM_ERASEBKGND()
+	ON_WM_NCHITTEST()
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+
+typedef CResizableDialogT<> CResizableDialog;
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 

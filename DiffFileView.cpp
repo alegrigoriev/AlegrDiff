@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "AlegrDiff.h"
 #include "DiffFileView.h"
+#include "GoToLineDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -66,6 +67,8 @@ BEGIN_MESSAGE_MAP(CDiffFileView, CView)
 	ON_COMMAND(ID_EDIT_FIND_WORD_NEXT, OnEditFindWordNext)
 	ON_COMMAND(ID_EDIT_FIND_WORD_PREV, OnEditFindWordPrev)
 	ON_WM_LBUTTONDBLCLK()
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_EDIT_GOTOLINE, OnEditGotoline)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -1306,5 +1309,34 @@ void CDiffFileView::OnLButtonDblClk(UINT nFlags, CPoint point)
 	{
 		pDoc->SetSelection(End, Begin);
 		MakeCaretVisible();
+	}
+}
+
+void CDiffFileView::OnContextMenu(CWnd* pWnd, CPoint point)
+{
+	// make sure window is active
+	GetParentFrame()->ActivateFrame();
+
+	CMenu menu;
+	if (menu.LoadMenu(IDR_MENU_FILEDIFF_CONTEXT))
+	{
+		CMenu* pPopup = menu.GetSubMenu(0);
+		if(pPopup != NULL)
+		{
+			pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_LEFTBUTTON,
+									point.x, point.y,
+									AfxGetMainWnd()); // use main window for cmds
+		}
+	}
+
+}
+
+void CDiffFileView::OnEditGotoline()
+{
+	CGotoLineDialog dlg;
+	dlg.m_LineNumber = GetDocument()->m_CaretPos.line;
+	if (IDOK == dlg.DoModal())
+	{
+		SetCaretPosition(0, dlg.m_LineNumber, SetPositionMakeCentered | SetPositionCancelSelection);
 	}
 }

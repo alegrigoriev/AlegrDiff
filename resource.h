@@ -14,6 +14,10 @@
 #define IDC_CURSOR_LEFT_ARROW           133
 #define IDS_OPEN_SECOND_TITLE           134
 #define IDR_MENU_LISTVIEW_CONTEXT       134
+#define IDR_MENU_FILEDIFF_CONTEXT       135
+#define IDS_STRING_DIRECTORY_LOAD_ERROR 135
+#define IDD_DIALOG_GOTO_LINE            136
+#define IDD_DIALOG_OPEN_TEMPLATE        137
 #define IDC_CURSOR_BEAM                 150
 #define IDC_COMBO_FIRST_DIR             1000
 #define IDC_COMBO_SECOND_DIR            1001
@@ -29,6 +33,7 @@
 #define IDC_EDIT_TAB_INDENT             1011
 #define IDC_EDITFILENAME_FILTER         1012
 #define IDC_BUTTON_ADVANCED             1013
+#define IDC_COMBO_RECENT                1013
 #define IDC_CHECK_BINARY                1014
 #define IDC_SPIN1                       1015
 #define IDC_BUTTON_NORMAL_FONT          1016
@@ -38,6 +43,7 @@
 #define IDC_STATIC_ADDED_TEXT           1020
 #define IDC_STATIC_DELETED_TEXT         1021
 #define IDC_CHECK_AUTO_RELOAD           1022
+#define IDC_EDIT_LINE_NUMBER            1023
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -55,6 +61,11 @@
 #define ID_EDIT_FIND_PREV               32797
 #define ID_EDIT_FIND_WORD_PREV          32798
 #define ID_EDIT_FIND_WORD_NEXT          32799
+#define ID_LISTVIEW_OPEN                32800
+#define ID_FILE_COPY_FIRST_DIR          32801
+#define ID_FILE_COPY_SECOND_DIR         32802
+#define IDS_DIRECTORY_ACCESS_DENIED     32848
+#define IDS_DIRECTORY_NOT_FOUND         32849
 #define ID_INDICATOR_CARET_POS          0xE705
 
 // Next default values for new objects
@@ -62,9 +73,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        135
-#define _APS_NEXT_COMMAND_VALUE         32800
-#define _APS_NEXT_CONTROL_VALUE         1023
+#define _APS_NEXT_RESOURCE_VALUE        138
+#define _APS_NEXT_COMMAND_VALUE         32803
+#define _APS_NEXT_CONTROL_VALUE         1026
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

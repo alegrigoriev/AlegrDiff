@@ -19,7 +19,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CGotoLineDialog)
 	enum { IDD = IDD_DIALOG_GOTO_LINE };
-	// NOTE: the ClassWizard will add data members here
+	UINT	m_LineNumber;
 	//}}AFX_DATA
 
 

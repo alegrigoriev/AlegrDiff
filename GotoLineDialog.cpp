@@ -19,7 +19,7 @@ CGotoLineDialog::CGotoLineDialog(CWnd* pParent /*=NULL*/)
 	: CDialog(CGotoLineDialog::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CGotoLineDialog)
-	// NOTE: the ClassWizard will add member initialization here
+	m_LineNumber = 0;
 	//}}AFX_DATA_INIT
 }
 
@@ -28,7 +28,7 @@ void CGotoLineDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CGotoLineDialog)
-	// NOTE: the ClassWizard will add DDX and DDV calls here
+	DDX_Text(pDX, IDC_EDIT_LINE_NUMBER, m_LineNumber);
 	//}}AFX_DATA_MAP
 }
 

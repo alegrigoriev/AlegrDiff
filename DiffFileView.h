@@ -134,6 +134,8 @@ protected:
 	afx_msg void OnEditFindWordNext();
 	afx_msg void OnEditFindWordPrev();
 	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnEditGotoline();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

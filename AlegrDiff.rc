@@ -195,7 +195,26 @@ END
 
 IDR_MENU_LISTVIEW_CONTEXT MENU DISCARDABLE 
 BEGIN
-    MENUITEM " ",                           65535
+    POPUP " "
+    BEGIN
+        MENUITEM "&View differences\tEnter",    ID_LISTVIEW_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "Edit &1st file",              ID_FILE_EDIT_FIRST
+        MENUITEM "Edit &2nd file",              ID_FILE_EDIT_SECOND
+        MENUITEM SEPARATOR
+        MENUITEM "Copy files from 1st dir...",  ID_FILE_COPY_FIRST_DIR
+        MENUITEM "Copy files from 2nd dir",     ID_FILE_COPY_SECOND_DIR
+    END
+END
+
+IDR_MENU_FILEDIFF_CONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP " "
+    BEGIN
+        MENUITEM "Copy\tCtrl+C",                ID_EDIT_COPY
+        MENUITEM "Accept",                      ID_EDIT_ACCEPT
+        MENUITEM "Decline",                     ID_EDIT_DECLINE
+    END
 END
 
 
@@ -209,6 +228,7 @@ BEGIN
     27,             ID_WINDOW_CLOSE_DIFF,   ASCII,  NOINVERT
     "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     "F",            ID_EDIT_FIND,           VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_EDIT_GOTOLINE,       VIRTKEY, CONTROL, NOINVERT
     "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
     "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
     "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
@@ -244,7 +264,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 0.61 beta",IDC_STATIC,35,14,128,8,
+    CTEXT           "AlegrDiff Version 0.62 beta",IDC_STATIC,35,14,128,8,
                     SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001\nalegr@earthlink.net",
                     IDC_STATIC,35,34,128,21
@@ -359,6 +379,30 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,123,274,50,14
 END
 
+IDD_DIALOG_GOTO_LINE DIALOG DISCARDABLE  0, 0, 154, 80
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Go To Line"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Line:",IDC_STATIC,34,22,29,8
+    EDITTEXT        IDC_EDIT_LINE_NUMBER,68,19,40,14,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    DEFPUSHBUTTON   "OK",IDOK,21,59,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,85,59,50,14
+END
+
+IDD_DIALOG_OPEN_TEMPLATE DIALOG DISCARDABLE  0, 0, 281, 49
+STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    RTEXT           "Re&cent: ",IDC_STATIC,7,9,26,8
+    COMBOBOX        IDC_COMBO_RECENT,40,7,228,68,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    RTEXT           "",1119,7,22,265,8,NOT WS_VISIBLE
+    CONTROL         "Binary comparision",IDC_CHECK_BINARY,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,32,78,10
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -445,6 +489,22 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 288
     END
+
+    IDD_DIALOG_GOTO_LINE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 147
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 73
+    END
+
+    IDD_DIALOG_OPEN_TEMPLATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 274
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 42
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -470,6 +530,7 @@ BEGIN
     IDS_FILENAME_FILTER     "C/C++ Files (.c, .cpp, .h, .rc,.dsp)|*.c;*.cpp;*.h;*.rc;*.dsp|Other Text Files (.txt, .log)|*.txt;*.log|All Files (*.*)|*||"
     IDS_OPEN_FIRST_TITLE    "First File To Compare"
     IDS_OPEN_SECOND_TITLE   "Second File To Compare"
+    IDS_STRING_DIRECTORY_LOAD_ERROR "Couldn't load directory ""%s"""
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -607,6 +668,19 @@ BEGIN
                             "Show line numbers at the left margin\nShow line numbers"
     ID_FILE_EDIT_FIRST      "Open first file for editing\nEdit first file"
     ID_FILE_EDIT_SECOND     "Open second file for editing\nEdit second file"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_LISTVIEW_OPEN        "View the files with differences\nView"
+    ID_FILE_COPY_FIRST_DIR  "Copy selected files from first directory\nCopy from first dir"
+    ID_FILE_COPY_SECOND_DIR "Copy selected files from the second dir\nCopy from second dir"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DIRECTORY_ACCESS_DENIED "Access to directory ""%s"" denied"
+    IDS_DIRECTORY_NOT_FOUND "Directory ""%s"" not found"
 END
 
 #endif    // English (U.S.) resources

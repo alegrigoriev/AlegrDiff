@@ -63,6 +63,9 @@ protected:
 	afx_msg void OnUpdateFileEditFirst(CCmdUI* pCmdUI);
 	afx_msg void OnFileEditSecond();
 	afx_msg void OnUpdateFileEditSecond(CCmdUI* pCmdUI);
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnListviewOpen();
+	afx_msg void OnUpdateListviewOpen(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -133,6 +133,10 @@ SOURCE=.\FolderDialog.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\GotoLineDialog.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\MainFrm.cpp
 # End Source File
 # Begin Source File
@@ -187,6 +191,10 @@ SOURCE=.\FileListSupport.h
 # Begin Source File
 
 SOURCE=.\FolderDialog.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\GotoLineDialog.h
 # End Source File
 # Begin Source File
 

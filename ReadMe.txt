@@ -1,13 +1,9 @@
 TODO:
-Add context menu to list view
-Add context menu to file view
-If folder not found, do dialog, destroy doc
 Make Word Left, Word Right, Word selection.
-Make Go To Line
 Make search dialog
+Make Go To Line to first or second file line number
 Check difference area of the file for identical lines
 in InvalidateRange, add for letter overlap.
-Make MRU folders list for file compare dialog
 Make Binary compare checkbox for file compare dialog
 Make combobox for last file filters
 Add progress to File list view and file diff view
@@ -23,9 +19,9 @@ Make background thread for comparision
 UNICODE file support
 
 Problems:
-Identical lines in the beginning of the file may be shown different
 
 Fixed:
+Identical lines in the beginning of the file may be shown different
 doesn't erase line ends after scrolling
 If two files are completely different, only first file is shown
 BIG file takes too much to read. Eliminated array reallocation.
@@ -33,6 +29,11 @@ File with differences: last lines not drawn
 Wrong status for inserted and removed parts of strings
 
 Done:
+Make MRU folders list for file compare dialog
+If folder not found, do dialog, destroy doc
+Make Go To Line
+Add context menu to file view
+Add context menu to list view
 Check file dates for change, when the app is activated
 Open files for editing in file list view
 Secondary sort after comparision result sort

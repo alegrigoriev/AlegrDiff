@@ -199,8 +199,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	virtual BOOL OnInitDialog();
-	virtual void OnOK();
-	virtual void OnCancel();
+protected:
+	virtual BOOL OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult);
 };
 
 /////////////////////////////////////////////////////////////////////////////

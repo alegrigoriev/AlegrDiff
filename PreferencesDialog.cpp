@@ -4,7 +4,6 @@
 #include "stdafx.h"
 #include "AlegrDiff.h"
 #include "PreferencesDialog.h"
-#include ".\preferencesdialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -478,14 +477,15 @@ BOOL CPreferencesPropertySheet::OnInitDialog()
 	return bResult;
 }
 
-void CPreferencesPropertySheet::OnOK()
+BOOL CPreferencesPropertySheet::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult)
 {
-	m_LastPageSelected = GetActiveIndex();
-	BaseClass::OnOK();
-}
+	// TODO: Add your specialized code here and/or call the base class
+	NMHDR * pNm = reinterpret_cast<NMHDR *>(lParam);
+	if (TCN_SELCHANGE == pNm->code)
+	{
+		TRACE(_T("TCN_SELCHANGE\n"));
+		m_LastPageSelected = GetTabControl()->GetCurSel();
+	}
 
-void CPreferencesPropertySheet::OnCancel()
-{
-	m_LastPageSelected = GetActiveIndex();
-	BaseClass::OnCancel();
+	return CPropertySheet::OnNotify(wParam, lParam, pResult);
 }

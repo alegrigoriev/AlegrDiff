@@ -694,6 +694,10 @@ BOOL CApplicationProfile::ExportSection(LPCTSTR szSection, LPCTSTR szFilename)
 		m_pszRegistryKey = OldRegistryKeyName;
 		throw;
 	}
+
+	// flush the file just written
+	WritePrivateProfileStringA(NULL, NULL, NULL, NULL);
+
 	m_pszProfileName = OldProfileName;
 	m_pszRegistryKey = OldRegistryKeyName;
 	return TRUE;
@@ -712,6 +716,10 @@ BOOL CApplicationProfile::ImportSection(LPCTSTR szSection, LPCTSTR szFilename)
 	m_pszRegistryKey.Empty();
 	m_pszProfileName = szFilename;
 	CloseCachedKeys();
+
+	// flush the cached files
+	WritePrivateProfileStringA(NULL, NULL, NULL, NULL);
+
 	try
 	{
 		CApplicationProfileItem * pTmp = pItems;

@@ -265,7 +265,7 @@ private:
 	static CSmallAllocator m_Allocator;
 };
 
-struct StringSection : public KListEntry<StringSection>
+struct StringSection : public ListItem<StringSection>
 {
 	static void * operator new(size_t size)
 	{
@@ -321,7 +321,7 @@ struct LinePair
 
 	const FileLine * pFirstLine;
 	const FileLine * pSecondLine;
-	KListEntry<StringSection> StrSections;
+	ListHead<StringSection> StrSections;
 private:
 	static CSmallAllocator m_Allocator;
 public:
@@ -441,7 +441,7 @@ private:
 
 enum PairCheckResult { FilesDeleted, FilesUnchanged, FilesTimeChanged, };
 
-class FilePair : public KListEntry<FilePair>
+class FilePair : public ListItem<FilePair>
 {
 public:
 	FilePair();
@@ -611,5 +611,5 @@ bool MatchWildcard(LPCTSTR name, LPCTSTR pattern);
 bool MultiPatternMatches(LPCTSTR name, LPCTSTR sPattern);
 CString MiltiSzToCString(LPCTSTR pMsz);
 CString PatternToMultiCString(LPCTSTR src);
-int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, KListEntry<StringSection> * ppSections, int nMinMatchingChars);
+int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, ListHead<StringSection> * ppSections, int nMinMatchingChars);
 #endif

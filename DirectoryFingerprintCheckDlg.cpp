@@ -283,7 +283,7 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 
 	// calculate total size to read
 	FilePair * pPair;
-	KListEntry<FilePair> * pList;
+	ListHead<FilePair> * pList;
 
 	for (pList = m_pDocument->GetFilePairList(), pPair = pList->First();
 		pList->NotEnd(pPair); pPair = pPair->Next())

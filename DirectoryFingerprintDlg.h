@@ -7,7 +7,6 @@
 
 class CDirectoryFingerprintDlg : public CResizableDialog
 {
-	DECLARE_DYNAMIC(CDirectoryFingerprintDlg)
 
 public:
 	CDirectoryFingerprintDlg(CWnd* pParent = NULL);   // standard constructor

@@ -9,7 +9,6 @@
 
 // CDirectoryFingerprintDlg dialog
 
-IMPLEMENT_DYNAMIC(CDirectoryFingerprintDlg, CResizableDialog)
 CDirectoryFingerprintDlg::CDirectoryFingerprintDlg(CWnd* pParent /*=NULL*/)
 	: CResizableDialog(CDirectoryFingerprintDlg::IDD, pParent)
 	, m_bIncludeDirectoryStructure(FALSE)

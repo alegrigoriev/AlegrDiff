@@ -592,9 +592,6 @@
 						UsePrecompiledHeader="1"/>
 				</FileConfiguration>
 			</File>
-			<File
-				RelativePath="UiUpdatedDlg.cpp">
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -679,6 +676,9 @@
 			</File>
 			<File
 				RelativePath="Md5HashCalculator.h">
+			</File>
+			<File
+				RelativePath=".\MessageMapT.h">
 			</File>
 			<File
 				RelativePath=".\PreferencesDialog.h">

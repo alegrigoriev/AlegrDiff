@@ -75,7 +75,7 @@ CFileDialogWithHistory::CFileDialogWithHistory(BOOL bOpenFileDialog, // TRUE for
 	: BaseClass(bOpenFileDialog, lpszDefExt, lpszFileName, dwFlags, lpszFilter, pParentWnd)
 	, m_RecentFolders(& m_Profile, Section, KeyFormat, NumStrings)
 {
-	if (CThisApp::SupportsV5FileDialog())
+	if (SupportsV5FileDialog())
 	{
 		m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_WITH_HISTORY_TEMPLATE_V5);
 	}
@@ -100,7 +100,7 @@ CFileDialogWithHistory::CFileDialogWithHistory(BOOL bOpenFileDialog, // TRUE for
 	: BaseClass(bOpenFileDialog, lpszDefExt, lpszFileName, dwFlags, lpszFilter, pParentWnd)
 	, m_RecentFolders(pSourceHistory)
 {
-	if (CThisApp::SupportsV5FileDialog())
+	if (SupportsV5FileDialog())
 	{
 		m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_WITH_HISTORY_TEMPLATE_V5);
 	}

@@ -84,7 +84,7 @@ protected:
 	CBitmap m_ArrowDownBitmap;
 	CBitmap m_ArrowUpBitmap;
 
-	void BuildSortedPairArray(vector<FilePair *> & PairArray, KListEntry<FilePair> * pPairList, int nCount);
+	void BuildSortedPairArray(vector<FilePair *> & PairArray, ListHead<FilePair> * pPairList, int nCount);
 
 // Generated message map functions
 protected:

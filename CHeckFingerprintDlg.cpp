@@ -9,7 +9,6 @@
 
 // CCheckFingerprintDlg dialog
 
-IMPLEMENT_DYNAMIC(CCheckFingerprintDlg, CResizableDialog)
 CCheckFingerprintDlg::CCheckFingerprintDlg(CWnd* pParent /*=NULL*/)
 	: CResizableDialog(CCheckFingerprintDlg::IDD, pParent)
 	, m_FingerprintFilenameHistory( & m_Profile, _T("History"), _T("FingerprintFile%d"), 15)

@@ -18,7 +18,7 @@ private:
 		ItemHeader * pNext;
 		BlockHeader * pContainingBlock;
 	};
-	struct BlockHeader : public KListEntry<BlockHeader>
+	struct BlockHeader : public ListItem<BlockHeader>
 	{
 		BlockHeader(CSmallAllocator * alloc)
 			: m_Signature(eSignature),
@@ -34,8 +34,8 @@ private:
 		size_t NumOfFreeItems;
 	};
 	BlockHeader * AllocateBlock();
-	KListEntry<BlockHeader> m_Blocks;
-	KListEntry<BlockHeader> m_BlocksWithFreeItems;
+	ListHead<BlockHeader> m_Blocks;
+	ListHead<BlockHeader> m_BlocksWithFreeItems;
 	CSimpleCriticalSection m_cs;
 	size_t m_ItemSize;  // without header
 	size_t m_BlockSize;

@@ -1,6 +1,6 @@
 TODO:
 
-No file size in the saved list. 
+2-pane mode for binary files
 No difference in file size in bytes reported in comparson result.
 No option for file size format (in kilobytes or in bytes).
 
@@ -8,7 +8,6 @@ Customizable number of MRU items
 Make more robust argorithm of version info detection (if it is version line, don't include version data to a normalized CRC).
 Detect Log: (as comment sequence)
 
-2-pane mode for binary files
 Allow doublequotes in the search pattern
 Assign an index to the files during original sort (for faster sorting)
 Make icons for the dialogs
@@ -38,8 +37,8 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-If the text comparison got aborted because of read error, this is not shown
 It shows the dialog with parameters instead of running the comparison for the folders specified in a command line. Please fix immediately!
+If the text comparison got aborted because of read error, this is not shown
 Blank line immediately following difference block is considered separate 
    for "Next Difference" command
 Blank lines prevent from proper line matching inside difference blocks
@@ -108,6 +107,10 @@ screen move in two directions may corrupt the image (??)
 
 Done:
 
+File size in the saved list.
+Enable/disable "selected files" radio button in the Save List dialog
+"Files different in version only" checkbox in the Save List dialog
+Saving comma-separated file list
 Add folder picture under the fingerprint picture
 Find full word only
 In 2-pane mode, go to another pane when added/removed text encountered

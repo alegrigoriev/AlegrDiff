@@ -80,8 +80,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON    DISCARDABLE     "res\\AlegrDiff.ico"
-IDR_ALEGRDTYPE          ICON    DISCARDABLE     "res\\AlegrDiffDoc.ico"
-IDR_FILEDIFFTYPE        ICON    DISCARDABLE     "res\\icon1.ico"
+IDR_ALEGRDTYPE_LIST     ICON    DISCARDABLE     "res\\AlegrDiffDoc.ico"
+IDR_ALEGRDTYPE          ICON    DISCARDABLE     "res\\icon1.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -175,6 +175,9 @@ BEGIN
         MENUITEM "Accept\tShift+F6",            ID_EDIT_ACCEPT
         MENUITEM "Discard\tF6",                 ID_EDIT_DECLINE
         MENUITEM "Merge Files And Save...",     ID_FILE_MERGE_SAVE
+        MENUITEM SEPARATOR
+        MENUITEM "Show File 1 Text\tF8",        ID_VIEW_FILE1_VERSION
+        MENUITEM "Show File 2 Text\tShift+F8",  ID_VIEW_FILE_2_VERSION
     END
     POPUP "&View"
     BEGIN
@@ -216,8 +219,52 @@ BEGIN
     POPUP " "
     BEGIN
         MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
-        MENUITEM "&Accept\tShift+F6",           ID_EDIT_ACCEPT
-        MENUITEM "&Discard\tF6",                ID_EDIT_DECLINE
+        MENUITEM "Merge File 1 Version\tF6",    ID_EDIT_DECLINE
+        MENUITEM "Merge File 2 Version\tShift+F6", ID_EDIT_ACCEPT
+    END
+END
+
+IDR_ALEGRDTYPE_LIST MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Compare &Directories...",     ID_FILE_COMPAREDIRECTORIES
+        MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
+        MENUITEM SEPARATOR
+        MENUITEM "&View differences\tEnter",    ID_LISTVIEW_OPEN
+        MENUITEM "Edit 1st File",               ID_FILE_EDIT_FIRST
+        MENUITEM "Edit 2nd File",               ID_FILE_EDIT_SECOND
+        MENUITEM SEPARATOR
+        MENUITEM "Copy Files From 1st Folder",  ID_FILE_COPY_FIRST_DIR
+        MENUITEM "Copy Files From 2nd Folder",  ID_FILE_COPY_SECOND_DIR
+        MENUITEM SEPARATOR
+        MENUITEM "Preferences...",              ID_FILE_PREFERENCES
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit\tAlt+F4",               ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Go To Next Diff\tF7",         ID_EDIT_GOTONEXTDIFF
+        MENUITEM "Go To Prev Diff\tShift+F7",   ID_EDIT_GOTOPREVDIFF
+        MENUITEM SEPARATOR
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "Select All\tCtrl+A",          ID_EDIT_SELECT_ALL
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+        MENUITEM SEPARATOR
+        MENUITEM "Refresh\tF5",                 ID_VIEW_REFRESH
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
+        MENUITEM "&Tile",                       ID_WINDOW_TILE_HORZ
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
     END
 END
 
@@ -251,6 +298,8 @@ BEGIN
     VK_F6,          ID_EDIT_ACCEPT,         VIRTKEY, SHIFT, NOINVERT
     VK_F7,          ID_EDIT_GOTONEXTDIFF,   VIRTKEY, NOINVERT
     VK_F7,          ID_EDIT_GOTOPREVDIFF,   VIRTKEY, SHIFT, NOINVERT
+    VK_F8,          ID_VIEW_FILE1_VERSION,  VIRTKEY, NOINVERT
+    VK_F8,          ID_VIEW_FILE_2_VERSION, VIRTKEY, SHIFT, NOINVERT
     VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
     "W",            ID_VIEW_IGNORE_WHITESPACES, VIRTKEY, CONTROL, NOINVERT
@@ -430,10 +479,10 @@ BEGIN
     CTEXT           "Common Text",IDC_STATIC_NORMAL_TEXT,8,35,132,16,
                     SS_CENTERIMAGE
     PUSHBUTTON      "Font...",IDC_BUTTON_NORMAL_FONT,149,35,36,17
-    CTEXT           "File 1 Only Text",IDC_STATIC_ADDED_TEXT,8,56,132,16,
+    CTEXT           "File 2 Only Text",IDC_STATIC_ADDED_TEXT,8,56,132,16,
                     SS_CENTERIMAGE
     PUSHBUTTON      "Font...",IDC_BUTTON_INSERTED_FONT,149,56,36,17
-    CTEXT           "File 2 Only Text",IDC_STATIC_DELETED_TEXT,8,77,132,16,
+    CTEXT           "File 1 Only Text",IDC_STATIC_DELETED_TEXT,8,77,132,16,
                     SS_CENTERIMAGE
     PUSHBUTTON      "Font...",IDC_BUTTON_ERASED_FONT,149,77,37,17
     CTEXT           "Text Accepted For Merge",IDC_STATIC_ACCEPTED_TEXT,8,98,
@@ -625,6 +674,7 @@ BEGIN
     IDS_OPEN_FIRST_TITLE    "First File To Compare"
     IDS_OPEN_SECOND_TITLE   "Second File To Compare"
     IDS_STRING_DIRECTORY_LOAD_ERROR "Couldn't load directory ""%s"""
+    IDR_ALEGRDTYPE_LIST     "\nAlegrD\nAlegrD\n\n\nAlegrDiff.Document\nAlegrD Document"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -748,8 +798,8 @@ BEGIN
                             "Compare all files in two directories\nCompare directories"
     ID_FILE_COMPAREFILES    "Compare two files\nCompare files"
     ID_FILE_PREFERENCES     "Change program preferences\nPreferences"
-    ID_EDIT_ACCEPT          "Accept change\nAccept"
-    ID_EDIT_DECLINE         "Discard text from merged version\nDiscard"
+    ID_EDIT_ACCEPT          "Use File 2 text\nFile 2"
+    ID_EDIT_DECLINE         "Use File 1 text\nDiscard"
     ID_EDIT_GOTONEXTDIFF    "Go to the next difference\nNext difference"
 END
 
@@ -774,6 +824,8 @@ BEGIN
     ID_FILE_MERGE_SAVE      "Merge differences from both files and save the result\nMerge files"
     ID_FILE_COPY_FIRST      "Copy the selected files from first folder to another folder\nCopy from first folder"
     ID_FILE_COPY_SECOND     "Copy the selected files from second folder to another folder\nCopy from second folder"
+    ID_VIEW_FILE1_VERSION   "Show first file text\nFile 1 text"
+    ID_VIEW_FILE_2_VERSION  "Show second file text\nFile 2 text"
 END
 
 STRINGTABLE DISCARDABLE 

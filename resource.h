@@ -17,6 +17,7 @@
 #define IDR_MENU_FILEDIFF_CONTEXT       135
 #define IDS_STRING_DIRECTORY_LOAD_ERROR 135
 #define IDD_DIALOG_GOTO_LINE            136
+#define IDR_ALEGRDTYPE_LIST             136
 #define IDD_DIALOG_OPEN_TEMPLATE        137
 #define IDD_PROPPAGE_COMPARISION_PREFERENCES 138
 #define IDD_PROPPAGE_VIEW_PREFERENCES   139
@@ -81,6 +82,8 @@
 #define ID_FILE_MERGE_SAVE              32805
 #define ID_FILE_COPY_FIRST              32807
 #define ID_FILE_COPY_SECOND             32808
+#define ID_VIEW_FILE1_VERSION           32809
+#define ID_VIEW_FILE_2_VERSION          32810
 #define IDS_DIRECTORY_ACCESS_DENIED     32848
 #define IDS_DIRECTORY_NOT_FOUND         32849
 #define IDS_PREFERENCES                 32850
@@ -107,7 +110,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        141
-#define _APS_NEXT_COMMAND_VALUE         32809
+#define _APS_NEXT_COMMAND_VALUE         32811
 #define _APS_NEXT_CONTROL_VALUE         1034
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

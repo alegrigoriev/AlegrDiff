@@ -1,6 +1,6 @@
 TODO:
-Catch Ctrl+Tab
 Context menu on selection: Merge File1 version, Merge File2 version
+Make copy to folder for the open file
 mark accept/decline line by line
 make selective accept/decline, for some lines of group
 show version of file1, file2 of the line
@@ -22,9 +22,13 @@ UNICODE file support
 //show subdir-only names in the status bar during comparision
 
 Problems:
-Blank lines are ignored during comparison, but may not be inored when line pair list built
+Tries to reload files during modal state
+Auto Scroll is too fast
 
 Fixed:
+crashed on some files
+F7 doesn't adjust for whitespaces
+Blank lines are ignored during comparison, but may not be inored when line pair list built
 Wrong button order in View properties
 Inserted line with only spaces is not whitespace
 Child window is created not maximized
@@ -32,6 +36,11 @@ Esc closes without prompting to save merged
 Go To next differences when whitespaces ignored
 
 Done:
+Open new frame with the same size attr as active frame
+Catch Ctrl+Tab, neat processing
+last line is not invalidated by InvalidateRange
+Separate menus for list view and diff view
+swap file1 and file2 only in view preferences
 Open directories or files from the command line
 Processed blank lines during section expansion
 make separate selection for background

@@ -330,6 +330,7 @@ void CFilePairDoc::OnEditGotonextdiff()
 	{
 		return;
 	}
+	NewPos = LinePosToDisplayPos(NewPos);
 	SetCaretPosition(NewPos.pos, NewPos.line, SetPositionCancelSelection);
 }
 
@@ -340,6 +341,7 @@ void CFilePairDoc::OnEditGotoprevdiff()
 	{
 		return;
 	}
+	NewPos = LinePosToDisplayPos(NewPos);
 	SetCaretPosition(NewPos.pos, NewPos.line, SetPositionCancelSelection);
 }
 

@@ -21,7 +21,6 @@ IMPLEMENT_DYNAMIC(CMainFrame, CMDIFrameWnd)
 BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	//{{AFX_MSG_MAP(CMainFrame)
 	ON_WM_CREATE()
-	ON_COMMAND(ID_WINDOW_NEW, OnWindowNew)
 	ON_WM_DROPFILES()
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
@@ -123,16 +122,6 @@ void CMainFrame::Dump(CDumpContext& dc) const
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame message handlers
 
-
-void CMainFrame::OnWindowNew()
-{
-	CMDIChildWnd* pActiveChild = MDIGetActive();
-	CDiffFileView * pView = dynamic_cast<CDiffFileView *>(pActiveChild->GetWindow(GW_CHILD));
-	if (NULL != pView)
-	{
-		GetApp()->OpenFilePairView(pView->GetDocument()->GetFilePair());
-	}
-}
 
 void CMainFrame::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
 {

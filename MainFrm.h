@@ -43,12 +43,12 @@ protected:  // control bar embedded members
 	CReBar      m_wndReBar;
 	CDialogBar      m_wndDlgBar;
 
+	int m_nRotateChildIndex;  // used for Ctrl+Tab handling
 // Generated message map functions
 protected:
 	void OnUpdateCaretPosIndicator(CCmdUI* pCmdUI);
 	//{{AFX_MSG(CMainFrame)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
-	afx_msg void OnWindowNew();
 	afx_msg void OnDropFiles(HDROP hDropInfo);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()

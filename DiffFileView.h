@@ -55,6 +55,9 @@ public:
 	bool m_ShowLineNumbers;
 	int m_LineNumberMarginWidth;
 
+	enum ShownVersion { ShownAllText, ShownFile1Version, ShownFile2Version, ShownMerged, };
+	ShownVersion m_ShownFileVersion;
+
 	TEXTMETRIC m_FontMetric;
 	int m_CharOverhang;
 
@@ -141,6 +144,10 @@ protected:
 	afx_msg void OnEditGotoline();
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnEditSelectAll();
+	afx_msg void OnUpdateViewFile2Version(CCmdUI* pCmdUI);
+	afx_msg void OnViewFile2Version();
+	afx_msg void OnUpdateViewFile1Version(CCmdUI* pCmdUI);
+	afx_msg void OnViewFile1Version();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

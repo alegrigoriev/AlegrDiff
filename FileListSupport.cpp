@@ -1576,6 +1576,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstCount,
 			// insert one whitespace to the output string
 			pDst[DstIdx] = ' ';
 			DstIdx++;
+			RemovedWhitespaces = false;
 			// mark the previous space as non extra whitespace
 			if (FirstWhitespaceIndex != 0 && WhitespaceMaskBits > FirstWhitespaceIndex)
 			{
@@ -1870,6 +1871,9 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 	LPCTSTR str1 = pStr1->GetNormalizedText();
 	LPCTSTR str2 = pStr2->GetNormalizedText();
 
+	ASSERT(_tcslen(str1) == pStr1->GetNormalizedLength());
+	ASSERT(_tcslen(str2) == pStr2->GetNormalizedLength());
+
 	KListEntry<StringDiffSection> DiffSections;
 
 	// allocate an equal section of zero length and add to the list
@@ -2022,36 +2026,6 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 				DiffSections.InsertTail(pDiffSection);
 			}
 		}
-#if 0
-		if (NULL != pErasedSection
-			&& NULL != pAddedSection
-			// if there is space in the beginning of the next text, or if it is end of the line,
-			// then check last chars of the deleted text. If it's
-			&& (' ' != pAddedSection->pBegin[pAddedSection->Length - 1]
-				&& ' ' == pErasedSection->pBegin[pErasedSection->Length - 1]
-				&& (' ' == pErasedSection->pBegin[pErasedSection->Length]
-					|| 0 == pErasedSection->pBegin[pErasedSection->Length]))
-
-			|| (' ' != pErasedSection->pBegin[0]
-				&& ' ' == pAddedSection->pBegin[0]
-				&& ( ! Sections.IsEmpty()
-					|| ' ' == Sections.Last()->pBegin[Sections.Last()->Length - 1])))
-		{
-			Sections.InsertTail(pAddedSection);
-			Sections.InsertTail(pErasedSection);
-		}
-		else
-		{
-			if (NULL != pErasedSection)
-			{
-				Sections.InsertTail(pErasedSection);
-			}
-			if (NULL != pAddedSection)
-			{
-				Sections.InsertTail(pAddedSection);
-			}
-		}
-#endif
 
 		str1 += idx1;
 		str2 += idx2;
@@ -2069,6 +2043,9 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 
 	LPCTSTR str2VersionBegin = _tcschr(str2ws, '$');
 	LPCTSTR str2VersionEnd = _tcsrchr(str2ws, '$');
+
+	ASSERT(_tcslen(str1ws) == pStr1->GetLength());
+	ASSERT(_tcslen(str2ws) == pStr2->GetLength());
 
 	if (NULL != str1VersionBegin
 		&& NULL != str2VersionBegin)
@@ -2163,6 +2140,29 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 				}
 			}
 			pDiffSection->Len2ws = str2ws - pDiffSection->Str2ws;
+		}
+	}
+
+	if (0)
+	{
+		for (pDiffSection = DiffSections.First();
+			DiffSections.NotEnd(pDiffSection); pDiffSection = pDiffSection->Next())
+		{
+			// print the diff sections
+			if (0 != pDiffSection->Len1ws)
+			{
+				TRACE(_T("Str1: len=%d, str=\"%.*s\"\n"),
+					pDiffSection->Len1, pDiffSection->Len1, pDiffSection->Str1);
+				TRACE(_T("Str1ws: len=%d, str=\"%.*s\"\n"),
+					pDiffSection->Len1ws, pDiffSection->Len1ws, pDiffSection->Str1ws);
+			}
+			if (0 != pDiffSection->Len2ws)
+			{
+				TRACE(_T("Str2: len=%d, str=\"%.*s\"\n"),
+					pDiffSection->Len2, pDiffSection->Len2, pDiffSection->Str2);
+				TRACE(_T("Str2ws: len=%d, str=\"%.*s\"\n"),
+					pDiffSection->Len2ws, pDiffSection->Len2ws, pDiffSection->Str2ws);
+			}
 		}
 	}
 
@@ -2380,6 +2380,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 	}
 
 	int nDifferentChars = 0;
+
 	// now generate the resulting difference sections
 	for (pDiffSection = DiffSections.First();
 		DiffSections.NotEnd(pDiffSection); pDiffSection = pDiffSection->Next())
@@ -3033,6 +3034,8 @@ CString FilePair::GetComparisonResult() const
 	static CString sComparingFiles(MAKEINTRESOURCE(IDS_STRING_COMPARING));
 
 	CString s;
+	TCHAR buf1[MAX_PATH], buf2[MAX_PATH];
+
 	switch(m_ComparisonResult)
 	{
 	case ResultUnknown:
@@ -3103,9 +3106,15 @@ CString FilePair::GetComparisonResult() const
 		s.Format(sCalculatingFingerprint, LPCTSTR(pSecondFile->GetFullName()));
 		break;
 	case ComparingFiles:
-		s.Format(sComparingFiles,
-				LPCTSTR(pFirstFile->GetFullName()),
-				LPCTSTR(pSecondFile->GetFullName()));
+		_tcsncpy(buf1, pFirstFile->GetFullName(), countof(buf1));
+		buf1[countof(buf1) - 1] = 0;
+		AbbreviateName(buf1, 50, TRUE);
+
+		_tcsncpy(buf2, pSecondFile->GetFullName(), countof(buf2));
+		buf2[countof(buf2) - 1] = 0;
+		AbbreviateName(buf2, 50, TRUE);
+
+		s.Format(sComparingFiles, buf1, buf2);
 		break;
 	}
 	return s;

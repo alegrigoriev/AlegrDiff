@@ -1124,7 +1124,7 @@ void CFilePairDoc::OnFileEditSecond()
 	}
 }
 
-bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive)
+bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive, bool WholeWord)
 {
 	// find from the current position
 	if (NULL == m_pFilePair
@@ -1467,6 +1467,7 @@ bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvok
 		dlg.m_sFindCombo = pApp->m_FindString;
 		dlg.m_bCaseSensitive = pApp->m_bCaseSensitive;
 		dlg.m_FindDown =  ! pApp->m_bFindBackward;
+		dlg.m_bWholeWord = pApp->m_bFindWholeWord;
 
 		if (IDOK != dlg.DoModal())
 		{
@@ -1476,11 +1477,13 @@ bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvok
 		pApp->m_bCaseSensitive = ( 0 != dlg.m_bCaseSensitive);
 		pApp->m_bFindBackward = ! dlg.m_FindDown;
 		bBackwards = pApp->m_bFindBackward;
+		pApp->m_bFindWholeWord = (0 != dlg.m_bWholeWord);
 	}
 	// update MRU, case sensitive
 	pApp->m_FindHistory.AddString(pApp->m_FindString);
 
-	return FindTextString(pApp->m_FindString, bBackwards, pApp->m_bCaseSensitive);
+	return FindTextString(pApp->m_FindString, bBackwards,
+						pApp->m_bCaseSensitive, pApp->m_bFindWholeWord);
 }
 
 // returns a pointer to a line text

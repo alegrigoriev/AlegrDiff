@@ -58,6 +58,8 @@ public:
 
 	int m_UsedFilenameFilter;
 
+	int m_FileListSort;
+
 	CString m_sFilenameFilter;
 	CString m_sBinaryFilesFilter;
 	CString m_sCppFilesFilter;

@@ -172,8 +172,8 @@ BEGIN
     END
     POPUP "&Merge"
     BEGIN
-        MENUITEM "Accept\tShift+F6",            ID_EDIT_ACCEPT
-        MENUITEM "Discard\tF6",                 ID_EDIT_DECLINE
+        MENUITEM "Merge File &2 Text\tShift+F6", ID_EDIT_ACCEPT
+        MENUITEM "Merge File &1 Text\tF6",      ID_EDIT_DECLINE
         MENUITEM "Merge Files And Save...",     ID_FILE_MERGE_SAVE
         MENUITEM SEPARATOR
         MENUITEM "Show File 1 Text\tF8",        ID_VIEW_FILE1_VERSION
@@ -319,7 +319,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 0.82 beta",IDC_STATIC,35,14,128,8,
+    CTEXT           "AlegrDiff Version 0.85 beta",IDC_STATIC,35,14,128,8,
                     SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001\nalegr@earthlink.net",
                     IDC_STATIC,35,34,128,21
@@ -348,7 +348,7 @@ BEGIN
     PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SECOND_DIR,183,58,17,14
     CONTROL         "Include &subdirectories",IDC_CHECK_INCLUDE_SUBDIRS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,122,10
-    PUSHBUTTON      "&Advanced >>",IDC_BUTTON_ADVANCED,150,86,50,14
+    PUSHBUTTON      "&More options >>",IDC_BUTTON_ADVANCED,137,86,63,14
     CONTROL         "&Binary comparison only",IDC_CHECK_BINARY,"Button",
                     BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,99,126,10
     LTEXT           "File&name filter: ",IDC_STATIC,7,117,46,8
@@ -373,7 +373,7 @@ BEGIN
     PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SECOND_DIR,183,58,17,14
     CONTROL         "Include &subdirectories",IDC_CHECK_INCLUDE_SUBDIRS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,122,10
-    PUSHBUTTON      "&Advanced <<",IDC_BUTTON_ADVANCED,150,86,50,14
+    PUSHBUTTON      "&Less options <<",IDC_BUTTON_ADVANCED,137,86,63,14
     CONTROL         "&Binary comparison only",IDC_CHECK_BINARY,"Button",
                     BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,99,126,10
     LTEXT           "File&name filter: ",IDC_STATIC,7,117,46,8
@@ -501,7 +501,7 @@ FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "File &2",IDOK,64,61,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,121,61,50,14
-    CTEXT           "Some of the differences are not marked as ""Accepted"" or ""Discarded"". Which file would you like to use as a base for the new file?",
+    LTEXT           "Some of the differences are not marked as\n""Use File 1"" or ""Use File 2"".\nWhich file would you like to use as a base for the new file?",
                     IDC_STATIC,15,16,148,35
     PUSHBUTTON      "File &1",IDNO,7,61,50,14
 END
@@ -798,8 +798,8 @@ BEGIN
                             "Compare all files in two directories\nCompare directories"
     ID_FILE_COMPAREFILES    "Compare two files\nCompare files"
     ID_FILE_PREFERENCES     "Change program preferences\nPreferences"
-    ID_EDIT_ACCEPT          "Use File 2 text\nFile 2"
-    ID_EDIT_DECLINE         "Use File 1 text\nDiscard"
+    ID_EDIT_ACCEPT          "Merge File 2 text\nFile 2 text"
+    ID_EDIT_DECLINE         "Merge File 1 text\nDiscard"
     ID_EDIT_GOTONEXTDIFF    "Go to the next difference\nNext difference"
 END
 

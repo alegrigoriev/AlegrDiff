@@ -172,32 +172,26 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 			{
 				Color = pApp->m_AddedTextColor;
 				pFont = & pApp->m_AddedFont;
-				if (pSection->pDiffSection != NULL)
+				if (pSection->IsAccepted())
 				{
-					if (pSection->pDiffSection->IsAccepted())
-					{
-						BackgroundColor = pApp->m_AcceptedTextBackgroundColor;
-					}
-					else if (pSection->pDiffSection->IsDeclined())
-					{
-						BackgroundColor = pApp->m_DiscardedTextBackgroundColor;
-					}
+					BackgroundColor = pApp->m_AcceptedTextBackgroundColor;
+				}
+				else if (pSection->IsDeclined())
+				{
+					BackgroundColor = pApp->m_DiscardedTextBackgroundColor;
 				}
 			}
 			else if (pSection->Attr & pSection->Erased)
 			{
 				Color = pApp->m_ErasedTextColor;
 				pFont = & pApp->m_ErasedFont;
-				if (pSection->pDiffSection != NULL)
+				if (pSection->IsAccepted())
 				{
-					if (pSection->pDiffSection->IsAccepted())
-					{
-						BackgroundColor = pApp->m_DiscardedTextBackgroundColor;
-					}
-					else if (pSection->pDiffSection->IsDeclined())
-					{
-						BackgroundColor = pApp->m_AcceptedTextBackgroundColor;
-					}
+					BackgroundColor = pApp->m_DiscardedTextBackgroundColor;
+				}
+				else if (pSection->IsDeclined())
+				{
+					BackgroundColor = pApp->m_AcceptedTextBackgroundColor;
 				}
 			}
 			else
@@ -1332,6 +1326,11 @@ void CDiffFileView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* 
 {
 	CView::OnActivateView(bActivate, pActivateView, pDeactivateView);
 	if (0) TRACE("bActivate=%d, this=%08X, pActivateView=%08X\n", bActivate, this, pActivateView);
+	if ( ! AfxGetMainWnd()->IsWindowEnabled())
+	{
+		// modal dialog is running
+		return;
+	}
 	if (m_OnActivateViewEntered)
 	{
 		return;

@@ -48,11 +48,18 @@ END_MESSAGE_MAP()
 // CAlegrDiffView construction/destruction
 
 CAlegrDiffView::CAlegrDiffView()
-	:m_SortColumn(ColumnSubdir),
-	m_bAscendingOrder(true)
 {
-	// TODO: add construction code here
-
+	CThisApp * pApp = GetApp();
+	if (pApp->m_FileListSort >= 0)
+	{
+		m_bAscendingOrder = true;
+		m_SortColumn = eColumns(pApp->m_FileListSort);
+	}
+	else
+	{
+		m_bAscendingOrder = false;
+		m_SortColumn = eColumns(~pApp->m_FileListSort);
+	}
 }
 
 CAlegrDiffView::~CAlegrDiffView()
@@ -151,6 +158,15 @@ void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
 	{
 		m_SortColumn = eColumns(pNMListView->iSubItem);
 		m_bAscendingOrder = true;
+	}
+	CThisApp * pApp = GetApp();
+	if (m_bAscendingOrder)
+	{
+		pApp->m_FileListSort = m_SortColumn;
+	}
+	else
+	{
+		pApp->m_FileListSort = ~m_SortColumn;
 	}
 	OnUpdate(NULL, 0, NULL);
 	*pResult = 0;

@@ -64,6 +64,7 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_MinMatchingChars(3),
 	m_NumberOfIdenticalLines(5),
 	m_PercentsOfLookLikeDifference(30),
+	m_FileListSort(CAlegrDiffView::ColumnSubdir),
 	m_MinIdenticalLines(5)
 {
 	m_NormalLogFont.lfCharSet = ANSI_CHARSET;
@@ -313,6 +314,11 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("FontPointSize"), m_FontPointSize, 100, 30, 500);
 	Profile.AddItem(_T("Settings"), _T("TabIndent"), m_TabIndent, 4, 1, 32);
 	Profile.AddItem(_T("Settings"), _T("UsedFilenameFilter"), m_UsedFilenameFilter, 0, 0, 8);
+
+	Profile.AddItem(_T("Settings"), _T("FileListSort"), m_FileListSort,
+					CAlegrDiffView::ColumnSubdir,
+					~CAlegrDiffView::ColumnComparisionResult,
+					CAlegrDiffView::ColumnComparisionResult);
 
 	Profile.AddItem(_T("Settings"), _T("RecurseSubdirs"), m_bRecurseSubdirs, false);
 	Profile.AddItem(_T("Settings"), _T("InitialDir1"), m_FileDir1, _T(""));

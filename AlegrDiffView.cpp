@@ -16,12 +16,14 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CAlegrDiffView
 
+DWORD AFXAPI _AfxGetComCtlVersion();
+
 IMPLEMENT_DYNCREATE(CAlegrDiffView, CListView)
 
 BEGIN_MESSAGE_MAP(CAlegrDiffView, CListView)
 	//{{AFX_MSG_MAP(CAlegrDiffView)
 	ON_NOTIFY_REFLECT(LVN_COLUMNCLICK, OnColumnclick)
-	ON_NOTIFY_REFLECT(LVN_GETDISPINFO, OnGetdispinfo)
+	ON_NOTIFY_REFLECT(NM_DBLCLK, OnDblclk)
 	//}}AFX_MSG_MAP
 	// Standard printing commands
 	ON_COMMAND(ID_FILE_PRINT, CView::OnFilePrint)
@@ -33,6 +35,8 @@ END_MESSAGE_MAP()
 // CAlegrDiffView construction/destruction
 
 CAlegrDiffView::CAlegrDiffView()
+	:m_SortColumn(ColumnSubdir),
+	m_bAscendingOrder(true)
 {
 	// TODO: add construction code here
 
@@ -112,11 +116,11 @@ void CAlegrDiffView::OnInitialUpdate()
 	// set style, header columns
 	CListCtrl * pList = &GetListCtrl();
 	CHeaderCtrl * pHeader = pList->GetHeaderCtrl();
-	pList->InsertColumn(0, "File Name", LVCFMT_LEFT, 200, 0);
-	pList->InsertColumn(1, "Subdirectory", LVCFMT_LEFT, 200, 1);
-	pList->InsertColumn(2, "1st Modified at", LVCFMT_LEFT, 150, 2);
-	pList->InsertColumn(3, "2nd Modified at", LVCFMT_LEFT, 150, 3);
-	pList->InsertColumn(4, "Comparision result", LVCFMT_LEFT, 400, 4);
+	pList->InsertColumn(ColumnName, "File Name", LVCFMT_LEFT, 200, ColumnName);
+	pList->InsertColumn(ColumnSubdir, "Subdirectory", LVCFMT_LEFT, 200, ColumnSubdir);
+	pList->InsertColumn(ColumnDate1, "1st Modified at", LVCFMT_LEFT, 150, ColumnDate1);
+	pList->InsertColumn(ColumnDate2, "2nd Modified at", LVCFMT_LEFT, 150, ColumnDate2);
+	pList->InsertColumn(ColumnComparisionResult, "Comparision result", LVCFMT_LEFT, 400, ColumnComparisionResult);
 	pList->SetExtendedStyle(pList->GetExtendedStyle() | LVS_EX_FULLROWSELECT);
 }
 
@@ -124,7 +128,16 @@ void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
 	// change sort order
-
+	if (m_SortColumn == pNMListView->iSubItem)
+	{
+		m_bAscendingOrder = ! m_bAscendingOrder;
+	}
+	else
+	{
+		m_SortColumn = eColumns(pNMListView->iSubItem);
+		m_bAscendingOrder = true;
+	}
+	OnUpdate(NULL, 0, NULL);
 	*pResult = 0;
 }
 
@@ -147,6 +160,63 @@ CString FileTimeToStr(FILETIME FileTime, LCID locale = LOCALE_USER_DEFAULT)
 	return result;
 }
 
+void CAlegrDiffView::SortPairArray(CArray<FilePair *,FilePair *> & PairArray, FilePair * pPairs, int nCount)
+{
+	PairArray.SetSize(nCount);
+	for (int i = 0; i < nCount && pPairs != NULL; i++, pPairs = pPairs->pNext)
+	{
+		PairArray[i] = pPairs;
+	}
+	PairArray.SetSize(i);
+	int (_cdecl * SortFunc)(const void * , const void * );
+	if (m_bAscendingOrder)
+	{
+		switch (m_SortColumn)
+		{
+		case ColumnName:
+			SortFunc = FilePair::NameSortFunc;
+			break;
+		default:
+		case ColumnSubdir:
+			SortFunc = FilePair::DirNameSortFunc;
+			break;
+		case ColumnDate1:
+			SortFunc = FilePair::Time1SortFunc;
+			break;
+		case ColumnDate2:
+			SortFunc = FilePair::Time2SortFunc;
+			break;
+		case ColumnComparisionResult:
+			SortFunc = FilePair::ComparisionSortFunc;
+			break;
+		}
+	}
+	else
+	{
+		switch (m_SortColumn)
+		{
+		case ColumnName:
+			SortFunc = FilePair::NameSortBackwardsFunc;
+			break;
+		default:
+		case ColumnSubdir:
+			SortFunc = FilePair::DirNameSortBackwardsFunc;
+			break;
+		case ColumnDate1:
+			SortFunc = FilePair::Time1SortBackwardsFunc;
+			break;
+		case ColumnDate2:
+			SortFunc = FilePair::Time2SortBackwardsFunc;
+			break;
+		case ColumnComparisionResult:
+			SortFunc = FilePair::ComparisionSortBackwardsFunc;
+			break;
+		}
+	}
+
+	qsort(PairArray.GetData(), i, sizeof (FilePair *), SortFunc);
+}
+
 void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 {
 	// fill the list control
@@ -156,9 +226,15 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	CAlegrDiffDoc * pDoc = GetDocument();
 
 	FilePair * pPair = pDoc->m_pPairList;
+	CArray<FilePair *,FilePair *> PairArray;
 
-	for (int item = 0; NULL != pPair; item++, pPair = pPair->pNext)
+	SortPairArray(PairArray, pDoc->m_pPairList, pDoc->m_nFilePairs);
+
+	pListCtrl->SetItemCount(PairArray.GetSize());
+
+	for (int item = 0; item < PairArray.GetSize(); item++)
 	{
+		FilePair * pPair = PairArray[item];
 		FileItem * pFileItem = pPair->pFirstFile;
 		if (NULL == pFileItem)
 		{
@@ -172,39 +248,54 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		lvi.lParam = LPARAM(pFileItem);
 		pListCtrl->InsertItem(& lvi);
 
-		pListCtrl->SetItemText(item, 1, (LPTSTR)pFileItem->GetSubdir());
+		pListCtrl->SetItemText(item, ColumnSubdir, (LPTSTR)pFileItem->GetSubdir());
 		// set modified time/date
 		CString datetime;
 		if (NULL != pPair->pFirstFile)
 		{
 			datetime = FileTimeToStr(pPair->pFirstFile->GetLastWriteTime());
-			pListCtrl->SetItemText(item, 2, datetime);
+			pListCtrl->SetItemText(item, ColumnDate1, datetime);
 		}
 		else
 		{
-			pListCtrl->SetItemText(item, 2, _T(""));
+			pListCtrl->SetItemText(item, ColumnDate1, _T(""));
 		}
 		if (NULL != pPair->pSecondFile)
 		{
 			datetime = FileTimeToStr(pPair->pSecondFile->GetLastWriteTime());
-			pListCtrl->SetItemText(item, 3, datetime);
+			pListCtrl->SetItemText(item, ColumnDate2, datetime);
 		}
 		else
 		{
-			pListCtrl->SetItemText(item, 3, _T(""));
+			pListCtrl->SetItemText(item, ColumnDate2, _T(""));
 		}
 		CString ComparisionResult = pPair->GetComparisionResult();
-		pListCtrl->SetItemText(item, 4, ComparisionResult);
+		pListCtrl->SetItemText(item, ColumnComparisionResult, ComparisionResult);
 	}
 
 	UnlockWindowUpdate();
 }
 
+#if 0
 void CAlegrDiffView::OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	LV_DISPINFO* pDispInfo = (LV_DISPINFO*)pNMHDR;
 	FilePair * pPair = (FilePair *)pDispInfo->item.lParam;
 	TRACE("CAlegrDiffView::OnGetdispinfo:pPair=%x\n", pPair);
 	pDispInfo->item.pszText = _T("OK");
+	*pResult = 0;
+}
+#endif
+void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	CListCtrl * pListCtrl = & GetListCtrl();
+	NMLISTVIEW * pNmlv = (NMLISTVIEW *) pNMHDR;
+	// open new view for the files
+	// compare two files
+	if (_AfxGetComCtlVersion() >= 0x00040070)
+	{
+	}
+
+//    int nItem = p;
 	*pResult = 0;
 }

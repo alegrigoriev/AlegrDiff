@@ -53,6 +53,7 @@ protected:
 	afx_msg BOOL OnBarCheckStatusBar(UINT nID);
 	afx_msg BOOL OnBarCheckToolbar(UINT nID);
 	afx_msg BOOL OnBarCheckRebar(UINT nID);
+	afx_msg void OnDestroy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -64,6 +64,8 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_bFindBackward(false),
 	m_bShowToolbar(true),
 	m_bShowStatusBar(true),
+	m_bOpenMaximized(true),
+	m_bOpenChildMaximized(true),
 	m_MinimalLineLength(2),
 	m_MinMatchingChars(3),
 	m_NumberOfIdenticalLines(5),
@@ -160,11 +162,14 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("FindBackward"), m_bFindBackward, false);
 	Profile.AddItem(_T("Settings"), _T("ShowToolbar"), m_bShowToolbar, true);
 	Profile.AddItem(_T("Settings"), _T("ShowStatusBar"), m_bShowStatusBar, true);
+	Profile.AddItem(_T("Settings"), _T("OpenChildMaximized"), m_bOpenChildMaximized, true);
+	Profile.AddItem(_T("Settings"), _T("OpenMaximized"), m_bOpenMaximized, true);
 
 	Profile.AddItem(_T("Settings"), _T("MinimalLineLength"), m_MinimalLineLength, 2, 1, 2048);
 	Profile.AddItem(_T("Settings"), _T("NumberOfIdenticalLines"), m_NumberOfIdenticalLines, 5, 1, 50);
 	Profile.AddItem(_T("Settings"), _T("PercentsOfLookLikeDifference"), m_PercentsOfLookLikeDifference, 30, 0, 99);
 	Profile.AddItem(_T("Settings"), _T("MinMatchingChars"), m_MinMatchingChars, 3, 1, 32);
+	Profile.AddItem(_T("Settings"), _T("GoToLineFileSelection"), m_GoToLineFileSelection, 0, 0, 2);
 
 	Profile.AddItem(_T("Settings"), _T("BinaryFiles"), m_sBinaryFilesFilter,
 					_T("*.exe;*.dll;*.sys;*.obj;*.pdb;*.zip"));
@@ -246,7 +251,13 @@ BOOL CAlegrDiffApp::InitInstance()
 #endif
 	// The main window has been initialized, so show and update it.
 	m_pMainWnd->DragAcceptFiles();
-	pMainFrame->ShowWindow(SW_SHOWMAXIMIZED);
+	int nCmdShow = SW_SHOWDEFAULT;
+	if (m_bOpenMaximized)
+	{
+		nCmdShow = SW_SHOWMAXIMIZED;
+	}
+	pMainFrame->ShowWindow(nCmdShow);
+
 	pMainFrame->UpdateWindow();
 	// process names from the command line
 	ParseCommandLine();

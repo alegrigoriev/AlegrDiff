@@ -20,8 +20,17 @@ public:
 	//{{AFX_DATA(CGotoLineDialog)
 	enum { IDD = IDD_DIALOG_GOTO_LINE };
 	UINT	m_LineNumber;
+	int		m_GoToLineFileSelection;
 	//}}AFX_DATA
+	UINT m_FirstFileNumLines;
+	UINT m_SecondFileNumLines;
+	UINT m_CombinedFileNumLines;
 
+	UINT m_FirstFileLine;
+	UINT m_SecondFileLine;
+	UINT m_CombinedFileLine;
+
+	BOOL m_bSingleFile;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -35,7 +44,10 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CGotoLineDialog)
-	// NOTE: the ClassWizard will add member functions here
+	afx_msg void OnRadioFirstFile();
+	afx_msg void OnRadioSecondFile();
+	afx_msg void OnRadioCombinedFile();
+	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

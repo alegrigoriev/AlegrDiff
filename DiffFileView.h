@@ -67,6 +67,7 @@ public:
 	int LinesInView() const { return m_VisibleRect.bottom - m_VisibleRect.top; }
 	int CharsInView() const { return m_VisibleRect.right - m_VisibleRect.left; }
 	void MakePositionVisible(int line, int pos);
+	void MakeCaretCenteredRangeVisible(TextPos NewPos, TextPos EndPos);
 	void MakeCaretVisible()
 	{
 		CFilePairDoc * pDoc = GetDocument();
@@ -78,7 +79,8 @@ public:
 		CFilePairDoc * pDoc = GetDocument();
 		MakePositionCentered(pDoc->m_CaretPos.line, pDoc->m_CaretPos.pos);
 	}
-	void BringPositionToBounds(TextPos textpos, const CRect & AllowedBounds, const CRect & BringToBounds);
+	void BringPositionsToBounds(TextPos textpos, TextPos endpos,
+								const CRect & AllowedBounds, const CRect & BringToBounds);
 
 	void InvalidateRange(TextPos begin, TextPos end);
 

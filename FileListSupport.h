@@ -352,8 +352,10 @@ public:
 	PairCheckResult CheckForFilesChanged();
 	PairCheckResult ReloadIfChanged();
 
-	TextPos NextDifference(TextPos PosFrom, BOOL IgnoreWhitespaces);
-	TextPos PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces);
+	bool NextDifference(TextPos PosFrom, BOOL IgnoreWhitespaces,
+						TextPos * DiffPos, TextPos * EndPos);
+	bool PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces,
+						TextPos * DiffPos, TextPos * EndPos);
 
 	int GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, bool bIgnoreWhitespaces);
 	BOOL ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int Set, int Reset);

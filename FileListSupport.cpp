@@ -1425,21 +1425,27 @@ DWORD FilePair::CompareTextFiles(bool bCompareAll)
 	CThisApp * pApp = GetApp();
 	int nLine1 = 0;
 	int nLine2 = 0;
+
 	int NumLines1 = pFirstFile->GetNumLines();
+	int NumNonBlankLines1 = pFirstFile->m_NormalizedHashSortedLines.GetSize();
+
 	int NumLines2 = pSecondFile->GetNumLines();
+	int NumNonBlankLines2 = pSecondFile->m_NormalizedHashSortedLines.GetSize();
+
 	// build list of equal sections
 	while (nLine1 < NumLines1
 			&& nLine2 < NumLines2)
 	{
 		// find the beginning of the section
 		// find a few identical lines
+		TRACE("nLine1 = %d, nLine2 = %d, looking for identical section\n", nLine1, nLine2);
 		while (nLine1 < NumLines1
 				&& nLine2 < NumLines2)
 		{
 			for (int dist = 0; dist < pApp->m_MaxSearchDistance; dist++)
 			{
 				const FileLine * Line1 = pFirstFile->GetLine(nLine1+dist);
-				if ( ! Line1->IsBlank())
+				if (Line1->IsBlank())
 				{
 					// check the lines in file2 in range Line2 to Line2+dist
 #if 0
@@ -1489,21 +1495,97 @@ DWORD FilePair::CompareTextFiles(bool bCompareAll)
 						(FileLine *const *) pSecondFile->m_NormalizedHashSortedLines.GetData(),
 						pSecondFile->m_NormalizedHashSortedLines.GetSize(),
 						LineHashComparisionFunc);
+					int nFoundIndex = ppLine - pSecondFile->m_NormalizedHashSortedLines.GetData();
 #ifdef _DEBUG
 					{
 						// verify that the correct position found
-						int nIndex = ppLine - pSecondFile->m_NormalizedHashSortedLines.GetData();
-						if (nIndex < 0 || nIndex >= pSecondFile->m_NormalizedHashSortedLines.GetSize())
+						if (nFoundIndex < 0 || nFoundIndex > pSecondFile->m_NormalizedHashSortedLines.GetSize())
 						{
-							TRACE("Wrong pointer in m_NormalizedHashSortedLines array\n");
+							TRACE("Wrong pointer %d in m_NormalizedHashSortedLines array (size=%d)\n",
+								nFoundIndex, pSecondFile->m_NormalizedHashSortedLines.GetSize());
+							DebugBreak();
 						}
 						else
 						{
-							//if (
+							// the item should be >= than the key,
+							// and the previous item should be < than key
+							if (nFoundIndex < pSecondFile->m_NormalizedHashSortedLines.GetSize())
+							{
+								const FileLine * pFoundLine = *ppLine;
+								if (pFoundLine->GetNormalizedHash() < Line1->GetNormalizedHash()
+									|| (pFoundLine->GetNormalizedHash() == Line1->GetNormalizedHash()
+										&& pFoundLine->GetLineNumber() < nLine2))
+								{
+									TRACE("Found index: %d, total lines: %d, "
+										"Key hash=%X, LineNumber=%d  > found hash=%x, LineNumber=%d\n",
+										nFoundIndex, pSecondFile->m_NormalizedHashSortedLines.GetSize(),
+										Line1->GetNormalizedHash(), nLine2,
+										pFoundLine->GetNormalizedHash(),
+										pFoundLine->GetLineNumber());
+									DebugBreak();
+								}
+							}
+							if (nFoundIndex >= 1)
+							{
+								const FileLine * pPrevLine = *(ppLine-1);
+								if ( pPrevLine->GetNormalizedHash() > Line1->GetNormalizedHash()
+									|| (pPrevLine->GetNormalizedHash() == Line1->GetNormalizedHash()
+										&& pPrevLine->GetLineNumber() >= nLine2))
+								{
+									TRACE("Found index: %d, total lines: %d, "
+										"Key hash=%X, LineNumber=%d,  <= previous hash=%x, LineNumber=%d\n",
+										nFoundIndex, pSecondFile->m_NormalizedHashSortedLines.GetSize(),
+										Line1->GetNormalizedHash(), nLine2,
+										pPrevLine->GetNormalizedHash(),
+										pPrevLine->GetLineNumber());
+									DebugBreak();
+								}
+							}
+
 						}
 					}
 #endif
+					// check that the exact match found
+					if (nFoundIndex < NumNonBlankLines2
+						&& Line1->IsNormalizedEqual(*ppLine))
+					{
+						// see if a few non-blank lines that follow, will match
+						int n1 = nLine1 + 1;
+						int n2 = (*ppLine)->GetLineNumber() + 1;
+						int NumEqual = 1;
+						// check if a few non-blank lines more are the same
+						while(n1 < NumLines1 && n2 < NumLines2
+							&& NumEqual < pApp->m_MinIdenticalLines
+							&& n1 - nLine1 < pApp->m_MaxSearchDistance)
+						{
+							const FileLine * L1 = pFirstFile->GetLine(n1);
+							if (L1->IsBlank())
+							{
+								n1++;
+								continue;
+							}
+							const FileLine * L2 = pSecondFile->GetLine(n2);
+							if (L2->IsBlank())
+							{
+								n2++;
+								continue;
+							}
+							if ( ! L1->IsNormalizedEqual(L2))
+							{
+								break;
+							}
+							n1++;
+							n2++;
+							NumEqual++;
+						}
+						if (NumEqual >= pApp->m_MinIdenticalLines)
+						{
+							// match found
+							break;
+						}
+					}
 #endif
+
 				}
 			}
 		}

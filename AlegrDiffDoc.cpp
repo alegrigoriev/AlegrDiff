@@ -446,7 +446,8 @@ CFilePairDoc::CFilePairDoc()
 	: m_TotalLines(0),
 	m_pFilePair(NULL),
 	m_CopyDisabled(false),
-	m_CaretPos(0, 0)
+	m_CaretPos(0, 0, 0)
+	, m_SelectionAnchor(0, 0, 0)
 {
 	m_ComparisonResult[0] = 0;
 	m_bIgnoreWhitespaces = GetApp()->m_bIgnoreWhitespaces;
@@ -533,7 +534,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 	SetCaretPosition(0, 0, SetPositionCancelSelection);
 }
 
-void CFilePairDoc::SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags)
+void CFilePairDoc::SetSelection(TextPosDisplay CaretPos, TextPosDisplay AnchorPos, int flags)
 {
 	m_SelectionAnchor = AnchorPos;
 	SetCaretPosition(CaretPos.pos, CaretPos.line, flags & ~SetPositionCancelSelection);
@@ -575,12 +576,12 @@ void CFilePairDoc::SetCaretPosition(int pos, int line, int flags)
 	}
 	if (m_WordSelectionMode)
 	{
-		TextPos AnchorBegin = m_OriginalSelectionAnchor;
-		TextPos AnchorEnd = m_OriginalSelectionAnchor;
+		TextPosDisplay AnchorBegin = m_OriginalSelectionAnchor;
+		TextPosDisplay AnchorEnd = m_OriginalSelectionAnchor;
 		GetWordOnPos(m_OriginalSelectionAnchor, AnchorBegin, AnchorEnd);
 
-		TextPos Begin = m_CaretPos;
-		TextPos End = m_CaretPos;
+		TextPosDisplay Begin = m_CaretPos;
+		TextPosDisplay End = m_CaretPos;
 		GetWordOnPos(m_CaretPos, Begin, End);
 
 		if (m_CaretPos < m_OriginalSelectionAnchor)
@@ -714,7 +715,6 @@ BEGIN_MESSAGE_MAP(CFilePairDoc, CAlegrDiffBaseDoc)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DECLINE, OnUpdateEditDecline)
 	ON_COMMAND(ID_FILE_MERGE_SAVE, OnFileMergeSave)
 	ON_COMMAND(ID_VIEW_IGNORE_WHITESPACES, OnViewIgnoreWhitespaces)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_IGNORE_WHITESPACES, OnUpdateViewIgnoreWhitespaces)
 	ON_UPDATE_COMMAND_UI(ID_FILE_COPY_FIRST_DIR_FILE, OnUpdateFileCopyFirstDirFile)
 	ON_COMMAND(ID_FILE_COPY_FIRST_DIR_FILE, OnFileCopyFirstDirFile)
 	ON_UPDATE_COMMAND_UI(ID_FILE_COPY_SECOND_DIR_FILE, OnUpdateFileCopySecondDirFile)
@@ -764,13 +764,13 @@ void CFilePairDoc::OnUpdateEditCopy(CCmdUI* pCmdUI)
 }
 
 ULONG CFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen,
-									TextPos pFrom, TextPos pTo,
+									TextPosDisplay pFrom, TextPosDisplay pTo,
 									int FileSelect)
 {
 	// FileSelect 1 - file 1, 2 - file 2, 0 = both files
 	ULONG TotalChars = 0;
 	CThisApp * pApp = GetApp();
-	TextPos begin, end;
+	TextPosDisplay begin, end;
 	if (pFrom < pTo)
 	{
 		begin = pFrom;
@@ -819,7 +819,7 @@ ULONG CFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen,
 		{
 			if ((pSection->Attr & pSection->Whitespace)
 				&& (pSection->Attr & pSection->Erased)
-				&& m_bIgnoreWhitespaces)
+				&& m_bIgnoreWhitespaces && 0 == FileSelect)
 			{
 				continue;   // don't show the section
 			}
@@ -1063,7 +1063,7 @@ void CFilePairDoc::OnViewRefresh()
 		return;
 	}
 	// check if there are any changes labeled
-	int flags = GetAcceptDeclineFlags(TextPos(0, 0), TextPos(GetTotalLines(), 0));
+	int flags = GetAcceptDeclineFlags(TextPosLine(0, 0), TextPosLine(GetTotalLines(), 0));
 	if (0 != (flags &
 			(StringSection::Declined
 				| StringSection::Accepted
@@ -1094,7 +1094,7 @@ void CFilePairDoc::OnViewRefresh()
 	}
 
 	TRACE("Reloading the files\n");
-	TextPos caretpos = m_CaretPos;
+	TextPosDisplay caretpos = m_CaretPos;
 
 	m_pFilePair->LoadFiles();   // make one more reference
 	m_pFilePair->Reference();
@@ -1158,8 +1158,8 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 		return false;
 	}
 	TCHAR line[2048];
-	TextPos LineSelectionAnchor = m_SelectionAnchor; //DisplayPosToLinePos(m_SelectionAnchor);
-	TextPos LineCaretPos = m_CaretPos; //DisplayPosToLinePos(m_CaretPos);
+	TextPosDisplay LineSelectionAnchor = m_SelectionAnchor; //DisplayPosToLinePos(m_SelectionAnchor);
+	TextPosDisplay LineCaretPos = m_CaretPos; //DisplayPosToLinePos(m_CaretPos);
 
 	int nSearchPos;
 	unsigned nSearchLine;
@@ -1229,7 +1229,8 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 					if (0 == _tcsncmp(pStr + nSearchPos, pStrToFind, nPatternLen))
 					{
 						// found
-						SetSelection(TextPos(nSearchLine, nSearchPos + nPatternLen), TextPos(nSearchLine, nSearchPos));
+						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, SearchScope),
+									TextPosDisplay(nSearchLine, nSearchPos, SearchScope));
 						return true;
 					}
 				}
@@ -1238,7 +1239,8 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 					if (0 ==_tcsnicmp(pStr + nSearchPos, pStrToFind, nPatternLen))
 					{
 						// found
-						SetSelection(TextPos(nSearchLine, nSearchPos + nPatternLen), TextPos(nSearchLine, nSearchPos));
+						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, SearchScope),
+									TextPosDisplay(nSearchLine, nSearchPos, SearchScope));
 						return true;
 					}
 				}
@@ -1273,7 +1275,8 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 					if (0 == _tcsncmp(pStr + nSearchPos, pStrToFind, nPatternLen))
 					{
 						// found
-						SetSelection(TextPos(nSearchLine, nSearchPos + nPatternLen), TextPos(nSearchLine, nSearchPos));
+						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, SearchScope),
+									TextPosDisplay(nSearchLine, nSearchPos, SearchScope));
 						return true;
 					}
 				}
@@ -1282,7 +1285,8 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 					if (0 ==_tcsnicmp(pStr + nSearchPos, pStrToFind, nPatternLen))
 					{
 						// found
-						SetSelection(TextPos(nSearchLine, nSearchPos + nPatternLen), TextPos(nSearchLine, nSearchPos));
+						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, SearchScope),
+									TextPosDisplay(nSearchLine, nSearchPos, SearchScope));
 						return true;
 					}
 				}
@@ -1307,7 +1311,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 	return false;
 }
 
-bool CFilePairDoc::GetWordOnPos(TextPos OnPos, TextPos &Start, TextPos &End)
+bool CFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, TextPosDisplay &End)
 {
 	if (OnPos.line >= (int)m_pFilePair->m_LinePairs.size())
 	{
@@ -1329,9 +1333,19 @@ bool CFilePairDoc::GetWordOnPos(TextPos OnPos, TextPos &Start, TextPos &End)
 	{
 		if ((pSection->Attr & pSection->Whitespace)
 			&& (pSection->Attr & pSection->Erased)
-			&& m_bIgnoreWhitespaces)
+			&& m_bIgnoreWhitespaces && 0 == OnPos.scope)
 		{
-			continue;   // don't show the section
+			continue;   // don't copy the section
+		}
+		if ((pSection->Attr & pSection->Erased)
+			&& 2 == OnPos.scope)
+		{
+			continue;   // don't copy the section
+		}
+		if ((pSection->Attr & pSection->Inserted)
+			&& 1 == OnPos.scope)
+		{
+			continue;   // don't copy the section
 		}
 		// if position is on the endo of line or on space, and the previous char is alpha, get the word to the left
 		if (CaretPos < nPos + pSection->Length
@@ -1442,7 +1456,7 @@ bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvok
 		if (m_CaretPos == m_SelectionAnchor
 			|| m_CaretPos.line != m_SelectionAnchor.line)
 		{
-			TextPos Begin, End;
+			TextPosDisplay Begin, End;
 			if (GetWordOnPos(m_CaretPos, Begin, End))
 			{
 				nBeginOffset = Begin.pos;
@@ -1565,7 +1579,7 @@ void CFilePairDoc::CaretLeftToWord(int SelectionFlags)
 		{
 			break;
 		}
-		pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen, 0);
+		pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen, m_CaretPos.scope);
 		if (NULL == pLine)
 		{
 			break;
@@ -1592,7 +1606,7 @@ void CFilePairDoc::CaretLeftToWord(int SelectionFlags)
 		if (CaretLine > 0)
 		{
 			CaretLine--;
-			pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen, 0);
+			pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen, m_CaretPos.scope);
 			CaretPos = StrLen;
 		}
 	}
@@ -1647,7 +1661,7 @@ void CFilePairDoc::CaretRightToWord(int SelectionFlags)
 		SetCaretPosition(0, CaretLine, SelectionFlags);
 		return;
 	}
-	pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen, 0);
+	pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen, m_CaretPos.scope);
 	if (CaretPos > StrLen)
 	{
 		CaretPos = StrLen;
@@ -1667,7 +1681,7 @@ void CFilePairDoc::CaretRightToWord(int SelectionFlags)
 			// go to the next line and skip the spaces
 			CaretLine++;
 			CaretPos = 0;
-			pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen, 0);
+			pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen, m_CaretPos.scope);
 			while (' ' == pLine[CaretPos])
 			{
 				CaretPos++;
@@ -1724,13 +1738,13 @@ void CFilePairDoc::OnEditAccept()
 						| StringSection::Discarded;
 		}
 
-		TextPos begin = DisplayPosToLinePos(m_SelectionAnchor);
-		TextPos end = DisplayPosToLinePos(m_CaretPos);
+		TextPosLine begin = DisplayPosToLinePos(m_SelectionAnchor);
+		TextPosLine end = DisplayPosToLinePos(m_CaretPos);
 		if (m_pFilePair->ModifyAcceptDeclineFlags(begin, end, SetFlags, ResetFlags))
 		{
 			InvalidatedRange ir;
-			ir.begin = LinePosToDisplayPos(begin);
-			ir.end = LinePosToDisplayPos(end);
+			ir.begin = begin;
+			ir.end = end;
 			UpdateAllViews(NULL, InvalidateRange, & ir);
 			SetModifiedFlag(TRUE);
 		}
@@ -1766,13 +1780,13 @@ void CFilePairDoc::OnEditDecline()
 						| StringSection::Included
 						| StringSection::Discarded;
 		}
-		TextPos begin = DisplayPosToLinePos(m_SelectionAnchor);
-		TextPos end = DisplayPosToLinePos(m_CaretPos);
+		TextPosLine begin = DisplayPosToLinePos(m_SelectionAnchor);
+		TextPosLine end = DisplayPosToLinePos(m_CaretPos);
 		if (m_pFilePair->ModifyAcceptDeclineFlags(begin, end, SetFlags, ResetFlags))
 		{
 			InvalidatedRange ir;
-			ir.begin = LinePosToDisplayPos(begin);
-			ir.end = LinePosToDisplayPos(end);
+			ir.begin = begin;
+			ir.end = end;
 			UpdateAllViews(NULL, InvalidateRange, & ir);
 			SetModifiedFlag(TRUE);
 		}
@@ -1796,8 +1810,8 @@ BOOL CFilePairDoc::SaveModified()
 	{
 		return TRUE;
 	}
-	int flags = m_pFilePair->GetAcceptDeclineFlags(TextPos(0, 0),
-													TextPos(GetTotalLines(), 0), false);
+	int flags = m_pFilePair->GetAcceptDeclineFlags(TextPosLine(0, 0),
+													TextPosLine(GetTotalLines(), 0), false);
 	if (0 != (flags & (StringSection::Declined | StringSection::Accepted
 				| StringSection::Included | StringSection::Discarded)))
 	{
@@ -1870,8 +1884,8 @@ END_MESSAGE_MAP()
 BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 {
 	// check if there are unmarked differences
-	int flags = GetAcceptDeclineFlags(TextPos(0, 0),
-									TextPos(GetTotalLines(), 0));
+	int flags = GetAcceptDeclineFlags(TextPosLine(0, 0),
+									TextPosLine(GetTotalLines(), 0));
 	int DefaultFlags = 0;
 	CThisApp * pApp = GetApp();
 	if (flags & StringSection::Undefined)
@@ -2110,43 +2124,34 @@ void CFilePairDoc::OnFileMergeSave()
 
 void CFilePairDoc::OnViewIgnoreWhitespaces()
 {
-	TextPos CaretLinePos = DisplayPosToLinePos(m_CaretPos);
-	TextPos AnchorLinePos = DisplayPosToLinePos(m_SelectionAnchor);
+	TextPosLine CaretLinePos = DisplayPosToLinePos(m_CaretPos);
+	TextPosLine AnchorLinePos = DisplayPosToLinePos(m_SelectionAnchor);
 
 	m_bIgnoreWhitespaces = ! m_bIgnoreWhitespaces;
 	GetApp()->m_bIgnoreWhitespaces = m_bIgnoreWhitespaces;
 
-	m_CaretPos = LinePosToDisplayPos(CaretLinePos);
-	m_SelectionAnchor = LinePosToDisplayPos(AnchorLinePos);
+	m_CaretPos = LinePosToDisplayPos(CaretLinePos, m_CaretPos.scope);
+	m_SelectionAnchor = LinePosToDisplayPos(AnchorLinePos, m_CaretPos.scope);
 
 	UpdateAllViews(NULL);
 }
 
-void CFilePairDoc::OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI)
+TextPosDisplay CFilePairDoc::LinePosToDisplayPos(TextPosLine position, int FileScope)
 {
-	pCmdUI->SetCheck(m_bIgnoreWhitespaces);
-}
-
-TextPos CFilePairDoc::LinePosToDisplayPos(TextPos position)
-{
-	LinePair * pPair = GetLinePair(position.line);
-	if (NULL == pPair)
+	if (NULL == m_pFilePair)
 	{
-		return position;
+		return TextPosDisplay(position.line, position.pos, FileScope);
 	}
-	return TextPos(position.line,
-					pPair->LinePosToDisplayPos(position.pos, m_bIgnoreWhitespaces));
+	return m_pFilePair->LinePosToDisplayPos(position, m_bIgnoreWhitespaces, FileScope);
 }
 // recalculates offset in the line with or without whitespaces shown to offset in the raw line
-TextPos CFilePairDoc::DisplayPosToLinePos(TextPos position)
+TextPosLine CFilePairDoc::DisplayPosToLinePos(TextPosDisplay position)
 {
-	LinePair * pPair = GetLinePair(position.line);
-	if (NULL == pPair)
+	if (NULL == m_pFilePair)
 	{
-		return position;
+		return TextPosLine(position.line, position.pos);
 	}
-	return TextPos(position.line,
-					pPair->DisplayPosToLinePos(position.pos, m_bIgnoreWhitespaces));
+	return m_pFilePair->DisplayPosToLinePos(position, m_bIgnoreWhitespaces);
 }
 
 LinePair * CFilePairDoc::GetLinePair(int line) const
@@ -2159,15 +2164,23 @@ LinePair * CFilePairDoc::GetLinePair(int line) const
 	return m_pFilePair->m_LinePairs[line];
 }
 
-int CFilePairDoc::GetAcceptDeclineFlags(TextPos begin, TextPos end)
+int CFilePairDoc::GetAcceptDeclineFlags(TextPosLine begin, TextPosLine end)
 {
 	if (NULL == m_pFilePair)
 	{
 		return StringSection::NoDifference;
 	}
-	return m_pFilePair->GetAcceptDeclineFlags(
-											DisplayPosToLinePos(begin), DisplayPosToLinePos(end), m_bIgnoreWhitespaces);
+	return m_pFilePair->GetAcceptDeclineFlags(begin, end, m_bIgnoreWhitespaces);
+}
 
+int CFilePairDoc::GetAcceptDeclineFlags(TextPosDisplay begin, TextPosDisplay end)
+{
+	if (NULL == m_pFilePair)
+	{
+		return StringSection::NoDifference;
+	}
+	return m_pFilePair->GetAcceptDeclineFlags(DisplayPosToLinePos(begin),
+											DisplayPosToLinePos(end), m_bIgnoreWhitespaces);
 }
 
 void CFilePairDoc::OnUpdateFileCopyFirstDirFile(CCmdUI* pCmdUI)
@@ -2295,7 +2308,9 @@ void CFilePairDoc::OnMergeInclude()
 {
 	if (NULL != m_pFilePair)
 	{
-		int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
+		TextPosLine begin = DisplayPosToLinePos(m_SelectionAnchor);
+		TextPosLine end = DisplayPosToLinePos(m_CaretPos);
+		int flags = GetAcceptDeclineFlags(begin, end);
 
 		int SetFlags = StringSection::Included;
 		int ResetFlags = StringSection::Declined
@@ -2311,13 +2326,11 @@ void CFilePairDoc::OnMergeInclude()
 						| StringSection::Discarded;
 		}
 
-		TextPos begin = DisplayPosToLinePos(m_SelectionAnchor);
-		TextPos end = DisplayPosToLinePos(m_CaretPos);
 		if (m_pFilePair->ModifyAcceptDeclineFlags(begin, end, SetFlags, ResetFlags))
 		{
 			InvalidatedRange ir;
-			ir.begin = LinePosToDisplayPos(begin);
-			ir.end = LinePosToDisplayPos(end);
+			ir.begin = begin;
+			ir.end = end;
 			UpdateAllViews(NULL, InvalidateRange, & ir);
 			SetModifiedFlag(TRUE);
 		}
@@ -2339,7 +2352,10 @@ void CFilePairDoc::OnMergeExclude()
 {
 	if (NULL != m_pFilePair)
 	{
-		int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
+		TextPosLine begin = DisplayPosToLinePos(m_SelectionAnchor);
+		TextPosLine end = DisplayPosToLinePos(m_CaretPos);
+
+		int flags = GetAcceptDeclineFlags(begin, end);
 
 		int SetFlags = StringSection::Discarded;
 		int ResetFlags = StringSection::Declined
@@ -2355,13 +2371,11 @@ void CFilePairDoc::OnMergeExclude()
 						| StringSection::Discarded;
 		}
 
-		TextPos begin = DisplayPosToLinePos(m_SelectionAnchor);
-		TextPos end = DisplayPosToLinePos(m_CaretPos);
 		if (m_pFilePair->ModifyAcceptDeclineFlags(begin, end, SetFlags, ResetFlags))
 		{
 			InvalidatedRange ir;
-			ir.begin = LinePosToDisplayPos(begin);
-			ir.end = LinePosToDisplayPos(end);
+			ir.begin = begin;
+			ir.end = end;
 			UpdateAllViews(NULL, InvalidateRange, & ir);
 			SetModifiedFlag(TRUE);
 		}

@@ -1,9 +1,11 @@
 TODO:
 
 Find full word only
+In 2-pane mode, go to another pane when added/removed text encountered
+2-pane mode for binary files
+Allow doublequotes in the search pattern
 Assign an index to the files during original sort (for faster sorting)
 Make icons for the dialogs
-Allow doublequotes in the search pattern
 Use OnActivateApp to refresh the files
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
 Copy binary dump as text
@@ -30,11 +32,9 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-"C:\\" shown in the list view title
 If the text comparison got aborted because of read error, this is not shown
-History gets lost  under Win9x
-Zero byte in text file is causing text not shown
-"Length" column On/Off not saved
+History gets lost under Win9x
+"Length" column On/Off not saved (in Win9x???)
 Focus after hiding files
 Blank line immediately following difference block is considered separate 
    for "Next Difference" command
@@ -43,8 +43,10 @@ Directory share name cannot be selected if no '\' appended
 Directory dialog allows to select network host. It won't return anything then.
 screen move in two directions may corrupt the image (??)
 Estimated time left is not shown while calculating a fingerpring of a big file   (???)
+"C:\\" shown in the list view title (???)
 
 Fixed:
+Zero byte in text file is causing text not shown
 If the comparison is very quick, the progress dialog may get stuck
 If the comparison got aborted because of read error, this is not shown
 Cannot switch to text mode, after fingerprint check
@@ -93,6 +95,7 @@ insufficient space allocated for copying files
 
 Done:
 
+Big-endian UNICODE files supported
 View files side by side
 Add Copy 1st file text, copy 2nd file text
 Save sizes of resizable dialogs for this session

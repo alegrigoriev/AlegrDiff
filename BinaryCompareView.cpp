@@ -1475,7 +1475,7 @@ void CBinaryCompareView::OnBindiffShowfirstfile()
 void CBinaryCompareView::OnUpdateBindiffShowfirstfile(CCmdUI *pCmdUI)
 {
 	FilePair * pPair = GetDocument()->GetFilePair();
-	if (NULL != pPair->pFirstFile
+	if (NULL != pPair->pFirstFile && ! pPair->pFirstFile->m_bIsPhantomFile
 		&& NULL != pPair->pSecondFile)
 	{
 		pCmdUI->Enable(TRUE);
@@ -1502,7 +1502,7 @@ void CBinaryCompareView::OnBindiffShow2ndfile()
 void CBinaryCompareView::OnUpdateBindiffShow2ndfile(CCmdUI *pCmdUI)
 {
 	FilePair * pPair = GetDocument()->GetFilePair();
-	if (NULL != pPair->pFirstFile
+	if (NULL != pPair->pFirstFile && ! pPair->pFirstFile->m_bIsPhantomFile
 		&& NULL != pPair->pSecondFile)
 	{
 		pCmdUI->Enable(TRUE);

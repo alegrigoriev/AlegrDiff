@@ -198,8 +198,8 @@ enum {
 class InvalidatedRange : public CObject
 {
 public:
-	TextPos begin;
-	TextPos end;
+	TextPosLine begin;  // line position
+	TextPosLine end;
 };
 
 void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, UINT FormatID, UINT DisabledItemID);

@@ -19,7 +19,8 @@ protected:
 
 // Attributes
 public:
-	CFilePairDoc* GetDocument();
+	typedef CFilePairDoc ThisDoc;
+	ThisDoc * GetDocument();
 	bool m_OnActivateViewEntered;
 
 // Operations
@@ -49,8 +50,8 @@ public:
 	// rectangle for BringCaretToBounds.
 	CRect m_PreferredRect;
 
-	TextPos m_DrawnSelBegin;
-	TextPos m_DrawnSelEnd;
+	TextPosDisplay m_DrawnSelBegin;
+	TextPosDisplay m_DrawnSelEnd;
 
 	bool m_LButtonDown;
 	bool m_TrackingSelection;
@@ -69,7 +70,7 @@ public:
 	int LinesInView() const { return m_VisibleRect.bottom - m_VisibleRect.top; }
 	int CharsInView() const { return m_VisibleRect.right - m_VisibleRect.left; }
 	void MakePositionVisible(int line, int pos);
-	void MakeCaretCenteredRangeVisible(TextPos NewPos, TextPos EndPos);
+	void MakeCaretCenteredRangeVisible(TextPosDisplay NewPos, TextPosDisplay EndPos);
 	void MakeCaretVisible()
 	{
 		CFilePairDoc * pDoc = GetDocument();
@@ -81,10 +82,11 @@ public:
 		CFilePairDoc * pDoc = GetDocument();
 		MakePositionCentered(pDoc->m_CaretPos.line, pDoc->m_CaretPos.pos);
 	}
-	void BringPositionsToBounds(TextPos textpos, TextPos endpos,
+	void BringPositionsToBounds(TextPosDisplay textpos, TextPosDisplay endpos,
 								const CRect & AllowedBounds, const CRect & BringToBounds);
 
-	void InvalidateRange(TextPos begin, TextPos end);
+	void InvalidateRange(TextPosDisplay begin, TextPosDisplay end);
+	void InvalidateRangeLine(TextPosLine begin, TextPosLine end);
 
 	void MoveCaretBy(int dx, int dy, int flags = SetPositionCancelSelection);
 	void SetCaretPosition(int pos, int line, int flags = SetPositionCancelSelection);
@@ -153,6 +155,7 @@ protected:
 	afx_msg void OnEditSelectAll();
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnEditCopy();
+	afx_msg void OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 public:

@@ -23,7 +23,6 @@ CDiffFileView::CDiffFileView()
 	m_FirstPosSeen(0),
 	m_LButtonDown(false),
 	m_TrackingSelection(false),
-	m_DrawnSelBegin(0, 0),
 	m_VisibleRect(0, 0, 0, 0),
 	m_PreferredRect(0, 0, 0, 0),
 	m_NumberMarginWidth(0),
@@ -34,7 +33,8 @@ CDiffFileView::CDiffFileView()
 	m_WheelAccumulator(0),
 	m_NumberOfPanes(1),
 	m_PaneWithFocus(0),
-	m_DrawnSelEnd(0, 0)
+	m_DrawnSelBegin(0, 0, 0),
+	m_DrawnSelEnd(0, 0, 0)
 {
 	// init font size, to avoid zero divide
 	m_FontMetric.tmAveCharWidth = 1;
@@ -80,6 +80,7 @@ BEGIN_MESSAGE_MAP(CDiffFileView, CView)
 	ON_WM_RBUTTONDOWN()
 	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
 	ON_WM_TIMER()
+	ON_UPDATE_COMMAND_UI(ID_VIEW_IGNORE_WHITESPACES, OnUpdateViewIgnoreWhitespaces)
 	//}}AFX_MSG_MAP
 	ON_COMMAND(IDC_VIEW_SIDE_BY_SIDE, OnViewSideBySide)
 	ON_UPDATE_COMMAND_UI(IDC_VIEW_SIDE_BY_SIDE, OnUpdateViewSideBySide)
@@ -135,8 +136,9 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 
 		if ((pSection->Attr & pSection->Whitespace)
 			&& (pSection->Attr & pSection->Erased)
-			&& pDoc->m_bIgnoreWhitespaces)
+			&& pDoc->m_bIgnoreWhitespaces && 0 == nFileSelect)
 		{
+			// the whitespaces are only hidden in single-pane mode
 			continue;   // don't show the section
 		}
 		LPCTSTR pText = pSection->pBegin;
@@ -191,7 +193,7 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 
 			if ((pSection->Attr & pSection->Inserted)
 				&& ! ((pSection->Attr & pSection->Whitespace)
-					&& pDoc->m_bIgnoreWhitespaces))
+					&& pDoc->m_bIgnoreWhitespaces && 0 == nFileSelect))
 			{
 				Color = pApp->m_AddedTextColor;
 				pFont = & pApp->m_AddedFont;
@@ -375,7 +377,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 
 		for (int nLine = m_FirstLineSeen, PosY = cr.top; PosY < cr.bottom; nLine++, PosY += nLineHeight)
 		{
-			TextPos SelBegin, SelEnd;
+			TextPosDisplay SelBegin, SelEnd;
 			if (pDoc->m_CaretPos < pDoc->m_SelectionAnchor)
 			{
 				SelBegin = pDoc->m_CaretPos;
@@ -559,7 +561,7 @@ BOOL CDiffFileView::PreCreateWindow(CREATESTRUCT& cs)
 
 void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
-	CFilePairDoc * pDoc = GetDocument();
+	ThisDoc * pDoc = GetDocument();
 	bool ShiftPressed = (0 != (0x8000 & GetKeyState(VK_SHIFT)));
 	bool CtrlPressed = (0 != (0x8000 & GetKeyState(VK_CONTROL)));
 	int SelectionFlags = SetPositionMakeVisible;
@@ -689,7 +691,7 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		// switch selection between panes
 		if (2 == m_NumberOfPanes)
 		{
-			TextPos begin, end;
+			TextPosDisplay begin, end;
 			if (pDoc->m_CaretPos < pDoc->m_SelectionAnchor)
 			{
 				begin = pDoc->m_CaretPos;
@@ -701,7 +703,11 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 				end = pDoc->m_CaretPos;
 			}
 
+			// TODO
 			InvalidateRange(begin, end);
+
+			TextPosLine CaretPosLine = pDoc->DisplayPosToLinePos(pDoc->m_CaretPos);
+			TextPosLine AnchorPosLine = pDoc->DisplayPosToLinePos(pDoc->m_SelectionAnchor);
 
 			if (0 == m_PaneWithFocus)
 			{
@@ -710,6 +716,20 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 			else
 			{
 				m_PaneWithFocus = 0;
+			}
+
+			pDoc->m_CaretPos = pDoc->LinePosToDisplayPos(CaretPosLine, m_PaneWithFocus + 1);
+			pDoc->m_SelectionAnchor = pDoc->LinePosToDisplayPos(AnchorPosLine, m_PaneWithFocus + 1);
+
+			if (pDoc->m_CaretPos < pDoc->m_SelectionAnchor)
+			{
+				begin = pDoc->m_CaretPos;
+				end = pDoc->m_SelectionAnchor;
+			}
+			else
+			{
+				begin = pDoc->m_SelectionAnchor;
+				end = pDoc->m_CaretPos;
 			}
 
 			InvalidateRange(begin, end);
@@ -981,16 +1001,37 @@ void CDiffFileView::UpdateHScrollBar()
 
 void CDiffFileView::MakePositionVisible(int line, int pos)
 {
-	BringPositionsToBounds(TextPos(line, pos), TextPos(line, pos), m_VisibleRect, m_VisibleRect);
+	ThisDoc * pDoc = GetDocument();
+	BringPositionsToBounds(TextPosDisplay(line, pos, pDoc->m_CaretPos.scope),
+							TextPosDisplay(line, pos, pDoc->m_CaretPos.scope), m_VisibleRect, m_VisibleRect);
 }
 
 void CDiffFileView::MakePositionCentered(int line, int pos)
 {
-	BringPositionsToBounds(TextPos(line, pos), TextPos(line, pos), m_VisibleRect, m_PreferredRect);
+	ThisDoc * pDoc = GetDocument();
+	BringPositionsToBounds(TextPosDisplay(line, pos, pDoc->m_CaretPos.scope),
+							TextPosDisplay(line, pos, pDoc->m_CaretPos.scope), m_VisibleRect, m_PreferredRect);
 }
 
-void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
+void CDiffFileView::InvalidateRangeLine(TextPosLine begin, TextPosLine end)
 {
+	CFilePairDoc * pDoc = GetDocument();
+
+	if (1 == m_NumberOfPanes)
+	{
+		InvalidateRange(pDoc->LinePosToDisplayPos(begin, 0), pDoc->LinePosToDisplayPos(end, 0));
+		return;
+	}
+	else
+	{
+		InvalidateRange(pDoc->LinePosToDisplayPos(begin, 1), pDoc->LinePosToDisplayPos(end, 1));
+		InvalidateRange(pDoc->LinePosToDisplayPos(begin, 2), pDoc->LinePosToDisplayPos(end, 2));
+	}
+}
+
+void CDiffFileView::InvalidateRange(TextPosDisplay begin, TextPosDisplay end)
+{
+	// begin, end is in display coordinates
 	ASSERT(end >= begin);
 	CRect r;
 	if (0) TRACE("InvalidateRange((%d, %d), (%d, %d))\n", begin, end);
@@ -998,7 +1039,13 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 	int nLinesInView = LinesInView();
 	int nCharsInView = CharsInView() + 1;
 
-	int nViewOffset = m_LineNumberMarginWidth + m_PaneWithFocus * GetPaneWidth();
+	int pane = 0;
+	if (m_NumberOfPanes > 1 && begin.scope > 0)
+	{
+		pane = begin.scope - 1;
+	}
+
+	int nViewOffset = m_LineNumberMarginWidth + pane * GetPaneWidth();
 
 	if (begin == end
 		|| end.line < m_FirstLineSeen
@@ -1162,6 +1209,7 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 		// Pane changes, ignore Shift
 		nFlags &= ~MK_SHIFT;
 		// reset old selection
+		GetDocument()->m_CaretPos.scope = nPane + 1;
 		SetCaretPosition(0, 0);
 	}
 
@@ -1401,15 +1449,15 @@ void CDiffFileView::OnCaptureChanged(CWnd *pWnd)
 void CDiffFileView::OnEditGotonextdiff()
 {
 	CFilePairDoc * pDoc = GetDocument();
-	TextPos NewPos;
-	TextPos EndPos;
-	if ( ! pDoc->GetFilePair()->NextDifference(pDoc->DisplayPosToLinePos(pDoc->m_CaretPos),
+	TextPosDisplay NewPos;
+	TextPosDisplay EndPos;
+
+	if ( ! pDoc->GetFilePair()->NextDifference(pDoc->m_CaretPos,
 												pDoc->m_bIgnoreWhitespaces, & NewPos, & EndPos))
 	{
 		return;
 	}
-	NewPos = pDoc->LinePosToDisplayPos(NewPos);
-	EndPos = pDoc->LinePosToDisplayPos(EndPos);
+
 	SetCaretPosition(NewPos.pos, NewPos.line, SetPositionCancelSelection);
 	// make caret position centered and the whole diff visible, if possible
 	MakeCaretCenteredRangeVisible(NewPos, EndPos);
@@ -1418,16 +1466,17 @@ void CDiffFileView::OnEditGotonextdiff()
 void CDiffFileView::OnEditGotoprevdiff()
 {
 	CFilePairDoc * pDoc = GetDocument();
-	TextPos NewPos;
-	TextPos EndPos;
-	if ( ! pDoc->GetFilePair()->PrevDifference(pDoc->DisplayPosToLinePos(pDoc->m_CaretPos),
+	TextPosDisplay NewPos;
+	TextPosDisplay EndPos;
+
+	if ( ! pDoc->GetFilePair()->PrevDifference(pDoc->m_CaretPos,
 												pDoc->m_bIgnoreWhitespaces, & NewPos, & EndPos))
 	{
 		return;
 	}
-	NewPos = pDoc->LinePosToDisplayPos(NewPos);
-	EndPos = pDoc->LinePosToDisplayPos(EndPos);
+
 	SetCaretPosition(NewPos.pos, NewPos.line, SetPositionCancelSelection);
+	// make caret position centered and the whole diff visible, if possible
 	MakeCaretCenteredRangeVisible(NewPos, EndPos);
 }
 
@@ -1443,7 +1492,7 @@ void CDiffFileView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		if (0) TRACE("Caret: (%d, %d), sel anchor: (%d, %d), prev: (%d, %d), (%d, %d)\n",
 					pDoc->m_CaretPos, pDoc->m_SelectionAnchor,
 					m_DrawnSelBegin, m_DrawnSelEnd);
-		TextPos Sel[4];
+		TextPosDisplay Sel[4];
 		if (pDoc->m_CaretPos < pDoc->m_SelectionAnchor)
 		{
 			Sel[0] = pDoc->m_CaretPos;
@@ -1479,7 +1528,7 @@ void CDiffFileView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		}
 		if (Sel[1] > Sel[2])
 		{
-			TextPos tmp = Sel[1];
+			TextPosDisplay tmp = Sel[1];
 			Sel[1] = Sel[2];
 			Sel[2] = tmp;
 		}
@@ -1492,7 +1541,7 @@ void CDiffFileView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		InvalidatedRange * pRange = dynamic_cast<InvalidatedRange *>(pHint);
 		if (NULL != pRange)
 		{
-			TextPos begin, end;
+			TextPosLine begin, end;
 			if (pRange->begin <= pRange->end)
 			{
 				begin = pRange->begin;
@@ -1503,8 +1552,8 @@ void CDiffFileView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 				end = pRange->begin;
 				begin = pRange->end;
 			}
-
-			InvalidateRange(begin, end);
+			// end, begin are in source line coordinates
+			InvalidateRangeLine(begin, end);
 		}
 	}
 	else if (lHint == UpdateViewsFilePairChanged)
@@ -1534,12 +1583,12 @@ void CDiffFileView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	}
 }
 
-void CDiffFileView::MakeCaretCenteredRangeVisible(TextPos NewPos, TextPos EndPos)
+void CDiffFileView::MakeCaretCenteredRangeVisible(TextPosDisplay NewPos, TextPosDisplay EndPos)
 {
 	BringPositionsToBounds(NewPos, EndPos, m_VisibleRect, m_PreferredRect);
 }
 
-void CDiffFileView::BringPositionsToBounds(TextPos textpos, TextPos endpos, const CRect & AllowedBounds, const CRect & BringToBounds)
+void CDiffFileView::BringPositionsToBounds(TextPosDisplay textpos, TextPosDisplay endpos, const CRect & AllowedBounds, const CRect & BringToBounds)
 {
 	// if caret position is inside bounds, it doesn't need to change
 	int CaretLine = textpos.line - m_FirstLineSeen;
@@ -1866,11 +1915,14 @@ void CDiffFileView::OnRButtonDown(UINT nFlags, CPoint point)
 	}
 	else
 	{
-		TextPos NewPos(nLine, m_FirstPosSeen + (point1.x + CharWidth() / 2) / CharWidth());
-		if (GetDocument()->m_CaretPos <= GetDocument()->m_SelectionAnchor
-			&& (NewPos < GetDocument()->m_CaretPos || NewPos > GetDocument()->m_SelectionAnchor)
-			|| GetDocument()->m_CaretPos > GetDocument()->m_SelectionAnchor
-			&& (NewPos > GetDocument()->m_CaretPos || NewPos < GetDocument()->m_SelectionAnchor))
+		ThisDoc * pDoc = GetDocument();
+
+		TextPosDisplay NewPos(nLine, short(m_FirstPosSeen + (point1.x + CharWidth() / 2) / CharWidth()),
+							pDoc->m_CaretPos.scope);
+		if (pDoc->m_CaretPos <= pDoc->m_SelectionAnchor
+			&& (NewPos < pDoc->m_CaretPos || NewPos > pDoc->m_SelectionAnchor)
+			|| pDoc->m_CaretPos > pDoc->m_SelectionAnchor
+			&& (NewPos > pDoc->m_CaretPos || NewPos < pDoc->m_SelectionAnchor))
 		{
 			SetCaretPosition(NewPos.pos, nLine, flags);
 		}
@@ -1881,7 +1933,9 @@ void CDiffFileView::OnRButtonDown(UINT nFlags, CPoint point)
 
 void CDiffFileView::OnEditSelectAll()
 {
-	GetDocument()->SetSelection(TextPos(0, 0), TextPos(GetDocument()->GetTotalLines(), 0));
+	ThisDoc * pDoc = GetDocument();
+	pDoc->SetSelection(TextPosDisplay(0, 0, pDoc->m_CaretPos.scope),
+						TextPosDisplay(pDoc->GetTotalLines(), 0, pDoc->m_CaretPos.scope));
 	CreateAndShowCaret();
 }
 
@@ -1933,7 +1987,8 @@ void CDiffFileView::OnActivateFrame(UINT nState, CFrameWnd* pDeactivateFrame)
 
 void CDiffFileView::OnViewSideBySide()
 {
-	FilePair * pFilePair = GetDocument()->GetFilePair();
+	ThisDoc * pDoc = GetDocument();
+	FilePair * pFilePair = pDoc->GetFilePair();
 
 	if (pFilePair->pFirstFile != NULL
 		&& pFilePair->pSecondFile != NULL)
@@ -1942,10 +1997,13 @@ void CDiffFileView::OnViewSideBySide()
 		{
 			m_NumberOfPanes = 1;
 			m_PaneWithFocus = 0;
+			pDoc->m_CaretPos.scope = 0;
 		}
 		else
 		{
 			m_NumberOfPanes = 2;
+			pDoc->m_CaretPos.scope = m_PaneWithFocus + 1;
+			// TODO: convert the address
 		}
 		OnMetricsChange();
 	}
@@ -2051,3 +2109,10 @@ void CDiffFileView::OnEditCopy()
 
 	GetDocument()->OnEditCopy(FileSelect);
 }
+
+void CDiffFileView::OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(GetDocument()->m_bIgnoreWhitespaces);
+	pCmdUI->Enable(m_NumberOfPanes <= 1);
+}
+

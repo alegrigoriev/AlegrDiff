@@ -346,6 +346,78 @@ int _cdecl FileLine::NormalizedGroupHashAndLineNumberCompareFunc(FileLine const 
 	return 0;
 }
 
+int fngets(char *string, int count, FILE *str)
+{
+	int i;
+	if (0 == count)
+	{
+		return 0;
+	}
+	for (i = 0; i < count - 1; i++)
+	{
+		int ch = getc(str);
+		if (ch == EOF)
+		{
+			break;
+		}
+
+		if (0 == ch)
+		{
+			ch = 0x01;
+		}
+
+		string[i] = char(ch);
+
+		if (ch == '\n')
+		{
+			i++;
+			break;
+		}
+	}
+
+	string[i] = 0;
+	return i;
+}
+
+int fngetws(wchar_t *string, int count, FILE *str, BOOL bBigEndian)
+{
+	int i;
+	if (0 == count)
+	{
+		return 0;
+	}
+
+	for (i = 0; i < count - 1; i++)
+	{
+		int ch = getwc(str);
+		if (ch == WEOF)
+		{
+			break;
+		}
+
+		if (bBigEndian)
+		{
+			ch = ((ch & 0xFF) << 8) | ((ch >> 8) & 0xFF);
+		}
+
+		if (0 == ch)
+		{
+			ch = 0x0001;
+		}
+
+		string[i] = wchar_t(ch);
+
+		if (ch == '\n')
+		{
+			i++;
+			break;
+		}
+	}
+
+	string[i] = 0;
+	return i;
+}
+
 #undef new
 bool FileItem::Load()
 {
@@ -396,24 +468,17 @@ bool FileItem::Load()
 	{
 		if (m_IsUnicode)
 		{
-			if (m_IsUnicodeBigEndian)
+			if (0 == fngetws(lineW, countof(lineW), file, m_IsUnicodeBigEndian))
 			{
 				break;
 			}
-			else
-			{
-				if (NULL == fgetws(lineW, (countof(lineW)) - 1, file))
-				{
-					break;
-				}
-			}
 #ifndef _UNICODE
-			wcstombs(lineA, lineW, sizeof lineA  - 1);
+			wcstombs(lineA, lineW, countof(lineA)  - 1);
 #endif
 		}
 		else
 		{
-			if (NULL == fgets(lineA, sizeof lineA - 1, file))
+			if (0 == fngets(lineA, countof(lineA), file))
 			{
 				break;
 			}
@@ -4156,33 +4221,16 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles(CProgressDialog * pP
 	return Result;
 }
 
-inline int CompareTextPosBegin(const TextPos * pos,  FileDiffSection * const *sec, int)
-{
-	if (*pos < (*sec)->m_Begin)
-	{
-		return -1;
-	}
-	return 1;
-}
-
-inline int CompareTextPosEnd(const TextPos * pos,  FileDiffSection * const *sec, int)
-{
-	if (*pos < (*sec)->m_End)
-	{
-		return -1;
-	}
-	return 1;
-}
-
-bool FilePair::NextDifference(TextPos PosFrom, BOOL IgnoreWhitespaces,
-							TextPos * DiffPos, TextPos * EndPos)
+bool FilePair::NextDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
+							TextPosDisplay * DiffPos, TextPosDisplay * EndPos)
 {
 	if (m_DiffSections.empty())
 	{
 		return FALSE;
 	}
 	FileDiffSection diff;
-	diff.m_Begin = PosFrom;
+	diff.m_Begin = DisplayPosToLinePos(PosFrom, IgnoreWhitespaces);
+
 	vector<FileDiffSection *>::iterator pFound = upper_bound(m_DiffSections.begin(),
 															m_DiffSections.end(), & diff, less<FileDiffSection *>());
 
@@ -4206,26 +4254,28 @@ bool FilePair::NextDifference(TextPos PosFrom, BOOL IgnoreWhitespaces,
 	}
 	if (NULL != DiffPos)
 	{
-		*DiffPos = pSection->m_Begin;
+		*DiffPos = LinePosToDisplayPos(pSection->m_Begin, IgnoreWhitespaces, PosFrom.scope);
 	}
 	if (NULL != EndPos)
 	{
-		*EndPos = pSection->m_End;
+		*EndPos = LinePosToDisplayPos(pSection->m_End, IgnoreWhitespaces, PosFrom.scope);
 	}
 	return TRUE;
 }
 
-bool FilePair::PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces,
-							TextPos * DiffPos, TextPos * EndPos)
+bool FilePair::PrevDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
+							TextPosDisplay * DiffPos, TextPosDisplay * EndPos)
 {
 	if (m_DiffSections.empty())
 	{
 		return FALSE;
 	}
 	FileDiffSection diff;
-	diff.m_Begin = PosFrom;
+	diff.m_Begin = DisplayPosToLinePos(PosFrom, IgnoreWhitespaces);
+
 	vector<FileDiffSection *>::iterator pFound = lower_bound(m_DiffSections.begin(),
 															m_DiffSections.end(), & diff, less<FileDiffSection *>());
+
 	if (pFound == m_DiffSections.begin())
 	{
 		return FALSE;
@@ -4246,13 +4296,33 @@ bool FilePair::PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces,
 	}
 	if (NULL != DiffPos)
 	{
-		*DiffPos = pSection->m_Begin;
+		*DiffPos = LinePosToDisplayPos(pSection->m_Begin, IgnoreWhitespaces, PosFrom.scope);
 	}
 	if (NULL != EndPos)
 	{
-		*EndPos = pSection->m_End;
+		*EndPos = LinePosToDisplayPos(pSection->m_End, IgnoreWhitespaces, PosFrom.scope);
 	}
 	return TRUE;
+}
+
+TextPosLine FilePair::DisplayPosToLinePos(TextPosDisplay position, BOOL IgnoreWhitespaces)
+{
+	if (unsigned(position.line) >= m_LinePairs.size())
+	{
+		return TextPosLine(position.line, position.pos);
+	}
+	return TextPosLine(position.line,
+						m_LinePairs[position.line]->DisplayPosToLinePos(position.pos, IgnoreWhitespaces, position.scope));
+}
+
+TextPosDisplay FilePair::LinePosToDisplayPos(TextPosLine position, BOOL IgnoreWhitespaces, int FileScope)
+{
+	if (unsigned(position.line) >= m_LinePairs.size())
+	{
+		return TextPosDisplay(position.line, position.pos, FileScope);
+	}
+	return TextPosDisplay(position.line,
+						m_LinePairs[position.line]->LinePosToDisplayPos(position.pos, IgnoreWhitespaces, FileScope), FileScope);
 }
 
 struct ModifyFlagsStruct
@@ -4260,6 +4330,7 @@ struct ModifyFlagsStruct
 	int Set;
 	int Reset;
 };
+
 void FilePair::ModifyAcceptDeclineFlagsFunc(StringSection * pSection, void * Param)
 {
 	ModifyFlagsStruct * pmfs = (ModifyFlagsStruct *) Param;
@@ -4267,7 +4338,7 @@ void FilePair::ModifyAcceptDeclineFlagsFunc(StringSection * pSection, void * Par
 	pSection->Attr |= pmfs->Set;
 }
 
-BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int Set, int Reset)
+BOOL FilePair::ModifyAcceptDeclineFlags(TextPosLine & PosFrom, TextPosLine & PosTo, int Set, int Reset)
 {
 	ModifyFlagsStruct mfs;
 	mfs.Set = Set;
@@ -4293,7 +4364,7 @@ void FilePair::GetAcceptDeclineFlagsFunc(StringSection * pSection, void * Param)
 	gfs->Reset &= pSection->Attr;
 }
 
-int FilePair::GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, bool bIgnoreWhitespaces)
+int FilePair::GetAcceptDeclineFlags(TextPosLine PosFrom, TextPosLine PosTo, bool bIgnoreWhitespaces)
 {
 	GetFlagsStruct gfs;
 	gfs.bIgnoreWhitespace = bIgnoreWhitespaces;
@@ -4307,10 +4378,10 @@ int FilePair::GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, bool bIgnore
 	return gfs.Set;
 }
 
-BOOL FilePair::EnumStringDiffSections(TextPos & PosFrom, TextPos & PosTo,
+BOOL FilePair::EnumStringDiffSections(TextPosLine & PosFrom, TextPosLine & PosTo,
 									void (* Func)(StringSection * pSection, void * Param), void * pParam)
 {
-	TextPos begin = PosFrom, end = PosTo;
+	TextPosLine begin = PosFrom, end = PosTo;
 	if (begin == end)
 	{
 		// if the range is of zero length, then modify all neighbor sections
@@ -4422,7 +4493,7 @@ BOOL FilePair::EnumStringDiffSections(TextPos & PosFrom, TextPos & PosTo,
 	// if the range is not of zero length, then modify all included
 	if (begin > end)
 	{
-		TextPos tmp = end;
+		TextPosLine tmp = end;
 		end = begin;
 		begin = tmp;
 	}
@@ -4454,7 +4525,7 @@ BOOL FilePair::EnumStringDiffSections(TextPos & PosFrom, TextPos & PosTo,
 			break;
 		}
 	}
-	TextPos ChangeEnd = begin;
+	TextPosLine ChangeEnd = begin;
 	for ( ; pPair->StrSections.NotEnd(pSection); pos += pSection->Length, pSection = pSection->Next())
 	{
 		if (end.line == begin.line
@@ -4574,9 +4645,9 @@ LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen,
 	return buf;
 }
 
-int LinePair::LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces)
+int LinePair::LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces, int FileScope)
 {
-	if ( ! bIgnoreWhitespaces)
+	if ( ! bIgnoreWhitespaces && 0 == FileScope)
 	{
 		return position;
 	}
@@ -4587,8 +4658,20 @@ int LinePair::LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces)
 		StrSections.NotEnd(pSection); pSection = pSection->Next())
 	{
 		pos += pSection->Length;
-		if ((pSection->Attr & pSection->Whitespace)
-			&& (pSection->Attr & pSection->Erased))
+		if ((pSection->Attr & pSection->Erased)
+			&& (((pSection->Attr & pSection->Whitespace)
+					&& bIgnoreWhitespaces && 0 == FileScope)
+				|| 2 == FileScope))
+		{
+			adj += pSection->Length;
+			if (pos >= position)
+			{
+				// return begin of the segment
+				return pos - adj;
+			}
+		}
+		else if (1 == FileScope
+				&& (pSection->Attr & pSection->File2Only))
 		{
 			adj += pSection->Length;
 			if (pos >= position)
@@ -4608,9 +4691,9 @@ int LinePair::LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces)
 	return position - adj;
 }
 
-int LinePair::DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces)
+int LinePair::DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces, int FileScope)
 {
-	if ( ! bIgnoreWhitespaces)
+	if ( ! bIgnoreWhitespaces && 0 == FileScope)
 	{
 		return position;
 	}
@@ -4620,8 +4703,15 @@ int LinePair::DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces)
 	for (StringSection * pSection = StrSections.First();
 		StrSections.NotEnd(pSection); pSection = pSection->Next())
 	{
-		if ((pSection->Attr & pSection->Whitespace)
-			&& (pSection->Attr & pSection->Erased))
+		if ((pSection->Attr & pSection->Erased)
+			&& (((pSection->Attr & pSection->Whitespace)
+					&& bIgnoreWhitespaces && 0 == FileScope)
+				|| 2 == FileScope))
+		{
+			adj += pSection->Length;
+		}
+		else if ((pSection->Attr & pSection->File2Only)
+				&& 1 == FileScope)
 		{
 			adj += pSection->Length;
 		}

@@ -31,8 +31,7 @@ CDirectoryFingerprintDlg::CDirectoryFingerprintDlg(CWnd* pParent /*=NULL*/)
 		IDOK, CenterHorizontally,
 		IDCANCEL, CenterHorizontally,
 	};
-	m_pResizeItems = items;
-	m_pResizeItemsCount = countof (items);
+	SetResizeableItems(items, countof(items));
 }
 
 CDirectoryFingerprintDlg::~CDirectoryFingerprintDlg()

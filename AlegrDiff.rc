@@ -266,13 +266,10 @@ BEGIN
     BEGIN
         MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
         MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+        MENUITEM "File &Length",                163
+        MENUITEM "Modification &Time",          164
         MENUITEM SEPARATOR
-        MENUITEM "&Hide Selected Files",        ID_VIEW_HIDESELECTEDFILES
-        MENUITEM "&Show All Files",             ID_VIEW_SHOWALLFILES
-        MENUITEM SEPARATOR
-        MENUITEM "File Length",                 163
-        MENUITEM "Modification Time",           164
-        POPUP "Sort By"
+        POPUP "Sort &By"
         BEGIN
             MENUITEM "Name",                        166
             MENUITEM "Folder",                      167
@@ -284,8 +281,11 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "Descending Order",            173
         END
+        MENUITEM "&Hide Selected Files",        ID_VIEW_HIDESELECTEDFILES
+        MENUITEM "Show &All Files",             ID_VIEW_SHOWALLFILES
         MENUITEM SEPARATOR
-        MENUITEM "Refresh\tF5",                 ID_VIEW_REFRESH
+        MENUITEM "R&escan Files\tF5",           ID_VIEW_REFRESH
+        MENUITEM "&Reset Columns",              ID_VIEW_RESETCOLUMNS
     END
     POPUP "&Window"
     BEGIN

@@ -57,14 +57,18 @@ public:
 	};
 	void SetSortColumn(eColumns nColumn, eSetSortColumnOrder Order);
 
-	UCHAR m_ColumnArray[MaxColumns];
-	//UCHAR m_SubitemArray[MaxColumns];
-	SHORT m_ColumnWidthArray[MaxColumns];
-	eColumns m_ColumnToItem[MaxColumns];
-	int m_ItemToColumn[MaxColumns];
+	// index: column type, result: column position (including hidden columns)
+	int m_ColumnArray[MaxColumns];
+	int m_ColumnWidthArray[MaxColumns];
+	// index - item associated with the column, result: column type
+	eColumns m_ViewItemToColumnType[MaxColumns];
+	// index: column position as seen, result:item associated with the column
+	int m_ColumnPositionToViewItem[MaxColumns];
+	int m_ColumnTypeToViewItem[MaxColumns];
+
 	void ResetColumnsArray();
 
-	void UpdateAppSort();
+	void UpdateAppColumns();
 
 	void PrintColumnOrder();
 
@@ -127,6 +131,8 @@ public:
 	afx_msg void OnUpdateListviewSortby2ndmodificationdate(CCmdUI *pCmdUI);
 	afx_msg void OnHdnBegindrag(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnHdnEnddrag(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnHdnEndtrack(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnViewResetcolumns();
 };
 
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp

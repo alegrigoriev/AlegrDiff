@@ -76,6 +76,9 @@ ON_COMMAND(ID_LISTVIEW_SORTBY_2NDMODIFICATIONDATE, OnListviewSortby2ndmodificati
 ON_UPDATE_COMMAND_UI(ID_LISTVIEW_SORTBY_2NDMODIFICATIONDATE, OnUpdateListviewSortby2ndmodificationdate)
 ON_NOTIFY(HDN_BEGINDRAG, 0, OnHdnBegindrag)
 ON_NOTIFY(HDN_ENDDRAG, 0, OnHdnEnddrag)
+ON_NOTIFY(HDN_ENDTRACKA, 0, OnHdnEndtrack)
+ON_NOTIFY(HDN_ENDTRACKW, 0, OnHdnEndtrack)
+ON_COMMAND(ID_VIEW_RESETCOLUMNS, OnViewResetcolumns)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -266,8 +269,8 @@ void CAlegrDiffView::ResetColumnsArray()
 	m_ColumnWidthArray[ColumnSubdir] = 200;
 	m_ColumnWidthArray[ColumnDate1] = 150;
 	m_ColumnWidthArray[ColumnDate2] = 150;
-	m_ColumnWidthArray[ColumnLength1] = 100;
-	m_ColumnWidthArray[ColumnLength2] = 100;
+	m_ColumnWidthArray[ColumnLength1] = 150;
+	m_ColumnWidthArray[ColumnLength2] = 150;
 	m_ColumnWidthArray[ColumnComparisionResult] = 400;
 
 }
@@ -325,7 +328,7 @@ void CAlegrDiffView::SetSortColumn(eColumns nColumn, eSetSortColumnOrder Order)
 		m_AscendingSortOrder[0] = (Order != SetSortColumnDescending);
 	}
 
-	UpdateAppSort();
+	UpdateAppColumns();
 
 	OnUpdate(NULL, 0, NULL);
 }
@@ -335,12 +338,12 @@ void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
 	NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
 	// change sort order
 	unsigned nColumn = pNMListView->iSubItem;
-	if (nColumn >= countof (m_ColumnToItem))
+	if (nColumn >= countof (m_ViewItemToColumnType))
 	{
 		return;
 	}
 
-	SetSortColumn(m_ColumnToItem[nColumn], SetSortColumnMouseClick);
+	SetSortColumn(m_ViewItemToColumnType[nColumn], SetSortColumnMouseClick);
 
 	*pResult = 0;
 }
@@ -427,14 +430,14 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	titles[ColumnLength1].LoadString(IDS_STRING_COLUMN_1ST_LENGTH);
 	titles[ColumnLength2].LoadString(IDS_STRING_COLUMN_2ND_LENGTH);
 
-	ASSERT(MaxColumns == countof(m_ItemToColumn));
-	ASSERT(MaxColumns == countof(m_ColumnToItem));
+	ASSERT(MaxColumns == countof(m_ColumnTypeToViewItem));
+	ASSERT(MaxColumns == countof(m_ViewItemToColumnType));
 	ASSERT(MaxColumns == countof(m_ColumnArray));
 
-	for (i = 0; i < countof(m_ColumnToItem); i++)
+	for (i = 0; i < countof(m_ViewItemToColumnType); i++)
 	{
-		m_ColumnToItem[i] = MaxColumns;
-		m_ItemToColumn[i] = MaxColumns;
+		m_ViewItemToColumnType[i] = MaxColumns;
+		m_ColumnTypeToViewItem[i] = MaxColumns;
 	}
 
 	int col = 0;    // real column
@@ -455,10 +458,11 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 					LPCTSTR(titles[i]), col, i);
 				pListCtrl->InsertColumn(col, titles[i], LVCFMT_LEFT, m_ColumnWidthArray[i], i);
 
-				m_ColumnToItem[col] = eColumns(i);
-				m_ItemToColumn[i] = col;
+				m_ViewItemToColumnType[col] = eColumns(i);
+				m_ColumnTypeToViewItem[i] = col;
 
 				// set sort direction
+				// TODO: for comctrl < 6.0
 				if (i == m_SortColumns[0])
 				{
 					HDITEM hdi;
@@ -481,6 +485,7 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 				break;
 			}
 		}
+		m_ColumnPositionToViewItem[j] = j;
 	}
 
 	BuildSortedPairArray(m_PairArray, pDoc->m_pPairList, pDoc->m_nFilePairs);
@@ -789,11 +794,11 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 	{
 		if (pFileItem->IsFolder())
 		{
-			pListCtrl->SetItemText(item, m_ItemToColumn[ColumnSubdir], pFileItem->GetName());
+			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnSubdir], pFileItem->GetName());
 		}
 		else
 		{
-			pListCtrl->SetItemText(item, m_ItemToColumn[ColumnSubdir], pFileItem->GetSubdir());
+			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnSubdir], pFileItem->GetSubdir());
 		}
 	}
 	// set modified time/date
@@ -803,21 +808,21 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 		if (NULL != pPair->pFirstFile && ! pPair->pFirstFile->IsFolder())
 		{
 			datetime = FileTimeToStr(pPair->pFirstFile->GetLastWriteTime());
-			pListCtrl->SetItemText(item, m_ItemToColumn[ColumnDate1], datetime);
+			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnDate1], datetime);
 		}
 		else
 		{
-			//pListCtrl->SetItemText(item, m_ItemToColumn[ColumnDate1], _T(""));
+			//pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnDate1], _T(""));
 		}
 
 		if (NULL != pPair->pSecondFile && ! pPair->pSecondFile->IsFolder())
 		{
 			datetime = FileTimeToStr(pPair->pSecondFile->GetLastWriteTime());
-			pListCtrl->SetItemText(item, m_ItemToColumn[ColumnDate2], datetime);
+			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnDate2], datetime);
 		}
 		else
 		{
-			//pListCtrl->SetItemText(item, m_ItemToColumn[ColumnDate2], _T(""));
+			//pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnDate2], _T(""));
 		}
 	}
 	if (m_ColumnWidthArray[ColumnLength1] >= 0)
@@ -826,26 +831,26 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 		if (NULL != pPair->pFirstFile && ! pPair->pFirstFile->IsFolder())
 		{
 			Length = FileLengthToStr(pPair->pFirstFile->GetFileLength());
-			pListCtrl->SetItemText(item, m_ItemToColumn[ColumnLength1], Length);
+			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength1], Length);
 		}
 		else
 		{
-			//pListCtrl->SetItemText(item, m_ItemToColumn[ColumnLength1], _T(""));
+			//pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength1], _T(""));
 		}
 
 		if (NULL != pPair->pSecondFile && ! pPair->pSecondFile->IsFolder())
 		{
 			Length = FileLengthToStr(pPair->pSecondFile->GetFileLength());
-			pListCtrl->SetItemText(item, m_ItemToColumn[ColumnLength2], Length);
+			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength2], Length);
 		}
 		else
 		{
-			//pListCtrl->SetItemText(item, m_ItemToColumn[ColumnLength2], _T(""));
+			//pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength2], _T(""));
 		}
 	}
 
 	CString ComparisionResult = pPair->GetComparisionResult();
-	pListCtrl->SetItemText(item, m_ItemToColumn[ColumnComparisionResult], ComparisionResult);
+	pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnComparisionResult], ComparisionResult);
 }
 
 void CAlegrDiffView::OnFileSaveList()
@@ -1083,7 +1088,7 @@ void CAlegrDiffView::OnUpdateListviewModificationtime(CCmdUI *pCmdUI)
 	pCmdUI->SetCheck(m_ColumnWidthArray[ColumnDate1] >= 0);
 }
 
-void CAlegrDiffView::UpdateAppSort()
+void CAlegrDiffView::UpdateAppColumns()
 {
 	CThisApp * pApp = GetApp();
 
@@ -1094,6 +1099,8 @@ void CAlegrDiffView::UpdateAppSort()
 		{
 			pApp->m_ColumnSort[i] |= 0x80;
 		}
+		pApp->m_ColumnWidthArray[i] = m_ColumnWidthArray[i];
+		pApp->m_ColumnArray[i] = m_ColumnArray[i];
 	}
 }
 
@@ -1195,18 +1202,103 @@ void CAlegrDiffView::OnHdnBegindrag(NMHDR *pNMHDR, LRESULT *pResult)
 void CAlegrDiffView::OnHdnEnddrag(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMHEADER phdr = reinterpret_cast<LPNMHEADER>(pNMHDR);
-	Invalidate();
 
-	if (NULL != phdr->pitem
-		&& 0 != (phdr->pitem->mask & HDI_ORDER)
-		&& 0 == phdr->pitem->iOrder)
+	*pResult = TRUE;
+
+	if (NULL == phdr
+		|| NULL == phdr->pitem)
 	{
-		// don't move the column to make it leftmost
-		*pResult = TRUE;
+		return;
 	}
-	else
+	int ItemToMove = phdr->iItem;
+	int NewItemPosition = phdr->pitem->iOrder;
+
+	if (ItemToMove >= MaxColumns
+		|| 0 == (phdr->pitem->mask & HDI_ORDER)
+		|| 0 == NewItemPosition
+		|| NewItemPosition >= MaxColumns)
 	{
-		*pResult = 0;
+		return;
 	}
-	// column order not changed yet
+	// real column order not changed yet
+	// rearrange ColumnArray. Don't change ItemToColumn, ColumnToItem
+
+	eColumns nColumn = m_ViewItemToColumnType[ItemToMove];
+	int OldPosition = m_ColumnArray[nColumn];
+
+	nColumn = m_ViewItemToColumnType[m_ColumnPositionToViewItem[NewItemPosition]];
+	int NewPosition = m_ColumnArray[nColumn];
+
+	TRACE("phdr->iItem=%d becomes phdr->pitem->iOrder=%d\n",
+		ItemToMove, NewItemPosition);
+
+	int i;
+	int NumColumns = GetListCtrl().GetHeaderCtrl()->GetItemCount();
+
+	// remove item from the old position
+	for (i = 0; i < NumColumns; i++)
+	{
+		if (m_ColumnPositionToViewItem[i] == ItemToMove)
+		{
+			break;
+		}
+	}
+	ASSERT(i < NumColumns);
+	for ( ; i < NumColumns - 1; i++)
+	{
+		m_ColumnPositionToViewItem[i] = m_ColumnPositionToViewItem[i + 1];
+	}
+	// insert an item to new position
+	for (i = NumColumns - 1; i > NewItemPosition; i--)
+	{
+		m_ColumnPositionToViewItem[i] = m_ColumnPositionToViewItem[i - 1];
+	}
+	m_ColumnPositionToViewItem[NewItemPosition] = ItemToMove;
+
+	// rearrange ColumnArray. Don't change ItemToColumn, ColumnToItem
+	for (i = 0; i < MaxColumns; i++)
+	{
+		if (m_ColumnArray[i] == OldPosition)
+		{
+			m_ColumnArray[i] = NewPosition;
+		}
+		else
+		{
+			if (m_ColumnArray[i] > OldPosition)
+			{
+				m_ColumnArray[i]--;
+			}
+			if (m_ColumnArray[i] >= NewPosition)
+			{
+				m_ColumnArray[i]++;
+			}
+		}
+		TRACE("Column type %d becomes number %d\n", i, m_ColumnArray[i]);
+	}
+
+	Invalidate();
+	UpdateAppColumns();
+	*pResult = 0;
+}
+
+void CAlegrDiffView::OnHdnEndtrack(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMHEADER phdr = reinterpret_cast<LPNMHEADER>(pNMHDR);
+	CListCtrl * pList = &GetListCtrl();
+
+	if (phdr->iItem < MaxColumns
+		&& m_ViewItemToColumnType[phdr->iItem] < MaxColumns)
+	{
+		int item = m_ViewItemToColumnType[phdr->iItem];
+		m_ColumnWidthArray[item] = pList->GetColumnWidth(phdr->iItem);
+		UpdateAppColumns();
+	}
+	*pResult = 0;
+}
+
+void CAlegrDiffView::OnViewResetcolumns()
+{
+	ResetColumnsArray();
+	UpdateAppColumns();
+	OnUpdate(NULL, 0, NULL);
 }

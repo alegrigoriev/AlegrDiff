@@ -223,7 +223,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	{
 		200, 200,
 		150, 150,
-		100, 100,
+		150, 150,
 		400,
 	};
 

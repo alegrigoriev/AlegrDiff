@@ -1,6 +1,6 @@
 TODO:
 Context menu on selection: Merge File1 version, Merge File2 version
-Make copy to folder for the open file
+Ctrl+mouse selection - make full words
 mark accept/decline line by line
 make selective accept/decline, for some lines of group
 show version of file1, file2 of the line
@@ -36,6 +36,7 @@ Esc closes without prompting to save merged
 Go To next differences when whitespaces ignored
 
 Done:
+Make copy to folder for the open file
 Open new frame with the same size attr as active frame
 Catch Ctrl+Tab, neat processing
 last line is not invalidated by InvalidateRange

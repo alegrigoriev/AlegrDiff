@@ -3212,6 +3212,7 @@ int FilePair::GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, bool bIgnore
 	return flags;
 }
 
+#if 0
 void FilePair::ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo,
 										int Set, int Reset,
 										FileDiffSection *const ** ppFirstSection, int * pNumSections)
@@ -3231,7 +3232,6 @@ void FilePair::ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo,
 		PosTo = PosFrom;
 		PosFrom = tmp;
 	}
-
 	FileDiffSection *const * ppSection =
 		BinLookupAbout<FileDiffSection *, TextPos, int>
 	(& PosFrom, 0,
@@ -3278,8 +3278,24 @@ void FilePair::ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo,
 			(* pNumSections)++;
 		}
 	}
-
 }
+#else
+void FilePair::ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo,
+										int Set, int Reset,
+										FileDiffSection *const ** ppFirstSection, int * pNumSections)
+{
+	if (PosFrom == PosTo)
+	{
+		if (PosFrom.line >= m_LinePairs.GetSize())
+		{
+			return;
+		}
+		// if the range is of zero length, then modify all neighbor sections
+		LinePair * pLinePair = m_LinePairs[PosFrom.line];
+	}
+	// if the range is not of zero length, then modify all included
+}
+#endif
 
 LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen, BOOL IgnoreWhitespaces)
 {

@@ -446,6 +446,10 @@ BEGIN_MESSAGE_MAP(CFilePairDoc, CDocument)
 	ON_COMMAND(ID_FILE_MERGE_SAVE, OnFileMergeSave)
 	ON_COMMAND(ID_VIEW_IGNORE_WHITESPACES, OnViewIgnoreWhitespaces)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_IGNORE_WHITESPACES, OnUpdateViewIgnoreWhitespaces)
+	ON_UPDATE_COMMAND_UI(ID_FILE_COPY_FIRST_DIR_FILE, OnUpdateFileCopyFirstDirFile)
+	ON_COMMAND(ID_FILE_COPY_FIRST_DIR_FILE, OnFileCopyFirstDirFile)
+	ON_UPDATE_COMMAND_UI(ID_FILE_COPY_SECOND_DIR_FILE, OnUpdateFileCopySecondDirFile)
+	ON_COMMAND(ID_FILE_COPY_SECOND_DIR_FILE, OnFileCopySecondDirFile)
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
 END_MESSAGE_MAP()
@@ -687,14 +691,13 @@ void CFilePairDoc::OnViewRefresh()
 
 void CFilePairDoc::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
 {
+	FileItem * pFile = NULL;
 	if (m_pFilePair != NULL)
 	{
-		ModifyOpenFileMenu(pCmdUI, m_pFilePair->pFirstFile, _T("&1 Open "));
+		pFile = m_pFilePair->pFirstFile;
 	}
-	else
-	{
-		pCmdUI->Enable(FALSE);
-	}
+	ModifyOpenFileMenu(pCmdUI, pFile,
+						IDS_OPEN_FIRST_FILE_MENU, IDS_OPEN_FIRST_FILE_MENU_DISABLED);
 }
 
 void CFilePairDoc::OnFileEditFirst()
@@ -707,14 +710,13 @@ void CFilePairDoc::OnFileEditFirst()
 
 void CFilePairDoc::OnUpdateFileEditSecond(CCmdUI* pCmdUI)
 {
+	FileItem * pFile = NULL;
 	if (m_pFilePair != NULL)
 	{
-		ModifyOpenFileMenu(pCmdUI, m_pFilePair->pSecondFile, _T("&2 Open "));
+		pFile = m_pFilePair->pSecondFile;
 	}
-	else
-	{
-		pCmdUI->Enable(FALSE);
-	}
+	ModifyOpenFileMenu(pCmdUI, pFile,
+						IDS_OPEN_SECOND_FILE_MENU, IDS_OPEN_SECOND_FILE_MENU_DISABLED);
 }
 
 void CFilePairDoc::OnFileEditSecond()
@@ -1564,4 +1566,43 @@ int CFilePairDoc::GetAcceptDeclineFlags(TextPos begin, TextPos end)
 	return m_pFilePair->GetAcceptDeclineFlags(
 											DisplayPosToLinePos(begin), DisplayPosToLinePos(end), m_bIgnoreWhitespaces);
 
+}
+
+void CFilePairDoc::OnUpdateFileCopyFirstDirFile(CCmdUI* pCmdUI)
+{
+	FileItem * pFile = NULL;
+	if (m_pFilePair != NULL)
+	{
+		pFile = m_pFilePair->pFirstFile;
+	}
+	ModifyOpenFileMenu(pCmdUI, pFile,
+						IDS_COPY_FILE_TO_FOLDER, IDS_COPY_FIRST_FILE_MENU_DISABLED);
+}
+
+void CFilePairDoc::OnFileCopyFirstDirFile()
+{
+	if (m_pFilePair != NULL && m_pFilePair->pFirstFile != NULL)
+	{
+		CopyFilesToFolder( & m_pFilePair->pFirstFile, 1, false);
+	}
+}
+
+void CFilePairDoc::OnUpdateFileCopySecondDirFile(CCmdUI* pCmdUI)
+{
+	FileItem * pFile = NULL;
+	if (m_pFilePair != NULL)
+	{
+		pFile = m_pFilePair->pSecondFile;
+	}
+	ModifyOpenFileMenu(pCmdUI, pFile,
+						IDS_COPY_FILE_TO_FOLDER, IDS_COPY_SECOND_FILE_MENU_DISABLED);
+
+}
+
+void CFilePairDoc::OnFileCopySecondDirFile()
+{
+	if (m_pFilePair != NULL && m_pFilePair->pSecondFile != NULL)
+	{
+		CopyFilesToFolder( & m_pFilePair->pSecondFile, 1, false);
+	}
 }

@@ -94,6 +94,15 @@ LINK32=link.exe
 # Begin Source File
 
 SOURCE=.\AlegrDiff.cpp
+
+!IF  "$(CFG)" == "AlegrDiff - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "AlegrDiff - Win32 Debug"
+
+# SUBTRACT CPP /FA<none>
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 

@@ -154,8 +154,8 @@ BEGIN
         MENUITEM "Edit 1st File",               ID_FILE_EDIT_FIRST
         MENUITEM "Edit 2nd File",               ID_FILE_EDIT_SECOND
         MENUITEM SEPARATOR
-        MENUITEM "Copy Files From 1st Folder",  ID_FILE_COPY_FIRST_DIR
-        MENUITEM "Copy Files From 2nd Folder",  ID_FILE_COPY_SECOND_DIR
+        MENUITEM "Copy 1st File To Folder...",  ID_FILE_COPY_FIRST_DIR_FILE
+        MENUITEM "Copy 2nd File To Folder...",  ID_FILE_COPY_SECOND_DIR_FILE
         MENUITEM SEPARATOR
         MENUITEM "Preferences...",              ID_FILE_PREFERENCES
         MENUITEM SEPARATOR
@@ -826,6 +826,10 @@ BEGIN
     ID_FILE_COPY_SECOND     "Copy the selected files from second folder to another folder\nCopy from second folder"
     ID_VIEW_FILE1_VERSION   "Show first file text\nFile 1 text"
     ID_VIEW_FILE_2_VERSION  "Show second file text\nFile 2 text"
+    ID_FILE_COPY_FIRST_DIR_FILE 
+                            "Copy first file to a selected directory\nCopy first file"
+    ID_FILE_COPY_SECOND_DIR_FILE 
+                            "Copy second file to a selected directory\nCopy second file"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -853,6 +857,13 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FIRST_FOLDER_DLG_TITLE "Select First Folder To Compare"
     IDS_SECOND_FOLDER_DLG_TITLE "Select Second Folder To Compare"
+    IDS_OPEN_FIRST_FILE_MENU "&1 Open %s"
+    IDS_OPEN_SECOND_FILE_MENU "&2 Open %s"
+    IDS_OPEN_FIRST_FILE_MENU_DISABLED "&1 Open 1st File"
+    IDS_OPEN_SECOND_FILE_MENU_DISABLED "&2 Open 2nd File"
+    IDS_COPY_FILE_TO_FOLDER "Copy %s To Folder..."
+    IDS_COPY_FIRST_FILE_MENU_DISABLED "Copy 1st File To Folder..."
+    IDS_COPY_SECOND_FILE_MENU_DISABLED "Copy 2nd File To Folder..."
 END
 
 #endif    // English (U.S.) resources

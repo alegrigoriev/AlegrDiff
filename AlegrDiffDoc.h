@@ -170,6 +170,10 @@ public:
 	afx_msg void OnFileMergeSave();
 	afx_msg void OnViewIgnoreWhitespaces();
 	afx_msg void OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateFileCopyFirstDirFile(CCmdUI* pCmdUI);
+	afx_msg void OnFileCopyFirstDirFile();
+	afx_msg void OnUpdateFileCopySecondDirFile(CCmdUI* pCmdUI);
+	afx_msg void OnFileCopySecondDirFile();
 	//}}AFX_MSG
 protected:
 	DECLARE_MESSAGE_MAP()

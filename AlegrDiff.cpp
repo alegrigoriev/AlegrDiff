@@ -113,7 +113,6 @@ CAlegrDiffApp::CAlegrDiffApp()
 	// then init subfields:
 	m_bShowToolbar = true;
 	m_bShowStatusBar = true;
-	m_bOpenMaximized = true;
 	m_bOpenChildMaximized = true;
 
 	m_NormalLogFont.lfCharSet = ANSI_CHARSET;
@@ -197,7 +196,6 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("ShowToolbar"), m_bShowToolbar, true);
 	Profile.AddItem(_T("Settings"), _T("ShowStatusBar"), m_bShowStatusBar, true);
 	Profile.AddItem(_T("Settings"), _T("OpenChildMaximized"), m_bOpenChildMaximized, true);
-	Profile.AddItem(_T("Settings"), _T("OpenMaximized"), m_bOpenMaximized, true);
 #else
 	Profile.AddItem(_T("Settings"), _T("PreferencesFlags"), m_PreferencesFlags, m_PreferencesFlags, 0, 0xFFFFFFFF);
 	Profile.AddItem(_T("Settings"), _T("StatusFlags"), m_StatusFlags, m_StatusFlags, 0, 0xFFFFFFFF);
@@ -317,12 +315,8 @@ BOOL CAlegrDiffApp::InitInstance()
 
 	// The main window has been initialized, so show and update it.
 	m_pMainWnd->DragAcceptFiles();
-	int nCmdShow = SW_SHOWDEFAULT;
-	if (m_bOpenMaximized)
-	{
-		nCmdShow = SW_SHOWMAXIMIZED;
-	}
-	pMainFrame->ShowWindow(nCmdShow);
+
+	pMainFrame->ShowWindow(SW_SHOWDEFAULT);
 
 	pMainFrame->UpdateWindow();
 	// process names from the command line

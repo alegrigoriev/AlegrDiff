@@ -1012,15 +1012,15 @@ void CDiffFileView::UpdateHScrollBar()
 void CDiffFileView::MakePositionVisible(int line, int pos)
 {
 	ThisDoc * pDoc = GetDocument();
-	BringPositionsToBounds(TextPosDisplay(line, (short)pos, (short)pDoc->m_CaretPos.scope),
-							TextPosDisplay(line, (short)pos, (short)pDoc->m_CaretPos.scope), m_VisibleRect, m_VisibleRect);
+	BringPositionsToBounds(TextPosDisplay(line, pos, pDoc->m_CaretPos.scope),
+							TextPosDisplay(line, pos, pDoc->m_CaretPos.scope), m_VisibleRect, m_VisibleRect);
 }
 
 void CDiffFileView::MakePositionCentered(int line, int pos)
 {
 	ThisDoc * pDoc = GetDocument();
-	BringPositionsToBounds(TextPosDisplay(line, (short)pos, (short)pDoc->m_CaretPos.scope),
-							TextPosDisplay(line, (short)pos, (short)pDoc->m_CaretPos.scope), m_VisibleRect, m_PreferredRect);
+	BringPositionsToBounds(TextPosDisplay(line, pos, pDoc->m_CaretPos.scope),
+							TextPosDisplay(line, pos, pDoc->m_CaretPos.scope), m_VisibleRect, m_PreferredRect);
 }
 
 void CDiffFileView::InvalidateRangeLine(TextPosLine begin, TextPosLine end)
@@ -1063,8 +1063,8 @@ void CDiffFileView::InvalidateRange(TextPosDisplay begin, TextPosDisplay end)
 	{
 		return;
 	}
-	begin.pos -= m_FirstPosSeen;
-	begin.line -= m_FirstLineSeen;
+	begin.pos = begin.pos - m_FirstPosSeen;
+	begin.line = begin.line - m_FirstLineSeen;
 
 	if (begin.line < -1)
 	{
@@ -1121,7 +1121,7 @@ void CDiffFileView::InvalidateRange(TextPosDisplay begin, TextPosDisplay end)
 		{
 			if (end.pos > nCharsInView + 1)
 			{
-				end.pos = short(nCharsInView + 1);
+				end.pos = nCharsInView + 1;
 			}
 			r.top = end.line * LineHeight();
 			r.bottom = r.top + LineHeight();
@@ -1236,7 +1236,7 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 	m_LButtonDown = true;
 	int flags = SetPositionMakeVisible;
 
-	short nPane = PointToPaneNumber(point.x);
+	int nPane = PointToPaneNumber(point.x);
 	point.x = PointToPaneOffset(point.x) - m_LineNumberMarginWidth;
 
 	int nLine = point.y / LineHeight() + m_FirstLineSeen;
@@ -1270,7 +1270,7 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 	}
 	else
 	{
-		ClickPos.pos = short(m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth());
+		ClickPos.pos = (m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth());
 		if (0 == (nFlags & MK_SHIFT))
 		{
 			flags |= SetPositionCancelSelection;
@@ -1423,7 +1423,9 @@ void CDiffFileView::UpdateVisibleRectangleBounds()
 	CRect cr;
 	GetClientRect( & cr);
 
+	m_VisibleRect.top = 0;
 	m_VisibleRect.bottom = cr.Height() / LineHeight() - 1;
+
 	m_PreferredRect.bottom = m_VisibleRect.bottom / 4;
 	m_PreferredRect.top = m_PreferredRect.bottom; //m_VisibleRect.bottom - m_VisibleRect.bottom / 4;
 
@@ -1435,6 +1437,7 @@ void CDiffFileView::UpdateVisibleRectangleBounds()
 	{
 		m_VisibleRect.right = 0;
 	}
+	m_VisibleRect.left = 0;
 
 	m_PreferredRect.left = m_VisibleRect.right / 3;
 	m_PreferredRect.right = m_VisibleRect.right - m_VisibleRect.right / 3;
@@ -2029,7 +2032,7 @@ void CDiffFileView::OnRButtonDown(UINT nFlags, CPoint point)
 	{
 		ThisDoc * pDoc = GetDocument();
 
-		TextPosDisplay NewPos(nLine, short(m_FirstPosSeen + (point1.x + CharWidth() / 2) / CharWidth()),
+		TextPosDisplay NewPos(nLine, (m_FirstPosSeen + (point1.x + CharWidth() / 2) / CharWidth()),
 							pDoc->m_CaretPos.scope);
 		if (pDoc->m_CaretPos <= pDoc->m_SelectionAnchor
 			&& (NewPos < pDoc->m_CaretPos || NewPos > pDoc->m_SelectionAnchor)
@@ -2114,7 +2117,7 @@ void CDiffFileView::OnViewSideBySide()
 		else
 		{
 			m_NumberOfPanes = 2;
-			pDoc->m_CaretPos.scope = short(m_PaneWithFocus + 1);
+			pDoc->m_CaretPos.scope = m_PaneWithFocus + 1;
 			// TODO: convert the address
 		}
 		OnMetricsChange();
@@ -2129,7 +2132,7 @@ void CDiffFileView::OnUpdateViewSideBySide(CCmdUI *pCmdUI)
 		&& pFilePair->pSecondFile != NULL)
 	{
 		pCmdUI->Enable(TRUE);
-		pCmdUI->SetCheck(2 == m_NumberOfPanes);
+		pCmdUI->SetCheck(m_NumberOfPanes > 1);
 	}
 	else
 	{
@@ -2138,7 +2141,7 @@ void CDiffFileView::OnUpdateViewSideBySide(CCmdUI *pCmdUI)
 	}
 }
 
-short CDiffFileView::PointToPaneNumber(int x)
+int CDiffFileView::PointToPaneNumber(int x)
 {
 	if (1 == m_NumberOfPanes)
 	{
@@ -2157,10 +2160,10 @@ short CDiffFileView::PointToPaneNumber(int x)
 	{
 		nPane = m_NumberOfPanes - 1;
 	}
-	return (short)nPane;
+	return nPane;
 }
 
-int CDiffFileView::PointToPaneOffset(int x, short nPane)
+int CDiffFileView::PointToPaneOffset(int x, int nPane)
 {
 	if (1 == m_NumberOfPanes)
 	{

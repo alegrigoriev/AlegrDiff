@@ -405,22 +405,6 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	}
 	// TODO: keep focus on the same item
 	// fill the list control
-#if 0
-	for (unsigned i = 0; i < m_PairArray.size(); i++)
-	{
-		m_PairArray[i]->m_bSelected = false;
-	}
-	// get all currently selected items
-	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
-	while(-1 != nItem)
-	{
-		if (nItem < m_PairArray.size())
-		{
-			m_PairArray[nItem]->m_bSelected = true;
-		}
-		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
-	}
-#endif
 	LockWindowUpdate();
 	pListCtrl->DeleteAllItems();
 
@@ -517,13 +501,12 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 				m_ViewItemToColumnType[col] = eColumns(i);
 				m_ColumnTypeToViewItem[i] = col;
 
-				// set sort direction
-				// TODO: for comctrl < 6.0
+				// set sort direction arrow
 				if (i == m_SortColumns[0])
 				{
 					HDITEM hdi;
 					pHeader->GetItem(col, & hdi);
-					if (GetApp()->GetComctrl32Ver() >= 0x0600)
+					if (_AfxGetComCtlVersion() >= 0x00060000)
 					{
 						hdi.mask = HDI_FORMAT;
 						if (m_AscendingSortOrder[0])
@@ -751,7 +734,8 @@ void CAlegrDiffView::OnUpdateListviewOpen(CCmdUI* pCmdUI)
 		FilePair * pPair = m_PairArray[nItem];
 		if (pPair->m_ComparisionResult == pPair->ResultUnknown
 			|| (pPair->pFirstFile != NULL && pPair->pFirstFile->IsFolder())
-			|| (pPair->pSecondFile != NULL && pPair->pSecondFile->IsFolder()))
+			|| (pPair->pSecondFile != NULL && pPair->pSecondFile->IsFolder())
+			|| (pPair->pSecondFile == NULL && pPair->pFirstFile != NULL && pPair->pFirstFile->m_bIsPhantomFile))
 		{
 			nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
 			continue;
@@ -768,9 +752,30 @@ void CAlegrDiffView::OnUpdateListviewOpen(CCmdUI* pCmdUI)
 
 void CAlegrDiffView::OnUpdateFileCopyFirstDir(CCmdUI* pCmdUI)
 {
-	CString s;
-	s.Format(IDS_COPY_FROM_DIR_FORMAT, LPCTSTR(GetDocument()->m_sFirstDir));
-	pCmdUI->SetText(s);
+	// check if there is anything to copy
+	CListCtrl * pListCtrl = & GetListCtrl();
+
+	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	if (-1 == nItem)
+	{
+		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
+	}
+	while(-1 != nItem)
+	{
+		if (nItem < m_PairArray.size())
+		{
+			FileItem * pFile = m_PairArray[nItem]->pFirstFile;
+			if (NULL != pFile && ! pFile->IsFolder() && ! pFile->m_bIsPhantomFile)
+			{
+				CString s;
+				s.Format(IDS_COPY_FROM_DIR_FORMAT, LPCTSTR(GetDocument()->m_sFirstDir));
+				pCmdUI->SetText(s);
+				return;
+			}
+		}
+		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
+	}
+	pCmdUI->Enable(FALSE);
 }
 
 void CAlegrDiffView::OnFileCopyFirstDir()
@@ -780,9 +785,30 @@ void CAlegrDiffView::OnFileCopyFirstDir()
 
 void CAlegrDiffView::OnUpdateFileCopySecondDir(CCmdUI* pCmdUI)
 {
-	CString s;
-	s.Format(IDS_COPY_FROM_DIR_FORMAT, LPCTSTR(GetDocument()->m_sSecondDir));
-	pCmdUI->SetText(s);
+	// check if there is anything to copy
+	CListCtrl * pListCtrl = & GetListCtrl();
+
+	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	if (-1 == nItem)
+	{
+		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
+	}
+	while(-1 != nItem)
+	{
+		if (nItem < m_PairArray.size())
+		{
+			FileItem * pFile = m_PairArray[nItem]->pSecondFile;
+			if (NULL != pFile && ! pFile->IsFolder() && ! pFile->m_bIsPhantomFile)
+			{
+				CString s;
+				s.Format(IDS_COPY_FROM_DIR_FORMAT, LPCTSTR(GetDocument()->m_sSecondDir));
+				pCmdUI->SetText(s);
+				return;
+			}
+		}
+		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
+	}
+	pCmdUI->Enable(FALSE);
 }
 
 void CAlegrDiffView::OnFileCopySecondDir()
@@ -848,15 +874,11 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 	lvi.iSubItem = 0;
 	lvi.state = 0;
 	lvi.stateMask = 0;
-	if (pFileItem->IsFolder())
-	{
-		lvi.pszText = _T("");
-	}
-	else
-	{
-		lvi.pszText = (LPTSTR)pFileItem->GetName();
-	}
+
+	lvi.pszText = (LPTSTR)pFileItem->GetName();
+
 	lvi.lParam = LPARAM(pFileItem);
+
 	if (pPair->m_bSelected)
 	{
 		lvi.state = LVIS_SELECTED;
@@ -866,14 +888,7 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 
 	if (m_ColumnWidthArray[ColumnSubdir] >= 0)
 	{
-		if (pFileItem->IsFolder())
-		{
-			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnSubdir], pFileItem->GetName());
-		}
-		else
-		{
-			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnSubdir], pFileItem->GetSubdir());
-		}
+		pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnSubdir], pFileItem->GetSubdir());
 	}
 	// set modified time/date
 	if (m_ColumnWidthArray[ColumnDate1] >= 0)
@@ -884,19 +899,11 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 			datetime = FileTimeToStr(pPair->pFirstFile->GetLastWriteTime());
 			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnDate1], datetime);
 		}
-		else
-		{
-			//pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnDate1], _T(""));
-		}
 
 		if (NULL != pPair->pSecondFile && ! pPair->pSecondFile->IsFolder())
 		{
 			datetime = FileTimeToStr(pPair->pSecondFile->GetLastWriteTime());
 			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnDate2], datetime);
-		}
-		else
-		{
-			//pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnDate2], _T(""));
 		}
 	}
 	if (m_ColumnWidthArray[ColumnLength1] >= 0)
@@ -907,19 +914,11 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 			Length = FileLengthToStrKb(pPair->pFirstFile->GetFileLength());
 			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength1], Length);
 		}
-		else
-		{
-			//pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength1], _T(""));
-		}
 
 		if (NULL != pPair->pSecondFile && ! pPair->pSecondFile->IsFolder())
 		{
 			Length = FileLengthToStrKb(pPair->pSecondFile->GetFileLength());
 			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength2], Length);
-		}
-		else
-		{
-			//pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength2], _T(""));
 		}
 	}
 

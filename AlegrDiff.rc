@@ -643,9 +643,10 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,76,65,50,14
 END
 
-IDD_DIALOG_OPEN_TEMPLATE DIALOG  0, 0, 281, 37
-STYLE DS_SETFONT | DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS
-FONT 8, "MS Sans Serif"
+IDD_DIALOG_OPEN_TEMPLATE DIALOGEX 0, 0, 281, 37
+STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | 
+    WS_CLIPSIBLINGS
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     RTEXT           "Re&cent Dirs: ",IDC_STATIC,7,9,45,8
     COMBOBOX        IDC_COMBO_RECENT,55,7,219,68,CBS_DROPDOWNLIST | 
@@ -742,18 +743,6 @@ BEGIN
     LTEXT           "Some of the differences are not marked as\n""Use File 1"" or ""Use File 2"".\nWhich file would you like to use as a base for the new file?\nFile 1: %s\nFile 2: %s",
                     IDC_STATIC_QEUSTION,15,16,193,93
     PUSHBUTTON      "File &1",IDNO,7,128,50,14
-END
-
-IDD_DIALOG_SAVE_MERGED_TEMPLATE DIALOGEX 0, 0, 281, 30
-STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | 
-    WS_CLIPSIBLINGS
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    CONTROL         "Open file after save",IDC_CHECK_OPEN_IN_EDITOR,"Button",
-                    BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,139,13,78,
-                    10
-    CONTROL         "Save as UNICODE",IDC_CHECK_UNICODE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,13,101,10
 END
 
 IDD_DIALOG_FIND DIALOGEX 0, 0, 263, 72
@@ -973,6 +962,38 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,75,49,50,14
 END
 
+IDD_DIALOG_SAVE_MERGED_TEMPLATE_V5 DIALOGEX 0, 0, 304, 50
+STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | 
+    WS_CLIPSIBLINGS
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    CONTROL         "Open file after save",IDC_CHECK_OPEN_IN_EDITOR,"Button",
+                    BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,139,32,78,
+                    10
+    CONTROL         "Save as UNICODE",IDC_CHECK_UNICODE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,32,101,10
+    RTEXT           "Re&cent Dirs: ",IDC_STATIC,0,9,51,8
+    COMBOBOX        IDC_COMBO_RECENT,52,7,250,68,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    RTEXT           "",1119,0,21,303,8,NOT WS_VISIBLE
+END
+
+IDD_DIALOG_SAVE_MERGED_TEMPLATE_V4 DIALOGEX 0, 0, 304, 50
+STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | 
+    WS_CLIPSIBLINGS
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    CONTROL         "Open file after save",IDC_CHECK_OPEN_IN_EDITOR,"Button",
+                    BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,139,32,78,
+                    10
+    CONTROL         "Save as UNICODE",IDC_CHECK_UNICODE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,32,101,10
+    RTEXT           "Re&cent Dirs: ",IDC_STATIC,0,9,51,8
+    COMBOBOX        IDC_COMBO_RECENT,52,7,250,68,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    RTEXT           "",1119,0,21,303,8,NOT WS_VISIBLE
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1142,14 +1163,6 @@ BEGIN
         BOTTOMMARGIN, 142
     END
 
-    IDD_DIALOG_SAVE_MERGED_TEMPLATE, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 274
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 23
-    END
-
     IDD_DIALOG_FIND, DIALOG
     BEGIN
         LEFTMARGIN, 7
@@ -1228,6 +1241,22 @@ BEGIN
         RIGHTMARGIN, 194
         TOPMARGIN, 7
         BOTTOMMARGIN, 63
+    END
+
+    IDD_DIALOG_SAVE_MERGED_TEMPLATE_V5, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 297
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 43
+    END
+
+    IDD_DIALOG_SAVE_MERGED_TEMPLATE_V4, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 297
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 43
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -1469,10 +1498,11 @@ BEGIN
     IDS_STRING_READING_FILE "Reading file..."
     IDS_STRING_ERROR_READING_FILE "Error while reading file ""%s"""
     IDS_STRING_ONLY_FINGERPRINT_SUBDIR_EXISTS 
-                            "Subdirectory exists only in the fingerprint file"
-    IDS_STRING_ONLY_FINGERPRINT_EXISTS "File exists only in fingerprint"
+                            "Subdirectory exists only in the fingerprint list"
+    IDS_STRING_ONLY_FINGERPRINT_EXISTS 
+                            "File exists only in the fingerprint list"
     IDS_CHECK_FINGERPRINT_FOLDER_DLG_TITLE 
-                            "Select a folder to check against fingerprint file"
+                            "Select a folder to check against fingerprint list"
 END
 
 STRINGTABLE 
@@ -1534,6 +1564,12 @@ END
 STRINGTABLE 
 BEGIN
     ID_VIEW_RESETCOLUMNS    "Reset all column order and width to the default\nReset columns"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_DIRECTORY_ACCESS_DENIED2 "Access to directory ""%s"" denied"
+    IDS_DIRECTORY_NOT_FOUND2 "Directory ""%s"" not found"
 END
 
 #endif    // English (U.S.) resources

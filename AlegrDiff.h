@@ -34,13 +34,8 @@ enum eColumns
 class CAlegrDiffApp : public CWinApp
 {
 	bool m_bIsWin9x;
-	DWORD m_MajorComctlrVer, m_MinorComcctrlVer;
 public:
 
-	DWORD GetComctrl32Ver() const
-	{
-		return ((m_MajorComctlrVer & 0xFF) << 8) | (m_MinorComcctrlVer & 0xFF);
-	}
 	void OpenPairOfPathnames(LPTSTR path1, LPTSTR path2);
 	void CompareFiles(LPCTSTR name1, LPCTSTR name2);
 	void CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filter = NULL);
@@ -97,10 +92,10 @@ public:
 	CString m_CopyFilesDir;
 	CString m_CustomFileOpenFilter;
 
-	CString m_sFindHistory[15];
-	CString m_RecentFolders[15];
-	CString m_sFilters[10];
-	CString m_RecentFiles[15];
+	CStringHistory m_FindHistory;
+	CStringHistory m_RecentFolders;
+	CStringHistory m_FileFilters;
+	CStringHistory m_RecentFiles;
 
 	UCHAR m_ColumnArray[MaxColumns];
 	UCHAR m_ColumnSort[MaxColumns];
@@ -199,7 +194,7 @@ void LoadHistoryCombo(CComboBox & Combo, CString history[], int NumItems);
 
 CString CreateCustomFilter(LPCTSTR Extension);
 int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
-				CString const * pHistory = NULL, int HistorySize = 0);
+				CStringHistory * pHistory);
 /////////////////////////////////////////////////////////////////////////////
 
 //{{AFX_INSERT_LOCATION}}

@@ -594,27 +594,35 @@ int FileItem::DirNameCompare(FileItem const * Item1, FileItem const * Item2)
 	}
 	// compare subdirs
 	// compare pointers to dir name buffers
-	if (Item1->GetSubdir() == Item2->GetSubdir())
+	if (Item1->GetSubdir() != Item2->GetSubdir())
 	{
-		return Item1->m_Name.CompareNoCase(Item2->m_Name);
+		if (0 == Item1->m_Subdir.GetLength()
+			&& 0 != Item2->m_Subdir.GetLength())
+		{
+			return -1;
+		}
+		if (0 == Item2->m_Subdir.GetLength()
+			&& 0 != Item1->m_Subdir.GetLength())
+		{
+			return 1;
+		}
+		int result = Item1->m_Subdir.CollateNoCase(Item2->m_Subdir);
+		if (0 != result)
+		{
+			return result;
+		}
 	}
-
-	if (0 == Item1->m_Subdir.GetLength()
-		&& 0 != Item2->m_Subdir.GetLength())
+	// directory name is the same
+	// compare file name. Subdirectories go first
+	if (Item1->IsFolder() == Item2->IsFolder())
+	{
+		return Item1->m_Name.CollateNoCase(Item2->m_Name);
+	}
+	if (Item1->IsFolder())
 	{
 		return -1;
 	}
-	if (0 == Item2->m_Subdir.GetLength()
-		&& 0 != Item1->m_Subdir.GetLength())
-	{
-		return 1;
-	}
-	int result = Item1->m_Subdir.CompareNoCase(Item2->m_Subdir);
-	if (0 != result)
-	{
-		return result;
-	}
-	return Item1->m_Name.CompareNoCase(Item2->m_Name);
+	return 1;
 }
 
 // sort names first then directories
@@ -638,6 +646,15 @@ int FileItem::NameCompare(FileItem const * Item1, FileItem const * Item2)
 	{
 		return -1;
 	}
+	if (Item1->IsFolder() != Item2->IsFolder())
+	{
+		if (Item1->IsFolder())
+		{
+			return -1;
+		}
+		return 1;
+	}
+
 	int result = Item1->m_Name.CollateNoCase(Item2->m_Name);
 	if (0 != result)
 	{
@@ -1347,6 +1364,8 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 			LoadSubFolder(NewDir, true,
 						sInclusionMask, sExclusionMask, sC_CPPMask, sBinaryMask);
 
+			wfd.cFileName[countof(wfd.cFileName) - 2] = 0;
+			_tcscat(wfd.cFileName, _T("\\"));
 			pFile = new FileItem( & wfd, m_BaseDir, SubDirectory);
 			if (NULL == pFile)
 			{

@@ -28,9 +28,10 @@ public:
 	CComboBox m_cbFilename;
 	CString m_sFilename;
 	virtual BOOL OnInitDialog();
-	CString m_sFingerprintFilenameHistory[10];
 
 	CApplicationProfile m_Profile;
+	CStringHistory m_FingerprintFilenameHistory;
+
 	void OnUpdateOk(CCmdUI * pCmdUI);
 	LRESULT OnKickIdle(WPARAM, LPARAM);
 	afx_msg void OnCbnEditchangeComboFirstDir();

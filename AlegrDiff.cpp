@@ -25,6 +25,7 @@
 #include "DirectoryFingerprintCheckDlg.h"
 #include <Shlwapi.h>
 #include <atlbase.h>
+#include "FileDialogWithHistory.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -76,9 +77,13 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_NumberOfIdenticalLines(5),
 	m_MinPercentWeakIdenticalLines(10),
 	m_PercentsOfLookLikeDifference(30),
+
+	m_RecentFolders( & Profile, _T("History"), _T("dir%d"), 15, true),
+	m_FindHistory( & Profile, _T("History"), _T("find%d"), 15, false),
+	m_FileFilters( & Profile, _T("History"), _T("filter%d"), 10, true),
+	m_RecentFiles( & Profile, _T("History"), _T("file%d"), 15, true),
+
 	m_MinIdenticalLines(5)
-	, m_MajorComctlrVer(4)
-	, m_MinorComcctrlVer(0)
 {
 	OSVERSIONINFO vi;
 	ZeroMemory(&vi, sizeof(OSVERSIONINFO));
@@ -152,7 +157,8 @@ BOOL CAlegrDiffApp::InitInstance()
 
 	// Change the registry key under which our settings are stored.
 
-	AtlGetCommCtrlVersion( & m_MajorComctlrVer, & m_MinorComcctrlVer);
+	// use _AfxGetComCtlVersion() instead
+	//AtlGetCommCtrlVersion( & m_MajorComctlrVer, & m_MinorComcctrlVer);
 
 	SetRegistryKey(_T("AleGr SoftWare"));
 
@@ -254,14 +260,10 @@ BOOL CAlegrDiffApp::InitInstance()
 
 	Profile.RemoveFromRegistry(_T("Settings"), _T("FileListSort"));
 
-	LoadHistory(Profile, _T("History"), _T("find%d"), m_sFindHistory,
-				countof(m_sFindHistory), false);
-	LoadHistory(Profile, _T("History"), _T("dir%d"), m_RecentFolders,
-				countof(m_RecentFolders), true);
-	LoadHistory(Profile, _T("History"), _T("file%d"), m_RecentFiles,
-				countof(m_RecentFiles), true);
-	LoadHistory(Profile, _T("History"), _T("filter%d"), m_sFilters,
-				countof(m_sFilters), true);
+	m_RecentFiles.Load();
+	m_FileFilters.Load();
+	m_FindHistory.Load();
+	m_RecentFolders.Load();
 
 	m_TextBackgroundColor = GetSysColor(COLOR_WINDOW);
 	m_SelectedTextColor = 0xFFFFFF;
@@ -393,9 +395,10 @@ CDocument * CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 {
 	if (pPair->m_ComparisionResult == pPair->ResultUnknown
 		|| (pPair->pFirstFile != NULL && pPair->pFirstFile->IsFolder())
-		|| (pPair->pSecondFile != NULL && pPair->pSecondFile->IsFolder()))
+		|| (pPair->pSecondFile != NULL && pPair->pSecondFile->IsFolder())
+		|| (pPair->pSecondFile == NULL && pPair->pFirstFile != NULL && pPair->pFirstFile->m_bIsPhantomFile))
 	{
-		// the file not compared yet, can't open
+		// the file not compared yet or not a real file, can't open
 		return NULL;
 	}
 	// check if there is already a CFilePairDoc
@@ -418,6 +421,7 @@ CDocument * CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 		}
 	}
 
+	// check if there is already a CBinaryCompareDoc
 	position = m_pBinaryDiffTemplate->GetFirstDocPosition();
 	while(position)
 	{
@@ -705,7 +709,7 @@ static void AFXAPI _AfxAbbreviateName(LPTSTR lpszCanon, int cchMax, BOOL bAtLeas
 
 void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, UINT FormatID, UINT DisabledItemID)
 {
-	if (NULL == pFile)
+	if (NULL == pFile || pFile->IsFolder() || pFile->m_bIsPhantomFile)
 	{
 		CString s;
 		s.LoadString(DisabledItemID);
@@ -1015,10 +1019,8 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 	}
 	FindClose(hFind);
 
-	AddStringToHistory(FileDir2, m_RecentFiles,
-						countof(m_RecentFiles), false);
-	AddStringToHistory(FileDir1, m_RecentFiles,
-						countof(m_RecentFiles), false);
+	m_RecentFiles.AddString(FileDir1, false);
+	m_RecentFiles.AddString(FileDir2, false, 1);
 
 	*pFileName1 = 0;
 	*pFileName2 = 0;
@@ -1446,166 +1448,8 @@ CString CreateCustomFilter(LPCTSTR Extension)
 	return ReturnValue;
 }
 
-class COpenDiffDialog : public CFileDialog
-{
-public:
-	COpenDiffDialog(BOOL bOpenFileDialog, // TRUE for FileOpen, FALSE for FileSaveAs
-					LPCTSTR lpszDefExt = NULL,
-					LPCTSTR lpszFileName = NULL,
-					DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-					LPCTSTR lpszFilter = NULL,
-					CWnd* pParentWnd = NULL)
-		: CFileDialog(bOpenFileDialog, lpszDefExt, lpszFileName, dwFlags,
-					lpszFilter, pParentWnd)
-	{}
-	~COpenDiffDialog()
-	{
-	}
-
-	virtual BOOL OnFileNameOK();
-
-	virtual void OnInitDone();
-	//{{AFX_MSG(COpenDiffDialog)
-	afx_msg void OnComboSelendOK();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
-};
-BEGIN_MESSAGE_MAP(COpenDiffDialog, CFileDialog)
-	//{{AFX_MSG_MAP(COpenDiffDialog)
-	ON_CBN_SELENDOK(IDC_COMBO_RECENT, OnComboSelendOK)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-void COpenDiffDialog::OnComboSelendOK()
-{
-	TRACE("COpenDiffDialog::OnComboSelendOK()\n");
-	CString str;
-	CComboBox * pCb = static_cast<CComboBox *>(GetDlgItem(IDC_COMBO_RECENT));
-	if (NULL != pCb)
-	{
-		int sel = pCb->GetCurSel();
-		if (-1 == sel
-			|| sel >= pCb->GetCount())
-		{
-			return;
-		}
-		pCb->GetLBText(sel, str);
-		TRACE(_T("COpenDiffDialog::OnComboSelendOK: %s selected\n"), LPCTSTR(str));
-		if (str.IsEmpty())
-		{
-			return;
-		}
-		// check if the selected text is a folder
-		// make sure we can find a file in the folder
-		CString dir(str);
-		TCHAR c = dir[dir.GetLength() - 1];
-		if (c != ':'
-			&& c != '\\'
-			&& c != '/')
-		{
-			dir += '\\';
-		}
-		dir += '*';
-
-		WIN32_FIND_DATA wfd;
-		HANDLE hFind = FindFirstFile(dir, & wfd);
-		if (INVALID_HANDLE_VALUE == hFind)
-		{
-			DWORD error = GetLastError();
-			TRACE("FindFirstFile failed, last error = %d\n", error);
-			CString s;
-			if (ERROR_ACCESS_DENIED == error)
-			{
-				s.Format(IDS_DIRECTORY_ACCESS_DENIED, LPCTSTR(str));
-			}
-			else if (1 || ERROR_DIRECTORY == error
-					|| ERROR_PATH_NOT_FOUND == error
-					|| ERROR_INVALID_NAME == error
-					|| ERROR_BAD_NETPATH)
-			{
-				s.Format(IDS_DIRECTORY_NOT_FOUND, LPCTSTR(str));
-			}
-			AfxMessageBox(s);
-			// delete the string from combobox
-			pCb->DeleteString(sel);
-			pCb->SetCurSel(-1); // no selection
-			return;
-		}
-		else
-		{
-			TRACE("FindFirstFile success\n");
-			FindClose(hFind);
-			CWnd * pParent = GetParent();
-			pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(str)));
-			pParent->SendMessage(WM_COMMAND, IDOK, 0);
-			pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR("")));
-			CWnd * pTmp = pParent->GetDlgItem(edt1);
-			if (NULL == pTmp)
-			{
-				// new style dialog
-				pTmp = pParent->GetDlgItem(cmb13);
-			}
-			if (NULL != pTmp)
-			{
-				pTmp->SetFocus();
-			}
-		}
-
-	}
-}
-
-BOOL COpenDiffDialog::OnFileNameOK()
-{
-	// add the current directory name to MRU
-	CThisApp * pApp = GetApp();
-	CString sCurrDir;
-	GetParent()->SendMessage(CDM_GETFOLDERPATH, MAX_PATH, LPARAM(sCurrDir.GetBuffer(MAX_PATH)));
-	sCurrDir.ReleaseBuffer();
-	TRACE(_T("COpenDiffDialog::OnFileNameOK Folder Path=%s\n"), LPCTSTR(sCurrDir));
-
-	AddStringToHistory(sCurrDir, pApp->m_RecentFolders,
-						countof(pApp->m_RecentFolders), false);
-
-	return CFileDialog::OnFileNameOK();
-}
-
-void COpenDiffDialog::OnInitDone()
-{
-	CFileDialog::OnInitDone();
-	CThisApp * pApp = GetApp();
-
-	CComboBox * pCb = static_cast<CComboBox *>(GetDlgItem(IDC_COMBO_RECENT));
-	if (NULL != pCb)
-	{
-		CString dir(m_ofn.lpstrInitialDir);
-		if (dir.GetLength() > 1
-			&& dir[dir.GetLength() - 1] == '\\')
-		{
-			dir.SetAt(dir.GetLength() - 1, 0);
-		}
-		pCb->SetExtendedUI();
-		CThisApp * pApp = GetApp();
-		int sel = -1;
-		for (int i = 0; i < countof(pApp->m_RecentFolders); i++)
-		{
-			if ( ! pApp->m_RecentFolders[i].IsEmpty())
-			{
-				pCb->AddString(pApp->m_RecentFolders[i]);
-				if (0 == pApp->m_RecentFolders[i].CompareNoCase(dir))
-				{
-					sel = i;
-				}
-			}
-		}
-		if (-1 != sel)
-		{
-			pCb->SetCurSel(sel);
-		}
-	}
-}
-
 int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
-				CString const * pHistory, int HistorySize)
+				CStringHistory * pHistory)
 {
 	CThisApp * pApp = GetApp();
 
@@ -1656,12 +1500,12 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 
 	if (0 != pHistory)
 	{
-		for (int i = 0; i < HistorySize; i++)
+		for (int i = 0; i < pHistory->Size(); i++)
 		{
 			TCHAR FullPath[MAX_PATH];
 			LPTSTR FileNamePart;
-			if ( ! pHistory[i].IsEmpty()
-				&& GetFullPathName(pHistory[i], MAX_PATH, FullPath, & FileNamePart)
+			if ( ! (*pHistory)[i].IsEmpty()
+				&& GetFullPathName((*pHistory)[i], MAX_PATH, FullPath, & FileNamePart)
 				&& NULL != FileNamePart)
 			{
 				// find extension
@@ -1694,13 +1538,13 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 
 	Filter += AllFilesFilter;
 
-	COpenDiffDialog dlg(TRUE, NULL, NULL,
-						OFN_HIDEREADONLY | OFN_FILEMUSTEXIST
-						| OFN_NOCHANGEDIR | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLETEMPLATE,
-						Filter);
+	CFileDialogWithHistory dlg(TRUE, & pApp->m_RecentFolders, NULL, NULL,
+								OFN_HIDEREADONLY | OFN_FILEMUSTEXIST
+								//| OFN_NOCHANGEDIR | OFN_EXPLORER
+								,
+								Filter);
 	// copy initial file name
 	_tcsncpy(dlg.m_ofn.lpstrFile, LastFileName, dlg.m_ofn.nMaxFile - 1);
-	dlg.m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_OPEN_TEMPLATE);
 
 	if (FullPath[0] == 0)
 	{
@@ -1799,7 +1643,17 @@ void CAlegrDiffApp::OnFileCheckDirectoryFingerprint()
 	{
 		return;
 	}
-	pDoc->SetTitle(_T(""));
+
+	{
+		CString title = dlg.m_sFilename;
+		title += _T(" - ");
+		title += dlg.m_sDirectory;
+		title += '\\';
+		pDoc->SetTitle(title);
+	}
+
+	pDoc->m_sSecondDir = dlg.m_sDirectory;
+
 	CDirectoryFingerprintCheckDlg dlg1(pDoc);
 
 	dlg1.m_sDirectory = dlg.m_sDirectory;

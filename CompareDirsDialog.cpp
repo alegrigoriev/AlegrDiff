@@ -20,6 +20,9 @@ CCompareDirsDialog::CCompareDirsDialog(CWnd* pParent /*=NULL*/)
 	: CDialog(CCompareDirsDialog::IDD, pParent),
 	m_bAdvanced(false),
 	m_nTabIndent(4)
+	, m_BinaryFilterHistory(& m_Profile, _T("History"), _T("BinaryFiles%d"), 5, true)
+	, m_CppFilterHistory(& m_Profile, _T("History"), _T("CppFiles%d"), 5, true)
+	, m_IgnoreFilterHistory(& m_Profile, _T("History"), _T("IgnoreFiles%d"), 10, true)
 {
 	//{{AFX_DATA_INIT(CCompareDirsDialog)
 	m_bIncludeSubdirs = FALSE;
@@ -65,23 +68,14 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 	if (pDX->m_bSaveAndValidate)
 	{
 		// Update MRU, case insensitive
-		AddStringToHistory(m_sFirstDir, pApp->m_RecentFolders,
-							countof(pApp->m_RecentFolders), false);
+		pApp->m_RecentFolders.AddString(m_sFirstDir, false);
 		// second folder added after the first. If they both are the same, two same folders added
-		AddStringToHistory(m_sSecondDir, & pApp->m_RecentFolders[1],
-							countof(pApp->m_RecentFolders) - 1, false);
+		pApp->m_RecentFolders.AddString(m_sSecondDir, false, 1);
+		pApp->m_FileFilters.AddString(m_FilenameFilter, false);
 
-		AddStringToHistory(m_FilenameFilter, pApp->m_sFilters,
-							countof(pApp->m_sFilters), false);
-
-		AddStringToHistory(m_sBinaryFilesFilter, m_sBinaryFilterHistory,
-							countof(m_sBinaryFilterHistory), false);
-
-		AddStringToHistory(m_sCppFilesFilter, m_sCppFilterHistory,
-							countof(m_sCppFilterHistory), false);
-
-		AddStringToHistory(m_sIgnoreFilesFilter, m_sIgnoreFilterHistory,
-							countof(m_sIgnoreFilterHistory), false);
+		m_BinaryFilterHistory.AddString(m_sBinaryFilesFilter, false);
+		m_CppFilterHistory.AddString(m_sCppFilesFilter, false);
+		m_IgnoreFilterHistory.AddString(m_sIgnoreFilesFilter, false);
 
 		m_Profile.UnloadAll();
 	}
@@ -153,7 +147,7 @@ int CCompareDirsDialog::DoModal()
 
 	if (m_FilenameFilter.IsEmpty())
 	{
-		m_FilenameFilter = pApp->m_sFilters[0];
+		m_FilenameFilter = pApp->m_FileFilters[0];
 	}
 	while (1)
 	{
@@ -200,34 +194,26 @@ BOOL CCompareDirsDialog::OnInitDialog()
 {
 	CThisApp * pApp = GetApp();
 
-	LoadHistory(m_Profile, _T("History"), _T("BinaryFiles%d"), m_sBinaryFilterHistory,
-				countof(m_sBinaryFilterHistory), true);
+	m_BinaryFilterHistory.Load();
 
-	LoadHistory(m_Profile, _T("History"), _T("CppFiles%d"), m_sCppFilterHistory,
-				countof(m_sCppFilterHistory), true);
+	m_CppFilterHistory.Load();
 
-	LoadHistory(m_Profile, _T("History"), _T("IgnoreFiles%d"), m_sIgnoreFilterHistory,
-				countof(m_sIgnoreFilterHistory), true);
+	m_IgnoreFilterHistory.Load();
 
 	CDialog::OnInitDialog();
 
-	LoadHistoryCombo(m_FirstDirCombo, pApp->m_RecentFolders, countof(pApp->m_RecentFolders));
-	LoadHistoryCombo(m_SecondDirCombo, pApp->m_RecentFolders, countof(pApp->m_RecentFolders));
-
 	// set the filters to combobox
-	LoadHistoryCombo(m_cFilenameFilter, pApp->m_sFilters, countof(pApp->m_sFilters));
+	pApp->m_RecentFolders.LoadCombo( & m_FirstDirCombo);
+	pApp->m_RecentFolders.LoadCombo( & m_SecondDirCombo);
+	pApp->m_FileFilters.LoadCombo( & m_cFilenameFilter);
 
 	if (m_bAdvanced)
 	{
 		m_Spin.SetRange(1, 32);
-		LoadHistoryCombo(m_cbBinaryFilesFilter, m_sBinaryFilterHistory,
-						countof(m_sBinaryFilterHistory));
 
-		LoadHistoryCombo(m_cbCppFilesFilter, m_sCppFilterHistory,
-						countof(m_sCppFilterHistory));
-
-		LoadHistoryCombo(m_cbIgnoreFilesFilter, m_sIgnoreFilterHistory,
-						countof(m_sIgnoreFilterHistory));
+		m_BinaryFilterHistory.LoadCombo( & m_cbBinaryFilesFilter);
+		m_CppFilterHistory.LoadCombo( & m_cbCppFilesFilter);
+		m_IgnoreFilterHistory.LoadCombo( & m_cbIgnoreFilesFilter);
 	}
 
 	OnCheckBinary();

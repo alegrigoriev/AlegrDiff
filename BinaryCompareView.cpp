@@ -117,17 +117,31 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 	DWORD OtherColor, AlternateColor;
 	FileItem * pFile;
 	FileItem * pOtherFile;
-	if (m_bShowSecondFile || NULL == pFilePair->pFirstFile)
+	if (m_bShowSecondFile
+		|| NULL == pFilePair->pFirstFile
+		|| pFilePair->pFirstFile->m_bIsPhantomFile)
 	{
 		pFile = pFilePair->pSecondFile;
+
 		pOtherFile = pFilePair->pFirstFile;
+		if (pOtherFile->m_bIsPhantomFile)
+		{
+			pOtherFile = NULL;
+		}
+
 		OtherColor = pApp->m_AddedTextColor;
 		AlternateColor = pApp->m_ErasedTextColor;
 	}
 	else
 	{
 		pFile = pFilePair->pFirstFile;
+
 		pOtherFile = pFilePair->pSecondFile;
+		if (pOtherFile->m_bIsPhantomFile)
+		{
+			pOtherFile = NULL;
+		}
+
 		OtherColor = pApp->m_ErasedTextColor;
 		AlternateColor = pApp->m_AddedTextColor;
 	}
@@ -772,7 +786,7 @@ void CBinaryCompareView::VScrollToTheAddr(LONGLONG Addr)
 	if (nOffset <= BytesPerScreen && nOffset >= -BytesPerScreen)
 	{
 		// need to scroll the view
-		int ndy = LONG(nOffset) / m_BytesPerLine;
+		int ndy = LONG(nOffset) / int(m_BytesPerLine);
 		if (0 == ndy)
 		{
 			return;

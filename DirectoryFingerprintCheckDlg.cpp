@@ -225,7 +225,7 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 		if (NumScannedItems < 1)
 		{
 			// error
-			break;
+			continue;
 		}
 
 		for (int i = 0; i < 16; i++)
@@ -234,32 +234,29 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 		}
 
 		// find the last '\'
-		LPTSTR Dir = _tcsrchr(FileName, '\\');
-		LPTSTR NamePart;
+		LPTSTR DirEnd = _tcsrchr(FileName, '\\');
+		LPTSTR NamePart = FileName;
 		CString SubDir;
 		FileItem * pFile;
 
-
-		if (NULL != Dir && 0 == Dir[1])
+		if (NULL != DirEnd && 0 == DirEnd[1])
 		{
-			wfd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-			// find another backslash
-			while (Dir != FileName)
-			{
-				Dir--;
-				if ('\\' == *Dir)
-				{
-					break;
-				}
-			}
-			if (Dir == FileName)
-			{
-				// another backslash not found
-				Dir = NULL;
-			}
+			// last char is backslash
 			if (NumScannedItems != 1)
 			{
-				break;
+				continue;
+			}
+
+			wfd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+			// find another backslash
+			while (DirEnd != FileName)
+			{
+				DirEnd--;
+				if ('\\' == *DirEnd)
+				{
+					NamePart = DirEnd + 1;
+					break;
+				}
 			}
 		}
 		else
@@ -267,29 +264,42 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 			if (NumScannedItems != 19)
 			{
 				// error
-				break;
+				continue;
 			}
+			if (NULL != DirEnd)
+			{
+				NamePart = DirEnd + 1;
+			}
+			else
+			{
+				DirEnd = FileName;
+			}
+
 			wfd.nFileSizeLow = DWORD(FileLength);
 			wfd.nFileSizeHigh = DWORD(FileLength >> 32);
 		}
 
-		if (NULL == Dir)
+		if (DirEnd != FileName)
 		{
-			NamePart = FileName;
+			SubDir = CString(FileName, DirEnd - FileName + 1);
 		}
-		else
+
+		if (NamePart[0] != 0
+			&& NamePart[0] != '\\'
+			&& (SubDir.IsEmpty()
+				|| SubDir[0] != '\\'))
 		{
-			NamePart = Dir + 1;
-			SubDir = CString(FileName, Dir - FileName + 1);
+			_tcsncpy(wfd.cFileName, NamePart, countof(wfd.cFileName) - 1);
+			wfd.cFileName[countof(wfd.cFileName) - 1] = 0;
+
+			pFile = new FileItem(& wfd, CString(), SubDir);
+
+			pFile->SetMD5(md5);
+
+			pFile->m_pNext = FileList1.m_pList;
+			FileList1.m_pList = pFile;
+			FileList1.m_NumFiles++;
 		}
-		_tcsncpy(wfd.cFileName, NamePart, countof(wfd.cFileName) - 1);
-		pFile = new FileItem(& wfd, CString(), SubDir);
-
-		pFile->SetMD5(md5);
-
-		pFile->m_pNext = FileList1.m_pList;
-		FileList1.m_pList = pFile;
-		FileList1.m_NumFiles++;
 	}
 
 	GetFullPathName(m_sDirectory, MAX_PATH, buf, & pFilePart);
@@ -299,9 +309,12 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 		InclusionPattern = '*';
 	}
 
+	fclose(m_pFile);
+	m_pFile = NULL;
+
 	if (! FileList2.LoadFolder(buf, m_bIncludeSubdirectories != 0,
-								InclusionPattern, ExclusionPattern, PatternToMultiCString(_T("*")),
-								PatternToMultiCString(_T(""))))
+								InclusionPattern, ExclusionPattern, PatternToMultiCString(_T("")),
+								PatternToMultiCString(_T("*"))))
 	{
 		// todo: post a command
 		DWORD error = GetLastError();
@@ -315,10 +328,7 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 		return 0;
 	}
 
-	fclose(m_pFile);
-
-	m_pFile = NULL;
-
+	m_pDocument->m_bRecurseSubdirs = (m_bIncludeSubdirectories != 0);
 	m_pDocument->BuildFilePairList(FileList1, FileList2);
 
 	m_TotalDataSize = 0;

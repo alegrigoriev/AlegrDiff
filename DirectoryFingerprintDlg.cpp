@@ -6,6 +6,7 @@
 #include "DirectoryFingerprintDlg.h"
 #include "FolderDialog.h"
 #include <afxpriv.h>
+#include "FileDialogWithHistory.h"
 
 // CDirectoryFingerprintDlg dialog
 
@@ -21,6 +22,8 @@ CDirectoryFingerprintDlg::CDirectoryFingerprintDlg(CWnd* pParent /*=NULL*/)
 	, m_bNeedUpdateControls(TRUE)
 	, m_bOkToOverwriteFile(FALSE)
 	, m_bSaveAsUnicode(FALSE)
+	, m_IgnoreFilterHistory(& m_Profile, _T("History"), _T("IgnoreFiles%d"), 15)
+	, m_FingerprintFilenameHistory( & m_Profile, _T("History"), _T("FingerprintFile%d"), 15)
 {
 }
 
@@ -47,17 +50,11 @@ void CDirectoryFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 	{
 		CThisApp * pApp = GetApp();
 
-		AddStringToHistory(m_sDirectory, pApp->m_RecentFolders,
-							countof(pApp->m_RecentFolders), false);
+		pApp->m_RecentFolders.AddString(m_sDirectory, false);
+		pApp->m_FileFilters.AddString(m_sFilenameFilter, false);
 
-		AddStringToHistory(m_sIgnoreFiles, m_sIgnoreFilterHistory,
-							countof(m_sIgnoreFilterHistory), false);
-
-		AddStringToHistory(m_sFilenameFilter, pApp->m_sFilters,
-							countof(pApp->m_sFilters), false);
-
-		AddStringToHistory(m_sSaveFilename, m_sFingerprintFilenameHistory,
-							countof(m_sFingerprintFilenameHistory), false);
+		m_IgnoreFilterHistory.AddString(m_sIgnoreFiles, false);
+		m_FingerprintFilenameHistory.AddString(m_sSaveFilename, false);
 
 		m_Profile.FlushAll();
 	}
@@ -100,9 +97,9 @@ void CDirectoryFingerprintDlg::OnBnClickedButtonBrowseSaveFilename()
 
 	m_SaveFilename.GetWindowText(m_sSaveFilename);
 
-	CFileDialog dlg(FALSE, _T("md5fp"), m_sSaveFilename,
-					OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-					Filter);
+	CFileDialogWithHistory dlg(FALSE, & GetApp()->m_RecentFolders, _T("md5fp"), m_sSaveFilename,
+								OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+								Filter);
 	dlg.m_ofn.lpstrTitle = Title;
 
 	if (IDOK != dlg.DoModal())
@@ -118,32 +115,24 @@ void CDirectoryFingerprintDlg::OnBnClickedButtonBrowseSaveFilename()
 BOOL CDirectoryFingerprintDlg::OnInitDialog()
 {
 	CThisApp * pApp = GetApp();
-	LoadHistory(m_Profile, _T("History"), _T("FingerprintFile%d"), m_sFingerprintFilenameHistory,
-				countof(m_sFingerprintFilenameHistory), true);
 
-	LoadHistory(m_Profile, _T("History"), _T("IgnoreFiles%d"), m_sIgnoreFilterHistory,
-				countof(m_sIgnoreFilterHistory), true);
+	m_IgnoreFilterHistory.Load();
+	m_FingerprintFilenameHistory.Load();
 
 	m_Profile.AddBoolItem(_T("Settings"), _T("IncludeDirsToFingerprint"), m_bIncludeDirectoryStructure, TRUE);
 	m_Profile.AddBoolItem(_T("Settings"), _T("SaveFingerprintAsUnicode"), m_bSaveAsUnicode, FALSE);
 
-	m_sSaveFilename = m_sFingerprintFilenameHistory[0];
-	m_sIgnoreFiles = m_sIgnoreFilterHistory[0];
+	m_sSaveFilename = m_FingerprintFilenameHistory[0];
+	m_sIgnoreFiles = m_IgnoreFilterHistory[0];
 	m_sDirectory = pApp->m_RecentFolders[0];
 
 	CDialog::OnInitDialog();
 
-	LoadHistoryCombo(m_DirCombo, pApp->m_RecentFolders,
-					countof(pApp->m_RecentFolders));
+	pApp->m_RecentFolders.LoadCombo( & m_DirCombo);
+	pApp->m_FileFilters.LoadCombo( & m_FilenameFilterCombo);
 
-	LoadHistoryCombo(m_FilenameFilterCombo, pApp->m_sFilters,
-					countof(pApp->m_sFilters));
-
-	LoadHistoryCombo(m_cbIgnoreFiles, m_sIgnoreFilterHistory,
-					countof(m_sIgnoreFilterHistory));
-
-	LoadHistoryCombo(m_SaveFilename, m_sFingerprintFilenameHistory,
-					countof(m_sFingerprintFilenameHistory));
+	m_IgnoreFilterHistory.LoadCombo( & m_cbIgnoreFiles);
+	m_FingerprintFilenameHistory.LoadCombo( & m_SaveFilename);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE

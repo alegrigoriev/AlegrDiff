@@ -335,21 +335,32 @@ template<class T> void CApplicationProfileItemBinary<T>::WriteData(BOOL bForceWr
 	}
 }
 
-template<int NumStrings = 10>
 class CStringHistory
 {
 public:
 	CStringHistory(CApplicationProfile * pProfile,
-					LPCTSTR Section, LPCTSTR KeyFormat);
+					LPCTSTR Section, LPCTSTR KeyFormat, int NumStrings, bool Trim = true);
+	CStringHistory(CStringHistory * pSourceHistory);
 	~CStringHistory();
 	void Load();
 	void Flush();
-	void LoadCombo(CComboBox & Combo);
-	void AddString(CString const & str);
-private:
-	CString m_Strings[NumStrings];
-	CApplicationProfile * m_pProfile;
-};
+	void LoadCombo(CComboBox * pCb);
+	void AddString(CString const & str, bool CaseSensitive, int AtIndex = 0);
+	void DeleteString(CString const & str, bool CaseSensitive, int StartFromIndex = 0);
 
+	int Size() const { return m_NumStrings; }
+	CString const & operator[](int index) const { return m_Strings[index]; }
+	CString & operator[](int index) { return m_Strings[index]; }
+
+protected:
+	CString * m_Strings;
+	int m_NumStrings;
+	CApplicationProfile * m_pProfile;
+	CString m_ProfileSection;
+	CString m_KeyFormat;
+	bool m_bTrim;
+	bool m_bAttached;
+private:
+};
 
 #endif

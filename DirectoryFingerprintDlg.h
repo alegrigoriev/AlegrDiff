@@ -31,21 +31,21 @@ public:
 	CComboBox m_DirCombo;
 	CString m_sDirectory;
 
+	CApplicationProfile m_Profile;
 	CComboBox m_FilenameFilterCombo;
 	CString m_sFilenameFilter;
 
 	CComboBox m_cbIgnoreFiles;
 	CString m_sIgnoreFiles;
-	CString m_sIgnoreFilterHistory[10];
+	CStringHistory m_IgnoreFilterHistory;
 
 	CComboBox m_SaveFilename;
 	CString m_sSaveFilename;
 	BOOL m_bOkToOverwriteFile;
-	CString m_sFingerprintFilenameHistory[10];
+	CStringHistory m_FingerprintFilenameHistory;
 
 	virtual BOOL OnInitDialog();
 
-	CApplicationProfile m_Profile;
 	LRESULT OnKickIdle(WPARAM, LPARAM);
 	afx_msg void OnCbnEditchangeComboFirstDir();
 	afx_msg void OnCbnSelchangeComboFirstDir();

@@ -5,6 +5,7 @@
 #include "AlegrDiff.h"
 #include "SaveFileListDlg.h"
 #include <afxpriv.h>
+#include "FileDialogWithHistory.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -107,12 +108,12 @@ void CSaveFileListDlg::OnButtonBrowse()
 	CString title;
 	title.LoadString(IDS_SAVE_LIST_TITLE);
 
-	CFileDialog dlg(FALSE, _T(".txt"), NULL,
-					OFN_HIDEREADONLY
-					| OFN_NOTESTFILECREATE
-					| OFN_EXPLORER
-					| OFN_ENABLESIZING,
-					Filter);
+	CFileDialogWithHistory dlg(FALSE, _T(".txt"), NULL,
+								OFN_HIDEREADONLY
+								| OFN_NOTESTFILECREATE
+								| OFN_EXPLORER
+								| OFN_ENABLESIZING,
+								Filter);
 
 	dlg.m_ofn.lpstrTitle = title;
 	CString Name;

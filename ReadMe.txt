@@ -1,22 +1,22 @@
 TODO:
 
-Change sort order and appearance of subdirs
+Remove final dialog in fingerprint creation
 Close file view if the file is updated in the list view
 Update comparison result in the list view on load and reload
 make word by word comparison in MatchStrings
+Find full word only
 If a file(s) exists only in one directory, don't show "Copy From" for another directory
 Version stamp keywords: $Archive: $Revision: $Date:
-Add "CStringHistory" class
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
 Add Copy 1st file text, copy 2nd file text
+show version of file1, file2 of the line
+Show Left-only, right-only, merged line (single line only)
 Copy binary dump as text
 Switch from text view to binary view
 Add folder picture under the fingerprint picture
 replace edit box with a combobox in FolderDialog
 Add history to SaveListOf Files
 
-show version of file1, file2 of the line
-Show Left-only, right-only, merged line (single line only)
 Import font settings from Visual C/VisualStudio
 Maybe different color for selected accepted/declined
 add option to keep the caret on one line during F3 and F7
@@ -32,6 +32,7 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+Name dialog doesn't work if directory name with backslash is specified
 Directory share name cannot be selected if no '\' appended
 Blank lines prevent from proper line matching inside difference blocks
 "   if()" and "  if ()" shows non-whitespace difference	- need full word mode
@@ -41,6 +42,8 @@ screen move in two directions may corrupt the image (??)
 Directory dialog allows to select network host. It won't return anything then.
 
 Fixed:
+If fingerprint: "File Exists only in """
+Scroll back in binary view redraws the whole view
 Wrong arrow direction for name/dir sort
 Status line for single file shows "Files DIFFERENT"
 Non-UNICODE OS: wrong status string
@@ -62,6 +65,15 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+Add "CStringHistory" class
+Set fingerprint list view title
+Set file from fingerprint view title as single file only
+Don't open a file which only exists in the fingerprint
+Set binary view for fingerprinted file with one name only
+Open all files from fingerprint list as binary
+Test if a file from the fingerprint check list can be opened
+Show subdirectories, if fingerprint is being checked
+Change sort order and appearance of subdirs
 Show sort order arrows with comctrl version < 6.0
 If main or child window is minimized, save its state before minimization
 Refresh list view

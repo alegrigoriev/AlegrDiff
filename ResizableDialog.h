@@ -48,6 +48,7 @@ protected:
 		MoveRight = 4,
 		ExpandDown = 8,
 		MoveDown = 0x10,
+		ThisIsDropCombobox = 0x20,  // combo fix required
 	};
 	struct ResizableDlgItem
 	{
@@ -81,6 +82,12 @@ protected:
 private:
 	ResizableDlgItem const * m_pResizeItems;
 	int m_ResizeItemsCount;
+	struct Combobox_data
+	{
+		CComboBox * pCombo;
+		CString EditText;
+		DWORD sel;
+	};
 };
 
 template<class Base>
@@ -145,49 +152,78 @@ void CResizableDialogT<Base>::OnSize(UINT nType, int cx, int cy)
 
 	if (0 != m_ResizeItemsCount)
 	{
+
+		std::vector<Combobox_data> combos;
+		combos.reserve(m_ResizeItemsCount);
+
 		HDWP hdwp = ::BeginDeferWindowPos(m_ResizeItemsCount);
 		for (int i = 0; i < m_ResizeItemsCount && NULL != hdwp; i++)
 		{
-			HWND hWnd = ::GetDlgItem(GetSafeHwnd(), m_pResizeItems[i].Id);
-			if (NULL == hWnd) continue;
+			UINT const flags = m_pResizeItems[i].flags;
+			CWnd * const pWnd = GetDlgItem(m_pResizeItems[i].Id);
 
-			CRect cr;
-			::GetWindowRect(hWnd, cr);
-			ScreenToClient(cr);
-
-			if (m_pResizeItems[i].flags & CenterHorizontally)
+			if (NULL == pWnd)
 			{
-				cr.right += (dx + (cx & 1)) >> 1;
-				cr.left += (dx + (cx & 1)) >> 1;
+				continue;
+			}
+
+			CRect r;
+			pWnd->GetWindowRect(r);
+			ScreenToClient(r);
+
+			if (flags & CenterHorizontally)
+			{
+				r.right += (dx + (cx & 1)) >> 1;
+				r.left += (dx + (cx & 1)) >> 1;
 			}
 			else
 			{
-				if (m_pResizeItems[i].flags & (ExpandRight | MoveRight))
+				if (flags & (ExpandRight | MoveRight))
 				{
-					cr.right += dx;
+					r.right += dx;
 				}
-				if (m_pResizeItems[i].flags & MoveRight)
+				if (flags & MoveRight)
 				{
-					cr.left += dx;
+					r.left += dx;
 				}
 			}
 
-			if (m_pResizeItems[i].flags & (ExpandDown | MoveDown))
+			if (flags & (ExpandDown | MoveDown))
 			{
-				cr.bottom += dy;
+				r.bottom += dy;
 			}
 
-			if (m_pResizeItems[i].flags & MoveDown)
+			if (flags & MoveDown)
 			{
-				cr.top += dy;
+				r.top += dy;
 			}
 
-			hdwp = ::DeferWindowPos(hdwp, hWnd, NULL, cr.left, cr.top,
-									cr.Width(), cr.Height(),
-									SWP_NOZORDER | SWP_NOOWNERZORDER// | SWP_NOACTIVATE | SWP_NOSENDCHANGING
+			if (flags & ThisIsDropCombobox)
+			{
+				// special processing for CComboBox
+				CComboBox * pCombo = static_cast<CComboBox *>(pWnd);
+
+				Combobox_data data;
+
+				pCombo->GetWindowText(data.EditText);
+
+				if ( ! data.EditText.IsEmpty())
+				{
+					data.pCombo = pCombo;
+					data.sel = pCombo->GetEditSel();
+					//pCombo->LockWindowUpdate();
+					pCombo->SetWindowText(_T(""));
+
+					combos.push_back(data);
+				}
+			}
+
+			hdwp = ::DeferWindowPos(hdwp, pWnd->GetSafeHwnd(), NULL, r.left, r.top,
+									r.Width(), r.Height(),
+									SWP_NOZORDER | SWP_NOOWNERZORDER /*| SWP_NOACTIVATE | SWP_NOSENDCHANGING*/
 									);
 			if (0) TRACE("DeferWindowPos hwnd=%x dw=%d dy=%d x=%d, y=%d returned %X\n",
-						hWnd, dx, dy, cr.left, cr.top, hdwp);
+						pWnd->GetSafeHwnd(), dx, dy, r.left, r.top, hdwp);
 		}
 
 		hdwp = OnDeferredSize(hdwp, cx, cy, dx, dy);
@@ -197,6 +233,13 @@ void CResizableDialogT<Base>::OnSize(UINT nType, int cx, int cy)
 			::EndDeferWindowPos(hdwp);
 		}
 
+		for (std::vector<Combobox_data>::const_iterator i = combos.begin();
+			i != combos.end(); i++)
+		{
+			i->pCombo->SetWindowText(i->EditText);
+			i->pCombo->SetEditSel(LOWORD(i->sel), HIWORD(i->sel));
+			//i->pCombo->UnlockWindowUpdate();
+		}
 	}
 
 	// invalidate an area which is (after resizing)

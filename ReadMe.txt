@@ -1,5 +1,6 @@
 TODO:
 Concatenate the file diff sections of the same type (whole line)
+eradicate phantom directory column, when subdirs are disabled
 make word by word comparison in MatchStrings
 
 show version of file1, file2 of the line

@@ -2122,21 +2122,21 @@ bool FilePair::Compare(const FilePair * Pair1, const FilePair * Pair2, const Com
 	case CompareSubitemDate1:
 		if (comp.PrimaryBackward)
 		{
-			return Time1SortBackwardsFunc(Pair1, Pair2) <= 0;
+			return Time1SortBackwardsFunc(Pair1, Pair2) < 0;
 		}
 		else
 		{
-			return Time1SortFunc(Pair1, Pair2) <= 0;
+			return Time1SortFunc(Pair1, Pair2) < 0;
 		}
 		break;
 	case CompareSubitemDate2:
 		if (comp.PrimaryBackward)
 		{
-			return Time2SortBackwardsFunc(Pair1, Pair2) <= 0;
+			return Time2SortBackwardsFunc(Pair1, Pair2) < 0;
 		}
 		else
 		{
-			return Time2SortFunc(Pair1, Pair2) <= 0;
+			return Time2SortFunc(Pair1, Pair2) < 0;
 		}
 		break;
 	case CompareSubitemResult:
@@ -2154,11 +2154,11 @@ bool FilePair::Compare(const FilePair * Pair1, const FilePair * Pair2, const Com
 	}
 	if (comp.PrimaryBackward)
 	{
-		return result >= 0;
+		return result > 0;
 	}
 	else
 	{
-		return result <= 0;
+		return result < 0;
 	}
 }
 

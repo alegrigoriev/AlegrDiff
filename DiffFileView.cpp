@@ -1028,13 +1028,16 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 		{
 			SetCaretPosition(0, nLine);
 		}
-		if (GetDocument()->m_SelectionAnchor.line <= nLine)
-		{
-			SetCaretPosition(0, nLine + 1, SetPositionMakeVisible);
-		}
 		else
 		{
-			SetCaretPosition(0, nLine, SetPositionMakeVisible);
+			if (GetDocument()->m_SelectionAnchor.line <= nLine)
+			{
+				SetCaretPosition(0, nLine + 1, SetPositionMakeVisible);
+			}
+			else
+			{
+				SetCaretPosition(0, nLine, SetPositionMakeVisible);
+			}
 		}
 	}
 	else

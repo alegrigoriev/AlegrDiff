@@ -824,7 +824,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 		// need data before the buffer begin, but some of the data is in the buffer
 		if (NeedEnd > m_FileReadPos && NeedEnd <= m_FileReadPos + m_FileReadFilled)
 		{
-			// move data up, read some to the end of buffer
+			TRACE("move data up, read some to the end of buffer\n");
 			ULONG_PTR MoveBy = ULONG_PTR(m_FileReadPos - NeedBegin);
 			ULONG_PTR NewFilled = m_FileReadFilled + MoveBy;
 			ULONG_PTR ToMove = m_FileReadFilled;
@@ -864,7 +864,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 		// may need data after the buffer end, but some of the data is in the buffer
 		if (NeedEnd > m_FileReadPos + m_FileReadFilled)
 		{
-			// move data down, read some more data
+			TRACE("move data down, read some more data\n");
 			ULONG_PTR MoveBy = ULONG_PTR(NeedEndBuffer - (m_FileReadPos + m_FileReadFilled));
 			if (0 != MoveBy)
 			{

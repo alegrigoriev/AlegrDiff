@@ -176,7 +176,7 @@ BEGIN
     BEGIN
         MENUITEM "Go To Next Diff\tF7",         ID_EDIT_GOTONEXTDIFF
         MENUITEM "Go To Prev Diff\tShift+F7",   ID_EDIT_GOTOPREVDIFF
-        MENUITEM "Go To Line...\tCtrl+G",       ID_EDIT_GOTOLINE
+        MENUITEM "Go To Line...\tCtrl+G",       ID_EDIT_GOTOADDRESS
         MENUITEM SEPARATOR
         MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
         MENUITEM "Select All\tCtrl+A",          ID_EDIT_SELECT_ALL
@@ -308,7 +308,7 @@ BEGIN
     BEGIN
         MENUITEM "Go To Next Diff\tF7",         ID_EDIT_GOTONEXTDIFF
         MENUITEM "Go To Prev Diff\tShift+F7",   ID_EDIT_GOTOPREVDIFF
-        MENUITEM "Go To Line...\tCtrl+G",       ID_EDIT_GOTOLINE
+        MENUITEM "Go To Line...\tCtrl+G",       ID_EDIT_GOTOADDRESS
         MENUITEM SEPARATOR
         MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
         MENUITEM "Select All\tCtrl+A",          ID_EDIT_SELECT_ALL
@@ -346,6 +346,67 @@ BEGIN
     END
 END
 
+IDR_ALEGRDTYPE_BIN MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Compare &Directories...",     ID_FILE_COMPAREDIRECTORIES
+        MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
+        MENUITEM "Merge Files And Save...",     ID_FILE_MERGE_SAVE
+        MENUITEM "&Create Directory Fingerprint...", 
+                                                ID_FILE_CREATEDIRECTORYFINGERPRINT
+
+        MENUITEM "C&heck Directory Fingerprint...", 
+                                                ID_FILE_CHECKDIRECTORYFILNGERPRINT
+
+        MENUITEM SEPARATOR
+        MENUITEM "Properties...\tAlt+Enter",    ID_FILE_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "Copy 1st File To Folder...",  ID_FILE_COPY_FIRST_DIR_FILE
+        MENUITEM "Copy 2nd File To Folder...",  ID_FILE_COPY_SECOND_DIR_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "Preferences...",              ID_FILE_PREFERENCES
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit\tAlt+F4",               ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Go To Next Diff\tF7",         ID_EDIT_GOTONEXTDIFF
+        MENUITEM "Go To Prev Diff\tShift+F7",   ID_EDIT_GOTOPREVDIFF
+        MENUITEM "Go To Address...\tCtrl+G",    ID_EDIT_GOTOADDRESS
+        MENUITEM SEPARATOR
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "Select All\tCtrl+A",          ID_EDIT_SELECT_ALL
+        MENUITEM "&Find...\tCtrl+F",            ID_EDIT_FIND
+        MENUITEM "Find Next\tF3",               ID_EDIT_FIND_NEXT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+        MENUITEM SEPARATOR
+        MENUITEM "Refresh\tF5",                 ID_VIEW_REFRESH
+        POPUP "Word size"
+        BEGIN
+            MENUITEM "&1 Byte",                     ID_WORDSIZE_1BYTE
+            MENUITEM "&2 Bytes",                    ID_WORDSIZE_2BYTES
+            MENUITEM "&4 Bytes",                    ID_WORDSIZE_4BYTES
+            MENUITEM "&8 Bytes",                    ID_WORDSIZE_8BYTES
+        END
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&New Window",                 ID_WINDOW_NEW
+        MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
+        MENUITEM "&Tile",                       ID_WINDOW_TILE_HORZ
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Using AlegrDiff...",          ID_HELP_USING
+        MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -357,7 +418,7 @@ BEGIN
     "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
     "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     "F",            ID_EDIT_FIND,           VIRTKEY, CONTROL, NOINVERT
-    "G",            ID_EDIT_GOTOLINE,       VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_EDIT_GOTOADDRESS,    VIRTKEY, CONTROL, NOINVERT
     "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
     "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
     "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
@@ -1102,6 +1163,7 @@ BEGIN
     IDS_OPEN_SECOND_TITLE   "Second File To Compare"
     IDS_STRING_DIRECTORY_LOAD_ERROR "Couldn't load directory ""%s"""
     IDR_ALEGRDTYPE_LIST     "\nAlegrD\nAlegrD\n\n\nAlegrDiff.Document\nAlegrD Document"
+    IDR_ALEGRDTYPE_BIN      "\nAlegrD\nAlegrD\n\n\nAlegrDiff.Document\nAlegrD Document"
 END
 
 STRINGTABLE 
@@ -1236,7 +1298,7 @@ END
 STRINGTABLE 
 BEGIN
     ID_EDIT_GOTOPREVDIFF    "Go to previous difference\nPrevious difference"
-    ID_EDIT_GOTOLINE        "Go to the line number\nGo to line"
+    ID_EDIT_GOTOADDRESS     "Go to the line number\nGo to line"
     IDS_DIFF_FILE_BANNER    "Comparing directories:\n%s\n%s\n\n"
     ID_VIEW_REFRESH         "Reload the current file(s)\nRefresh"
     ID_VIEW_SHOW_LINE_NUMBERS 

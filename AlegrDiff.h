@@ -25,6 +25,8 @@ public:
 	CAlegrDiffApp();
 
 	CApplicationProfile Profile;
+	int m_MaxSearchDistance;
+	int m_MinIdenticalLines;
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CAlegrDiffApp)
@@ -32,6 +34,7 @@ public:
 	virtual BOOL InitInstance();
 	//}}AFX_VIRTUAL
 // Implementation
+
 	//{{AFX_MSG(CAlegrDiffApp)
 	afx_msg void OnAppAbout();
 	//}}AFX_MSG

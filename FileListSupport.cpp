@@ -122,11 +122,75 @@ void FileItem::Unload()
 		delete m_Lines[i];
 	}
 	m_Lines.RemoveAll();
+	m_HashSortedLines.RemoveAll();
 }
 
 FileItem::~FileItem()
 {
 	Unload();
+}
+
+int _cdecl FileLine::HashCompareFunc(const void * p1, const void * p2)
+{
+	FileLine const * pLine1 = *(FileLine **) p1;
+	FileLine const * pLine2 = *(FileLine **) p2;
+	if (pLine1->GetHash() > pLine2->GetHash())
+	{
+		return -1;
+	}
+	if (pLine1->GetHash() < pLine2->GetHash())
+	{
+		return 1;
+	}
+	return 0;
+}
+
+int _cdecl FileLine::HashAndLineNumberCompareFunc(const void * p1, const void * p2)
+{
+	FileLine const * pLine1 = *(FileLine **) p1;
+	FileLine const * pLine2 = *(FileLine **) p2;
+	if (pLine1->GetHash() > pLine2->GetHash())
+	{
+		return -1;
+	}
+	if (pLine1->GetHash() < pLine2->GetHash())
+	{
+		return 1;
+	}
+	// if hash is the same, compare line numbers
+	if (pLine1->GetLineNumber() > pLine2->GetLineNumber())
+	{
+		return -1;
+	}
+	if (pLine1->GetLineNumber() < pLine2->GetLineNumber())
+	{
+		return 1;
+	}
+	return 0;
+}
+
+int _cdecl FileLine::NormalizedHashAndLineNumberCompareFunc(const void * p1, const void * p2)
+{
+	FileLine const * pLine1 = *(FileLine **) p1;
+	FileLine const * pLine2 = *(FileLine **) p2;
+	if (pLine1->GetNormalizedHash() > pLine2->GetNormalizedHash())
+	{
+		return -1;
+	}
+	if (pLine1->GetNormalizedHash() < pLine2->GetNormalizedHash())
+	{
+		return 1;
+	}
+	// if hash is the same, compare line numbers
+	if (pLine1->GetLineNumber() > pLine2->GetLineNumber())
+	{
+		return -1;
+	}
+	if (pLine1->GetLineNumber() < pLine2->GetLineNumber())
+	{
+		return 1;
+	}
+	return 0;
 }
 
 #undef new
@@ -140,11 +204,34 @@ bool FileItem::Load()
 	char line[2048];
 	for (int LinNum =0; NULL != fgets(line, sizeof line, file); LinNum++)
 	{
-		size_t length = strlen(line);
-		FileLine * pLine = new (length) FileLine(line, length, LinNum);
-		m_Lines.Add(pLine);
+		FileLine * pLine = new FileLine(line, true);
+		if (pLine)
+		{
+			pLine->SetLineNumber(LinNum);
+			m_Lines.Add(pLine);
+		}
 	}
 	fclose(file);
+
+	int i;
+	// make sorted array of the string hash values
+	m_HashSortedLines.SetSize(LinNum);
+	for (i = 0; i < LinNum; i++)
+	{
+		m_HashSortedLines[i] = m_Lines[i];
+	}
+
+	qsort(m_HashSortedLines.GetData(), LinNum,
+		sizeof m_HashSortedLines[0], FileLine::HashAndLineNumberCompareFunc);
+	// make sorted array of the normalized string hash values
+	m_NormalizedHashSortedLines.SetSize(LinNum);
+	for (i = 0; i < LinNum; i++)
+	{
+		m_NormalizedHashSortedLines[i] = m_Lines[i];
+	}
+
+	qsort(m_NormalizedHashSortedLines.GetData(), LinNum,
+		sizeof m_NormalizedHashSortedLines[0], FileLine::NormalizedHashAndLineNumberCompareFunc);
 	return true;
 }
 
@@ -337,6 +424,147 @@ void FileList::GetSortedList(CArray<FileItem *, FileItem *> & ItemArray, DWORD S
 
 }
 
+void * BinLookup(
+				const void *key,
+				const void *base,
+				size_t num,
+				size_t width,
+				int (__cdecl *compare)(const void *, const void *)
+				)
+{
+	char *lo = (char *)base;
+	char *hi = (char *)base + (num - 1) * width;
+	char *mid;
+	unsigned int half;
+	unsigned int uphalf;
+	int result;
+
+	while (lo <= hi)
+	{
+		half = num / 2;
+		uphalf = num - half - 1;
+		if (0 != half)
+		{
+			mid = lo + uphalf * width;
+			result = compare(key,mid);
+			if (0 == result)
+			{
+				return(mid);
+			}
+			else if (result < 0)
+			{
+				hi = mid - width;
+
+				num = uphalf;
+			}
+			else
+			{
+				lo = mid + width;
+				num = half;
+			}
+		}
+		else if (num)
+		{
+			result = compare(key,lo);
+			if (0 == result)
+			{
+				return lo;
+			}
+			else
+				return NULL;
+		}
+		else
+		{
+			break;
+		}
+	}
+	return(NULL);
+}
+// find equal or the next greater
+template<class T, class A> T * BinLookupAbout(
+											const T *key,
+											A ComparisionContext,
+											const T *base,
+											size_t num,
+											int (__cdecl *compare)(const T * item1, const T * item2, A ComparisionContext)
+											)
+{
+	const T *lo = base;
+	const T *hi = base + (num - 1);
+	const T *mid;
+	unsigned int half;
+	unsigned int uphalf;
+	int result;
+
+	while (lo <= hi)
+	{
+		half = num / 2;
+		uphalf = num - half - 1;
+		if (0 != half)
+		{
+			mid = lo + uphalf;
+			result = compare(key, mid, ComparisionContext);
+			if (0 == result)
+			{
+				return mid;
+			}
+			else if (result < 0)
+			{
+				// choose lower half
+				hi = mid - 1;
+
+				num = uphalf;
+			}
+			else
+			{
+				// choose upper half
+				lo = mid + 1;
+				num = half;
+			}
+		}
+		else if (num)
+		{
+			result = compare(key, lo, ComparisionContext);
+			if (result <= 0)
+			{
+				return lo;
+			}
+			else
+			{
+				return hi;
+			}
+		}
+		else
+		{
+			break;
+		}
+	}
+	return lo;
+}
+
+// find the line with the same hash and same and greater number, return -1 if not found
+int FileItem::FindMatchingLineIndex(const FileLine * pLine, int nStartLineIndex)
+{
+	void const * key = pLine;
+	void * pFound = bsearch( & key, m_HashSortedLines.GetData(), m_HashSortedLines.GetSize(),
+							sizeof m_HashSortedLines[0], FileLine::HashCompareFunc);
+	if (NULL == pFound)
+	{
+		return -1;
+	}
+	if (pFound < m_HashSortedLines.GetData()
+		|| pFound >= m_HashSortedLines.GetData() + m_HashSortedLines.GetSize())
+	{
+		TRACE("Inconsistent address returned from bsearch\n");
+		return -1;
+	}
+	//int SortedIndex =
+	FileLine * pFoundLine = *(FileLine **) pFound;
+	// todo: there can be several lines with the same number
+	return pFoundLine->GetLineNumber();
+}
+
+
 bool FileList::LoadFolder(const CString & BaseDir, bool bRecurseSubdirs,
 						LPCTSTR sInclusionMask, LPCTSTR sExclusionMask)
 {
@@ -513,89 +741,432 @@ DWORD CalculateHash(const char * data, int len)
 	}
 	return crc32_val;
 }
-
-FileLine::FileLine(const char * src, size_t length, int OrdNum)
-	: m_HashCode(0), m_Flags(0), m_Number(OrdNum), m_Link(NULL)
+// remove the unnecessary whitespaces from the line (based on C, C++ syntax)
+// return string length
+static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen)
 {
-	m_Length = length;
-	memcpy(m_Data, src, length);
-	m_Data[length] = 0;
-	m_HashCode = CalculateHash(m_Data, length);
-}
+	// pDst buffer size must be greater or equal strlen(pSrc)
+	int SrcIdx = 0;
+	int DstIdx = 0;
+	bool CanRemoveWhitespace = true;
+	TCHAR cPrevChar = 0;
+	bool PrevCharAlpha = false;
 
-CString FilePair::GetComparisionResult()
-{
-	if (NULL == pFirstFile)
+	TCHAR c;
+	// remove whitespaces at the begin
+	while ((c = Src[SrcIdx]) == ' '
+			|| '\t' == c)
 	{
-		if (NULL == pSecondFile)
+		SrcIdx++;
+	}
+	while (Src[SrcIdx] && DstIdx < DstLen - 1)
+	{
+		// it's OK to remove extra spaces between non-alpha bytes,
+		// unless these are the following pairs:
+		// /*, */, //, ++, --, &&, ||, ##, ->*, ->, >>, << >=, <=, ==, ::
+		// that is most two-char operators
+		// strings also must be kept intact.
+		// Can remove extra spaces between alpha and non-alpha
+		c = Src[SrcIdx];
+		bool c_IsAlpha = (0 != isalpha(c));
+		if(c_IsAlpha)
 		{
-			return CString();
-		}
-		CString s;
-		s.Format("File exists only in \"%s%s\"",
-				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
-		return s;
-	}
-	if (NULL == pSecondFile)
-	{
-		CString s;
-		s.Format("File exists only in \"%s%s\"",
-				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
-		return s;
-	}
-	return CString();
-}
+			if (PrevCharAlpha)
+			{
+				if(DstIdx >= DstLen - 1)
+				{
+					break;
+				}
+				// insert one whitespace to the output string
+				pDst[DstIdx] = ' ';
+				DstIdx++;
+			}
+			// move all alpha chars till non-alpha
+			do
+			{
+				if(DstIdx >= DstLen - 1)
+				{
+					break;
+				}
+				pDst[DstIdx] = c;
+				SrcIdx++;
+				DstIdx++;
+				c = Src[SrcIdx];
+			} while (isalpha(c));
 
-DWORD FilePair::CompareFiles(bool bCompareAll)
-{
-	if (NULL == pFirstFile
-		|| NULL == pSecondFile)
-	{
-		return 0;
-	}
-	// TODO: different function for binary comparision
-	if (! pFirstFile->Load()
-		|| ! pSecondFile->Load())
-	{
-		pFirstFile->Unload();
-		return 0;
-	}
-	// different comparision for different modes
-	return CompareTextFiles(bCompareAll);
-	return 1;
-}
-
-DWORD FilePair::CompareTextFiles(bool bCompareAll)
-{
-	// find similar lines
-	int nLine1 = 0;
-	int nLine2 = 0;
-	int NumLines1 = pFirstFile->GetNumLines();
-	int NumLines2 = pSecondFile->GetNumLines();
-	// build list of equal sections
-	FileSection * pSection = new FileSection;
-	pSection->File1LineBegin = nLine1;
-	pSection->File1LineEnd = nLine1;
-
-	pSection->File2LineBegin = nLine2;
-	pSection->File2LineEnd = nLine2;
-
-	while (nLine1 < NumLines1
-			&& nLine2 < NumLines2)
-	{
-		const FileLine * Line1 = pFirstFile->GetLine(nLine1);
-		const FileLine * Line2 = pSecondFile->GetLine(nLine2);
-		if (Line1->IsEqual( *Line2))
-		{
-			nLine1++;
-			nLine2++;
+			PrevCharAlpha = true;
+			CanRemoveWhitespace = true;
 		}
 		else
 		{
-			break;
+			if( ! PrevCharAlpha)
+			{
+				// TODO: need to check for a space between #define name and (arguments)
+
+				// check if we need to insert a whitespace
+				static int ReservedPairs[] =
+				{
+					// /*, */, //, ++, --, &&, ||, ##, ->*, ->, >>, << >=, <=, ==, ::
+					// TODO: process L' and L"
+					'//', '/*', '*/', '++', '--', '!=', '##', '%=',
+					'^=', '&=', '&&', '-=', '==', '::', '<<',
+					'>>', '||', '|=', '<=', '>=', '/=', '\'\'', '""',
+				};
+				// may be non-portable to big-endian
+				int pair = ((cPrevChar & 0xFF) << 8) | (c & 0xFF);
+				for (int i = 0; i < sizeof ReservedPairs / sizeof ReservedPairs[0]; i++)
+				{
+					if (pair == ReservedPairs[i])
+					{
+						if(DstIdx < DstLen - 1)
+						{
+							pDst[DstIdx] = ' ';
+							DstIdx++;
+						}
+						break;
+					}
+				}
+			}
+			// move all non-alpha non whitespace chars
+			// check for a string or character constant
+			if ('\'' == c)
+			{
+				// character constant
+				// skip everything till the next '. Process \'
+				cPrevChar = c;
+				do
+				{
+					if(DstIdx >= DstLen - 1)
+					{
+						break;
+					}
+					pDst[DstIdx] = c;
+					SrcIdx++;
+					DstIdx++;
+					c = Src[SrcIdx];
+					if ('\'' == c)
+					{
+						// if the next char is double quote,
+						// skip both
+						if(DstIdx >= DstLen - 1)
+						{
+							break;
+						}
+						pDst[DstIdx] = c;
+						SrcIdx++;
+						DstIdx++;
+						c = Src[SrcIdx];
+						if ('\'' == c)
+						{
+							continue;
+						}
+						break;
+					}
+					else if ('\\' ==c)
+					{
+						// skip the next char
+						if(DstIdx >= DstLen - 1)
+						{
+							break;
+						}
+						pDst[DstIdx] = c;
+						SrcIdx++;
+						DstIdx++;
+						c = Src[SrcIdx];
+					}
+				} while (c != 0);
+			}
+			else if ('"' == c)
+			{
+				// char string
+				cPrevChar = c;
+				do
+				{
+					if(DstIdx >= DstLen - 1)
+					{
+						break;
+					}
+					pDst[DstIdx] = c;
+					SrcIdx++;
+					DstIdx++;
+					c = Src[SrcIdx];
+					if ('"' == c)
+					{
+						// if the next char is double quote,
+						// skip both
+						if(DstIdx >= DstLen - 1)
+						{
+							break;
+						}
+						pDst[DstIdx] = c;
+						SrcIdx++;
+						DstIdx++;
+						c = Src[SrcIdx];
+						if ('"' == c)
+						{
+							continue;
+						}
+						break;
+					}
+					else if ('\\' ==c)
+					{
+						// skip the next char
+						if(DstIdx >= DstLen - 1)
+						{
+							break;
+						}
+						pDst[DstIdx] = c;
+						SrcIdx++;
+						DstIdx++;
+						c = Src[SrcIdx];
+					}
+				} while (c != 0);
+			}
+			else do
+			{
+				if(DstIdx >= DstLen - 1)
+				{
+					break;
+				}
+				cPrevChar = c;
+				pDst[DstIdx] = c;
+				SrcIdx++;
+				DstIdx++;
+				c = Src[SrcIdx];
+			} while (c != 0
+					&& c != ' '
+					&& c != '\t'
+					&& ! isalpha(c));
+			PrevCharAlpha = false;
+		}
+		// remove whitespaces
+		while ((c = Src[SrcIdx]) == ' '
+				|| '\t' == c)
+		{
+			SrcIdx++;
 		}
 	}
-	return 1;
+	pDst[DstIdx] = 0;
+	return DstIdx;
+}
+
+static void RemoveExtraWhitespaces(CString & Dst, const CString & Src)
+{
+	// pDst buffer size must be grater or equal strlen(pSrc)
+	int SrcIdx = 0;
+	int DstIdx = 0;
+	bool CanRemoveWhitespace = true;
+	TCHAR cPrevChar = 0;
+	bool PrevCharAlpha = false;
+	LPTSTR pDst = Dst.GetBuffer(Src.GetLength());
+
+	TCHAR c;
+	// remove whitespaces at the begin
+	while ((c = Src[SrcIdx]) == ' '
+			|| '\t' == c)
+	{
+		SrcIdx++;
+	}
+	while (Src[SrcIdx])
+	{
+		// it's OK to remove extra spaces between non-alpha bytes,
+		// unless these are the following pairs:
+		// /*, */, //, ++, --, &&, ||, ##, ->*, ->, >>, << >=, <=, ==, ::
+		// that is most two-char operators
+		// strings also must be kept intact.
+		// Can remove extra spaces between alpha and non-alpha
+		c = Src[SrcIdx];
+		bool c_IsAlpha = (0 != isalpha(c));
+		if(c_IsAlpha)
+		{
+			if (PrevCharAlpha)
+			{
+				// insert one whitespace to the output string
+				pDst[DstIdx] = ' ';
+				DstIdx++;
+			}
+			// move all alpha chars till non-alpha
+			do
+			{
+				pDst[DstIdx] = c;
+				SrcIdx++;
+				DstIdx++;
+				c = Src[SrcIdx];
+			} while (isalpha(c));
+
+			PrevCharAlpha = true;
+			CanRemoveWhitespace = true;
+		}
+		else
+		{
+			if( ! PrevCharAlpha)
+			{
+				// TODO: need to check for a space between #define name and (arguments)
+
+				// check if we need to insert a whitespace
+				static int ReservedPairs[] =
+				{
+					// /*, */, //, ++, --, &&, ||, ##, ->*, ->, >>, << >=, <=, ==, ::
+					// TODO: process L' and L"
+					'//', '/*', '*/', '++', '--', '!=', '##', '%=',
+					'^=', '&=', '&&', '-=', '==', '::', '<<',
+					'>>', '||', '|=', '<=', '>=', '/=', '\'\'', '""',
+				};
+				// may be non-portable to big-endian
+				int pair = ((cPrevChar & 0xFF) << 8) | (c & 0xFF);
+				for (int i = 0; i < sizeof ReservedPairs / sizeof ReservedPairs[0]; i++)
+				{
+					if (pair == ReservedPairs[i])
+					{
+						pDst[DstIdx] = ' ';
+						DstIdx++;
+						break;
+					}
+				}
+			}
+			// move all non-alpha non whitespace chars
+			// check for a string or character constant
+			if ('\'' == c)
+			{
+				// character constant
+				// skip everything till the next '. Process \'
+				cPrevChar = c;
+				do
+				{
+					pDst[DstIdx] = c;
+					SrcIdx++;
+					DstIdx++;
+					c = Src[SrcIdx];
+					if ('\'' == c)
+					{
+						// if the next char is double quote,
+						// skip both
+						pDst[DstIdx] = c;
+						SrcIdx++;
+						DstIdx++;
+						c = Src[SrcIdx];
+						if ('\'' == c)
+						{
+							continue;
+						}
+						break;
+					}
+					else if ('\\' ==c)
+					{
+						// skip the next char
+						pDst[DstIdx] = c;
+						SrcIdx++;
+						DstIdx++;
+						c = Src[SrcIdx];
+					}
+				} while (c != 0);
+			}
+			else if ('"' == c)
+			{
+				// char string
+				cPrevChar = c;
+				do
+				{
+					pDst[DstIdx] = c;
+					SrcIdx++;
+					DstIdx++;
+					c = Src[SrcIdx];
+					if ('"' == c)
+					{
+						// if the next char is double quote,
+						// skip both
+						pDst[DstIdx] = c;
+						SrcIdx++;
+						DstIdx++;
+						c = Src[SrcIdx];
+						if ('"' == c)
+						{
+							continue;
+						}
+						break;
+					}
+					else if ('\\' ==c)
+					{
+						// skip the next char
+						pDst[DstIdx] = c;
+						SrcIdx++;
+						DstIdx++;
+						c = Src[SrcIdx];
+					}
+				} while (c != 0);
+			}
+			else do
+			{
+				cPrevChar = c;
+				pDst[DstIdx] = c;
+				SrcIdx++;
+				DstIdx++;
+				c = Src[SrcIdx];
+			} while (c != 0
+					&& c != ' '
+					&& c != '\t'
+					&& ! isalpha(c));
+			PrevCharAlpha = false;
+		}
+		// remove whitespaces
+		while ((c = Src[SrcIdx]) == ' '
+				|| '\t' == c)
+		{
+			SrcIdx++;
+		}
+	}
+	Dst.ReleaseBuffer(DstIdx);
+}
+
+// find difference in the strings, and build the array of inserts and
+// and deleted chars
+void MatchStrings(LPCTSTR str1, LPCTSTR str2, DWORD Results[])
+{
+}
+
+FileLine::FileLine(const char * src, bool MakeNormalizedString)
+	: m_Flags(0), m_Number(-1), m_Link(NULL)
+{
+	m_Length = strlen(src);
+	char TmpBuf[2048];
+	m_NormalizedStringLength = RemoveExtraWhitespaces(TmpBuf, src, sizeof TmpBuf);
+
+	m_pAllocatedBuf = new char[m_Length + m_NormalizedStringLength + 2];
+	if (NULL != m_pAllocatedBuf)
+	{
+		m_pString = m_pAllocatedBuf;
+		memcpy(m_pAllocatedBuf, src, m_Length + 1);
+		m_HashCode = CalculateHash(m_pString, m_Length);
+
+		m_pNormalizedString = m_pAllocatedBuf + m_Length + 1;
+		memcpy(m_pAllocatedBuf + m_Length + 1, TmpBuf, m_NormalizedStringLength + 1);
+		m_NormalizedHashCode = CalculateHash(m_pNormalizedString, m_NormalizedStringLength);
+
+		if (0 == m_NormalizedStringLength)
+		{
+			m_Flags |= BlankString;
+		}
+	}
+	else
+	{
+		m_pString = NULL;
+		m_pNormalizedString = NULL;
+		m_Length = 0;
+		m_NormalizedStringLength = 0;
+
+		m_HashCode = 0xFFFFFFFF;
+		m_NormalizedHashCode = 0xFFFFFFFF;
+	}
+}
+
+FileLine::~FileLine()
+{
+	delete m_pAllocatedBuf;
+}
+
+bool FileLine::LooksLike(const FileLine * pOtherLine, int PercentsDifferent) const
+{
+	return false;
 }
 
 int _cdecl FilePair::Time1SortFunc(const void * p1, const void * p2)
@@ -739,4 +1310,32 @@ int _cdecl FilePair::ComparisionSortFunc(const void * p1, const void * p2)
 int _cdecl FilePair::ComparisionSortBackwardsFunc(const void * p1, const void * p2)
 {
 	return 0; (*(FilePair * const *) p2, *(FilePair * const *) p1);
+}
+
+bool FileLine::IsEqual(const FileLine * pOtherLine) const
+{
+	if (m_HashCode != pOtherLine->m_HashCode
+		|| m_Length != pOtherLine->m_Length)
+	{
+		return false;
+	}
+	if (0 == m_Length)
+	{
+		return true;
+	}
+	return 0 == memcmp(m_pString, pOtherLine->m_pString, m_Length);
+}
+
+bool FileLine::IsNormalizedEqual(const FileLine * pOtherLine) const
+{
+	if (m_NormalizedHashCode != pOtherLine->m_NormalizedHashCode
+		|| m_NormalizedStringLength != pOtherLine->m_NormalizedStringLength)
+	{
+		return false;
+	}
+	if (0 == m_NormalizedStringLength)
+	{
+		return true;
+	}
+	return 0 == memcmp(m_pNormalizedString, pOtherLine->m_pNormalizedString, m_NormalizedStringLength);
 }

@@ -17,13 +17,99 @@ BOOL AFXAPI AfxUnhookWindowCreate();
 /////////////////////////////////////////////////////////////////////////////
 // CFileDialogWithHistory
 
+using CResizableFileDialog::CParentWnd;
 IMPLEMENT_DYNAMIC(CResizableFileDialog, CFileDialog)
+IMPLEMENT_DYNAMIC(CParentWnd, CWnd)
 
 BEGIN_MESSAGE_MAP(CResizableFileDialog, CFileDialog)
 	//{{AFX_MSG_MAP(CResizableFileDialog)
 	ON_WM_SIZE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
+
+BEGIN_MESSAGE_MAP(CParentWnd, CWnd)
+	ON_MESSAGE(CDM_GETFILEPATH, OnGetFilePath)
+	ON_MESSAGE(CDM_GETFOLDERPATH, OnGetFolderPath)
+	ON_MESSAGE(CDM_GETSPEC, OnGetSpec)
+	ON_MESSAGE(CDM_SETCONTROLTEXT, OnSetControlText)
+	ON_MESSAGE(CDM_SETDEFEXT, OnSetDefExt)
+END_MESSAGE_MAP()
+
+LRESULT CParentWnd::OnGetFilePath(WPARAM wParam, LPARAM lParam)
+{
+	CStringA strA;
+	LPSTR buf = strA.GetBuffer(wParam);
+	// get in MBCS
+	LRESULT lresult = DefWindowProc(CDM_GETFILEPATH, wParam, LPARAM(buf));
+	// convert to unicode
+	if (lresult > 0 && unsigned(lresult) < wParam)
+	{
+		CStringW strW(strA, lresult - 1);
+		LPWSTR bufW = LPWSTR(lParam);
+		wcsncpy(bufW, strW, wParam - 1);
+		bufW[wParam - 1] = 0;
+		return strW.GetLength() + 1;
+	}
+	else
+	{
+		return lresult;
+	}
+}
+
+LRESULT CParentWnd::OnGetFolderPath(WPARAM wParam, LPARAM lParam)
+{
+	CStringA strA;
+	LPSTR buf = strA.GetBuffer(wParam);
+	// get in MBCS
+	LRESULT lresult = DefWindowProc(CDM_GETFOLDERPATH, wParam, LPARAM(buf));
+	// convert to unicode
+	if (lresult > 0 && unsigned(lresult) < wParam)
+	{
+		CStringW strW(strA, lresult - 1);
+		LPWSTR bufW = LPWSTR(lParam);
+		wcsncpy(bufW, strW, wParam - 1);
+		bufW[wParam - 1] = 0;
+		return strW.GetLength() + 1;
+	}
+	else
+	{
+		return lresult;
+	}
+}
+
+LRESULT CParentWnd::OnGetSpec(WPARAM wParam, LPARAM lParam)
+{
+	CStringA strA;
+	LPSTR buf = strA.GetBuffer(wParam);
+	// get in MBCS
+	LRESULT lresult = DefWindowProc(CDM_GETSPEC, wParam, LPARAM(buf));
+	// convert to unicode
+	if (lresult > 0 && unsigned(lresult) < wParam)
+	{
+		CStringW strW(strA, lresult - 1);
+		LPWSTR bufW = LPWSTR(lParam);
+		wcsncpy(bufW, strW, wParam - 1);
+		bufW[wParam - 1] = 0;
+		return strW.GetLength() + 1;
+	}
+	else
+	{
+		return lresult;
+	}
+}
+LRESULT CParentWnd::OnSetControlText(WPARAM wParam, LPARAM lParam)
+{
+	CStringA txt;
+	txt = LPCWSTR(lParam);
+	return DefWindowProc(CDM_SETCONTROLTEXT, wParam, LPARAM(LPCSTR(txt)));
+}
+
+LRESULT CParentWnd::OnSetDefExt(WPARAM wParam, LPARAM lParam)
+{
+	CStringA txt;
+	txt = LPCWSTR(lParam);
+	return DefWindowProc(CDM_SETDEFEXT, wParam, LPARAM(LPCSTR(txt)));
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // CFileDialogWithHistory
@@ -181,6 +267,53 @@ void CFileDialogWithHistory::OnComboSelendOK()
 	}
 }
 
+#ifdef _UNICODE
+void CResizableFileDialog::UpdateOfn(OPENFILENAMEA & ofn)
+{
+	// move file name and the custom filter back
+	CStringW s;
+
+	if (ofn.Flags & OFN_ALLOWMULTISELECT)
+	{
+		AssignMultiSz(s, ofn.lpstrFile);
+	}
+	else
+	{
+		s = ofn.lpstrFile;
+	}
+	size_t length = s.GetLength() + 1;
+	if (length <= m_pOFN->nMaxFile)
+	{
+		memcpy(m_pOFN->lpstrFile, LPCWSTR(s), length * sizeof (WCHAR));
+	}
+
+	if (m_pOFN->lpstrCustomFilter)
+	{
+		AssignMultiSz(s, ofn.lpstrCustomFilter);
+		size_t length = s.GetLength() + 1;
+
+		if (length <= m_pOFN->nMaxCustFilter)
+		{
+			memcpy(m_pOFN->lpstrCustomFilter, LPCWSTR(s), length * sizeof (WCHAR));
+		}
+	}
+
+	// translate nFileOffset
+	m_pOFN->nFileOffset = CStringW::StrTraits::GetBaseTypeLength(ofn.lpstrFile, ofn.nFileOffset);
+
+	if (0 != ofn.nFileExtension)
+	{
+		m_pOFN->nFileExtension = CStringW::StrTraits::GetBaseTypeLength(ofn.lpstrFile, ofn.nFileExtension);
+	}
+	else
+	{
+		m_pOFN->nFileExtension = 0;
+	}
+
+	m_pOFN->nFilterIndex = ofn.nFilterIndex;
+	m_pOFN->Flags = ofn.Flags;
+}
+
 UINT_PTR CALLBACK CResizableFileDialog::ResizableFileDialogHook(
 																HWND hdlg,      // handle to child dialog box
 																UINT uiMsg,     // message identifier
@@ -196,8 +329,12 @@ UINT_PTR CALLBACK CResizableFileDialog::ResizableFileDialogHook(
 		// handle WM_INITDIALOG
 		if (WM_INITDIALOG == uiMsg)
 		{
+			// subclass dialog
 			pOfn = reinterpret_cast<OPENFILENAMEA*>(lParam);
 			pDlg = reinterpret_cast<CResizableFileDialog *>(pOfn->lCustData);
+
+			pDlg->m_ParentWnd.SubclassWindow(::GetParent(hdlg));
+
 			lParam = LPARAM( & pDlg->m_ofn);
 			return pDlg->m_ofn.lpfnHook(hdlg, uiMsg, wParam, LPARAM( & pDlg->m_ofn));
 		}
@@ -218,7 +355,9 @@ UINT_PTR CALLBACK CResizableFileDialog::ResizableFileDialogHook(
 	pOfn = pOfnA->lpOFN;
 
 	pDlg = reinterpret_cast<CResizableFileDialog *>(pOfn->lCustData);
-	// translate OPENFILENAME back?
+	// translate OPENFILENAME back
+
+	pDlg->UpdateOfn(*pOfn);
 
 	switch (pOfnA->hdr.code)
 	{
@@ -259,7 +398,7 @@ UINT_PTR CALLBACK CResizableFileDialog::ResizableFileDialogHook(
 		break;
 	}
 }
-
+#endif
 INT_PTR CResizableFileDialog::DoModal()
 {
 	// proxy for MSLU fix under Windows ME
@@ -271,7 +410,8 @@ INT_PTR CResizableFileDialog::DoModal()
 	if (vi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS
 		&& vi.dwMajorVersion == 4
 		&& vi.dwMinorVersion >= 90
-		&& m_ofn.lStructSize != OPENFILENAME_SIZE_VERSION_400)
+		&& m_ofn.lStructSize != OPENFILENAME_SIZE_VERSION_400
+		&& m_pOFN->Flags & OFN_EXPLORER)
 	{
 		OPENFILENAMEA ofn;
 		memzero(ofn);
@@ -283,7 +423,6 @@ INT_PTR CResizableFileDialog::DoModal()
 		ofn.nFilterIndex = m_pOFN->nFilterIndex;
 		ofn.Flags = m_pOFN->Flags;
 
-		ofn.lCustData = m_pOFN->lCustData;
 		ofn.pvReserved = m_pOFN->pvReserved;
 		ofn.dwReserved = m_pOFN->dwReserved;
 		ofn.FlagsEx = m_pOFN->FlagsEx;
@@ -291,7 +430,8 @@ INT_PTR CResizableFileDialog::DoModal()
 		CStringA lpstrFilter;
 		if (m_pOFN->lpstrFilter)
 		{
-			lpstrFilter = m_pOFN->lpstrFilter;
+			// it is multisz string
+			AssignMultiSz(lpstrFilter, m_pOFN->lpstrFilter);
 			ofn.lpstrFilter = lpstrFilter;
 		}
 
@@ -309,6 +449,13 @@ INT_PTR CResizableFileDialog::DoModal()
 			ofn.lpstrInitialDir = lpstrInitialDir;
 		}
 
+		CStringA lpstrFileTitle;
+		if (m_pOFN->lpstrFileTitle && m_pOFN->nMaxFileTitle)
+		{
+			ofn.lpstrFileTitle = lpstrFileTitle.GetBuffer(m_pOFN->nMaxFileTitle);
+			ofn.nMaxFileTitle = m_pOFN->nMaxFileTitle;
+		}
+
 		CStringA lpstrTitle;
 		if (m_pOFN->lpstrTitle)
 		{
@@ -320,14 +467,20 @@ INT_PTR CResizableFileDialog::DoModal()
 		if (m_pOFN->lpstrCustomFilter)
 		{
 			// it is multisz string
+			AssignMultiSz(lpstrCustomFilter, m_pOFN->lpstrCustomFilter);
 			ofn.lpstrCustomFilter = lpstrCustomFilter.GetBuffer(m_pOFN->nMaxCustFilter);
 			ofn.nMaxCustFilter = m_pOFN->nMaxCustFilter;
-			memset(ofn.lpstrCustomFilter, 0, ofn.nMaxCustFilter);
-			WideCharToMultiByte(CP_ACP, 0,
-								m_pOFN->lpstrCustomFilter, m_pOFN->nMaxCustFilter,
-								ofn.lpstrCustomFilter, ofn.nMaxCustFilter, 0, 0);
-			//m_pOFN->lpstrCustomFilter;
+
+			DWORD nOffset = lpstrCustomFilter.GetLength() + 1;
+
+			ASSERT(nOffset <= ofn.nMaxCustFilter);
+			if (nOffset < ofn.nMaxCustFilter)
+			{
+				memset(ofn.lpstrCustomFilter + nOffset, 0, (ofn.nMaxCustFilter-nOffset)*sizeof(*ofn.lpstrCustomFilter));
+			}
 		}
+
+		ofn.nFilterIndex = m_pOFN->nFilterIndex;
 
 		CStringA lpTemplateName;
 		ofn.lpTemplateName = LPCSTR(m_pOFN->lpTemplateName);
@@ -344,7 +497,7 @@ INT_PTR CResizableFileDialog::DoModal()
 		CStringA lpstrFile(m_ofn.lpstrFile);
 		DWORD nOffset = lpstrFile.GetLength() + 1;
 
-		ofn.nMaxFile = m_ofn.n_MaxFile;
+		ofn.nMaxFile = m_ofn.nMaxFile;
 		ofn.lpstrFile = lpstrFile.GetBuffer(ofn.nMaxFile);
 
 		ASSERT(nOffset <= ofn.nMaxFile);
@@ -380,7 +533,7 @@ INT_PTR CResizableFileDialog::DoModal()
 		if (nResult)
 		{
 			ASSERT(pThreadState->m_pAlternateWndInit == NULL);
-			// move file name and the custom filter back
+			UpdateOfn(ofn);
 		}
 		pThreadState->m_pAlternateWndInit = NULL;
 

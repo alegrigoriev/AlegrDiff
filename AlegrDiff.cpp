@@ -1483,12 +1483,10 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 
 	Filter += AllFilesFilter;
 
-	CFileDialogWithHistory dlg(TRUE, & pApp->m_RecentFolders, NULL, NULL,
+	CFileDialogWithHistory dlg(TRUE, & pApp->m_RecentFolders, NULL, LastFileName,
 								OFN_HIDEREADONLY | OFN_FILEMUSTEXIST
 								| OFN_NOCHANGEDIR | OFN_EXPLORER,
 								Filter);
-	// copy initial file name
-	_tcsncpy(dlg.m_ofn.lpstrFile, LastFileName, dlg.m_ofn.nMaxFile - 1);
 
 	if (FullPath[0] == 0)
 	{
@@ -1636,3 +1634,4 @@ CString FileLengthToStrKb(ULONGLONG Length)
 	StrFormatByteSize(Length, buf, countof(buf));
 	return CString(buf);
 }
+

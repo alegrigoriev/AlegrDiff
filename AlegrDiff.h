@@ -193,6 +193,7 @@ CString FileLengthToStrKb(ULONGLONG Length);
 CString CreateCustomFilter(LPCTSTR Extension);
 int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 				CStringHistory * pHistory);
+
 /////////////////////////////////////////////////////////////////////////////
 
 //{{AFX_INSERT_LOCATION}}

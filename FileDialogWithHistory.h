@@ -14,7 +14,7 @@
 class CResizableFileDialog : public CFileDialog
 {
 	DECLARE_DYNAMIC(CResizableFileDialog)
-
+	typedef CFileDialog BaseClass;
 public:
 	CResizableFileDialog(BOOL bOpenFileDialog, // TRUE for FileOpen, FALSE for FileSaveAs
 						LPCTSTR lpszDefExt = NULL,
@@ -22,7 +22,7 @@ public:
 						DWORD dwFlags = OFN_HIDEREADONLY,
 						LPCTSTR lpszFilter = NULL,
 						CWnd* pParentWnd = NULL)
-		: CFileDialog(bOpenFileDialog, lpszDefExt,
+		: BaseClass(bOpenFileDialog, lpszDefExt,
 					lpszFileName, dwFlags | OFN_EXPLORER, lpszFilter, pParentWnd,
 					OpenfilenameSize()),
 		m_pResizeItems(NULL),
@@ -88,6 +88,7 @@ protected:
 
 class CFileDialogWithHistory : public CResizableFileDialog
 {
+	typedef CResizableFileDialog BaseClass;
 	DECLARE_DYNAMIC(CFileDialogWithHistory)
 
 public:

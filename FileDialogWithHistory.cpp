@@ -24,7 +24,7 @@ using CResizableFileDialog::CParentWnd;
 IMPLEMENT_DYNAMIC(CResizableFileDialog, CFileDialog)
 IMPLEMENT_DYNAMIC(CParentWnd, CWnd)
 
-BEGIN_MESSAGE_MAP(CResizableFileDialog, CFileDialog)
+BEGIN_MESSAGE_MAP(CResizableFileDialog, BaseClass)
 	//{{AFX_MSG_MAP(CResizableFileDialog)
 	ON_WM_SIZE()
 	//}}AFX_MSG_MAP
@@ -132,10 +132,18 @@ CFileDialogWithHistory::CFileDialogWithHistory(BOOL bOpenFileDialog, // TRUE for
 												LPCTSTR lpszFilter,
 												CWnd* pParentWnd, LPCTSTR Section,
 												LPCTSTR KeyFormat, int NumStrings)
-	: CResizableFileDialog(bOpenFileDialog, lpszDefExt, lpszFileName, dwFlags, lpszFilter, pParentWnd)
+	: BaseClass(bOpenFileDialog, lpszDefExt, lpszFileName, dwFlags, lpszFilter, pParentWnd)
 	, m_RecentFolders(& m_Profile, Section, KeyFormat, NumStrings)
 {
-	m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_OPEN_TEMPLATE);
+	if (CThisApp::SupportsV5FileDialog())
+	{
+		m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_WITH_HISTORY_TEMPLATE_V5);
+	}
+	else
+	{
+		m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_WITH_HISTORY_TEMPLATE_V4);
+	}
+
 	m_ofn.Flags |= OFN_ENABLETEMPLATE;
 
 	static ResizableDlgItem const item = {IDC_COMBO_RECENT, ExpandRight};
@@ -149,10 +157,18 @@ CFileDialogWithHistory::CFileDialogWithHistory(BOOL bOpenFileDialog, // TRUE for
 												DWORD dwFlags,
 												LPCTSTR lpszFilter,
 												CWnd* pParentWnd)
-	: CResizableFileDialog(bOpenFileDialog, lpszDefExt, lpszFileName, dwFlags, lpszFilter, pParentWnd)
+	: BaseClass(bOpenFileDialog, lpszDefExt, lpszFileName, dwFlags, lpszFilter, pParentWnd)
 	, m_RecentFolders(pSourceHistory)
 {
-	m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_OPEN_TEMPLATE);
+	if (CThisApp::SupportsV5FileDialog())
+	{
+		m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_WITH_HISTORY_TEMPLATE_V5);
+	}
+	else
+	{
+		m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_WITH_HISTORY_TEMPLATE_V4);
+	}
+
 	m_ofn.Flags |= OFN_ENABLETEMPLATE;
 
 	static ResizableDlgItem const item = {IDC_COMBO_RECENT, ExpandRight};
@@ -552,7 +568,7 @@ INT_PTR CResizableFileDialog::DoModal()
 #endif
 	while (1)
 	{
-		UINT result = CFileDialog::DoModal();
+		UINT result = BaseClass::DoModal();
 		if (result != 0 || CommDlgExtendedError() != FNERR_INVALIDFILENAME)
 		{
 			return result;
@@ -590,12 +606,12 @@ INT_PTR CFileDialogWithHistory::DoModal()
 		}
 		m_ofn.lpstrInitialDir = m_SubstituteInitialFolder;
 	}
-	return CResizableFileDialog::DoModal();
+	return BaseClass::DoModal();
 }
 
 void CFileDialogWithHistory::OnInitDone()
 {
-	CResizableFileDialog::OnInitDone();
+	BaseClass::OnInitDone();
 
 	CComboBox * pCb = static_cast<CComboBox *>(GetDlgItem(IDC_COMBO_RECENT));
 	if (NULL != pCb)
@@ -639,7 +655,7 @@ CString CResizableFileDialog::GetNextPathName(POSITION& pos) const
 	if (0 == (m_ofn.Flags & OFN_EXPLORER)
 		|| (m_ofn.Flags & OFN_ALLOWMULTISELECT) == 0)
 	{
-		return CFileDialog::GetNextPathName(pos);
+		return BaseClass::GetNextPathName(pos);
 	}
 
 	LPTSTR lpsz = (LPTSTR)pos;
@@ -744,7 +760,7 @@ size_t CResizableFileDialog::OpenfilenameSize()
 void CResizableFileDialog::OnSize(UINT nType, int cx, int cy)
 {
 	TRACE("CResizableFileDialog::OnSize %d %d, hwdn=%x\n", cx, cy, m_hWnd);
-	CFileDialog::OnSize(nType, cx, cy);
+	BaseClass::OnSize(nType, cx, cy);
 	// move dialog items
 	// use _parent_ dialog size
 	CRect r;

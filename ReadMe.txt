@@ -1,8 +1,8 @@
 TODO:
+Make file comparison dialog, similar to dir comparison
 show version of file1, file2 of the line
 Show Left-only, right-only, merged line (single line only)
 Show line number from first and second file
-todo: Make file comparison dialog, similar to dir comparison
 Add Save differences
 Add save file list
 Make Go To Line to first or second file line number
@@ -29,6 +29,7 @@ inserts lots of empty lines on merge
 merge doesn't work
 
 Done:
+mailto: button in About dialog
 make dir names and full file names available either in properties sheet or in whatever
 Show file properties
 show progress while comparing the files in the thread

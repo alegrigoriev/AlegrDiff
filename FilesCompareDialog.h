@@ -19,10 +19,17 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CFilesCompareDialog)
 	enum { IDD = IDD_DIALOG_COMPARE_FILES };
-	// NOTE: the ClassWizard will add data members here
+	CComboBox	m_SecondCombo;
+	CComboBox	m_FirstCombo;
+	BOOL	m_bBinaryFile;
+	BOOL	m_bCCppFile;
 	//}}AFX_DATA
+	CString	m_sFirstFileName;
+	CString	m_sSecondFileName;
 
-
+	int m_UsedFilenameFilter;
+	CString m_FileDir1;
+	CString m_FileDir2;
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CFilesCompareDialog)

@@ -76,6 +76,8 @@
 #define IDC_BUTTON_BROWSE_FIRST_FILE    1046
 #define IDC_BUTTON_BROWSE_SECOND_FILE   1047
 #define IDC_CHECK_COMPARE_C_CPP         1048
+#define IDC_BUTTON_MAILTO               1049
+#define IDC_STATIC_VERSION              1050
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -139,7 +141,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        144
 #define _APS_NEXT_COMMAND_VALUE         32814
-#define _APS_NEXT_CONTROL_VALUE         1049
+#define _APS_NEXT_CONTROL_VALUE         1051
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

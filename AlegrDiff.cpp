@@ -10,9 +10,9 @@
 #include "AlegrDiffView.h"
 #include "DiffFileView.h"
 #include "CompareDirsDialog.h"
+#include "FilesCompareDialog.h"
 #include "PreferencesDialog.h"
 #include "FolderDialog.h"
-#include <Dlgs.h>
 #include <locale.h>
 
 #ifdef _DEBUG
@@ -177,7 +177,26 @@ BOOL CAlegrDiffApp::InitInstance()
 	{
 		CString s;
 		s.Format("find%d", i);
-		Profile.AddItem(_T("History\\Find"), s, m_sFindHistory[i]);
+		Profile.AddItem(_T("History"), s, m_sFindHistory[i]);
+	}
+
+	for (i = 0; i < sizeof m_RecentFolders / sizeof m_RecentFolders[0]; i++)
+	{
+		CString s;
+		s.Format("dir%d", i);
+		Profile.AddItem(_T("History"), s, m_RecentFolders[i]);
+		m_RecentFolders[i].TrimLeft();
+		m_RecentFolders[i].TrimRight();
+	}
+
+	// read last filters from the registry
+	for (i = 0; i < sizeof m_sFilters / sizeof m_sFilters[0]; i++)
+	{
+		CString s;
+		s.Format("filter%d", i);
+		Profile.AddItem(_T("History"), s, m_sFilters[i]);
+		m_sFilters[i].TrimLeft();
+		m_sFilters[i].TrimRight();
 	}
 
 	m_TextBackgroundColor = GetSysColor(COLOR_WINDOW);
@@ -248,7 +267,7 @@ protected:
 // Implementation
 protected:
 	//{{AFX_MSG(CAboutDlg)
-	// No message handlers
+	afx_msg void OnButtonMailto();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
@@ -268,7 +287,7 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
 	//{{AFX_MSG_MAP(CAboutDlg)
-		// No message handlers
+	ON_BN_CLICKED(IDC_BUTTON_MAILTO, OnButtonMailto)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -787,66 +806,26 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 		Name2 = pName2;
 	}
 
-
-	CString Filter;
-	Filter.LoadString(IDS_FILENAME_FILTER);
-
-	CString title1;
-	title1.LoadString(IDS_OPEN_FIRST_TITLE);
-	COpenDiffDialog dlg1(TRUE, NULL, NULL,
-						OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLETEMPLATE,
-						Filter);
-	dlg1.m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_OPEN_TEMPLATE);
-
-	dlg1.m_ofn.lpstrInitialDir = m_FileDir1;
-	dlg1.m_ofn.lpstrTitle = title1;
-	dlg1.m_ofn.nFilterIndex = m_UsedFilenameFilter;
-
-	dlg1.m_bBinaryMode = m_BinaryComparision;
-
-	if (Name1.IsEmpty())
+	if (Name1.IsEmpty()
+		|| Name2.IsEmpty())
 	{
-		if (IDOK != dlg1.DoModal())
-		{
-			return;
-		}
-		Name1 = dlg1.GetPathName();
-		TCHAR CurrDir1[MAX_PATH] = {0};
-		GetCurrentDirectory(MAX_PATH, CurrDir1);
-		m_FileDir1 = CurrDir1;
-	}
+		CFilesCompareDialog dlg;
 
-	CString title2;
-	title2.LoadString(IDS_OPEN_SECOND_TITLE);
+		dlg.m_sFirstFileName = Name1;
+		dlg.m_sSecondFileName = Name2;
+		dlg.m_bBinaryFile = m_BinaryComparision;
+		dlg.m_UsedFilenameFilter = m_UsedFilenameFilter;
 
-	COpenDiffDialog dlg2(TRUE, NULL, NULL,
-						OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLETEMPLATE,
-						Filter);
-
-	dlg2.m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_OPEN_TEMPLATE);
-	dlg2.m_ofn.lpstrInitialDir = m_FileDir2;
-	dlg2.m_ofn.lpstrTitle = title2;
-	dlg2.m_ofn.nFilterIndex = dlg1.m_ofn.nFilterIndex;
-
-	dlg2.m_bBinaryMode = dlg1.m_bBinaryMode;
-	if (Name2.IsEmpty())
-	{
-
-		if (IDOK != dlg2.DoModal())
+		if (IDOK != dlg.DoModal())
 		{
 			return;
 		}
 
-
-		TCHAR CurrDir2[MAX_PATH] = {0};
-		GetCurrentDirectory(MAX_PATH, CurrDir2);
-		m_FileDir2 = CurrDir2;
-
-		Name2 = dlg2.GetPathName();
+		m_UsedFilenameFilter = dlg.m_UsedFilenameFilter;
+		m_BinaryComparision = dlg.m_bBinaryFile;
+		Name1 = dlg.m_sFirstFileName;
+		Name2 = dlg.m_sSecondFileName;
 	}
-
-	m_UsedFilenameFilter = dlg2.m_ofn.nFilterIndex;
-	m_BinaryComparision = dlg2.m_bBinaryMode;
 
 	TCHAR FileDir1[MAX_PATH];
 	LPTSTR pFileName1 = FileDir1;
@@ -857,7 +836,6 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 	LPTSTR pFileName2 = FileDir2;
 	GetFullPathName(Name2, MAX_PATH, FileDir2, & pFileName2);
 	*pFileName2 = 0;
-
 
 	WIN32_FIND_DATA wfd1;
 	WIN32_FIND_DATA wfd2;
@@ -1116,3 +1094,27 @@ CString FileTimeToStr(FILETIME FileTime, LCID locale)
 	return result;
 }
 
+
+void CAboutDlg::OnButtonMailto()
+{
+	SHELLEXECUTEINFO shex;
+	memset( & shex, 0, sizeof shex);
+	shex.cbSize = sizeof shex;
+	shex.hwnd = NULL;//AfxGetMainWnd()->m_hWnd;
+
+	CString Subj;
+	CWnd * pWnd = GetDlgItem(IDC_STATIC_VERSION);
+	if (NULL != pWnd)
+	{
+		pWnd->GetWindowText(Subj);
+	}
+	else
+	{
+		Subj = _T("AlegrDiff");
+	}
+	CString file(_T("mailto:alegr@earthlink.net?Subject="));
+	file += Subj;
+	shex.lpFile = file;
+	shex.nShow = SW_SHOWDEFAULT;
+	ShellExecuteEx( & shex);
+}

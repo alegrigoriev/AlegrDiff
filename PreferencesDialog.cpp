@@ -41,22 +41,21 @@ BOOL CFontDialogTitle::OnInitDialog( )
 
 IMPLEMENT_DYNCREATE(CFilesPreferencePage, CPropertyPage)
 
-CFilesPreferencePage::CFilesPreferencePage() : CPropertyPage(CFilesPreferencePage::IDD)
+CFilesPreferencePage::CFilesPreferencePage()
+	: CPropertyPage(CFilesPreferencePage::IDD)
+	, m_BinaryFilterHistory( & m_Profile, _T("History"), _T("BinaryFiles%d"), 5)
+	, m_CppFilterHistory( & m_Profile, _T("History"), _T("CppFiles%d"), 5)
+	, m_IgnoreFilterHistory( & m_Profile, _T("History"), _T("IgnoreFiles%d"), 10)
 {
+	m_BinaryFilterHistory.Load();
+	m_CppFilterHistory.Load();
+	m_IgnoreFilterHistory.Load();
 	//{{AFX_DATA_INIT(CFilesPreferencePage)
 	m_sBinaryFilesFilter = _T("");
 	m_sCppFilesFilter = _T("");
 	m_sIgnoreFilesFilter = _T("");
 	m_AutoReloadChangedFiles = FALSE;
 	//}}AFX_DATA_INIT
-	LoadHistory(m_Profile, _T("History"), _T("BinaryFiles%d"), m_sBinaryFilterHistory,
-				countof(m_sBinaryFilterHistory), true);
-
-	LoadHistory(m_Profile, _T("History"), _T("CppFiles%d"), m_sCppFilterHistory,
-				countof(m_sCppFilterHistory), true);
-
-	LoadHistory(m_Profile, _T("History"), _T("IgnoreFiles%d"), m_sIgnoreFilterHistory,
-				countof(m_sIgnoreFilterHistory), true);
 }
 
 CFilesPreferencePage::~CFilesPreferencePage()
@@ -77,14 +76,9 @@ void CFilesPreferencePage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_IGNORE, m_cbIgnoreFilter);
 	if (pDX->m_bSaveAndValidate)
 	{
-		AddStringToHistory(m_sBinaryFilesFilter, m_sBinaryFilterHistory,
-							countof(m_sBinaryFilterHistory), false);
-
-		AddStringToHistory(m_sCppFilesFilter, m_sCppFilterHistory,
-							countof(m_sCppFilterHistory), false);
-
-		AddStringToHistory(m_sIgnoreFilesFilter, m_sIgnoreFilterHistory,
-							countof(m_sIgnoreFilterHistory), false);
+		m_BinaryFilterHistory.AddString(m_sBinaryFilesFilter);
+		m_CppFilterHistory.AddString(m_sCppFilesFilter);
+		m_IgnoreFilterHistory.AddString(m_sIgnoreFilesFilter);
 
 		m_Profile.FlushAll();
 	}
@@ -103,14 +97,10 @@ BOOL CFilesPreferencePage::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 
-	LoadHistoryCombo(m_cbBinaryFilter, m_sBinaryFilterHistory,
-					countof(m_sBinaryFilterHistory));
+	m_BinaryFilterHistory.LoadCombo( & m_cbBinaryFilter);
+	m_CppFilterHistory.LoadCombo( & m_cbCppFilter);
+	m_IgnoreFilterHistory.LoadCombo( & m_cbIgnoreFilter);
 
-	LoadHistoryCombo(m_cbCppFilter, m_sCppFilterHistory,
-					countof(m_sCppFilterHistory));
-
-	LoadHistoryCombo(m_cbIgnoreFilter, m_sIgnoreFilterHistory,
-					countof(m_sIgnoreFilterHistory));
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }

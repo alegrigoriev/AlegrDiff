@@ -36,8 +36,8 @@ void CCheckFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 	{
 		CThisApp * pApp = GetApp();
 
-		pApp->m_RecentFolders.AddString(m_sDirectory, false);
-		m_FingerprintFilenameHistory.AddString(m_sFilename, false);
+		pApp->m_RecentFolders.AddString(m_sDirectory);
+		m_FingerprintFilenameHistory.AddString(m_sFilename);
 
 		m_Profile.FlushAll();
 	}
@@ -83,7 +83,8 @@ void CCheckFingerprintDlg::OnBnClickedButtonBrowseOpenFilename()
 	m_cbFilename.GetWindowText(m_sFilename);
 
 	CFileDialogWithHistory dlg(TRUE, & GetApp()->m_RecentFolders, _T("md5fp"), m_sFilename,
-								OFN_HIDEREADONLY | OFN_FILEMUSTEXIST,
+								OFN_HIDEREADONLY | OFN_NOCHANGEDIR
+								| OFN_FILEMUSTEXIST | OFN_EXPLORER,
 								Filter);
 
 	dlg.m_ofn.lpstrTitle = Title;

@@ -108,11 +108,12 @@ void CSaveFileListDlg::OnButtonBrowse()
 	CString title;
 	title.LoadString(IDS_SAVE_LIST_TITLE);
 
-	CFileDialogWithHistory dlg(FALSE, _T(".txt"), NULL,
+	CFileDialogWithHistory dlg(FALSE, & GetApp()->m_RecentFolders, _T(".txt"), NULL,
 								OFN_HIDEREADONLY
 								| OFN_NOTESTFILECREATE
+								| OFN_PATHMUSTEXIST
 								| OFN_EXPLORER
-								| OFN_ENABLESIZING,
+								| OFN_NOCHANGEDIR | OFN_ENABLESIZING,
 								Filter);
 
 	dlg.m_ofn.lpstrTitle = title;

@@ -283,7 +283,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 
 		while (m_PairList.NotEnd(pInsertBefore))
 		{
-			// check if we insert ir remove items, or the item is duplicate
+			// check if we insert or remove items, or the item is duplicate
 			FileItem * pItem1 = pPair->pFirstFile;
 			if (NULL == pItem1)
 			{
@@ -300,6 +300,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			if (comparison < 0)
 			{
 				pInsertBefore->m_bDeleted = true;
+				m_bNeedUpdateViews = true;
 				pInsertBefore = pInsertBefore->Next();
 
 				continue;
@@ -322,8 +323,10 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 						&& pPair->pSecondFile->GetLastWriteTime() !=
 						pInsertBefore->pSecondFile->GetLastWriteTime()))
 				{
-					// files times changed
+					// files times changed only
 					pInsertBefore->m_bChanged = true;
+					pPair->m_ComparisonResult = pPair->ResultUnknown;
+					m_bNeedUpdateViews = true;
 				}
 				pPair->Dereference();
 				pPair = NULL;
@@ -331,6 +334,9 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			else
 			{
 				pInsertBefore->m_bDeleted = true;
+				pPair->m_bFocused = pInsertBefore->m_bFocused;
+				pPair->m_bSelected = pInsertBefore->m_bSelected;
+				pInsertBefore->m_bFocused = false;
 			}
 			pInsertBefore = m_PairList.Next(pInsertBefore);
 			break;

@@ -30,6 +30,9 @@ BEGIN_MESSAGE_MAP(CAlegrDiffView, CListView)
 	ON_UPDATE_COMMAND_UI(ID_FILE_EDIT_FIRST, OnUpdateFileEditFirst)
 	ON_COMMAND(ID_FILE_EDIT_SECOND, OnFileEditSecond)
 	ON_UPDATE_COMMAND_UI(ID_FILE_EDIT_SECOND, OnUpdateFileEditSecond)
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_LISTVIEW_OPEN, OnListviewOpen)
+	ON_UPDATE_COMMAND_UI(ID_LISTVIEW_OPEN, OnUpdateListviewOpen)
 	//}}AFX_MSG_MAP
 	// Standard printing commands
 	ON_COMMAND(ID_FILE_PRINT, CView::OnFilePrint)
@@ -397,6 +400,57 @@ void CAlegrDiffView::OnUpdateFileEditSecond(CCmdUI* pCmdUI)
 		&& NULL != m_PairArray[nItem])
 	{
 		ModifyOpenFileMenu(pCmdUI, m_PairArray[nItem]->pSecondFile, _T("&2 Open "));
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+	}
+}
+
+void CAlegrDiffView::OnContextMenu(CWnd* pWnd, CPoint point)
+{
+	// make sure window is active
+	GetParentFrame()->ActivateFrame();
+
+	CMenu menu;
+	if (menu.LoadMenu(IDR_MENU_LISTVIEW_CONTEXT))
+	{
+		CMenu* pPopup = menu.GetSubMenu(0);
+		if(pPopup != NULL)
+		{
+			pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_LEFTBUTTON,
+									point.x, point.y,
+									AfxGetMainWnd()); // use main window for cmds
+		}
+	}
+
+}
+
+void CAlegrDiffView::OnListviewOpen()
+{
+	CListCtrl * pListCtrl = & GetListCtrl();
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	while(-1 != nItem)
+	{
+		if (nItem < m_PairArray.GetSize())
+		{
+			GetApp()->OpenFilePairView(m_PairArray[nItem]);
+		}
+		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
+	}
+}
+
+void CAlegrDiffView::OnUpdateListviewOpen(CCmdUI* pCmdUI)
+{
+	CListCtrl * pListCtrl = & GetListCtrl();
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	if (-1 != nItem)
+	{
+		if (NULL != pCmdUI->m_pMenu)
+		{
+			pCmdUI->m_pMenu->SetDefaultItem(ID_LISTVIEW_OPEN, FALSE);
+		}
+		pCmdUI->Enable(TRUE);
 	}
 	else
 	{

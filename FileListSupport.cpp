@@ -2643,21 +2643,47 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 		}
 
 		FileSection * pSection = new FileSection;
-		pSection->File1LineBegin = Line1Begin;
+		if (NULL != pSection)
+		{
+			pSection->File1LineBegin = Line1Begin;
 
-		pSection->File2LineBegin = Line2Begin;
-		pSection->File1LineEnd = nLine1;
-		pSection->File2LineEnd = nLine2;
-		pSection->pNext = NULL;
-		if (pLastSection == NULL)
+			pSection->File2LineBegin = Line2Begin;
+			pSection->File1LineEnd = nLine1;
+			pSection->File2LineEnd = nLine2;
+			pSection->pNext = NULL;
+			if (pLastSection == NULL)
+			{
+				pFirstSection = pSection;
+			}
+			else
+			{
+				pLastSection->pNext = pSection;
+			}
+			pLastSection = pSection;
+		}
+	}
+	// if the files don't start from identical lines, add an empty section
+	if (NULL == pFirstSection
+		|| (pFirstSection->File1LineBegin != 0
+			&& pFirstSection->File2LineBegin != 0))
+	{
+		FileSection * pSection = new FileSection;
+
+		if (NULL != pSection)
 		{
+			pSection->File1LineBegin = 0;
+			pSection->File2LineBegin = 0;
+
+			pSection->File1LineEnd = 0;
+			pSection->File2LineEnd = 0;
+
+			pSection->pNext = pFirstSection;
 			pFirstSection = pSection;
+			if (NULL == pLastSection)
+			{
+				pLastSection = pSection;
+			}
 		}
-		else
-		{
-			pLastSection->pNext = pSection;
-		}
-		pLastSection = pSection;
 	}
 	// scan list of sections and try to expand them downwards with looking like lines
 	int nPrevSectionEnd1 = 0;

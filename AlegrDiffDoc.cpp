@@ -83,12 +83,18 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 	{
 		DWORD error = GetLastError();
 		FreeFilePairList();
+		CString s;
+		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(dir1));
+		AfxMessageBox(s);
 		return false;
 	}
 	if (! FileList2.LoadFolder(dir2, bRecurseSubdirs,
 								m_sInclusionPattern, m_sExclusionPattern))
 	{
 		FreeFilePairList();
+		CString s;
+		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(dir2));
+		AfxMessageBox(s);
 		return false;
 	}
 	{

@@ -750,26 +750,34 @@ BEGIN
     PUSHBUTTON      "File &1",IDNO,7,128,50,14
 END
 
-IDD_DIALOG_FIND DIALOGEX 0, 0, 263, 72
+IDD_DIALOG_FIND DIALOGEX 0, 0, 263, 100
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
     WS_SYSMENU
 CAPTION "Find"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Find what:",IDC_STATIC,7,10,38,8
-    COMBOBOX        IDC_COMBO_FIND,47,8,150,77,CBS_DROPDOWN | WS_VSCROLL | 
+    LTEXT           "&Find what:",IDC_STATIC,7,10,45,8
+    COMBOBOX        IDC_COMBO_FIND,53,8,144,77,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
     CONTROL         "Match &whole word only",IDC_CHECK_WHOLE_WORD,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,29,105,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,29,112,10
     CONTROL         "Match &case",IDC_CHECK_CASE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,43,66,10
-    GROUPBOX        "Direction",IDC_STATIC,138,28,59,37,WS_GROUP
+                    WS_TABSTOP,7,41,84,10
+    GROUPBOX        "Direction",IDC_STATIC,7,54,59,39,WS_GROUP
     CONTROL         "&Up",IDC_RADIO_UP,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP | WS_TABSTOP,146,39,42,10
-    CONTROL         "&Down",IDC_RADIO_DOWN,"Button",BS_AUTORADIOBUTTON,146,
-                    51,44,10
-    DEFPUSHBUTTON   "Find",IDOK,206,7,50,14
+                    WS_GROUP | WS_TABSTOP,13,65,42,10
+    CONTROL         "&Down",IDC_RADIO_DOWN,"Button",BS_AUTORADIOBUTTON,13,77,
+                    44,10
+    GROUPBOX        "Search in",IDC_STATIC,103,42,90,51
+    CONTROL         "&Combined file",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,112,77,74,10
+    CONTROL         "File &1",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON,112,53,
+                    66,10
+    CONTROL         "File &2",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,112,65,
+                    66,10
+    DEFPUSHBUTTON   "Find",IDOK,206,7,50,14,WS_GROUP
     PUSHBUTTON      "Cancel",IDCANCEL,206,24,50,14
+    PUSHBUTTON      "&Help",IDHELP,206,46,50,14
 END
 
 IDD_DIALOG_PROPERTIES DIALOGEX 0, 0, 270, 220
@@ -1031,8 +1039,8 @@ VS_VERSION_INFO$(RETAIL_VERSION) VERSIONINFO
 #else
 VS_VERSION_INFO VERSIONINFO
 #endif
- FILEVERSION 1,0,22,0
- PRODUCTVERSION 1,0,22,0
+ FILEVERSION 1,0,23,0
+ PRODUCTVERSION 1,0,23,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -1049,13 +1057,13 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "AleGr Software"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application"
-            VALUE "FileVersion", "1, 0, 22, 0"
+            VALUE "FileVersion", "1, 0, 23, 0"
             VALUE "InternalName", "AlegrDiff"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001-2002"
             VALUE "OriginalFilename", "AlegrDiff.EXE"
-            VALUE "PrivateBuild", "Beta 1.22"
+            VALUE "PrivateBuild", "Beta 1.23"
             VALUE "ProductName", "AlegrDiff Application"
-            VALUE "ProductVersion", "1, 0, 22, 0"
+            VALUE "ProductVersion", "1, 0, 23, 0"
         END
     END
     BLOCK "VarFileInfo"
@@ -1193,7 +1201,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 256
         TOPMARGIN, 7
-        BOTTOMMARGIN, 65
+        BOTTOMMARGIN, 93
     END
 
     IDD_DIALOG_PROPERTIES, DIALOG

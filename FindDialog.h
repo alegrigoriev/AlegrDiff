@@ -41,6 +41,13 @@ protected:
 	afx_msg void OnEditchangeComboFind();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+public:
+	// 0 - both files, 1 - file1, 2 - file2
+	int m_SearchScope;
+	afx_msg void OnBnClickedRadio1();
+	afx_msg void OnBnClickedRadio2();
+	afx_msg void OnBnClickedRadio3();
+	afx_msg void OnBnClickedCheckWholeWord();
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -79,6 +79,9 @@ inline void AssignMultiSz(CStringA & dst, LPCWSTR src)
 	dst = CStringA(src, MultiSzLen(src));
 }
 
+#define EnableDlgItem(id, Enable) \
+	::EnableWindow(GetDlgItem(id)->GetSafeHwnd(), Enable)
+
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 

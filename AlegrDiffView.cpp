@@ -13,6 +13,7 @@
 #include "FilesPropertiesDialog.h"
 #include <shlwapi.h>
 #include <atlpath.h>
+#include ".\alegrdiffview.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -87,6 +88,26 @@ ON_COMMAND(ID_FILE_PROPERTIES, OnFileProperties)
 ON_UPDATE_COMMAND_UI(ID_FILE_PROPERTIES, OnUpdateFileProperties)
 ON_NOTIFY_REFLECT(LVN_ITEMCHANGED, OnLvnItemchanged)
 ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
+ON_COMMAND(ID_SHOW_DIFFERENTFILES, OnShowDifferentfiles)
+ON_UPDATE_COMMAND_UI(ID_SHOW_DIFFERENTFILES, OnUpdateShowDifferentfiles)
+ON_COMMAND(ID_SHOW_DIFFERENTINVERSIONINFO, OnShowDifferentinversioninfo)
+ON_UPDATE_COMMAND_UI(ID_SHOW_DIFFERENTINVERSIONINFO, OnUpdateShowDifferentinversioninfo)
+ON_COMMAND(ID_SHOW_IDENTICALFILES, OnShowIdenticalfiles)
+ON_UPDATE_COMMAND_UI(ID_SHOW_IDENTICALFILES, OnUpdateShowIdenticalfiles)
+ON_COMMAND(ID_SHOW_FILESIN2NDDIRECTORYONLY, OnShowFilesin2nddirectoryonly)
+ON_UPDATE_COMMAND_UI(ID_SHOW_FILESIN2NDDIRECTORYONLY, OnUpdateShowFilesin2nddirectoryonly)
+ON_COMMAND(ID_SHOW_FILESIN1STDIRECTORYONLY, OnShowFilesin1stdirectoryonly)
+ON_UPDATE_COMMAND_UI(ID_SHOW_FILESIN1STDIRECTORYONLY, OnUpdateShowFilesin1stdirectoryonly)
+ON_COMMAND(ID_SHOW_SUBDIRECTORIESIN1STDIRONLY, OnShowSubdirectoriesin1stdironly)
+ON_UPDATE_COMMAND_UI(ID_SHOW_SUBDIRECTORIESIN1STDIRONLY, OnUpdateShowSubdirectoriesin1stdironly)
+ON_COMMAND(ID_SHOW_SUBDIRECTORIESIN2NDDIR, OnShowSubdirectoriesin2nddir)
+ON_UPDATE_COMMAND_UI(ID_SHOW_SUBDIRECTORIESIN2NDDIR, OnUpdateShowSubdirectoriesin2nddir)
+ON_COMMAND(ID_SHOW_DIFFERENTINSPACESONLY, OnShowDifferentinspacesonly)
+ON_UPDATE_COMMAND_UI(ID_SHOW_DIFFERENTINSPACESONLY, OnUpdateShowDifferentinspacesonly)
+ON_COMMAND(ID_SHOW_LONGERFILESIN1STDIRECTORY, OnShowLongerfilesin1stdirectory)
+ON_UPDATE_COMMAND_UI(ID_SHOW_LONGERFILESIN1STDIRECTORY, OnUpdateShowLongerfilesin1stdirectory)
+ON_COMMAND(ID_SHOW_LONGERFILESIN2NDDIRECTORY, OnShowLongerfilesin2nddirectory)
+ON_UPDATE_COMMAND_UI(ID_SHOW_LONGERFILESIN2NDDIRECTORY, OnUpdateShowLongerfilesin2nddirectory)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -112,6 +133,8 @@ inline void CAlegrDiffView::PrintColumnOrder()
 }
 
 CAlegrDiffView::CAlegrDiffView()
+	: m_ShowFilesMask(0xFFFFFFFF)
+	, m_PresentFilesMask(0)
 {
 	CThisApp * pApp = GetApp();
 
@@ -374,15 +397,22 @@ void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, ListHe
 
 	FilePair * pPair = pPairList->First();
 
+	m_PresentFilesMask = 0;
+
 	for (int i = 0; i < nCount && pPairList->NotEnd(pPair); i++, pPair = pPair->Next())
 	{
+		// set mask bit
+		m_PresentFilesMask |= 1 << pPair->GetComparisonResult();
+
 		if (NULL != pPair->pFirstFile
 			&& NULL != pPair->pSecondFile
 			&& pPair->pFirstFile->IsFolder())
 		{
 			continue;
 		}
-		if ( ! pPair->m_bHideFromListView)
+
+		if ( ! pPair->m_bHideFromListView
+			&& (m_ShowFilesMask & (1 << pPair->GetComparisonResult())))
 		{
 			PairArray.push_back(pPair);
 		}
@@ -405,7 +435,7 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 			{
 				if (m_PairArray[i] == alvi->pPair)
 				{
-					CString ComparisionResult = alvi->pPair->GetComparisonResult();
+					CString ComparisionResult = alvi->pPair->GetComparisonResultStr();
 					pListCtrl->SetItemText(i,
 											m_ColumnArray[ColumnComparisionResult],
 											ComparisionResult);
@@ -627,9 +657,11 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 	pListCtrl->SetItemCount(m_PairArray.size());
 
 	int nSel = -1;
+
 	for (unsigned item = 0; item < m_PairArray.size(); item++)
 	{
 		FilePair * pPair = m_PairArray[item];
+
 		if (pPair->m_bFocused)
 		{
 			if (-1 == nSel)
@@ -1027,7 +1059,7 @@ void CAlegrDiffView::SetListViewItem(FilePair *pPair, int item, bool bInsert)
 		}
 	}
 
-	CString ComparisionResult = pPair->GetComparisonResult();
+	CString ComparisionResult = pPair->GetComparisonResultStr();
 	pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnComparisionResult], ComparisionResult);
 }
 
@@ -1088,7 +1120,7 @@ void CAlegrDiffView::OnFileSaveList()
 			}
 			else if (dlg.IncludeGroups == dlg.GetFilesFilter()) // include groups
 			{
-				switch (pFilePair->m_ComparisonResult)
+				switch (pFilePair->GetComparisonResult())
 				{
 				case pFilePair->FilesIdentical:
 					if ( ! dlg.IncludeIdenticalFiles())
@@ -1265,7 +1297,7 @@ void CAlegrDiffView::OnFileSaveList()
 
 				if (dlg.IncludeComparisonResult())
 				{
-					line += pFilePair->GetComparisonResult();
+					line += pFilePair->GetComparisonResultStr();
 				}
 
 				line.TrimRight();
@@ -1690,4 +1722,129 @@ void CAlegrDiffView::OnEditSelectAll()
 	}
 }
 
+void CAlegrDiffView::ToggleShowFilesMask(ShowFilesMask mask)
+{
+	m_ShowFilesMask ^= mask;
+	OnUpdate(NULL, OnUpdateRebuildListView, NULL);
+}
 
+void CAlegrDiffView::UpdateShowFilesMask(CCmdUI* pCmdUI, ShowFilesMask mask)
+{
+	if (m_PresentFilesMask & mask)
+	{
+		pCmdUI->SetCheck(0 != (m_ShowFilesMask & mask));
+	}
+	else
+	{
+		// remove this menu item
+		CMenu* pMenu = pCmdUI->m_pMenu;
+		if (NULL != pMenu)
+		{
+			pMenu->DeleteMenu(pCmdUI->m_nID, MF_BYCOMMAND);
+		}
+		else
+		{
+			pCmdUI->Enable(FALSE);
+		}
+	}
+}
+
+void CAlegrDiffView::OnShowDifferentfiles()
+{
+	ToggleShowFilesMask(ShowDifferentFiles);
+}
+
+void CAlegrDiffView::OnUpdateShowDifferentfiles(CCmdUI *pCmdUI)
+{
+	UpdateShowFilesMask(pCmdUI, ShowDifferentFiles);
+}
+
+void CAlegrDiffView::OnShowDifferentinversioninfo()
+{
+	ToggleShowFilesMask(ShowVersionInfoDifferentFiles);
+}
+
+void CAlegrDiffView::OnUpdateShowDifferentinversioninfo(CCmdUI *pCmdUI)
+{
+	UpdateShowFilesMask(pCmdUI, ShowVersionInfoDifferentFiles);
+}
+
+void CAlegrDiffView::OnShowIdenticalfiles()
+{
+	ToggleShowFilesMask(ShowIdenticalFiles);
+}
+
+void CAlegrDiffView::OnUpdateShowIdenticalfiles(CCmdUI *pCmdUI)
+{
+	UpdateShowFilesMask(pCmdUI, ShowIdenticalFiles);
+}
+
+void CAlegrDiffView::OnShowFilesin2nddirectoryonly()
+{
+	ToggleShowFilesMask(ShowOnlySecondFileFiles);
+}
+
+void CAlegrDiffView::OnUpdateShowFilesin2nddirectoryonly(CCmdUI *pCmdUI)
+{
+	UpdateShowFilesMask(pCmdUI, ShowOnlySecondFileFiles);
+}
+
+void CAlegrDiffView::OnShowFilesin1stdirectoryonly()
+{
+	ToggleShowFilesMask(ShowOnlyFirstFileFiles);
+}
+
+void CAlegrDiffView::OnUpdateShowFilesin1stdirectoryonly(CCmdUI *pCmdUI)
+{
+	UpdateShowFilesMask(pCmdUI, ShowOnlyFirstFileFiles);
+}
+
+void CAlegrDiffView::OnShowSubdirectoriesin1stdironly()
+{
+	ToggleShowFilesMask(ShowOnlyFirstDirectory);
+}
+
+void CAlegrDiffView::OnUpdateShowSubdirectoriesin1stdironly(CCmdUI *pCmdUI)
+{
+	UpdateShowFilesMask(pCmdUI, ShowOnlyFirstDirectory);
+}
+
+void CAlegrDiffView::OnShowSubdirectoriesin2nddir()
+{
+	ToggleShowFilesMask(ShowOnlySecondDirectory);
+}
+
+void CAlegrDiffView::OnUpdateShowSubdirectoriesin2nddir(CCmdUI *pCmdUI)
+{
+	UpdateShowFilesMask(pCmdUI, ShowOnlySecondDirectory);
+}
+
+void CAlegrDiffView::OnShowDifferentinspacesonly()
+{
+	ToggleShowFilesMask(ShowDifferentInSpacesFiles);
+}
+
+void CAlegrDiffView::OnUpdateShowDifferentinspacesonly(CCmdUI *pCmdUI)
+{
+	UpdateShowFilesMask(pCmdUI, ShowDifferentInSpacesFiles);
+}
+
+void CAlegrDiffView::OnShowLongerfilesin1stdirectory()
+{
+	ToggleShowFilesMask(ShowFirstFileLongerFiles);
+}
+
+void CAlegrDiffView::OnUpdateShowLongerfilesin1stdirectory(CCmdUI *pCmdUI)
+{
+	UpdateShowFilesMask(pCmdUI, ShowFirstFileLongerFiles);
+}
+
+void CAlegrDiffView::OnShowLongerfilesin2nddirectory()
+{
+	ToggleShowFilesMask(ShowSecondFileLongerFiles);
+}
+
+void CAlegrDiffView::OnUpdateShowLongerfilesin2nddirectory(CCmdUI *pCmdUI)
+{
+	UpdateShowFilesMask(pCmdUI, ShowSecondFileLongerFiles);
+}

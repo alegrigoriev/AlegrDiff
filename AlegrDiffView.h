@@ -48,6 +48,26 @@ public:
 	//
 	eColumns m_SortColumns[MaxColumns];
 	bool m_AscendingSortOrder[MaxColumns];
+	enum ShowFilesMask
+	{
+		ShowIdenticalFiles = 1 << FilePair::FilesIdentical,
+		ShowDifferentFiles = 1 << FilePair::FilesDifferent,
+		ShowDifferentInSpacesFiles = 1 << FilePair::DifferentInSpaces,
+		ShowVersionInfoDifferentFiles = 1 << FilePair::VersionInfoDifferent,
+		ShowOnlyFirstFileFiles = (1 << FilePair::OnlyFirstFile) | (1 << FilePair::FileInFingerprintFileOnly),
+		ShowOnlySecondFileFiles = 1 << FilePair::OnlySecondFile,
+		ShowOnlyFirstDirectory =
+			(1 << FilePair::OnlyFirstDirectory) | (1 << FilePair::DirectoryInFingerprintFileOnly),
+		ShowOnlySecondDirectory = 1 << FilePair::OnlySecondDirectory,
+		ShowFirstFileLongerFiles = 1 << FilePair::FirstFileLonger,
+		ShowSecondFileLongerFiles = 1 << FilePair::SecondFileLonger,
+//        ShowIdenticalFiles = 1 << FilePair::FilesIdentical,
+	};
+	ULONG m_ShowFilesMask;
+	ULONG m_PresentFilesMask;
+
+	void ToggleShowFilesMask(ShowFilesMask mask);
+	void UpdateShowFilesMask(CCmdUI* pCmdUI, ShowFilesMask mask);
 
 	enum eSetSortColumnOrder
 	{
@@ -112,6 +132,7 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 public:
+protected:
 	afx_msg void OnListviewFilelength();
 	afx_msg void OnUpdateListviewFilelength(CCmdUI *pCmdUI);
 	afx_msg void OnListviewModificationtime();
@@ -141,7 +162,27 @@ public:
 	afx_msg void OnUpdateFileProperties(CCmdUI *pCmdUI);
 	afx_msg void OnLvnItemchanged(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnEditSelectAll();
-protected:
+	afx_msg void OnShowDifferentfiles();
+	afx_msg void OnUpdateShowDifferentfiles(CCmdUI *pCmdUI);
+	afx_msg void OnShowDifferentinversioninfo();
+	afx_msg void OnUpdateShowDifferentinversioninfo(CCmdUI *pCmdUI);
+	afx_msg void OnShowIdenticalfiles();
+	afx_msg void OnUpdateShowIdenticalfiles(CCmdUI *pCmdUI);
+	afx_msg void OnShowFilesin2nddirectoryonly();
+	afx_msg void OnUpdateShowFilesin2nddirectoryonly(CCmdUI *pCmdUI);
+	afx_msg void OnShowFilesin1stdirectoryonly();
+	afx_msg void OnUpdateShowFilesin1stdirectoryonly(CCmdUI *pCmdUI);
+	afx_msg void OnShowSubdirectoriesin1stdironly();
+	afx_msg void OnUpdateShowSubdirectoriesin1stdironly(CCmdUI *pCmdUI);
+	afx_msg void OnShowSubdirectoriesin2nddir();
+	afx_msg void OnUpdateShowSubdirectoriesin2nddir(CCmdUI *pCmdUI);
+public:
+	afx_msg void OnShowDifferentinspacesonly();
+	afx_msg void OnUpdateShowDifferentinspacesonly(CCmdUI *pCmdUI);
+	afx_msg void OnShowLongerfilesin1stdirectory();
+	afx_msg void OnUpdateShowLongerfilesin1stdirectory(CCmdUI *pCmdUI);
+	afx_msg void OnShowLongerfilesin2nddirectory();
+	afx_msg void OnUpdateShowLongerfilesin2nddirectory(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp

@@ -908,8 +908,9 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 		dlg.m_sSecondDir = dir2;
 	}
 
-	// run the dialog only if one of the directoriees is not specified
-	if (IDOK == dlg.DoModal())
+	// if both directories are specified and Shift is not held, then skip the dialog
+	if ((NULL != dir1 && NULL != dir2 && 0 == (0x8000 & GetKeyState(VK_SHIFT)))
+		|| IDOK == dlg.DoModal())
 	{
 		m_sFilenameFilter = dlg.m_FilenameFilter;
 		m_bRecurseSubdirs = (1 == dlg.m_bIncludeSubdirs);
@@ -961,7 +962,8 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 	}
 
 	if (Name1.IsEmpty()
-		|| Name2.IsEmpty())
+		|| Name2.IsEmpty()
+		|| 0 != (0x8000 & GetKeyState(VK_SHIFT)))
 	{
 		CFilesCompareDialog dlg;
 

@@ -7,7 +7,6 @@
 #define IDR_MAINFRAME                   128
 #define IDR_ALEGRDTYPE                  129
 #define IDD_DIALOG_COMPARE_DIRS         130
-#define IDR_ALEGRDTYPE2                 130
 #define IDR_FILEDIFFTYPE                131
 #define IDS_FILENAME_FILTER             132
 #define IDD_DIALOG_COMPARE_DIRS_ADVANCED 133
@@ -45,6 +44,9 @@
 #define ID_WORDSIZE_2BYTES              154
 #define ID_WORDSIZE_4BYTES              155
 #define ID_WORDSIZE_8BYTES              156
+#define IDR_BINARYDIFF_CONTEXT          157
+#define ID_BINDIFF_SHOWFIRSTFILE        158
+#define ID_BINDIFF_SHOW2NDFILE          159
 #define IDC_COMBO_FIRST_DIR             1000
 #define IDC_COMBO_SECOND_DIR            1001
 #define IDC_COMBO_SAVE_FILENAME         1001
@@ -134,7 +136,7 @@
 #define IDS_REPLACEYESNO                32780
 #define ID_EDIT_GOTONEXTDIFF            32783
 #define ID_EDIT_GOTOPREVDIFF            32784
-#define ID_EDIT_GOTOADDRESS             32785
+#define ID_EDIT_GOTOLINE                32785
 #define IDS_DIFF_FILE_BANNER            32786
 #define ID_VIEW_REFRESH                 32787
 #define ID_VIEW_SHOW_LINE_NUMBERS       32789
@@ -222,7 +224,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        157
+#define _APS_NEXT_RESOURCE_VALUE        160
 #define _APS_NEXT_COMMAND_VALUE         32820
 #define _APS_NEXT_CONTROL_VALUE         1078
 #define _APS_NEXT_SYMED_VALUE           101

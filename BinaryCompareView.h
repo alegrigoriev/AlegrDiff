@@ -107,6 +107,11 @@ public:
 	afx_msg void OnUpdateWordsize4bytes(CCmdUI *pCmdUI);
 	afx_msg void OnWordsize8bytes();
 	afx_msg void OnUpdateWordsize8bytes(CCmdUI *pCmdUI);
+	afx_msg void OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/);
+	afx_msg void OnBindiffShowfirstfile();
+	afx_msg void OnUpdateBindiffShowfirstfile(CCmdUI *pCmdUI);
+	afx_msg void OnBindiffShow2ndfile();
+	afx_msg void OnUpdateBindiffShow2ndfile(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp

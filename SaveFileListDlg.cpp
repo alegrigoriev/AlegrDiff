@@ -88,7 +88,10 @@ END_MESSAGE_MAP()
 
 void CSaveFileListDlg::OnUpdateOk(CCmdUI * pCmdUI)
 {
-	pCmdUI->Enable(m_eFilename.GetWindowTextLength() != 0);
+	CString s;
+	m_eFilename.GetWindowText(s);
+	s.Trim();
+	pCmdUI->Enable(! s.IsEmpty());
 }
 
 void CSaveFileListDlg::OnUpdateCheckIncludeGroup(CCmdUI * pCmdUI)

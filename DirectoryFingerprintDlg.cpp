@@ -5,6 +5,7 @@
 #include "AlegrDiff.h"
 #include "DirectoryFingerprintDlg.h"
 #include "FolderDialog.h"
+#include <afxpriv.h>
 
 // CDirectoryFingerprintDlg dialog
 
@@ -17,6 +18,7 @@ CDirectoryFingerprintDlg::CDirectoryFingerprintDlg(CWnd* pParent /*=NULL*/)
 	, m_sFilenameFilter(_T(""))
 	, m_sIgnoreFiles(_T(""))
 	, m_sSaveFilename(_T(""))
+	, m_bNeedUpdateControls(TRUE)
 	, m_bSaveAsUnicode(FALSE)
 {
 }
@@ -64,7 +66,12 @@ void CDirectoryFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CDirectoryFingerprintDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_FIRST_DIR, OnBnClickedButtonBrowseDir)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_SAVE_FILENAME, OnBnClickedButtonBrowseSaveFilename)
-	ON_BN_CLICKED(IDOK, OnBnClickedOk)
+	ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
+	ON_CBN_EDITCHANGE(IDC_COMBO_FIRST_DIR, OnCbnEditchangeComboFirstDir)
+	ON_CBN_SELCHANGE(IDC_COMBO_FIRST_DIR, OnCbnSelchangeComboFirstDir)
+	ON_CBN_EDITCHANGE(IDC_COMBO_SAVE_FILENAME, OnCbnEditchangeComboSaveFilename)
+	ON_CBN_SELCHANGE(IDC_COMBO_SAVE_FILENAME, OnCbnSelchangeComboSaveFilename)
+	ON_UPDATE_COMMAND_UI(IDOK, OnUpdateOk)
 END_MESSAGE_MAP()
 
 
@@ -80,6 +87,7 @@ void CDirectoryFingerprintDlg::OnBnClickedButtonBrowseDir()
 	if (IDOK == dlg.DoModal())
 	{
 		m_DirCombo.SetWindowText(dlg.GetFolderPath());
+		m_bNeedUpdateControls = TRUE;
 	}
 }
 
@@ -101,6 +109,7 @@ void CDirectoryFingerprintDlg::OnBnClickedButtonBrowseSaveFilename()
 		return;
 	}
 	m_SaveFilename.SetWindowText(dlg.GetPathName());
+	m_bNeedUpdateControls = TRUE;
 }
 
 BOOL CDirectoryFingerprintDlg::OnInitDialog()
@@ -137,10 +146,44 @@ BOOL CDirectoryFingerprintDlg::OnInitDialog()
 	// EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CDirectoryFingerprintDlg::OnBnClickedOk()
+LRESULT CDirectoryFingerprintDlg::OnKickIdle(WPARAM, LPARAM)
 {
-	// check if the fingerprint file exists
-	m_SaveFilename.GetWindowText(m_sSaveFilename);
-
-	OnOK();
+	if (m_bNeedUpdateControls)
+	{
+		UpdateDialogControls(this, FALSE);
+	}
+	m_bNeedUpdateControls = FALSE;
+	return 0;
 }
+
+
+void CDirectoryFingerprintDlg::OnCbnEditchangeComboFirstDir()
+{
+	m_bNeedUpdateControls = TRUE;
+}
+
+void CDirectoryFingerprintDlg::OnCbnSelchangeComboFirstDir()
+{
+	m_bNeedUpdateControls = TRUE;
+}
+
+void CDirectoryFingerprintDlg::OnCbnEditchangeComboSaveFilename()
+{
+	m_bNeedUpdateControls = TRUE;
+}
+
+void CDirectoryFingerprintDlg::OnCbnSelchangeComboSaveFilename()
+{
+	m_bNeedUpdateControls = TRUE;
+}
+
+void CDirectoryFingerprintDlg::OnUpdateOk(CCmdUI * pCmdUI)
+{
+	CString s1, s2;
+	m_SaveFilename.GetWindowText(s1);
+	s1.Trim();
+	m_DirCombo.GetWindowText(s2);
+	s2.Trim();
+	pCmdUI->Enable(! s1.IsEmpty() && ! s2.IsEmpty());
+}
+

@@ -176,7 +176,7 @@ BEGIN
     BEGIN
         MENUITEM "Go To Next Diff\tF7",         ID_EDIT_GOTONEXTDIFF
         MENUITEM "Go To Prev Diff\tShift+F7",   ID_EDIT_GOTOPREVDIFF
-        MENUITEM "Go To Line...\tCtrl+G",       ID_EDIT_GOTOADDRESS
+        MENUITEM "Go To Line...\tCtrl+G",       ID_EDIT_GOTOLINE
         MENUITEM SEPARATOR
         MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
         MENUITEM "Select All\tCtrl+A",          ID_EDIT_SELECT_ALL
@@ -308,7 +308,7 @@ BEGIN
     BEGIN
         MENUITEM "Go To Next Diff\tF7",         ID_EDIT_GOTONEXTDIFF
         MENUITEM "Go To Prev Diff\tShift+F7",   ID_EDIT_GOTOPREVDIFF
-        MENUITEM "Go To Line...\tCtrl+G",       ID_EDIT_GOTOADDRESS
+        MENUITEM "Go To Line...\tCtrl+G",       ID_EDIT_GOTOLINE
         MENUITEM SEPARATOR
         MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
         MENUITEM "Select All\tCtrl+A",          ID_EDIT_SELECT_ALL
@@ -373,7 +373,7 @@ BEGIN
     BEGIN
         MENUITEM "Go To Next Diff\tF7",         ID_EDIT_GOTONEXTDIFF
         MENUITEM "Go To Prev Diff\tShift+F7",   ID_EDIT_GOTOPREVDIFF
-        MENUITEM "Go To Address...\tCtrl+G",    ID_EDIT_GOTOADDRESS
+        MENUITEM "Go To Address...\tCtrl+G",    ID_EDIT_GOTOLINE
         MENUITEM SEPARATOR
         MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
         MENUITEM "Select All\tCtrl+A",          ID_EDIT_SELECT_ALL
@@ -393,6 +393,8 @@ BEGIN
             MENUITEM "&4 Bytes",                    ID_WORDSIZE_4BYTES
             MENUITEM "&8 Bytes",                    ID_WORDSIZE_8BYTES
         END
+        MENUITEM "Show 1&st File",              158
+        MENUITEM "Show 2&nd File",              159
     END
     POPUP "&Window"
     BEGIN
@@ -407,6 +409,20 @@ BEGIN
     END
 END
 
+IDR_BINARYDIFF_CONTEXT MENU 
+BEGIN
+    POPUP " "
+    BEGIN
+        MENUITEM "&1 Byte",                     153
+        MENUITEM "&2 Bytes",                    154
+        MENUITEM "&4 Bytes",                    155
+        MENUITEM "&8 Bytes",                    156
+        MENUITEM SEPARATOR
+        MENUITEM "Show 1&st File",              ID_BINDIFF_SHOWFIRSTFILE
+        MENUITEM "Show 2&nd File",              ID_BINDIFF_SHOW2NDFILE
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -418,7 +434,7 @@ BEGIN
     "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
     "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     "F",            ID_EDIT_FIND,           VIRTKEY, CONTROL, NOINVERT
-    "G",            ID_EDIT_GOTOADDRESS,    VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_EDIT_GOTOLINE,       VIRTKEY, CONTROL, NOINVERT
     "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
     "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
     "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
@@ -1298,7 +1314,7 @@ END
 STRINGTABLE 
 BEGIN
     ID_EDIT_GOTOPREVDIFF    "Go to previous difference\nPrevious difference"
-    ID_EDIT_GOTOADDRESS     "Go to the line number\nGo to line"
+    ID_EDIT_GOTOLINE        "Go to the line number\nGo to line"
     IDS_DIFF_FILE_BANNER    "Comparing directories:\n%s\n%s\n\n"
     ID_VIEW_REFRESH         "Reload the current file(s)\nRefresh"
     ID_VIEW_SHOW_LINE_NUMBERS 
@@ -1403,6 +1419,11 @@ BEGIN
                             "Create directory fingerprint information file\nCreate dir fingerprint"
     ID_FILE_CHECKDIRECTORYFILNGERPRINT 
                             "Check the files against previously created fingerprint information\nCheck dir fingerprint"
+    ID_WORDSIZE_1BYTE       "Show data as bytes"
+    ID_WORDSIZE_2BYTES      "Show data as 16-bit words"
+    ID_WORDSIZE_4BYTES      "Show data as 32-bit double words"
+    ID_WORDSIZE_8BYTES      "Show data as 64-bit quad words"
+    ID_BINDIFF_SHOWFIRSTFILE "Show contents of the first file"
 END
 
 STRINGTABLE 

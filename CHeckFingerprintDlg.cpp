@@ -5,6 +5,7 @@
 #include "AlegrDiff.h"
 #include "CheckFingerprintDlg.h"
 #include "FolderDialog.h"
+#include <afxpriv.h>
 
 // CCheckFingerprintDlg dialog
 
@@ -13,6 +14,7 @@ CCheckFingerprintDlg::CCheckFingerprintDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CCheckFingerprintDlg::IDD, pParent)
 	, m_sDirectory(_T(""))
 	, m_sFilename(_T(""))
+	, m_bNeedUpdateControls(TRUE)
 {
 }
 
@@ -46,6 +48,12 @@ void CCheckFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CCheckFingerprintDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_FIRST_DIR, OnBnClickedButtonBrowseFirstDir)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_SAVE_FILENAME, OnBnClickedButtonBrowseOpenFilename)
+	ON_CBN_EDITCHANGE(IDC_COMBO_FIRST_DIR, OnCbnEditchangeComboFirstDir)
+	ON_CBN_SELCHANGE(IDC_COMBO_FIRST_DIR, OnCbnSelchangeComboFirstDir)
+	ON_CBN_EDITCHANGE(IDC_COMBO_SAVE_FILENAME, OnCbnEditchangeComboSaveFilename)
+	ON_CBN_SELCHANGE(IDC_COMBO_SAVE_FILENAME, OnCbnSelchangeComboSaveFilename)
+	ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
+	ON_UPDATE_COMMAND_UI(IDOK, OnUpdateOk)
 END_MESSAGE_MAP()
 
 
@@ -59,10 +67,12 @@ void CCheckFingerprintDlg::OnBnClickedButtonBrowseFirstDir()
 
 	CFolderDialog dlg(DlgTitle, m_sDirectory);
 
-	if (IDOK == dlg.DoModal())
+	if (IDOK != dlg.DoModal())
 	{
-		m_cbDirectory.SetWindowText(dlg.GetFolderPath());
+		return;
 	}
+	m_cbDirectory.SetWindowText(dlg.GetFolderPath());
+	m_bNeedUpdateControls = TRUE;
 }
 
 void CCheckFingerprintDlg::OnBnClickedButtonBrowseOpenFilename()
@@ -85,6 +95,7 @@ void CCheckFingerprintDlg::OnBnClickedButtonBrowseOpenFilename()
 	}
 
 	m_cbFilename.SetWindowText(dlg.GetPathName());
+	m_bNeedUpdateControls = TRUE;
 }
 
 BOOL CCheckFingerprintDlg::OnInitDialog()
@@ -106,4 +117,44 @@ BOOL CCheckFingerprintDlg::OnInitDialog()
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CCheckFingerprintDlg::OnCbnEditchangeComboFirstDir()
+{
+	m_bNeedUpdateControls = TRUE;
+}
+
+void CCheckFingerprintDlg::OnCbnSelchangeComboFirstDir()
+{
+	m_bNeedUpdateControls = TRUE;
+}
+
+void CCheckFingerprintDlg::OnCbnEditchangeComboSaveFilename()
+{
+	m_bNeedUpdateControls = TRUE;
+}
+
+void CCheckFingerprintDlg::OnCbnSelchangeComboSaveFilename()
+{
+	m_bNeedUpdateControls = TRUE;
+}
+
+LRESULT CCheckFingerprintDlg::OnKickIdle(WPARAM, LPARAM)
+{
+	if (m_bNeedUpdateControls)
+	{
+		UpdateDialogControls(this, FALSE);
+	}
+	m_bNeedUpdateControls = FALSE;
+	return 0;
+}
+
+void CCheckFingerprintDlg::OnUpdateOk(CCmdUI * pCmdUI)
+{
+	CString s1, s2;
+	m_cbFilename.GetWindowText(s1);
+	s1.Trim();
+	m_cbDirectory.GetWindowText(s2);
+	s2.Trim();
+	pCmdUI->Enable(! s1.IsEmpty() && ! s2.IsEmpty());
 }

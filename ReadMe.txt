@@ -1,5 +1,6 @@
 TODO:
 
+Show data chars for binary file
 Open Binary file difference
 Support comparison of BIG lists
 Save columns width and order
@@ -9,6 +10,7 @@ For binary comparison: show file size
 In Properties dialog: show file size
 Add 1st file size, 2nd file size (with exact size tooltips?)
 Refresh list view
+
 make word by word comparison in MatchStrings
 show version of file1, file2 of the line
 Show Left-only, right-only, merged line (single line only)
@@ -38,6 +40,9 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+Make "Show 1st, show 2nd for binary files
+Enable/Disable OK in CheckDirFingerprint dialog
+Enable/Disable OK in CreateDirFingerprint dialog
 Set binary compare doc title
 Add extensions from the recent files to the browse for file dialog
 Remove "Use Binary filter", "Use Ignore Filter" etc checkboxes,

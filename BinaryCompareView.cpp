@@ -124,7 +124,7 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 		pFile = pFilePair->pSecondFile;
 
 		pOtherFile = pFilePair->pFirstFile;
-		if (pOtherFile->m_bIsPhantomFile)
+		if (NULL != pOtherFile && pOtherFile->m_bIsPhantomFile)
 		{
 			pOtherFile = NULL;
 		}
@@ -137,7 +137,7 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 		pFile = pFilePair->pFirstFile;
 
 		pOtherFile = pFilePair->pSecondFile;
-		if (pOtherFile->m_bIsPhantomFile)
+		if (NULL != pOtherFile && pOtherFile->m_bIsPhantomFile)
 		{
 			pOtherFile = NULL;
 		}
@@ -221,13 +221,13 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 					{
 						CurrChar = FileBuf1[ByteOffset];
 						_stprintf(buf, _T("%02X"), CurrChar);
-						if (Buf2Filled <= ByteOffset
-							|| CurrChar != FileBuf2[ByteOffset])
+						if (NULL != pOtherFile && (Buf2Filled <= ByteOffset
+								|| CurrChar != FileBuf2[ByteOffset]))
 						{
 							color = OtherColor;
 						}
 					}
-					else if (Buf2Filled > ByteOffset)
+					else if (NULL != pOtherFile && Buf2Filled > ByteOffset)
 					{
 						CurrChar = FileBuf2[ByteOffset];
 						_stprintf(buf, _T("%02X"), CurrChar);

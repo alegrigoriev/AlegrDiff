@@ -395,7 +395,12 @@ void CBinaryCompareDoc::OnViewViewastextfiles()
 	pPair->Reference();
 	OnCloseDocument();
 
-	pPair->m_ComparisonResult = pPair->ResultUnknown;
+	if (NULL == pPair->pFirstFile
+		|| ! pPair->pFirstFile->m_bIsPhantomFile)
+	{
+		pPair->m_ComparisonResult = pPair->ResultUnknown;
+	}
+
 	pPair->UnloadFiles(true);
 
 	if (NULL != pPair->pFirstFile)

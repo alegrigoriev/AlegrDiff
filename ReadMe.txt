@@ -1,9 +1,5 @@
 TODO:
 
-View files side by side
-show version of file1, file2 of the line
-Show Left-only, right-only, merged line (single line only)
-Add Copy 1st file text, copy 2nd file text
 Find full word only
 Assign an index to the files during original sort (for faster sorting)
 Make icons for the dialogs
@@ -34,6 +30,8 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+"C:\\" shown in the list view title
+If the text comparison got aborted because of read error, this is not shown
 History gets lost  under Win9x
 Zero byte in text file is causing text not shown
 "Length" column On/Off not saved
@@ -44,8 +42,14 @@ Blank lines prevent from proper line matching inside difference blocks
 Directory share name cannot be selected if no '\' appended
 Directory dialog allows to select network host. It won't return anything then.
 screen move in two directions may corrupt the image (??)
+Estimated time left is not shown while calculating a fingerpring of a big file   (???)
 
 Fixed:
+If the comparison is very quick, the progress dialog may get stuck
+If the comparison got aborted because of read error, this is not shown
+Cannot switch to text mode, after fingerprint check
+Inconsistency between create and check fingerpring dlg
+Wrong title in Creating Fingerprint dialog
 Creates Recent File List subkey and deletes it on exit
 "Different only in version stamp" changes to "Files are DIFFERENT" 
  when the file is opened.
@@ -89,6 +93,8 @@ insufficient space allocated for copying files
 
 Done:
 
+View files side by side
+Add Copy 1st file text, copy 2nd file text
 Save sizes of resizable dialogs for this session
 Make File Compare dialog resizable
 Make radio buttons in file compare dialog: Binary Text Default

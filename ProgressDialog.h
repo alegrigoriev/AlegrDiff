@@ -29,7 +29,7 @@ public:
 		m_TotalDataSize = size;
 	}
 	void AddDoneItem(LONGLONG size);
-	void SetNextItem(LPCTSTR Name, LONGLONG size, DWORD ItemOverhead);
+	void SetNextItem(LPCTSTR Name, LONGLONG size, DWORD ItemOverhead, bool EllipsePath = false);
 
 	UINT SignalDialogEnd(UINT Command);
 
@@ -42,6 +42,7 @@ public:
 	CSimpleCriticalSection m_cs;
 	CString m_CurrentItemName;
 	BOOL m_bItemNameChanged;
+	BOOL m_bEllipsePath;
 
 	LONGLONG m_TotalDataSize;
 	LONGLONG m_CurrentItemSize;

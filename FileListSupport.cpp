@@ -3300,18 +3300,16 @@ FilePair::eFileComparisionResult FilePair::CompareFiles(class CProgressDialog * 
 		// just build the line array
 		FileItem * pFile = pFirstFile;
 		result = OnlyFirstFile;
-		if (NULL == pFile || pFile->m_bIsPhantomFile)
+		if (NULL == pFile)
 		{
 			pFile = pSecondFile;
-			if (pFirstFile->m_bIsPhantomFile)
-			{
-				// keep previous result
-				result = m_ComparisonResult;
-			}
-			else
-			{
-				result = OnlySecondFile;
-			}
+			result = OnlySecondFile;
+		}
+		else if (pFile->m_bIsPhantomFile)
+		{
+			pFile = pSecondFile;
+			// keep previous result
+			result = m_ComparisonResult;
 		}
 
 		if (NULL != pFile)

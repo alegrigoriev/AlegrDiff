@@ -9,6 +9,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 #include <afxcview.h>
+#include <vector>
+using namespace std;
 
 class CAlegrDiffView : public CListView
 {
@@ -51,9 +53,9 @@ public:
 #endif
 
 protected:
-	CArray<FilePair *,FilePair *> m_PairArray;
+	vector<FilePair *> m_PairArray;
 
-	void BuildSortedPairArray(CArray<FilePair *,FilePair *> & PairArray, FilePair * pPairs, int nCount);
+	void BuildSortedPairArray(vector<FilePair *> & PairArray, FilePair * pPairs, int nCount);
 
 // Generated message map functions
 protected:

@@ -1,5 +1,5 @@
 TODO:
-
+make different secondary sort after somparison result sort
 show version of file1, file2 of the line
 Show Left-only, right-only, merged line (single line only)
 make dir names and full file names available either in properties sheet or in whatever
@@ -20,6 +20,7 @@ F8 - hold anchor
 Problems:
 
 Fixed:
+merge doesn't work
 
 Done:
 Make background thread for comparision

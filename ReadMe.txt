@@ -1,17 +1,20 @@
 TODO:
-Add Merge function
 Ignore whitespace-only differences
+CaretRightToWord
+Cancel selection on Accept/Decline commands (to see the result immediately). ???
+Maybe different color for selected accepted/declined
+Add Save differences
+Add save file list
+Add Copy files
 show subdir-only names in the status bar during comparision
-If a file reloaded and some changes are marked, ask confirmation.
+Add color selection for background.
+Hide Apply in the preferences sheet
 Make Word Left, Word Right, Word selection.
 Make search dialog
 Make Go To Line to first or second file line number
 in InvalidateRange, add for letter overlap.
 Make combobox for last file filters
 Add progress to File list view and file diff view
-Add Save differences
-Add save file list
-Add Copy files
 Open directories or files from the command line
 Make binary comparision
 Compare EXE version info for DLL, EXE, SYS
@@ -23,6 +26,7 @@ Problems:
 Blank lines are ignored during comparision, but may not be inored when line pair list built
 
 Fixed:
+when checking for alpnanum, check also for '_'
 invalidates too much when cursor moved after scroll
 Identical lines in the beginning of the file may be shown different
 doesn't erase line ends after scrolling
@@ -32,6 +36,9 @@ File with differences: last lines not drawn
 Wrong status for inserted and removed parts of strings
 
 Done:
+Add Merge function
+If a file reloaded and some changes are marked, ask confirmation.
+don't cancel selection if right click inside the selection
 Paint accepted and declined changes with color
 Add "Number of lines to match", "Min string length to match", "percents of look-like difference"
 Check difference area of the file for identical lines

@@ -100,7 +100,7 @@ BEGIN
     BUTTON      ID_FILE_COMPAREDIRECTORIES
     BUTTON      ID_FILE_COMPAREFILES
     BUTTON      ID_FILE_PREFERENCES
-    BUTTON      ID_FILE_SAVE
+    BUTTON      ID_FILE_MERGE_SAVE
     SEPARATOR
     BUTTON      ID_VIEW_SHOW_LINE_NUMBERS
     BUTTON      ID_EDIT_GOTONEXTDIFF
@@ -151,11 +151,12 @@ BEGIN
     BEGIN
         MENUITEM "Compare &Directories...",     ID_FILE_COMPAREDIRECTORIES
         MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
-        MENUITEM "Preferences...",              ID_FILE_PREFERENCES
+        MENUITEM "Merge Files And Save...",     ID_FILE_MERGE_SAVE
         MENUITEM SEPARATOR
         MENUITEM "Edit 1st File",               ID_FILE_EDIT_FIRST
         MENUITEM "Edit 2nd File",               ID_FILE_EDIT_SECOND
         MENUITEM SEPARATOR
+        MENUITEM "Preferences...",              ID_FILE_PREFERENCES
         MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
@@ -171,8 +172,11 @@ BEGIN
         MENUITEM "Go To Prev Diff\tShift+F7",   ID_EDIT_GOTOPREVDIFF
         MENUITEM "Go To Line...\tCtrl+G",       ID_EDIT_GOTOLINE
         MENUITEM SEPARATOR
-        MENUITEM "Accept",                      ID_EDIT_ACCEPT
-        MENUITEM "Decline",                     ID_EDIT_DECLINE
+    END
+    POPUP "&Merge"
+    BEGIN
+        MENUITEM "Accept\tShift+F6",            ID_EDIT_ACCEPT
+        MENUITEM "Decline\tF6",                 ID_EDIT_DECLINE
     END
     POPUP "&View"
     BEGIN
@@ -181,7 +185,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Refresh\tF5",                 ID_VIEW_REFRESH
         MENUITEM "Show Line Numbers",           ID_VIEW_SHOW_LINE_NUMBERS
-        MENUITEM "Ignore &Whitespaces",         ID_VIEW_IGNORE_WHITESPACES
+        MENUITEM "Ignore &Whitespaces\tCtrl+W", ID_VIEW_IGNORE_WHITESPACES
     END
     POPUP "&Window"
     BEGIN
@@ -246,8 +250,8 @@ BEGIN
     VK_F3,          ID_EDIT_FIND_WORD_PREV, VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
     VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
-    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
-    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_F6,          ID_EDIT_DECLINE,        VIRTKEY, NOINVERT
+    VK_F6,          ID_EDIT_ACCEPT,         VIRTKEY, SHIFT, NOINVERT
     VK_F7,          ID_EDIT_GOTONEXTDIFF,   VIRTKEY, NOINVERT
     VK_F7,          ID_EDIT_GOTOPREVDIFF,   VIRTKEY, SHIFT, NOINVERT
     VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
@@ -268,7 +272,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 0.69 beta",IDC_STATIC,35,14,128,8,
+    CTEXT           "AlegrDiff Version 0.699 beta",IDC_STATIC,35,14,128,8,
                     SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001\nalegr@earthlink.net",
                     IDC_STATIC,35,34,128,21
@@ -475,6 +479,26 @@ BEGIN
                     SS_CENTERIMAGE
 END
 
+IDD_DIALOG_ACCEPT_OR_DECLINE_ALL DIALOG DISCARDABLE  0, 0, 179, 82
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Accept Or Decline Differences"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Accept",IDOK,7,61,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,122,61,50,14
+    PUSHBUTTON      "Decline",IDNO,64,61,50,14
+    CTEXT           "Some of the differences are not marked as ""Accepted"" or ""Declined"". How would you like to merge them?",
+                    IDC_STATIC,15,22,148,29
+END
+
+IDD_DIALOG_SAVE_MERGED_TEMPLATE DIALOG DISCARDABLE  0, 0, 281, 30
+STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Open file after save",IDC_CHECK_OPEN_IN_EDITOR,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,13,78,10
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -600,6 +624,22 @@ BEGIN
         RIGHTMARGIN, 188
         TOPMARGIN, 7
         BOTTOMMARGIN, 120
+    END
+
+    IDD_DIALOG_ACCEPT_OR_DECLINE_ALL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 172
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 75
+    END
+
+    IDD_DIALOG_SAVE_MERGED_TEMPLATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 274
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 23
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -773,6 +813,7 @@ BEGIN
     ID_FILE_COPY_SECOND_DIR "Copy selected files from the second dir\nCopy from second dir"
     ID_VIEW_IGNORE_WHITESPACES 
                             "Hide or show whitespace-only difference\nIgnore whitespaces"
+    ID_FILE_MERGE_SAVE      "Merge differences from both files and save the result\nMerge files"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -780,6 +821,12 @@ BEGIN
     IDS_DIRECTORY_ACCESS_DENIED "Access to directory ""%s"" denied"
     IDS_DIRECTORY_NOT_FOUND "Directory ""%s"" not found"
     IDS_PREFERENCES         "Preferences"
+    IDS_QUERY_RELOAD_FILES  "Some of differences in ""%s%s"" are marked for merging.\nOne of the files have changed in the meanwhile. \nIf the files are reloaded, these attributes will be lost.\nReload the files?"
+    IDS_QUERY_SAVE_MERGED_FILE 
+                            "Some of differences in ""%s%s"" are marked for merging.\nWould you like to save the merged file?"
+    IDS_ALL_FILES           "|All Files (*.*)|*||"
+    IDS_SAVE_MERGED_DIALOG_TITLE "Merge Files And Save"
+    IDS_STRING_COULDNT_SAVE_MERGED "Could not save the merged file"
 END
 
 #endif    // English (U.S.) resources

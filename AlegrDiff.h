@@ -23,6 +23,7 @@
 class CAlegrDiffApp : public CWinApp
 {
 public:
+	void OpenSingleFile(LPCTSTR pName);
 	void NotifyFilePairChanged(FilePair * pPair);
 	CAlegrDiffApp();
 	~CAlegrDiffApp();
@@ -52,6 +53,7 @@ public:
 
 	CString m_FileDir1;
 	CString m_FileDir2;
+	CString m_LastSaveMergedDir;
 	int m_UsedFilenameFilter;
 
 	CString m_sFilenameFilter;

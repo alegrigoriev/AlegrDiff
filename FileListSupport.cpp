@@ -331,7 +331,7 @@ bool FileItem::Load()
 	char TabExpandedLine[2048];
 
 	FileLine * pLineList = NULL;
-	for (int LinNum =0; NULL != fgets(line, sizeof line - 1, file); LinNum++)
+	for (unsigned LinNum =0; NULL != fgets(line, sizeof line - 1, file); LinNum++)
 	{
 		// expand tabs
 		for (int i = 0, pos = 0; line[i] != 0 && pos < sizeof TabExpandedLine - 1; pos++)
@@ -369,7 +369,7 @@ bool FileItem::Load()
 	BeginTime = timeGetTime();
 #endif
 	m_Lines.SetSize(LinNum);
-	int i, j;
+	unsigned i, j;
 	for (i = LinNum - 1; i >= 0 && pLineList != NULL; i--)
 	{
 		FileLine * pLine = pLineList;
@@ -1324,55 +1324,82 @@ static DWORD CalculateHash(const char * data, int len)
 	for (int i = 0 ; i < len; i++)
 	{
 		char c = data[i];
-		// TODO: ignore whitespaces
 		crc32_val = ( crc32_val << 8 ) ^ CRC32_Table[(( crc32_val >> 24) ^ c) & 0xff];
 	}
 	return crc32_val;
 }
 // remove the unnecessary whitespaces from the line (based on C, C++ syntax)
 // return string length
-static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen, bool c_cpp_file)
+static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
+								char * pWhitespaceMask, int WhitespaceMaskSize,
+								bool c_cpp_file)
 {
 	// pDst buffer size must be greater or equal strlen(pSrc)
-	int SrcIdx = 0;
-	int DstIdx = 0;
-	bool CanRemoveWhitespace = true;
+	unsigned int SrcIdx = 0;
+	unsigned int DstIdx = 0;
+	bool RemovedWhitespaces = false;
+	bool LeaveOneExtraSpace = false;
 	TCHAR cPrevChar = 0;
 	bool PrevCharAlpha = false;
+	unsigned int WhitespaceMaskBits = WhitespaceMaskSize * 8;
+	if (NULL != pWhitespaceMask)
+	{
+		memset(pWhitespaceMask, 0, WhitespaceMaskSize);
+	}
+	else
+	{
+		WhitespaceMaskBits = 0;
+	}
 
 	TCHAR c;
 	// remove whitespaces at the begin
 	while ((c = Src[SrcIdx]) == ' '
 			|| '\t' == c)
 	{
+		if (WhitespaceMaskBits > SrcIdx)
+		{
+			pWhitespaceMask[SrcIdx / 8] |= (1 << (SrcIdx & 7));
+		}
 		SrcIdx++;
 	}
-	while (Src[SrcIdx] && DstIdx < DstLen - 1)
+	// check if it is preprocessor line
+	if (c_cpp_file && '#' == Src[SrcIdx])
+	{
+		// consider all characters alpha, that is don't remove all but one spaces
+		LeaveOneExtraSpace = true;
+	}
+
+	while (Src[SrcIdx] && DstIdx + 1 < DstLen)
 	{
 		// it's OK to remove extra spaces between non-alpha bytes,
 		// unless these are the following pairs:
 		// /*, */, //, ++, --, &&, ||, ##, ->*, ->, >>, << >=, <=, ==, ::
 		// that is most two-char operators
 		// strings also must be kept intact.
-		// Can remove extra spaces between alpha and non-alpha
+		// Can remove extra spaces between alpha and non-alpha, unless LeaveOneExtraSpace = true
 		c = Src[SrcIdx];
-		bool c_IsAlpha = (0 != _istalnum(c));
+		bool c_IsAlpha = (_istalnum(c)  || '_' == c);
+		if ((RemovedWhitespaces && LeaveOneExtraSpace) || (PrevCharAlpha && c_IsAlpha))
+		{
+			if(DstIdx + 1 >= DstLen)
+			{
+				break;
+			}
+			// insert one whitespace to the output string
+			pDst[DstIdx] = ' ';
+			DstIdx++;
+			// mark the previous space as non extra whitespace
+			if (SrcIdx != 0 && WhitespaceMaskBits >= SrcIdx)
+			{
+				pWhitespaceMask[(SrcIdx - 1) / 8] &= ~(1 << ((SrcIdx - 1) & 7));
+			}
+		}
 		if(c_IsAlpha)
 		{
-			if (PrevCharAlpha)
-			{
-				if(DstIdx >= DstLen - 1)
-				{
-					break;
-				}
-				// insert one whitespace to the output string
-				pDst[DstIdx] = ' ';
-				DstIdx++;
-			}
 			// move all alpha chars till non-alpha
 			do
 			{
-				if(DstIdx >= DstLen - 1)
+				if(DstIdx + 1 >= DstLen)
 				{
 					break;
 				}
@@ -1380,21 +1407,18 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen, bool c_c
 				SrcIdx++;
 				DstIdx++;
 				c = Src[SrcIdx];
-			} while (_istalnum(c));
+			} while (_istalnum(c) || '_' == c);
 
 			PrevCharAlpha = true;
-			CanRemoveWhitespace = true;
 		}
 		else
 		{
 			if( ! PrevCharAlpha)
 			{
-				// TODO: need to check for a space between #define name and (arguments)
 
 				// check if we need to insert a whitespace
 				static int ReservedPairs[] =
 				{
-					// /*, */, //, ++, --, &&, ||, ##, ->*, ->, >>, << >=, <=, ==, ::
 					// TODO: process L' and L"
 					'//', '/*', '*/', '++', '--', '!=', '##', '%=',
 					'^=', '&=', '&&', '-=', '==', '::', '<<',
@@ -1402,18 +1426,18 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen, bool c_c
 				};
 				// may be non-portable to big-endian
 				int pair = ((cPrevChar & 0xFF) << 8) | (c & 0xFF);
-				for (int i = 0; i < sizeof ReservedPairs / sizeof ReservedPairs[0]; i++)
-				{
-					if (pair == ReservedPairs[i])
+				if (c_cpp_file) for (int i = 0; i < sizeof ReservedPairs / sizeof ReservedPairs[0]; i++)
 					{
-						if(DstIdx < DstLen - 1)
+						if (pair == ReservedPairs[i])
 						{
-							pDst[DstIdx] = ' ';
-							DstIdx++;
+							if(DstIdx + 1 < DstLen)
+							{
+								pDst[DstIdx] = ' ';
+								DstIdx++;
+							}
+							break;
 						}
-						break;
 					}
-				}
 			}
 			// move all non-alpha non whitespace chars
 			// check for a string or character constant
@@ -1424,7 +1448,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen, bool c_c
 				cPrevChar = c;
 				do
 				{
-					if(DstIdx >= DstLen - 1)
+					if(DstIdx + 1 >= DstLen)
 					{
 						break;
 					}
@@ -1436,7 +1460,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen, bool c_c
 					{
 						// if the next char is double quote,
 						// skip both
-						if(DstIdx >= DstLen - 1)
+						if(DstIdx + 1 >= DstLen)
 						{
 							break;
 						}
@@ -1453,7 +1477,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen, bool c_c
 					else if ('\\' ==c)
 					{
 						// skip the next char
-						if(DstIdx >= DstLen - 1)
+						if(DstIdx + 1 >= DstLen)
 						{
 							break;
 						}
@@ -1470,7 +1494,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen, bool c_c
 				cPrevChar = c;
 				do
 				{
-					if(DstIdx >= DstLen - 1)
+					if(DstIdx + 1 >= DstLen)
 					{
 						break;
 					}
@@ -1482,7 +1506,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen, bool c_c
 					{
 						// if the next char is double quote,
 						// skip both
-						if(DstIdx >= DstLen - 1)
+						if(DstIdx + 1 >= DstLen)
 						{
 							break;
 						}
@@ -1499,7 +1523,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen, bool c_c
 					else if ('\\' ==c)
 					{
 						// skip the next char
-						if(DstIdx >= DstLen - 1)
+						if(DstIdx + 1 >= DstLen)
 						{
 							break;
 						}
@@ -1512,7 +1536,8 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen, bool c_c
 			}
 			else do
 			{
-				if(DstIdx >= DstLen - 1)
+				// move all non-alphanumeric
+				if(DstIdx + 1 >= DstLen)
 				{
 					break;
 				}
@@ -1524,13 +1549,19 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen, bool c_c
 			} while (c != 0
 					&& c != ' '
 					&& c != '\t'
-					&& ! _istalnum(c));
+					&& ! (_istalnum(c) || '_' == c));
 			PrevCharAlpha = false;
 		}
 		// remove whitespaces
+		RemovedWhitespaces = false;
 		while ((c = Src[SrcIdx]) == ' '
 				|| '\t' == c)
 		{
+			RemovedWhitespaces = true;
+			if (WhitespaceMaskBits > SrcIdx)
+			{
+				pWhitespaceMask[SrcIdx / 8] |= (1 << (SrcIdx & 7));
+			}
 			SrcIdx++;
 		}
 	}
@@ -1542,11 +1573,12 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, int DstLen, bool c_c
 // and deleted chars
 // returns number of different characters.
 // if ppSections is not NULL, builds a list of sections
-int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int nMinMatchingChars)
+int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection ** ppSections, int nMinMatchingChars)
 {
 	int nDifferentChars = 0;
-	LPCTSTR str1 = pStr1;
-	LPCTSTR str2 = pStr2;
+	LPCTSTR str1 = pStr1->GetText();
+	LPCTSTR str2 = pStr2->GetText();
+
 	LPCTSTR pEqualStrBegin = str1;
 	StringSection * pLastSection = NULL;
 	// zero the sections list
@@ -1676,6 +1708,9 @@ int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int 
 			}
 		}
 
+		int nDiffChars1 = 0;
+		int nDiffChars2 = 0;
+
 		if (idx1 != 0
 			&& ppSections != NULL)
 		{
@@ -1687,21 +1722,19 @@ int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int 
 				pSection->Attr = StringSection::Erased;
 				pSection->pNext = NULL;
 
-				// mark it as whitespace, if it consists of spaces only
-				// and there is a whitespace along it
-				for (int i = 0; i < idx1 && ' ' == str1[i]; i++)
-				{ } // empty
-				if (i == idx1
-					&& (str1[idx1] == 0
-						|| str1[idx1] == ' '
-						|| str1 == pStr1 || *(str1 - 1) == ' '
-						// check if the space is between alphanum and non-alphanum
-						// there as at least one character before it
-						|| (0 != _istalnum(*(str1 - 1))) != (0 != _istalnum(str1[idx1]))
-					))
+				// check if it is whitespace difference
+				pSection->Attr |= pSection->Whitespace;
+				for (unsigned i = 0, CharIdx = str1 - pStr1->GetText(); i < idx1; i++, CharIdx++)
 				{
-					pSection->Attr |= pSection->Whitespace;
+					if ( ! pStr1->IsExtraWhitespace(CharIdx))
+					{
+						// it is NOT whitespace diff
+						pSection->Attr &= ~pSection->Whitespace;
+						nDiffChars1 = idx1;
+						break;
+					}
 				}
+				// whitespace difference is not counted in nDifferentChars
 
 				if (NULL != pLastSection)
 				{
@@ -1713,6 +1746,20 @@ int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int 
 				}
 				pLastSection = pSection;
 			}
+		}
+		else
+		{
+			// check if it is whitespace difference
+			for (unsigned i = 0, CharIdx = str1 - pStr1->GetText(); i < idx1; i++, CharIdx++)
+			{
+				if ( ! pStr1->IsExtraWhitespace(CharIdx))
+				{
+					// it is NOT whitespace diff
+					nDiffChars1 = idx1;
+					break;
+				}
+			}
+			// whitespace difference is not counted in nDifferentChars
 		}
 
 		if (idx2 != 0
@@ -1726,21 +1773,19 @@ int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int 
 				pSection->Attr = StringSection::Inserted;
 				pSection->pNext = NULL;
 
-				// mark it as whitespace, if it consists of spaces only
-				// and there is a whitespace along it
-				for (int i = 0; i < idx2 && ' ' == str2[i]; i++)
-				{ } // empty
-				if (i == idx2
-					&& (str2[idx2] == 0
-						|| str2[idx2] == ' '
-						|| str2 == pStr2 || *(str2 - 1) == ' '
-						// check if the space is between alphanum and non-alphanum
-						// there as at least one character before it
-						|| (0 != _istalnum(*(str2 - 1))) != (0 != _istalnum(str2[idx2]))
-					))
+				// check if it is whitespace difference
+				pSection->Attr |= pSection->Whitespace;
+				for (unsigned i = 0, CharIdx = str2 - pStr2->GetText(); i < idx2; i++, CharIdx++)
 				{
-					pSection->Attr |= pSection->Whitespace;
+					if ( ! pStr2->IsExtraWhitespace(CharIdx))
+					{
+						// it is NOT whitespace diff
+						pSection->Attr &= ~pSection->Whitespace;
+						nDiffChars2 = idx2;
+						break;
+					}
 				}
+				// whitespace difference is not counted in nDifferentChars
 
 				if (NULL != pLastSection)
 				{
@@ -1753,15 +1798,29 @@ int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int 
 				pLastSection = pSection;
 			}
 		}
+		else
+		{
+			// check if it is whitespace difference
+			for (unsigned i = 0, CharIdx = str2 - pStr2->GetText(); i < idx2; i++, CharIdx++)
+			{
+				if ( ! pStr2->IsExtraWhitespace(CharIdx))
+				{
+					// it is NOT whitespace diff
+					nDiffChars2 = idx2;
+					break;
+				}
+			}
+			// whitespace difference is not counted in nDifferentChars
+		}
 
 		// number of different chars is the greater of different string length
-		if (idx1 > idx2)
+		if (nDiffChars1 > nDiffChars2)
 		{
-			nDifferentChars += idx1;
+			nDifferentChars += nDiffChars1;
 		}
 		else
 		{
-			nDifferentChars += idx2;
+			nDifferentChars += nDiffChars2;
 		}
 
 		str1 += idx1;
@@ -1784,9 +1843,15 @@ FileLine::FileLine(const char * src, bool MakeNormalizedString, bool c_cpp_file)
 {
 	m_Length = strlen(src);
 	char TmpBuf[2050];
-	m_NormalizedStringLength = RemoveExtraWhitespaces(TmpBuf, src, sizeof TmpBuf, c_cpp_file);
+	char WhitespaceMask[2048 / 8];
 
-	m_pAllocatedBuf = ::new char[m_Length + m_NormalizedStringLength + 2];
+	m_NormalizedStringLength = RemoveExtraWhitespaces(TmpBuf, src, sizeof TmpBuf,
+													WhitespaceMask, sizeof WhitespaceMask,
+													c_cpp_file);
+
+	int WhitespaceMaskLength = (m_Length + 7) / 8;
+
+	m_pAllocatedBuf = ::new char[m_Length + WhitespaceMaskLength+ m_NormalizedStringLength + 2];
 	if (NULL != m_pAllocatedBuf)
 	{
 		m_pString = m_pAllocatedBuf;
@@ -1797,10 +1862,9 @@ FileLine::FileLine(const char * src, bool MakeNormalizedString, bool c_cpp_file)
 		memcpy(m_pAllocatedBuf + m_Length + 1, TmpBuf, m_NormalizedStringLength + 1);
 		m_NormalizedHashCode = CalculateHash(m_pNormalizedString, m_NormalizedStringLength);
 
-		//if (0 == m_NormalizedStringLength)
-		//{
-		//m_Flags |= BlankString;
-		//}
+		m_pWhitespaceMask = m_pNormalizedString + m_NormalizedStringLength + 1;
+		memcpy(m_pAllocatedBuf + m_Length + m_NormalizedStringLength + 2,
+				WhitespaceMask, WhitespaceMaskLength);
 	}
 	else
 	{
@@ -1808,6 +1872,7 @@ FileLine::FileLine(const char * src, bool MakeNormalizedString, bool c_cpp_file)
 		m_pNormalizedString = NULL;
 		m_Length = 0;
 		m_NormalizedStringLength = 0;
+		m_pWhitespaceMask = NULL;
 
 		m_HashCode = 0xFFFFFFFF;
 		m_NormalizedHashCode = 0xFFFFFFFF;
@@ -1821,8 +1886,8 @@ FileLine::~FileLine()
 
 bool FileLine::LooksLike(const FileLine * pOtherLine, int PercentsDifferent) const
 {
-	int nCharsDifferent = MatchStrings(GetNormalizedText(),
-										pOtherLine->GetNormalizedText(), NULL, 3);
+	int nCharsDifferent = MatchStrings(this, pOtherLine, NULL, 3);
+	// nCharsDifferent won't count whitespace difference
 
 	int nLength = GetNormalizedLength();
 	if (nLength < pOtherLine->GetNormalizedLength())
@@ -2735,7 +2800,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 
 			pPair->pFirstLine = pFirstFile->GetLine(i + pSection->File1LineBegin);
 			pPair->pSecondLine = pSecondFile->GetLine(i + pSection->File2LineBegin);
-			MatchStrings(pPair->pFirstLine->GetText(), pPair->pSecondLine->GetText(),
+			MatchStrings(pPair->pFirstLine, pPair->pSecondLine,
 						& pPair->pFirstSection, 3);
 
 			int pos = 0;
@@ -2819,7 +2884,7 @@ inline int CompareTextPosEnd(const TextPos * pos,  FileDiffSection * const *sec,
 	return 1;
 }
 
-TextPos FilePair::NextDifference(TextPos PosFrom)
+TextPos FilePair::NextDifference(TextPos PosFrom, BOOL IgnoreWhitespaces)
 {
 	if (0 == m_DiffSections.GetSize())
 	{
@@ -2842,12 +2907,26 @@ TextPos FilePair::NextDifference(TextPos PosFrom)
 		{
 			return TextPos(-1, -1);
 		}
-		pSection = ppSection[1];
+		ppSection++;
+		SectionIdx++;
+		pSection = *ppSection;
+	}
+	if (IgnoreWhitespaces)
+	{
+		while (pSection->m_Flags & pSection->FlagWhitespace)
+		{
+			if (SectionIdx == m_DiffSections.GetUpperBound())
+			{
+				return TextPos(-1, -1);
+			}
+			ppSection++;
+			SectionIdx++;
+		}
 	}
 	return pSection->m_Begin;
 }
 
-TextPos FilePair::PrevDifference(TextPos PosFrom)
+TextPos FilePair::PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces)
 {
 	if (0 == m_DiffSections.GetSize())
 	{
@@ -3002,7 +3081,7 @@ void FilePair::ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo,
 
 }
 
-LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen)
+LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen, BOOL IgnoreWhitespaces)
 {
 	if (NULL == pFirstLine)
 	{
@@ -3021,6 +3100,11 @@ LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen)
 		for (StringSection * pSection = pFirstSection
 			; pSection != NULL && StrLen + 1u < nBufChars; pSection = pSection->pNext)
 		{
+			if ((pSection->Attr & pSection->Whitespace)
+				&& IgnoreWhitespaces)
+			{
+				continue;   // don't show the section
+			}
 			int len = pSection->Length;
 			if (StrLen + len + 1u > nBufChars)
 			{
@@ -3036,7 +3120,67 @@ LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen)
 
 }
 
+int LinePair::LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces)
+{
+	if ( ! bIgnoreWhitespaces)
+	{
+		return position;
+	}
+	int pos = 0;
+	int adj = 0;
+
+	for (StringSection * pSection = pFirstSection; NULL != pSection; pSection = pSection->pNext)
+	{
+		pos += pSection->Length;
+		if (pSection->Attr & pSection->Whitespace)
+		{
+			adj += pSection->Length;
+			if (pos >= position)
+			{
+				// return begin of the segment
+				return pos - adj;
+			}
+		}
+		else
+		{
+			if (pos >= position)
+			{
+				return position - adj;
+			}
+		}
+	}
+	return position - adj;
+}
+
+int LinePair::DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces)
+{
+	if ( ! bIgnoreWhitespaces)
+	{
+		return position;
+	}
+	int pos = 0;
+	int adj = 0;
+
+	for (StringSection * pSection = pFirstSection; NULL != pSection; pSection = pSection->pNext)
+	{
+		if (pSection->Attr & pSection->Whitespace)
+		{
+			adj += pSection->Length;
+		}
+		else
+		{
+			pos += pSection->Length;
+			if (pos >= position)
+			{
+				return position + adj;
+			}
+		}
+	}
+	return position + adj;
+}
+
 CSmallAllocator FileLine::m_Allocator(sizeof FileLine);
 CSmallAllocator StringSection::m_Allocator(sizeof StringSection);
 CSmallAllocator LinePair::m_Allocator(sizeof LinePair);
 CSmallAllocator FileDiffSection::m_Allocator(sizeof FileDiffSection);
+

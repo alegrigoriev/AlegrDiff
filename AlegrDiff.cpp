@@ -312,6 +312,8 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("RecurseSubdirs"), m_bRecurseSubdirs, false);
 	Profile.AddItem(_T("Settings"), _T("InitialDir1"), m_FileDir1, _T(""));
 	Profile.AddItem(_T("Settings"), _T("InitialDir2"), m_FileDir2, _T(""));
+	Profile.AddItem(_T("Settings"), _T("LastSaveMergedDir"), m_LastSaveMergedDir, _T("."));
+
 	Profile.AddItem(_T("Settings"), _T("FilenameFilter"), m_sFilenameFilter, _T("*"));
 	Profile.AddItem(_T("Settings"), _T("UseBinaryFilesFilter"), m_bUseBinaryFilesFilter, true);
 	Profile.AddItem(_T("Settings"), _T("UseCppFilter"), m_bUseCppFilter, true);
@@ -616,8 +618,6 @@ void CAlegrDiffApp::OnFileComparefiles()
 		pPair->pSecondFile = new FileItem( & wfd2, FileDir2, "",
 											MultiPatternMatches(wfd2.cFileName, sCFilesPattern));
 
-		CString title = Name1 + _T(" - ") + Name2;
-
 		pDoc->SetFilePair(pPair);
 		// SetFilePair references the pair, we need to compensate it
 		pPair->Dereference();
@@ -627,59 +627,6 @@ void CAlegrDiffApp::OnFileComparefiles()
 
 void CAlegrDiffApp::OnFilePreferences()
 {
-#if 0
-	CPreferencesDialog dlg;
-	dlg.m_bUseBinaryFilesFilter = m_bUseBinaryFilesFilter;
-	dlg.m_sBinaryFilesFilter = m_sBinaryFilesFilter;
-
-	dlg.m_bUseCppFilter = m_bUseCppFilter;
-	dlg.m_sCppFilesFilter = m_sCppFilesFilter;
-
-	dlg.m_bUseIgnoreFilter = m_bUseIgnoreFilter;
-	dlg.m_sIgnoreFilesFilter = m_sIgnoreFilesFilter;
-
-	dlg.m_nTabIndent = m_TabIndent;
-
-	dlg.m_NormalLogFont = m_NormalLogFont;
-	dlg.m_NormalTextColor = m_NormalTextColor;
-	dlg.m_AddedLogFont = m_AddedLogFont;
-	dlg.m_AddedTextColor = m_AddedTextColor;
-	dlg.m_ErasedLogFont = m_ErasedLogFont;
-	dlg.m_ErasedTextColor = m_ErasedTextColor;
-	dlg.m_FontPointSize = m_FontPointSize;
-
-	dlg.m_AutoReloadChangedFiles = m_AutoReloadChangedFiles;
-
-	if (IDOK == dlg.DoModal())
-	{
-		m_bUseBinaryFilesFilter = (0 != dlg.m_bUseBinaryFilesFilter);
-		m_sBinaryFilesFilter = dlg.m_sBinaryFilesFilter;
-
-		m_bUseCppFilter = (0 != dlg.m_bUseCppFilter);
-		m_sCppFilesFilter = dlg.m_sCppFilesFilter;
-
-		m_bUseIgnoreFilter = (0 != dlg.m_bUseIgnoreFilter);
-		m_sIgnoreFilesFilter = dlg.m_sIgnoreFilesFilter;
-
-		m_TabIndent = dlg.m_nTabIndent;
-		m_AutoReloadChangedFiles = dlg.m_AutoReloadChangedFiles;
-
-		if (dlg.m_bFontChanged)
-		{
-			m_NormalLogFont = dlg.m_NormalLogFont;
-			m_NormalTextColor = dlg.m_NormalTextColor;
-
-			m_AddedLogFont = dlg.m_AddedLogFont;
-			m_AddedTextColor = dlg.m_AddedTextColor;
-
-			m_ErasedLogFont = dlg.m_ErasedLogFont;
-			m_ErasedTextColor = dlg.m_ErasedTextColor;
-
-			m_FontPointSize = dlg.m_FontPointSize;
-			OnFontChanged();
-		}
-	}
-#else
 	CPreferencesPropertySheet dlg;
 	dlg.m_FilesPage.m_bUseBinaryFilesFilter = m_bUseBinaryFilesFilter;
 	dlg.m_FilesPage.m_sBinaryFilesFilter = m_sBinaryFilesFilter;
@@ -738,7 +685,6 @@ void CAlegrDiffApp::OnFilePreferences()
 			OnFontChanged();
 		}
 	}
-#endif
 }
 
 void CAlegrDiffApp::OnFontChanged()
@@ -830,4 +776,42 @@ void OpenFileForEditing(class FileItem * pFile)
 	shex.lpFile = name;
 	shex.nShow = SW_SHOWDEFAULT;
 	ShellExecuteEx( & shex);
+}
+
+void CAlegrDiffApp::OpenSingleFile(LPCTSTR pName)
+{
+	WIN32_FIND_DATA wfd1;
+	HANDLE hFind = FindFirstFile(pName, & wfd1);
+	if (INVALID_HANDLE_VALUE == hFind
+		|| NULL == hFind)
+	{
+		return;
+	}
+	FindClose(hFind);
+
+	TCHAR FileDir1[MAX_PATH];
+	LPTSTR pFileName1 = FileDir1;
+	GetFullPathName(pName, MAX_PATH, FileDir1, & pFileName1);
+	*pFileName1 = 0;
+
+	CFilePairDoc * pDoc = (CFilePairDoc *)m_pFileDiffTemplate->OpenDocumentFile(NULL);
+	if (NULL != pDoc)
+	{
+		FilePair * pPair = new FilePair;
+
+		CString sCFilesPattern;
+		if (m_bUseCppFilter)
+		{
+			sCFilesPattern = PatternToMultiCString(m_sCppFilesFilter);
+		}
+		pPair->pFirstFile = new FileItem( & wfd1, FileDir1, "",
+										MultiPatternMatches(wfd1.cFileName, sCFilesPattern));
+
+		pPair->pSecondFile = NULL;
+
+
+		pDoc->SetFilePair(pPair);
+		// SetFilePair references the pair, we need to compensate it
+		pPair->Dereference();
+	}
 }

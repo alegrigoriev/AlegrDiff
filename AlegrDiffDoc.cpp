@@ -244,11 +244,10 @@ IMPLEMENT_DYNCREATE(CFilePairDoc, CDocument)
 
 CFilePairDoc::CFilePairDoc()
 	: m_TotalLines(0),
-	m_UseLinePairArray(false),
 	m_pFilePair(NULL),
-	m_BaseOnFirstFile(true),
 	m_CaretPos(0, 0)
 {
+	m_bIgnoreWhitespaces = GetApp()->m_bIgnoreWhitespaces;
 }
 
 BOOL CFilePairDoc::OnNewDocument()
@@ -306,7 +305,6 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(AFX_IDS_IDLEMESSAGE);
 		}
 
-		m_UseLinePairArray = true;
 		m_TotalLines = pPair->m_LinePairs.GetSize();
 	}
 	UpdateAllViews(NULL, FileLoaded);
@@ -350,7 +348,7 @@ void CFilePairDoc::SetCaretPosition(int pos, int line, int flags)
 
 void CFilePairDoc::OnEditGotonextdiff()
 {
-	TextPos NewPos = m_pFilePair->NextDifference(m_CaretPos);
+	TextPos NewPos = m_pFilePair->NextDifference(m_CaretPos, m_bIgnoreWhitespaces);
 	if (NewPos == TextPos(-1, -1))
 	{
 		return;
@@ -360,7 +358,7 @@ void CFilePairDoc::OnEditGotonextdiff()
 
 void CFilePairDoc::OnEditGotoprevdiff()
 {
-	TextPos NewPos = m_pFilePair->PrevDifference(m_CaretPos);
+	TextPos NewPos = m_pFilePair->PrevDifference(m_CaretPos, m_bIgnoreWhitespaces);
 	if (NewPos == TextPos(-1, -1))
 	{
 		return;
@@ -384,6 +382,11 @@ void CFilePairDoc::CaretToHome(int flags)
 
 		for (StringSection * pSection = pLine->pFirstSection; pSection != NULL; pSection = pSection->pNext)
 		{
+			if ((pSection->Attr & pSection->Whitespace)
+				&& m_bIgnoreWhitespaces)
+			{
+				continue;   // don't show the section
+			}
 			for (int i = 0; i < pSection->Length; pos++)
 			{
 				if (pSection->pBegin[i] == '\t')
@@ -425,6 +428,11 @@ void CFilePairDoc::CaretToEnd(int flags)
 	{
 		for (StringSection * pSection = pLine->pFirstSection; pSection != NULL; pSection = pSection->pNext)
 		{
+			if ((pSection->Attr & pSection->Whitespace)
+				&& m_bIgnoreWhitespaces)
+			{
+				continue;   // don't show the section
+			}
 			for (int i = 0; i < pSection->Length; pos++)
 			{
 				if (pSection->pBegin[i] != '\t'
@@ -454,6 +462,9 @@ BEGIN_MESSAGE_MAP(CFilePairDoc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_ACCEPT, OnUpdateEditAccept)
 	ON_COMMAND(ID_EDIT_DECLINE, OnEditDecline)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DECLINE, OnUpdateEditDecline)
+	ON_COMMAND(ID_FILE_MERGE_SAVE, OnFileMergeSave)
+	ON_COMMAND(ID_VIEW_IGNORE_WHITESPACES, OnViewIgnoreWhitespaces)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_IGNORE_WHITESPACES, OnUpdateViewIgnoreWhitespaces)
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
 END_MESSAGE_MAP()
@@ -474,31 +485,16 @@ void CFilePairDoc::Dump(CDumpContext& dc) const
 #endif //_DEBUG
 
 /////////////////////////////////////////////////////////////////////////////
-// CFilePairDoc serialization
-
-void CFilePairDoc::Serialize(CArchive& ar)
-{
-	if (ar.IsStoring())
-	{
-		// TODO: add storing code here
-	}
-	else
-	{
-		// TODO: add loading code here
-	}
-}
-
-/////////////////////////////////////////////////////////////////////////////
 // CFilePairDoc commands
 
 void CFilePairDoc::OnUpdateEditGotonextdiff(CCmdUI* pCmdUI)
 {
-	pCmdUI->Enable(m_pFilePair->NextDifference(m_CaretPos) != TextPos(-1, -1));
+	pCmdUI->Enable(m_pFilePair->NextDifference(m_CaretPos, m_bIgnoreWhitespaces) != TextPos(-1, -1));
 }
 
 void CFilePairDoc::OnUpdateEditGotoprevdiff(CCmdUI* pCmdUI)
 {
-	pCmdUI->Enable(m_pFilePair->PrevDifference(m_CaretPos) != TextPos(-1, -1));
+	pCmdUI->Enable(m_pFilePair->PrevDifference(m_CaretPos, m_bIgnoreWhitespaces) != TextPos(-1, -1));
 }
 
 void CFilePairDoc::OnUpdateEditCopy(CCmdUI* pCmdUI)
@@ -551,6 +547,11 @@ ULONG CFilePairDoc::CopyTextToMemory(PUCHAR pBuf, ULONG BufLen, TextPos pFrom, T
 		StringSection * pSection = pPair->pFirstSection;
 		for ( ; pSection != NULL; pSection = pSection->pNext)
 		{
+			if ((pSection->Attr & pSection->Whitespace)
+				&& m_bIgnoreWhitespaces)
+			{
+				continue;   // don't show the section
+			}
 			for (int i = 0; i < pSection->Length; pos++, i++)
 			{
 				if (pos >= end.pos && line == end.line)
@@ -665,7 +666,24 @@ void CFilePairDoc::OnViewRefresh()
 	{
 		return;
 	}
-	PairCheckResult res1 = m_pFilePair->ReloadIfChanged();
+	PairCheckResult res1 = m_pFilePair->CheckForFilesChanged();
+	if (FilesUnchanged == res1)
+	{
+		return;
+	}
+	// check if there are any changes labeled
+	int flags = m_pFilePair->GetAcceptDeclineFlags(TextPos(0, 0), TextPos(GetTotalLines(), 0));
+	if (0 != (flags & (FileDiffSection::FlagDecline | FileDiffSection::FlagAccept)))
+	{
+		CString s;
+		s.Format(IDS_QUERY_RELOAD_FILES,
+				m_pFilePair->pSecondFile->GetSubdir(), m_pFilePair->pSecondFile->GetName());
+		if (IDYES != AfxMessageBox(s, MB_YESNO))
+		{
+			return;
+		}
+	}
+	res1 = m_pFilePair->ReloadIfChanged();
 	if (FilesDeleted == res1)
 	{
 		// close this document
@@ -680,7 +698,7 @@ void CFilePairDoc::OnViewRefresh()
 		SetFilePair(m_pFilePair);
 		m_pFilePair->Dereference();
 		SetCaretPosition(caretpos.pos, caretpos.line, SetPositionCancelSelection);
-		//UpdateAllViews(NULL, FileLoaded);
+		UpdateAllViews(NULL);
 	}
 }
 
@@ -899,8 +917,13 @@ bool CFilePairDoc::GetWordUnderCaret(TextPos &Start, TextPos &End)
 	int nPos = 0;
 	int CaretPos = m_CaretPos.pos;
 	for (StringSection * pSection = pPair->pFirstSection
-		; pSection != NULL; nPos += pSection->Length, pSection = pSection->pNext)
+		; pSection != NULL; pSection = pSection->pNext)
 	{
+		if ((pSection->Attr & pSection->Whitespace)
+			&& m_bIgnoreWhitespaces)
+		{
+			continue;   // don't show the section
+		}
 		if (CaretPos < nPos + pSection->Length)
 		{
 			// get a word under the caret and to the right, or take a single non-alpha char
@@ -937,6 +960,7 @@ bool CFilePairDoc::GetWordUnderCaret(TextPos &Start, TextPos &End)
 			}
 			return true;
 		}
+		nPos += pSection->Length;
 	}
 
 	return false;
@@ -1033,7 +1057,7 @@ LPCTSTR CFilePairDoc::GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int
 	{
 		return NULL;
 	}
-	return pPair->GetText(buf, BufChars, pStrLen);
+	return pPair->GetText(buf, BufChars, pStrLen, m_bIgnoreWhitespaces);
 }
 
 void CFilePairDoc::CaretLeftToWord(bool bCancelSelection)
@@ -1115,6 +1139,10 @@ void CFilePairDoc::OnEditAccept()
 			ir.end = ppSection[i]->m_End;
 			UpdateAllViews(NULL, InvalidateRange, & ir);
 		}
+		if (0 != NumSections)
+		{
+			SetModifiedFlag(TRUE);
+		}
 	}
 }
 
@@ -1153,6 +1181,10 @@ void CFilePairDoc::OnEditDecline()
 			ir.end = ppSection[i]->m_End;
 			UpdateAllViews(NULL, InvalidateRange, & ir);
 		}
+		if (0 != NumSections)
+		{
+			SetModifiedFlag(TRUE);
+		}
 	}
 }
 
@@ -1165,4 +1197,289 @@ void CFilePairDoc::OnUpdateEditDecline(CCmdUI* pCmdUI)
 	}
 	pCmdUI->Enable(0 == (flags & FileDiffSection::FlagNoDifference));
 	pCmdUI->SetCheck(0 != (flags & FileDiffSection::FlagDecline));
+}
+
+BOOL CFilePairDoc::SaveModified()
+{
+	if ( ! IsModified())
+	{
+		return TRUE;
+	}
+	int flags = m_pFilePair->GetAcceptDeclineFlags(TextPos(0, 0),
+													TextPos(GetTotalLines(), 0));
+	if (0 != (flags & (FileDiffSection::FlagDecline | FileDiffSection::FlagAccept)))
+	{
+		CString s;
+		s.Format(IDS_QUERY_SAVE_MERGED_FILE,
+				m_pFilePair->pSecondFile->GetSubdir(), m_pFilePair->pSecondFile->GetName());
+		int answer = AfxMessageBox(s, MB_YESNOCANCEL);
+		if (IDYES == answer)
+		{
+			return DoSaveMerged(FALSE);
+		}
+		if (IDNO == answer)
+		{
+			return TRUE;    // don't save merged
+		}
+		return FALSE;
+	}
+	SetModifiedFlag(FALSE);
+	return TRUE;
+}
+
+BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
+{
+	// check if there are unmarked differences
+	int flags = m_pFilePair->GetAcceptDeclineFlags(TextPos(0, 0),
+													TextPos(GetTotalLines(), 0));
+	int DefaultFlags = 0;
+	if (flags & FileDiffSection::FlagUndefined)
+	{
+		CDialog dlg(IDD_DIALOG_ACCEPT_OR_DECLINE_ALL);
+		int result = dlg.DoModal();
+		if (IDOK == result)
+		{
+			DefaultFlags = FileDiffSection::FlagAccept;
+		}
+		else if (IDNO == result)
+		{
+			DefaultFlags = FileDiffSection::FlagDecline;
+		}
+		else
+		{
+			// IDCANCEL or error
+			return FALSE;
+		}
+	}
+	CThisApp * pApp = GetApp();
+	LPCTSTR FileExt = NULL;
+	LPCTSTR FileName = m_pFilePair->pSecondFile->GetName();
+	for (int pos = strlen(FileName); pos > 0; pos--)
+	{
+		if ('.' == FileName[pos - 1])
+		{
+			FileExt = & FileName[pos - 1];
+			break;
+		}
+	}
+	// create the filter
+	CString filter;
+	if (NULL != FileExt)
+	{
+		filter = '*';
+		filter = FileExt;
+		filter += _T(" Files|*");
+		filter += FileExt;
+	}
+	CString AllFilter;
+	AllFilter.LoadString(IDS_ALL_FILES);
+	filter += AllFilter;
+
+	CFileDialog dlg(FALSE,
+					FileExt,
+					FileName,
+					OFN_HIDEREADONLY
+					| OFN_EXPLORER
+					| OFN_ENABLESIZING
+					| OFN_NONETWORKBUTTON
+					| OFN_OVERWRITEPROMPT,
+					filter,
+					NULL);
+	dlg.m_ofn.lpstrInitialDir = pApp->m_LastSaveMergedDir;
+	CString DlgTitle;
+	DlgTitle.LoadString(IDS_SAVE_MERGED_DIALOG_TITLE);
+	dlg.m_ofn.lpstrTitle = DlgTitle;
+
+	if (IDOK == dlg.DoModal())
+	{
+		LPTSTR DirBuf = pApp->m_LastSaveMergedDir.GetBuffer(MAX_PATH + 1);
+		if (DirBuf)
+		{
+			GetCurrentDirectory(MAX_PATH + 1, DirBuf);
+			pApp->m_LastSaveMergedDir.ReleaseBuffer();
+		}
+		CString FileName = dlg.GetPathName();
+		if (! SaveMergedFile(FileName, DefaultFlags))
+		{
+			AfxMessageBox(IDS_STRING_COULDNT_SAVE_MERGED);
+			return FALSE;
+		}
+		SetModifiedFlag(FALSE);
+		pApp->OpenSingleFile(FileName);
+
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
+BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags)
+{
+	FILE * file = fopen(Name, "wt");
+	if (NULL == file)
+	{
+		return FALSE;
+	}
+	BOOL result = TRUE;
+	for (int LineNum = 0, DiffSectionIdx = 0; LineNum < GetTotalLines(); LineNum++)
+	{
+		LinePair * pPair = m_pFilePair->m_LinePairs[LineNum];
+		if (NULL == pPair)
+		{
+			continue;
+		}
+
+		FileDiffSection * pDiffSection = NULL;
+		while (DiffSectionIdx < m_pFilePair->m_DiffSections.GetSize())
+		{
+			pDiffSection = m_pFilePair->m_DiffSections[DiffSectionIdx];
+			if (pDiffSection->m_End > TextPos(LineNum, 0))
+			{
+				break;
+			}
+			pDiffSection = NULL;
+			DiffSectionIdx++;
+		}
+
+		StringSection * pSection = pPair->pFirstSection;
+
+		// check if the line is all removed
+		if (NULL != pDiffSection
+			&& pDiffSection->m_Begin <= TextPos(LineNum, 0)
+			&& pDiffSection->m_End >= TextPos(LineNum + 1, 0))
+		{
+			// check if the block is accepted
+			if ((pDiffSection->IsAccepted()
+					|| ! pDiffSection->IsDeclined()
+					&& (DefaultFlags & FileDiffSection::FlagAccept))
+				&& (pSection->Attr & pSection->Erased))
+			{
+				// skip the line
+				continue;
+			}
+			if ((pDiffSection->IsDeclined()
+					|| ! pDiffSection->IsAccepted()
+					&& (DefaultFlags & FileDiffSection::FlagDecline))
+				&& (pSection->Attr & pSection->Inserted))
+			{
+				// skip the line
+				continue;
+			}
+		}
+
+
+		for (int LinePos = 0; NULL != pSection; LinePos += pSection->Length, pSection = pSection->pNext)
+		{
+			pDiffSection = NULL;
+			while (DiffSectionIdx < m_pFilePair->m_DiffSections.GetSize())
+			{
+				pDiffSection = m_pFilePair->m_DiffSections[DiffSectionIdx];
+				if (pDiffSection->m_End > TextPos(LineNum, LinePos))
+				{
+					break;
+				}
+				pDiffSection = NULL;
+				DiffSectionIdx++;
+			}
+
+			// check if the string section is all removed
+			if (NULL != pDiffSection
+				&& pDiffSection->m_Begin <= TextPos(LineNum, LinePos)
+				&& pDiffSection->m_End >= TextPos(LineNum, LinePos + pSection->Length))
+			{
+				// check if the block is accepted
+				if ((pDiffSection->IsAccepted()
+						|| ! pDiffSection->IsDeclined()
+						&& (DefaultFlags & FileDiffSection::FlagAccept))
+					&& (pSection->Attr & pSection->Erased))
+				{
+					// skip the string section
+					continue;
+				}
+				if ((pDiffSection->IsDeclined()
+						|| ! pDiffSection->IsAccepted()
+						&& (DefaultFlags & FileDiffSection::FlagDecline))
+					&& (pSection->Attr & pSection->Inserted))
+				{
+					// skip the string section
+					continue;
+				}
+			}
+			if (pSection->Length != 0
+				&& 1 != fwrite(pSection->pBegin, pSection->Length, 1, file))
+			{
+				fclose(file);
+				return FALSE;
+			}
+		}
+		if (EOF == fputc('\n', file))
+		{
+			fclose(file);
+			return FALSE;
+		}
+	}
+	if (fflush(file))
+	{
+		result = FALSE;
+	}
+	fclose(file);
+	return result;
+}
+
+void CFilePairDoc::OnFileMergeSave()
+{
+	DoSaveMerged(TRUE); // open it in new window
+}
+
+void CFilePairDoc::OnViewIgnoreWhitespaces()
+{
+	TextPos CaretLinePos = DisplayPosToLinePos(m_CaretPos);
+	TextPos AnchorLinePos = DisplayPosToLinePos(m_SelectionAnchor);
+
+	m_bIgnoreWhitespaces = ! m_bIgnoreWhitespaces;
+	GetApp()->m_bIgnoreWhitespaces = m_bIgnoreWhitespaces;
+
+	m_CaretPos = LinePosToDisplayPos(CaretLinePos);
+	m_SelectionAnchor = LinePosToDisplayPos(AnchorLinePos);
+
+	UpdateAllViews(NULL);
+}
+
+void CFilePairDoc::OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(m_bIgnoreWhitespaces);
+}
+
+TextPos CFilePairDoc::LinePosToDisplayPos(TextPos position)
+{
+	LinePair * pPair = GetLinePair(position.line);
+	if (NULL == pPair)
+	{
+		return position;
+	}
+	return TextPos(position.line,
+					pPair->LinePosToDisplayPos(position.pos, m_bIgnoreWhitespaces));
+}
+// recalculates offset in the line with or without whitespaces shown to offset in the raw line
+TextPos CFilePairDoc::DisplayPosToLinePos(TextPos position)
+{
+	LinePair * pPair = GetLinePair(position.line);
+	if (NULL == pPair)
+	{
+		return position;
+	}
+	return TextPos(position.line,
+					pPair->DisplayPosToLinePos(position.pos, m_bIgnoreWhitespaces));
+}
+
+LinePair * CFilePairDoc::GetLinePair(int line) const
+{
+	if (NULL == m_pFilePair
+		|| line >= m_pFilePair->m_LinePairs.GetSize())
+	{
+		return NULL;
+	}
+	return m_pFilePair->m_LinePairs[line];
 }

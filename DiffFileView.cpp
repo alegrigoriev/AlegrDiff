@@ -24,6 +24,8 @@ CDiffFileView::CDiffFileView()
 	m_DrawnSelBegin(0, 0),
 	m_VisibleRect(0, 0, 0, 0),
 	m_PreferredRect(0, 0, 0, 0),
+	m_NumberMarginWidth(0),
+	m_ShowLineNumbers(false),
 	m_DrawnSelEnd(0, 0)
 {
 	// init font size, to avoid zero divide
@@ -55,6 +57,8 @@ BEGIN_MESSAGE_MAP(CDiffFileView, CView)
 	ON_WM_CAPTURECHANGED()
 	ON_COMMAND(ID_EDIT_GOTONEXTDIFF, OnEditGotonextdiff)
 	ON_COMMAND(ID_EDIT_GOTOPREVDIFF, OnEditGotoprevdiff)
+	ON_COMMAND(ID_VIEW_SHOW_LINE_NUMBERS, OnViewShowLineNumbers)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_LINE_NUMBERS, OnUpdateViewShowLineNumbers)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -1009,7 +1013,10 @@ void CDiffFileView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	}
 	else
 	{
-		CView::OnUpdate(pSender, lHint, pHint);
+		Invalidate(TRUE);
+		UpdateHScrollBar();
+		UpdateVScrollBar();
+		CreateAndShowCaret();
 	}
 }
 
@@ -1049,4 +1056,15 @@ void CDiffFileView::CaretToEnd(int flags)
 	GetDocument()->CaretToEnd(flags);
 	MakeCaretVisible();
 	CreateAndShowCaret();
+}
+
+void CDiffFileView::OnViewShowLineNumbers()
+{
+	m_ShowLineNumbers = ! m_ShowLineNumbers;
+	OnUpdate(NULL, 0, NULL);
+}
+
+void CDiffFileView::OnUpdateViewShowLineNumbers(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(m_ShowLineNumbers);
 }

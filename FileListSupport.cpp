@@ -3,6 +3,10 @@
 #include "FileListSupport.h"
 #include "AlegrDiff.h"
 
+#ifdef _DEBUG
+#include <mmsystem.h>
+#endif
+
 #undef tolower
 #undef toupper
 static DWORD CalculateHash(const char * data, int len);
@@ -318,23 +322,22 @@ int _cdecl FileLine::NormalizedGroupHashAndLineNumberCompareFunc(const void * p1
 bool FileItem::Load()
 {
 	CThisApp * pApp = GetApp();
-	FILE * file = fopen(m_BaseDir + m_Subdir + m_Name, "rt");
+	FILE * file = fopen(LPCTSTR(GetFullName()), "rt");
 	if (NULL == file)
 	{
 		return false;
 	}
 	char line[2048];
+	char buf[512];
+	setvbuf(file, buf, _IOFBF, sizeof buf);
+#ifdef _DEBUG
+	DWORD BeginTime = timeGetTime();
+#endif
 	char TabExpandedLine[2048];
-	m_Lines.SetSize(0, 1000);
+
+	FileLine * pLineList = NULL;
 	for (int LinNum =0; NULL != fgets(line, sizeof line - 1, file); LinNum++)
 	{
-		// remove last \n char
-		int len = strlen(line);
-		if (len > 0
-			&& '\n' == line[len - 1])
-		{
-			line[len - 1] = 0;
-		}
 		// expand tabs
 		for (int i = 0, pos = 0; line[i] != 0 && pos < sizeof TabExpandedLine - 1; pos++)
 		{
@@ -346,6 +349,11 @@ bool FileItem::Load()
 					i++;
 				}
 			}
+			else if (line[i] == '\n')
+			{
+				i++;
+				pos--;
+			}
 			else
 			{
 				TabExpandedLine[pos] = line[i];
@@ -356,13 +364,25 @@ bool FileItem::Load()
 		FileLine * pLine = new FileLine(TabExpandedLine, true);
 		if (pLine)
 		{
-			pLine->SetLineNumber(LinNum);
-			m_Lines.Add(pLine);
+			pLine->SetNext(pLineList);
+			pLineList = pLine;
 		}
 	}
 	fclose(file);
-
+#ifdef _DEBUG
+	TRACE("File %s loaded in %d ms\n", LPCTSTR(GetFullName()), timeGetTime() - BeginTime);
+	BeginTime = timeGetTime();
+#endif
+	m_Lines.SetSize(LinNum);
 	int i, j;
+	for (i = LinNum - 1; i >= 0 && pLineList != NULL; i--)
+	{
+		FileLine * pLine = pLineList;
+		pLineList = pLine->Next();
+		pLine->SetLineNumber(i);
+		m_Lines[i] = pLine;
+	}
+
 	// make sorted array of the string hash values
 	m_NonBlankLines.SetSize(LinNum);
 	for (i = 0, j = 0; i < LinNum; i++)
@@ -409,7 +429,7 @@ bool FileItem::Load()
 	m_NormalizedHashSortedLineGroups.Copy(m_NonBlankLines);
 	qsort(m_NormalizedHashSortedLineGroups.GetData(), m_NormalizedHashSortedLineGroups.GetSize(),
 		sizeof m_NormalizedHashSortedLineGroups[0], FileLine::NormalizedGroupHashAndLineNumberCompareFunc);
-#ifdef _DEBUG
+#if 0//def _DEBUG
 	// check if the array is sorted correctly
 	{
 		int i;
@@ -464,6 +484,9 @@ bool FileItem::Load()
 	}
 #endif
 	// make sorted array of the normalized string hash values
+#ifdef _DEBUG
+	TRACE("Lines sorted in %d ms\n", timeGetTime() - BeginTime);
+#endif
 
 	return true;
 }
@@ -1698,7 +1721,7 @@ int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int 
 			{
 				pSection->pBegin = str1;
 				pSection->Length = idx1;
-				pSection->Attr = StringSection::Inserted;
+				pSection->Attr = StringSection::Erased;
 				pSection->pNext = NULL;
 				if (NULL != pLastSection)
 				{
@@ -1720,7 +1743,7 @@ int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int 
 			{
 				pSection->pBegin = str2;
 				pSection->Length = idx2;
-				pSection->Attr = StringSection::Erased;
+				pSection->Attr = StringSection::Inserted;
 				pSection->pNext = NULL;
 				if (NULL != pLastSection)
 				{
@@ -1753,6 +1776,7 @@ int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int 
 
 FileLine::FileLine(const char * src, bool MakeNormalizedString)
 	: //m_Flags(0),
+	m_pNext(NULL),
 	m_Number(-1),
 //m_Link(NULL),
 //m_FirstTokenIndex(-1),
@@ -1762,7 +1786,7 @@ FileLine::FileLine(const char * src, bool MakeNormalizedString)
 	m_NormalizedGroupHashCode(0)
 {
 	m_Length = strlen(src);
-	char TmpBuf[2048];
+	char TmpBuf[2050];
 	m_NormalizedStringLength = RemoveExtraWhitespaces(TmpBuf, src, sizeof TmpBuf);
 
 	m_pAllocatedBuf = ::new char[m_Length + m_NormalizedStringLength + 2];
@@ -2156,12 +2180,19 @@ FilePair::eFileComparisionResult FilePair::PreCompareFiles()
 	{
 		return ResultUnknown;
 	}
+#ifdef _DEBUG
+	DWORD BeginTime = timeGetTime();
+#endif
 	eFileComparisionResult result = ResultUnknown;
 	if (NULL != pFirstFile
 		&& NULL != pSecondFile)
 	{
 		result = PreCompareTextFiles();
 	}
+#ifdef _DEBUG
+	TRACE("Files compared in %d ms\n", timeGetTime() - BeginTime);
+	BeginTime = timeGetTime();
+#endif
 	UnloadFiles();
 	// different comparision for different modes
 	return result;
@@ -2367,12 +2398,14 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 			{
 				// no identical lines found
 				TRACE("No more identical lines found\n");
-				break;
 			}
-			nLine1 = Line2MatchIn1;
-			nLine2 = Line2Found;
-			TRACE("Found first line %d in file2 and matching line %d in file1\n",
-				nLine2, nLine1);
+			else
+			{
+				nLine1 = Line2MatchIn1;
+				nLine2 = Line2Found;
+				TRACE("Found first line %d in file2 and matching line %d in file1\n",
+					nLine2, nLine1);
+			}
 		}
 		else if (-1 == Line2Found)
 		{
@@ -2403,8 +2436,8 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 		}
 		Line1Begin = nLine1;
 		Line2Begin = nLine2;
-		nLine1++;
-		nLine2++;
+		//nLine1++;
+		//nLine2++;
 
 		while (nLine1 < NumLines1
 				&& nLine2 < NumLines2)
@@ -2423,7 +2456,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 				// check if the lines are similar enough
 				// the lines can be considered similar if < 1/4 of the characters is different,
 				// or the only difference is in whitespaces
-				if (Line1->LooksLike(Line2, 15))
+				if (0 && Line1->LooksLike(Line2, 15))
 				{
 					nLine1++;
 					nLine2++;
@@ -2469,6 +2502,23 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 
 		nPrevSectionEnd1 = pSection->File1LineEnd;
 		nPrevSectionEnd2 = pSection->File2LineEnd;
+	}
+	// scan list of sections and try to expand them upwards with looking like lines
+	for (pSection = pFirstSection; pSection != NULL && pSection->pNext != NULL; pSection = pSection->pNext)
+	{
+		int nNextSectionBegin1 = pSection->pNext->File1LineBegin;
+		int nNextSectionBegin2 = pSection->pNext->File2LineBegin;
+
+		while (pSection->File1LineEnd < nNextSectionBegin1
+				&& pSection->File2LineEnd < nNextSectionBegin2
+				&& pFirstFile->GetLine(pSection->File1LineEnd)->
+				LooksLike(pSecondFile->GetLine(pSection->File2LineEnd), 15))
+		{
+			// expand the section up, to include alike lines
+			pSection->File1LineEnd++;
+			pSection->File2LineEnd++;
+		}
+
 	}
 	// build the array of line pairs
 	// calculate number of line pairs
@@ -2588,11 +2638,22 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 						pDiffSection->m_Begin.line = nLineIndex;
 						pDiffSection->m_Begin.pos = pos;
 						pDiffSection->m_End.line = nLineIndex;
-						pDiffSection->m_End.pos = pos + pSection->Length;
+						pos += pSection->Length;
+						pDiffSection->m_End.pos = pos;
+						if (pSection->pNext != NULL
+							&& pSection->pNext->Attr != pSection->Identical)
+						{
+							pSection = pSection->pNext;
+							pos += pSection->Length;
+							pDiffSection->m_End.pos = pos;
+						}
 						m_DiffSections.Add(pDiffSection);
 					}
 				}
-				pos += pSection->Length;
+				else
+				{
+					pos += pSection->Length;
+				}
 			}
 		}
 		nPrevSectionEnd1 = pSection->File1LineEnd;

@@ -54,6 +54,7 @@ protected:
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CAlegrDiffDoc)
+	afx_msg void OnFileSave();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
@@ -116,6 +117,7 @@ protected:
 	afx_msg void OnUpdateEditGotoprevdiff(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditCopy(CCmdUI* pCmdUI);
 	afx_msg void OnEditCopy();
+	afx_msg void OnFileSave();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

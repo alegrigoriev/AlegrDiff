@@ -48,6 +48,7 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_AddedTextColor(0x00FF0000),   // blue
 	m_bRecurseSubdirs(false),
 	m_FontPointSize(100),
+	m_UsedFilenameFilter(0),
 	m_MinIdenticalLines(5)
 {
 	m_NormalLogFont.lfCharSet = ANSI_CHARSET;
@@ -112,6 +113,7 @@ BOOL CAlegrDiffApp::InitInstance()
 
 	Profile.AddItem(_T("Settings"), _T("FontPointSize"), m_FontPointSize, 100, 30, 500);
 	Profile.AddItem(_T("Settings"), _T("TabIndent"), m_TabIndent, 4, 1, 32);
+	Profile.AddItem(_T("Settings"), _T("UsedFilenameFilter"), m_UsedFilenameFilter, 0, 0, 8);
 
 	Profile.AddItem(_T("Settings"), _T("RecurseSubdirs"), m_bRecurseSubdirs, false);
 	Profile.AddItem(_T("Settings"), _T("InitialDir1"), m_FileDir1, _T(""));
@@ -327,6 +329,7 @@ void CAlegrDiffApp::OnFileComparefiles()
 					Filter);
 	dlg1.m_ofn.lpstrInitialDir = m_FileDir1;
 	dlg1.m_ofn.lpstrTitle = title1;
+	dlg1.m_ofn.nFilterIndex = m_UsedFilenameFilter;
 
 	if (IDOK != dlg1.DoModal())
 	{
@@ -341,14 +344,14 @@ void CAlegrDiffApp::OnFileComparefiles()
 
 	dlg2.m_ofn.lpstrInitialDir = m_FileDir2;
 	dlg2.m_ofn.lpstrTitle = title2;
+	dlg2.m_ofn.nFilterIndex = dlg1.m_ofn.nFilterIndex;
 
-	if (m_FileDir2.IsEmpty())
-	{
-	}
 	if (IDOK != dlg2.DoModal())
 	{
 		return;
 	}
+	m_UsedFilenameFilter = dlg1.m_ofn.nFilterIndex;
+
 	TCHAR CurrDir2[MAX_PATH] = {0};
 	GetCurrentDirectory(MAX_PATH, CurrDir2);
 

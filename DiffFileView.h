@@ -45,6 +45,7 @@ protected:
 public:
 	int m_FirstLineSeen;
 	int m_FirstPosSeen;
+	int m_NumberMarginWidth;
 	// visible rectangle (0-relative)
 	CRect m_VisibleRect;
 	// rectangle for BringCaretToBounds.
@@ -55,6 +56,7 @@ public:
 
 	bool m_LButtonDown;
 	bool m_TrackingSelection;
+	bool m_ShowLineNumbers;
 
 	TEXTMETRIC m_FontMetric;
 
@@ -127,6 +129,8 @@ protected:
 	afx_msg void OnCaptureChanged(CWnd *pWnd);
 	afx_msg void OnEditGotonextdiff();
 	afx_msg void OnEditGotoprevdiff();
+	afx_msg void OnViewShowLineNumbers();
+	afx_msg void OnUpdateViewShowLineNumbers(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

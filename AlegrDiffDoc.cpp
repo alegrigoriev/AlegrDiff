@@ -21,6 +21,7 @@ IMPLEMENT_DYNCREATE(CAlegrDiffDoc, CDocument)
 
 BEGIN_MESSAGE_MAP(CAlegrDiffDoc, CDocument)
 	//{{AFX_MSG_MAP(CAlegrDiffDoc)
+	ON_COMMAND(ID_FILE_SAVE, OnFileSave)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -159,6 +160,13 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 			idx1++;
 			pPair->pSecondFile = Files2[idx2];
 			idx2++;
+
+			CString s;
+			s.Format(_T("Comparing %s - %s"),
+					LPCTSTR(pPair->pFirstFile->GetFullName()),
+					LPCTSTR(pPair->pSecondFile->GetFullName()));
+			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(s);
+
 			pPair->ComparisionResult = pPair->PreCompareFiles();
 			if (0) TRACE("File \"%s\" exists in both \"%s\" and \"%s\"\n",
 						pPair->pFirstFile->GetName(),
@@ -169,6 +177,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 	// all files are referenced in FilePair list
 	FileList1.Detach();
 	FileList2.Detach();
+	((CFrameWnd*)AfxGetMainWnd())->SetMessageText(AFX_IDS_IDLEMESSAGE);
 	return true;
 }
 
@@ -258,9 +267,32 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 	if (NULL != pPair)
 	{
 		pPair->Reference();
+		if (NULL != pPair->pFirstFile)
+		{
+			CString title(pPair->pFirstFile->GetFullName());
+			if (NULL != pPair->pSecondFile)
+			{
+				title += " - ";
+				title += pPair->pSecondFile->GetFullName();
+			}
+			SetTitle(title);
+		}
+		else if (NULL != pPair->pSecondFile)
+		{
+			CString title(pPair->pSecondFile->GetFullName());
+			SetTitle(title);
+		}
+		else
+		{
+			SetTitle("");
+		}
+
 		if (0 == pPair->m_LinePairs.GetSize())
 		{
+			//UpdateAllViews(NULL, 0);    // erase the views
+			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(_T("Loading and comparing files..."));
 			pPair->CompareFiles();
+			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(AFX_IDS_IDLEMESSAGE);
 		}
 		// build the line pair array
 		if (pPair->m_LinePairs.GetSize() != 0)
@@ -279,31 +311,6 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 			}
 
 			m_TotalLines = pFile->GetNumLines();
-		}
-		if (NULL != pPair->pFirstFile)
-		{
-			CString title(pPair->pFirstFile->GetBasedir());
-			title += pPair->pFirstFile->GetSubdir();
-			title += pPair->pFirstFile->GetName();
-			if (NULL != pPair->pSecondFile)
-			{
-				title += " - ";
-				title += pPair->pSecondFile->GetBasedir();
-				title += pPair->pSecondFile->GetSubdir();
-				title += pPair->pSecondFile->GetName();
-			}
-			SetTitle(title);
-		}
-		else if (NULL != pPair->pSecondFile)
-		{
-			CString title(pPair->pSecondFile->GetBasedir());
-			title += pPair->pSecondFile->GetSubdir();
-			title += pPair->pSecondFile->GetName();
-			SetTitle(title);
-		}
-		else
-		{
-			SetTitle("");
 		}
 	}
 	UpdateAllViews(NULL, FileLoaded);
@@ -435,6 +442,7 @@ BEGIN_MESSAGE_MAP(CFilePairDoc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_GOTOPREVDIFF, OnUpdateEditGotoprevdiff)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, OnUpdateEditCopy)
 	ON_COMMAND(ID_EDIT_COPY, OnEditCopy)
+	ON_COMMAND(ID_FILE_SAVE, OnFileSave)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -611,4 +619,16 @@ void CFilePairDoc::OnEditCopy()
 		GlobalUnlock(hMem);
 		GlobalFree(hMem);
 	}
+}
+
+void CFilePairDoc::OnFileSave()
+{
+	// TODO: Add your command handler code here
+
+}
+
+void CAlegrDiffDoc::OnFileSave()
+{
+	// TODO: Add your command handler code here
+
 }

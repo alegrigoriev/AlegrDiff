@@ -1,23 +1,34 @@
 TODO:
+Add Line Numbers at the left margin
 Make Word Left, Word Right, Word selection.
 Make Go To Line
-Add Line Numbers at the left margin
+Make search
 Add context menu to list view
 Add context menu to file view
 Make background thread for comparision
 Add progress to File list view and file diff view
 Check file dates for change, when the app is activated
 Add "Refresh" function
+Add Save differences
+Add save file list
+Add Copy files
 Open directories or files from the command line
 Make binary comparision
+Compare EXE version info for DLL, EXE, SYS
 Make progress dialog for binary comparision
+UNICODE file support
 
 Problems:
 
 Fixed:
+If two files are completely different, only first file is shown
+BIG file takes too much to read. Eliminated array reallocation.
 File with differences: last lines not drawn
+Wrong status for inserted and removed parts of strings
 
 Done:
+Added buffering to file read
+Remember Used file filter 
 Add font selection
 Expand tabs during file loading
 Make "Copy to clipboard"

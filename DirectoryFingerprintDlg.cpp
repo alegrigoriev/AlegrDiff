@@ -63,6 +63,8 @@ void CDirectoryFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_CBString(pDX, IDC_COMBO_SAVE_FILENAME, m_sSaveFilename);
 	DDX_Check(pDX, IDC_CHECK_SAVE_AS_UNICODE, m_bSaveAsUnicode);
 
+	static int PrevWidth = 0;
+
 	if (pDX->m_bSaveAndValidate)
 	{
 		CThisApp * pApp = GetApp();
@@ -75,6 +77,12 @@ void CDirectoryFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 		m_FingerprintFilenameHistory.AddString(m_sSaveFilename);
 
 		m_Profile.FlushAll();
+
+		PrevWidth = m_DlgWidth;
+	}
+	else
+	{
+		m_DlgWidth = PrevWidth;
 	}
 }
 
@@ -82,15 +90,18 @@ void CDirectoryFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CDirectoryFingerprintDlg, CResizableDialog)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_FIRST_DIR, OnBnClickedButtonBrowseDir)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_SAVE_FILENAME, OnBnClickedButtonBrowseSaveFilename)
-	ON_BN_CLICKED(IDC_BUTTON_BROWSE_SAVE_FILENAME, OnBnClickedIncludeSubdirs)
+
+	ON_BN_CLICKED(IDC_CHECK_INCLUDE_SUBDIRS, OnBnClickedIncludeSubdirs)
 
 	ON_CBN_EDITCHANGE(IDC_COMBO_FIRST_DIR, OnCbnEditchangeComboFirstDir)
 	ON_CBN_SELCHANGE(IDC_COMBO_FIRST_DIR, OnCbnSelchangeComboFirstDir)
+
 	ON_CBN_EDITCHANGE(IDC_COMBO_SAVE_FILENAME, OnCbnEditchangeComboSaveFilename)
 	ON_CBN_SELCHANGE(IDC_COMBO_SAVE_FILENAME, OnCbnSelchangeComboSaveFilename)
 
 	ON_UPDATE_COMMAND_UI(IDOK, OnUpdateOk)
 	ON_UPDATE_COMMAND_UI(IDC_COMBO_IGNORE_DIRS, OnUpdateIgnoreDirs)
+	ON_UPDATE_COMMAND_UI(IDC_CHECK_INCLUDE_DIRECTORY_STRUCTURE, OnUpdateIncludeDirectoryStructure)
 END_MESSAGE_MAP()
 
 
@@ -207,6 +218,11 @@ void CDirectoryFingerprintDlg::OnUpdateOk(CCmdUI * pCmdUI)
 }
 
 void CDirectoryFingerprintDlg::OnUpdateIgnoreDirs(CCmdUI * pCmdUI)
+{
+	pCmdUI->Enable(IsDlgButtonChecked(IDC_CHECK_INCLUDE_SUBDIRS));
+}
+
+void CDirectoryFingerprintDlg::OnUpdateIncludeDirectoryStructure(CCmdUI * pCmdUI)
 {
 	pCmdUI->Enable(IsDlgButtonChecked(IDC_CHECK_INCLUDE_SUBDIRS));
 }

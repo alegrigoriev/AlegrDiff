@@ -9,11 +9,22 @@
 
 // CCheckFingerprintDlg dialog
 
-IMPLEMENT_DYNAMIC(CCheckFingerprintDlg, CUiUpdatedDlg)
+IMPLEMENT_DYNAMIC(CCheckFingerprintDlg, CResizableDialog)
 CCheckFingerprintDlg::CCheckFingerprintDlg(CWnd* pParent /*=NULL*/)
-	: CUiUpdatedDlg(CCheckFingerprintDlg::IDD, pParent)
+	: CResizableDialog(CCheckFingerprintDlg::IDD, pParent)
 	, m_FingerprintFilenameHistory( & m_Profile, _T("History"), _T("FingerprintFile%d"), 15)
 {
+	static const ResizableDlgItem items[] =
+	{
+		IDC_COMBO_FIRST_DIR, ExpandRight,
+		IDC_COMBO_SAVE_FILENAME, ExpandRight,
+		IDC_BUTTON_BROWSE_FIRST_DIR, MoveRight,
+		IDC_BUTTON_BROWSE_SAVE_FILENAME, MoveRight,
+		IDOK, CenterHorizontally,
+		IDCANCEL, CenterHorizontally,
+	};
+	m_pResizeItems = items;
+	m_pResizeItemsCount = countof (items);
 }
 
 CCheckFingerprintDlg::~CCheckFingerprintDlg()
@@ -22,11 +33,13 @@ CCheckFingerprintDlg::~CCheckFingerprintDlg()
 
 void CCheckFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CUiUpdatedDlg::DoDataExchange(pDX);
+	CResizableDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_COMBO_FIRST_DIR, m_cbDirectory);
 	DDX_CBString(pDX, IDC_COMBO_FIRST_DIR, m_sDirectory);
 	DDX_Control(pDX, IDC_COMBO_SAVE_FILENAME, m_cbFilename);
 	DDX_CBString(pDX, IDC_COMBO_SAVE_FILENAME, m_sFilename);
+
+	static int PrevWidth = 0;
 
 	if (pDX->m_bSaveAndValidate)
 	{
@@ -36,11 +49,17 @@ void CCheckFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 		m_FingerprintFilenameHistory.AddString(m_sFilename);
 
 		m_Profile.FlushAll();
+
+		PrevWidth = m_DlgWidth;
+	}
+	else
+	{
+		m_DlgWidth = PrevWidth;
 	}
 }
 
 
-BEGIN_MESSAGE_MAP(CCheckFingerprintDlg, CUiUpdatedDlg)
+BEGIN_MESSAGE_MAP(CCheckFingerprintDlg, CResizableDialog)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_FIRST_DIR, OnBnClickedButtonBrowseFirstDir)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_SAVE_FILENAME, OnBnClickedButtonBrowseOpenFilename)
 	ON_CBN_EDITCHANGE(IDC_COMBO_FIRST_DIR, OnCbnEditchangeComboFirstDir)
@@ -102,7 +121,7 @@ BOOL CCheckFingerprintDlg::OnInitDialog()
 	m_sFilename = m_FingerprintFilenameHistory[0];
 	m_sDirectory = pApp->m_RecentFolders[0];
 
-	CUiUpdatedDlg::OnInitDialog();
+	CResizableDialog::OnInitDialog();
 
 	m_cbDirectory.LimitText(MAX_PATH);
 	m_cbFilename.LimitText(MAX_PATH);
@@ -142,4 +161,11 @@ void CCheckFingerprintDlg::OnUpdateOk(CCmdUI * pCmdUI)
 	m_cbDirectory.GetWindowText(s2);
 	s2.Trim();
 	pCmdUI->Enable(! s1.IsEmpty() && ! s2.IsEmpty());
+}
+
+void CCheckFingerprintDlg::OnMetricsChange()
+{
+	CResizableDialog::OnMetricsChange();
+	m_mmxi.ptMaxTrackSize.y = m_mmxi.ptMinTrackSize.y;
+	m_mmxi.ptMaxSize.y = m_mmxi.ptMinTrackSize.y;
 }

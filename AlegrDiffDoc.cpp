@@ -188,6 +188,8 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 
 	// amount of data to process
 	ULONGLONG TotalFilesSize = 0;
+	ULONG DirectoryNameIndex = 0;
+	ULONG FileNameIndex = 0;
 
 	for (unsigned idx1 = 0, idx2 = 0; idx1 < Files1.size() || idx2 < Files2.size(); )
 	{
@@ -515,6 +517,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 			//UpdateAllViews(NULL, 0);    // erase the views
 			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(_T("Loading and comparing files..."));
 
+			CWaitCursor WaitCursor;
 			pPair->m_ComparisonResult = pPair->CompareFiles(NULL);
 		}
 

@@ -205,6 +205,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("PreferencesFlags"), m_PreferencesFlags, m_PreferencesFlags, 0, 0xFFFFFFFF);
 	Profile.AddItem(_T("Settings"), _T("StatusFlags"), m_StatusFlags, m_StatusFlags, 0, 0xFFFFFFFF);
 #endif
+	Profile.AddItem(_T("Settings"), _T("ComparisionMode"), m_ComparisonMode, 0, 0, 2);
 
 
 	Profile.AddItem(_T("Settings"), _T("MinimalLineLength"), m_MinimalLineLength, 2, 1, 2048);
@@ -969,14 +970,14 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 
 		dlg.m_sFirstFileName = Name1;
 		dlg.m_sSecondFileName = Name2;
-		dlg.m_bBinaryFile = m_BinaryComparision;
+		dlg.m_ComparisonMode = m_ComparisonMode;
 
 		if (IDOK != dlg.DoModal())
 		{
 			return;
 		}
 
-		m_BinaryComparision = (0 != dlg.m_bBinaryFile);
+		m_ComparisonMode = dlg.m_ComparisonMode;
 		Name1 = dlg.m_sFirstFileName;
 		Name2 = dlg.m_sSecondFileName;
 	}
@@ -1020,22 +1021,29 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 	*pFileName2 = 0;
 	FilePair * pPair = new FilePair;
 
-	bool bFilesBinary = m_BinaryComparision;
-
 	CString sCFilesPattern(PatternToMultiCString(m_sCppFilesFilter));
 	CString sBinFilesPattern(PatternToMultiCString(m_sBinaryFilesFilter));
 
-	if ( ! bFilesBinary
-		&& ! m_sBinaryFilesFilter.IsEmpty())
+	bool bFilesBinary = false;
+
+	if (2 == m_ComparisonMode)
+	{
+		bFilesBinary = true;
+	}
+	else if (1 == m_ComparisonMode)
+	{
+		bFilesBinary = false;
+	}
+	else if ( ! m_sBinaryFilesFilter.IsEmpty())
 	{
 		bFilesBinary = MultiPatternMatches(wfd1.cFileName, sBinFilesPattern)
 						|| MultiPatternMatches(wfd2.cFileName, sBinFilesPattern);
 	}
 
-	pPair->pFirstFile = new FileItem( & wfd1, FileDir1, "");
+	pPair->pFirstFile = new FileItem( & wfd1, FileDir1, _T(""));
 	pPair->pFirstFile->m_IsBinary = bFilesBinary;
 
-	pPair->pSecondFile = new FileItem( & wfd2, FileDir2, "");
+	pPair->pSecondFile = new FileItem( & wfd2, FileDir2, _T(""));
 	pPair->pSecondFile->m_IsBinary = bFilesBinary;
 
 	if ( ! bFilesBinary
@@ -1543,7 +1551,10 @@ void CAlegrDiffApp::OnFileCreatedirectoryfingerprint()
 	dlg1.m_bIncludeDirectoryStructure = dlg.m_bIncludeDirectoryStructure;
 	dlg1.m_bIncludeSubdirectories = dlg.m_bIncludeSubdirectories;
 	dlg1.m_sFilenameFilter = dlg.m_sFilenameFilter;
+
 	dlg1.m_sIgnoreFiles = dlg.m_sIgnoreFiles;
+	dlg1.m_sIgnoreFolders = dlg.m_sIgnoreFolders;
+
 	dlg1.m_sDirectory = dlg.m_sDirectory;
 	dlg1.m_FingerprintFilename = dlg.m_sSaveFilename;
 	dlg1.m_bSaveAsUnicode = dlg.m_bSaveAsUnicode;

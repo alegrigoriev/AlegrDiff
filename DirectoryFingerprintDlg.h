@@ -21,9 +21,6 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
-	afx_msg void OnBnClickedButtonBrowseDir();
-	afx_msg void OnBnClickedIncludeSubdirs();
-	afx_msg void OnBnClickedButtonBrowseSaveFilename();
 
 	BOOL m_bIncludeDirectoryStructure;
 	BOOL m_bIncludeSubdirectories;
@@ -53,6 +50,9 @@ protected:
 	virtual BOOL OnInitDialog();
 	virtual void OnMetricsChange();
 
+	afx_msg void OnBnClickedButtonBrowseDir();
+	afx_msg void OnBnClickedIncludeSubdirs();
+	afx_msg void OnBnClickedButtonBrowseSaveFilename();
 	afx_msg void OnCbnEditchangeComboFirstDir();
 	afx_msg void OnCbnSelchangeComboFirstDir();
 	afx_msg void OnCbnEditchangeComboSaveFilename();
@@ -60,5 +60,6 @@ protected:
 
 	void OnUpdateOk(CCmdUI * pCmdUI);
 	void OnUpdateIgnoreDirs(CCmdUI * pCmdUI);
+	void OnUpdateIncludeDirectoryStructure(CCmdUI * pCmdUI);
 	virtual void OnOK();
 };

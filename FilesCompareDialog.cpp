@@ -16,20 +16,28 @@ static char THIS_FILE[] = __FILE__;
 
 
 CFilesCompareDialog::CFilesCompareDialog(CWnd* pParent /*=NULL*/)
-	: CDialog(CFilesCompareDialog::IDD, pParent)
+	: CResizableDialog(CFilesCompareDialog::IDD, pParent)
+	, m_ComparisonMode(0)
 {
 	//{{AFX_DATA_INIT(CFilesCompareDialog)
-	m_bBinaryFile = FALSE;
 	//}}AFX_DATA_INIT
-	//m_bCCppFile = FALSE;
-	m_sFirstFileName = _T("");
-	m_sSecondFileName = _T("");
+	static const ResizableDlgItem items[] =
+	{
+		IDC_COMBO_FIRST_FILE, ExpandRight,
+		IDC_COMBO_SECOND_FILE, ExpandRight,
+		IDC_BUTTON_BROWSE_FIRST_FILE, MoveRight,
+		IDC_BUTTON_BROWSE_SECOND_FILE, MoveRight,
+		IDOK, CenterHorizontally,
+		IDCANCEL, CenterHorizontally,
+	};
+	m_pResizeItems = items;
+	m_pResizeItemsCount = countof (items);
 }
 
 
 void CFilesCompareDialog::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
+	CResizableDialog::DoDataExchange(pDX);
 	CThisApp * pApp = GetApp();
 
 	// get file names from history
@@ -43,13 +51,16 @@ void CFilesCompareDialog::DoDataExchange(CDataExchange* pDX)
 		{
 			m_sSecondFileName = pApp->m_RecentFiles[1];
 		}
+		m_DlgWidth = m_PrevWidth;
+	}
+	else
+	{
+		m_PrevWidth = m_DlgWidth;
 	}
 	//{{AFX_DATA_MAP(CFilesCompareDialog)
 	DDX_Control(pDX, IDC_COMBO_SECOND_FILE, m_SecondCombo);
 	DDX_Control(pDX, IDC_COMBO_FIRST_FILE, m_FirstCombo);
-	DDX_Check(pDX, IDC_CHECK_BINARY, m_bBinaryFile);
 	//}}AFX_DATA_MAP
-	//DDX_Check(pDX, IDC_CHECK_COMPARE_C_CPP, m_bCCppFile);
 	DDX_CBString(pDX, IDC_COMBO_FIRST_FILE, m_sFirstFileName);
 	DDX_CBString(pDX, IDC_COMBO_SECOND_FILE, m_sSecondFileName);
 	// save file names to history
@@ -58,19 +69,30 @@ void CFilesCompareDialog::DoDataExchange(CDataExchange* pDX)
 		pApp->m_RecentFiles.AddString(m_sFirstFileName);
 		pApp->m_RecentFiles.AddString(m_sSecondFileName, 1);
 	}
+	DDX_Radio(pDX, IDC_RADIO3, m_ComparisonMode);
 }
 
 
-BEGIN_MESSAGE_MAP(CFilesCompareDialog, CDialog)
+BEGIN_MESSAGE_MAP(CFilesCompareDialog, CResizableDialog)
 	//{{AFX_MSG_MAP(CFilesCompareDialog)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_FIRST_FILE, OnButtonBrowseFirstFile)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_SECOND_FILE, OnButtonBrowseSecondFile)
 	ON_WM_DROPFILES()
+	ON_UPDATE_COMMAND_UI(IDOK, OnUpdateOk)
+	ON_CBN_EDITCHANGE(IDC_COMBO_FIRST_FILE, OnChangeFile)
+	ON_CBN_SELCHANGE(IDC_COMBO_FIRST_FILE, OnChangeFile)
+	ON_CBN_EDITCHANGE(IDC_COMBO_SECOND_FILE, OnChangeFile)
+	ON_CBN_SELCHANGE(IDC_COMBO_SECOND_FILE, OnChangeFile)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CFilesCompareDialog message handlers
+
+void CFilesCompareDialog::OnChangeFile()
+{
+	NeedUpdateControls();
+}
 
 void CFilesCompareDialog::OnButtonBrowseFirstFile()
 {
@@ -84,6 +106,7 @@ void CFilesCompareDialog::OnButtonBrowseFirstFile()
 	}
 
 	m_FirstCombo.SetWindowText(Name);
+	NeedUpdateControls();
 }
 
 void CFilesCompareDialog::OnButtonBrowseSecondFile()
@@ -98,11 +121,12 @@ void CFilesCompareDialog::OnButtonBrowseSecondFile()
 	}
 
 	m_SecondCombo.SetWindowText(Name);
+	NeedUpdateControls();
 }
 
 BOOL CFilesCompareDialog::OnInitDialog()
 {
-	CDialog::OnInitDialog();
+	CResizableDialog::OnInitDialog();
 	CThisApp * pApp = GetApp();
 	// set comboboxes
 	m_FirstCombo.LimitText(MAX_PATH);
@@ -169,4 +193,24 @@ void CFilesCompareDialog::OnDropFiles(HDROP hDropInfo)
 			// TODO
 		}
 	}
+	NeedUpdateControls();
 }
+
+void CFilesCompareDialog::OnUpdateOk(CCmdUI * pCmdUI)
+{
+	CString s1, s2;
+	m_FirstCombo.GetWindowText(s1);
+	s1.Trim();
+	m_SecondCombo.GetWindowText(s2);
+	s2.Trim();
+	pCmdUI->Enable(! s1.IsEmpty() && ! s2.IsEmpty());
+}
+
+void CFilesCompareDialog::OnMetricsChange()
+{
+	CResizableDialog::OnMetricsChange();
+	m_mmxi.ptMaxTrackSize.y = m_mmxi.ptMinTrackSize.y;
+	m_mmxi.ptMaxSize.y = m_mmxi.ptMinTrackSize.y;
+}
+
+int CFilesCompareDialog::m_PrevWidth;

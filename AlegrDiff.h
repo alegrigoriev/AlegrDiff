@@ -137,6 +137,7 @@ public:
 	int m_TabIndent;
 	int m_GoToLineFileSelection;
 	int m_SearchScope;
+	int m_ComparisonMode;    // 0 - default, 1 - text, 2 - binary
 
 	LOGFONT m_NormalLogFont;
 	CFont m_NormalFont;

@@ -2591,6 +2591,9 @@ FilePair::FilePair()
 	m_bHideFromListView(false),
 	m_bSelected(false),
 	m_bDeleted(false),
+	m_FilenameSortOrder(0),
+	m_DirectorySortOrder(0),
+
 	m_ComparisonResult(ResultUnknown)
 {
 }

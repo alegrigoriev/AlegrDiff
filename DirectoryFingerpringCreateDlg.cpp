@@ -136,12 +136,14 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 			_T("; Fingerprint of \"%s\", created %s %s%s")
 			_T("IncludeFiles=%s%s")
 			_T("ExcludeFiles=%s%s")
+			_T("ExcludeFolders=%s%s")
 			_T("IncludeSubdirs=%d%s")
 			_T("IncludeDirInfo=%d%s%s"),
 			FullDirectoryName,
 			date, time, crlf,
 			LPCTSTR(m_sFilenameFilter), crlf,
 			LPCTSTR(m_sIgnoreFiles), crlf,
+			LPCTSTR(m_sIgnoreFolders), crlf,
 			m_bIncludeSubdirectories, crlf,
 			m_bIncludeDirectoryStructure, crlf, crlf);
 

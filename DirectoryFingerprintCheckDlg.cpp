@@ -13,13 +13,18 @@
 
 IMPLEMENT_DYNAMIC(CDirectoryFingerprintCheckDlg, CProgressDialog)
 CDirectoryFingerprintCheckDlg::CDirectoryFingerprintCheckDlg(
-															CAlegrDiffDoc * pDoc, CWnd* pParent /*=NULL*/)
-	: CProgressDialog(CDirectoryFingerprintCheckDlg::IDD, pParent)
+															CAlegrDiffDoc * pDoc,
+															LPCTSTR DirectoryToCheck,
+															LPCTSTR FingerprintFilename,
+															CWnd* pParent /*=NULL*/)
+	: BaseClass(CDirectoryFingerprintCheckDlg::IDD, pParent)
 	, m_pDocument(pDoc)
 	, m_pFile(NULL)
 	, m_bIncludeSubdirectories(FALSE)
 	, m_bIncludeDirectoryStructure(FALSE)
 	, m_bSaveAsUnicode(FALSE)
+	, m_sDirectory(DirectoryToCheck)
+	, m_FingerprintFilename(FingerprintFilename)
 {
 }
 
@@ -29,11 +34,11 @@ CDirectoryFingerprintCheckDlg::~CDirectoryFingerprintCheckDlg()
 
 void CDirectoryFingerprintCheckDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CProgressDialog::DoDataExchange(pDX);
+	BaseClass::DoDataExchange(pDX);
 }
 
 
-BEGIN_MESSAGE_MAP(CDirectoryFingerprintCheckDlg, CProgressDialog)
+BEGIN_MESSAGE_MAP(CDirectoryFingerprintCheckDlg, BaseClass)
 END_MESSAGE_MAP()
 
 
@@ -64,14 +69,14 @@ INT_PTR CDirectoryFingerprintCheckDlg::DoModal()
 		_setmode(_fileno(m_pFile), _O_TEXT);
 	}
 
-	INT_PTR result = CProgressDialog::DoModal();
+	INT_PTR result = BaseClass::DoModal();
 
 	return result;
 }
 
 BOOL CDirectoryFingerprintCheckDlg::OnInitDialog()
 {
-	CProgressDialog::OnInitDialog();
+	BaseClass::OnInitDialog();
 
 	TRACE("CDirectoryFingerprintCheckDlg::OnInitDialog()\n");
 

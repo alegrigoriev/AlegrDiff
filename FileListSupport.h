@@ -380,6 +380,8 @@ public:
 	eFileComparisionResult PreCompareTextFiles();
 
 	eFileComparisionResult m_ComparisionResult;
+	bool m_bComparisionResultChanged;
+	//bool m_bUnderComparision;
 	CArray<LinePair *, LinePair *> m_LinePairs;
 	CArray<FileDiffSection *, FileDiffSection *> m_DiffSections;
 };

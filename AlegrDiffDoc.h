@@ -17,6 +17,16 @@ protected: // create from serialization only
 	DECLARE_DYNCREATE(CAlegrDiffDoc)
 
 // Attributes
+	CSimpleCriticalSection m_FileListCs;
+	static unsigned _stdcall _CompareThreadFunction(PVOID arg);
+	unsigned CompareThreadFunction();
+	HANDLE m_hEvent;
+	HANDLE m_hThread;
+	volatile BOOL m_bStopThread;
+
+	FilePair * m_NextPairToRefresh;
+	FilePair * volatile m_NextPairToCompare;
+
 public:
 	CString m_sInclusionPattern;
 	CString m_sExclusionPattern;
@@ -27,11 +37,12 @@ public:
 	FilePair * m_pPairList;
 	int m_nFilePairs;
 	bool m_bRecurseSubdirs;
+
+	void RunComparisionThread();
 // Operations
 public:
 	bool BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseSubdirs);
 	void FreeFilePairList();
-	//bool BuildFileList(LPCTSTR dir);
 
 
 // Overrides
@@ -52,6 +63,7 @@ protected:
 
 // Generated message map functions
 protected:
+	virtual void OnIdle();
 	//{{AFX_MSG(CAlegrDiffDoc)
 	afx_msg void OnFileSave();
 	afx_msg void OnViewRefresh();
@@ -69,7 +81,7 @@ enum {
 	SetPositionMakeCentered = 2,
 	SetPositionCancelSelection = 4,
 	MoveCaretPositionAlways = 8,
-	OnUpdateAddListViewItem = 0x100,
+	OnUpdateListViewItem = 0x100,
 };
 
 class InvalidatedRange : public CObject

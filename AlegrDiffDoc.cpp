@@ -8,6 +8,8 @@
 #include "CompareDirsDialog.h"
 #include "DiffFileView.h"
 #include "FindDialog.h"
+#include <process.h>
+#include <afxpriv.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -33,6 +35,11 @@ END_MESSAGE_MAP()
 CAlegrDiffDoc::CAlegrDiffDoc()
 	: m_nFilePairs(0),
 	m_bRecurseSubdirs(false),
+	m_hThread(NULL),
+	m_hEvent(CreateEvent(NULL, FALSE, FALSE, NULL)),
+	m_bStopThread(TRUE),
+	m_NextPairToRefresh(NULL),
+	m_NextPairToCompare(NULL),
 	m_pPairList(NULL)
 {
 	CThisApp * pApp = GetApp();
@@ -57,6 +64,22 @@ CAlegrDiffDoc::CAlegrDiffDoc()
 
 CAlegrDiffDoc::~CAlegrDiffDoc()
 {
+	if (NULL != m_hThread)
+	{
+		m_bStopThread = TRUE;
+		SetEvent(m_hEvent);
+		if (WAIT_TIMEOUT == WaitForSingleObject(m_hThread, 5000))
+		{
+			TerminateThread(m_hThread, -1);
+		}
+		CloseHandle(m_hThread);
+		m_hThread = NULL;
+	}
+	if (NULL != m_hEvent)
+	{
+		CloseHandle(m_hEvent);
+		m_hEvent = NULL;
+	}
 	FreeFilePairList();
 }
 
@@ -172,7 +195,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 			idx1++;
 			pPair->pSecondFile = Files2[idx2];
 			idx2++;
-
+#if 0
 			CString s;
 			s.Format(_T("Comparing %s - %s"),
 					LPCTSTR(pPair->pFirstFile->GetFullName()),
@@ -180,14 +203,14 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(s);
 
 			pPair->m_ComparisionResult = pPair->PreCompareFiles();
+#else
+			pPair->m_ComparisionResult = pPair->ResultUnknown;
+#endif
 			if (0) TRACE("File \"%s\" exists in both \"%s\" and \"%s\"\n",
 						pPair->pFirstFile->GetName(),
 						FileList1.m_BaseDir + pPair->pFirstFile->GetSubdir(),
 						FileList2.m_BaseDir + pPair->pSecondFile->GetSubdir());
 		}
-		AddListViewItemStruct alvi;
-		alvi.pPair = pPair;
-		UpdateAllViews(NULL, OnUpdateAddListViewItem, & alvi);
 	}
 	// all files are referenced in FilePair list
 	FileList1.Detach();
@@ -1673,5 +1696,70 @@ void CFilePairDoc::OnFileCopySecondDirFile()
 	if (m_pFilePair != NULL && m_pFilePair->pSecondFile != NULL)
 	{
 		CopyFilesToFolder( & m_pFilePair->pSecondFile, 1, false);
+	}
+}
+
+void CAlegrDiffDoc::RunComparisionThread()
+{
+	unsigned threadid;
+	ResetEvent(m_hEvent);
+	m_bStopThread = false;
+	m_NextPairToRefresh = m_pPairList;
+	m_NextPairToCompare = m_pPairList;
+
+	m_hThread = (HANDLE) _beginthreadex(NULL, 0x10000,
+										_CompareThreadFunction, this, 0, & threadid);
+
+}
+
+unsigned _stdcall CAlegrDiffDoc::_CompareThreadFunction(PVOID arg)
+{
+	CAlegrDiffDoc * pDoc = static_cast<CAlegrDiffDoc *>(arg);
+
+	return pDoc->CompareThreadFunction();
+}
+
+unsigned CAlegrDiffDoc::CompareThreadFunction()
+{
+	for (FilePair * pPair = m_pPairList; pPair != NULL && ! m_bStopThread; pPair = pPair->pNext)
+	{
+		//m_FileListCs.Lock();
+		if (pPair->ResultUnknown != pPair->m_ComparisionResult)
+		{
+			continue;
+		}
+		//m_FileListCs.Unlock();
+		pPair->m_ComparisionResult = pPair->PreCompareFiles();
+		m_NextPairToCompare = pPair->pNext;
+		pPair->m_bComparisionResultChanged = true;
+
+		::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
+	}
+	m_NextPairToCompare = NULL;
+	::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
+	return 0;
+}
+
+void CAlegrDiffDoc::OnIdle()
+{
+	while (m_NextPairToRefresh != m_NextPairToCompare)
+	{
+		if (m_NextPairToRefresh->m_bComparisionResultChanged)
+		{
+			m_NextPairToRefresh->m_bComparisionResultChanged = false;
+			AddListViewItemStruct alvi;
+			alvi.pPair = m_NextPairToRefresh;
+			UpdateAllViews(NULL, OnUpdateListViewItem, & alvi);
+		}
+		m_NextPairToRefresh = m_NextPairToRefresh->pNext;
+	}
+	if (NULL == m_NextPairToRefresh
+		&& NULL != m_hThread)
+	{
+		m_bStopThread = true;
+		WaitForSingleObject(m_hThread, 5000);
+		CloseHandle(m_hThread);
+		m_hThread = NULL;
+		UpdateAllViews(NULL);
 	}
 }

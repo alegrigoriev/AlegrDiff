@@ -251,14 +251,20 @@ void CAlegrDiffView::BuildSortedPairArray(CArray<FilePair *,FilePair *> & PairAr
 void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 {
 	CListCtrl * pListCtrl = &GetListCtrl();
-	if (OnUpdateAddListViewItem == lHint)
+	if (OnUpdateListViewItem == lHint)
 	{
 		AddListViewItemStruct * alvi = static_cast<AddListViewItemStruct *>(pHint);
 		if (NULL != alvi)
 		{
-			int item = pListCtrl->GetItemCount();
-			AddListViewItem(alvi->pPair, item);
-			pListCtrl->UpdateWindow();
+			for (int i = 0; i < m_PairArray.GetSize(); i++)
+			{
+				if (m_PairArray[i] == alvi->pPair)
+				{
+					CString ComparisionResult = alvi->pPair->GetComparisionResult();
+					pListCtrl->SetItemText(i, ColumnComparisionResult, ComparisionResult);
+					break;
+				}
+			}
 		}
 		return;
 	}

@@ -14,7 +14,7 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CResizableDialog dialog
 
-IMPLEMENT_DYNAMIC(CResizableDialog, CUiUpdatedDlg)
+//IMPLEMENT_DYNAMIC(CResizableDialog, CUiUpdatedDlg)
 
 CResizableDialog::CResizableDialog(UINT id, CWnd* pParent)
 	: CUiUpdatedDlg(id, pParent)

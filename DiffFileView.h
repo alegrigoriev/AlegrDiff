@@ -56,9 +56,6 @@ public:
 	bool m_LButtonDown;
 	bool m_TrackingSelection;
 
-	CFont m_NormalFont;
-	CFont m_UnderlineFont;
-	CFont m_StrikeoutFont;
 	TEXTMETRIC m_FontMetric;
 
 	int CharWidth() const { return m_FontMetric.tmAveCharWidth; }

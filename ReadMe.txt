@@ -1,6 +1,4 @@
 TODO:
-Add font selection
-Expand tabs during file loading
 Make Word Left, Word Right, Word selection.
 Make Go To Line
 Add Line Numbers at the left margin
@@ -20,6 +18,8 @@ Fixed:
 File with differences: last lines not drawn
 
 Done:
+Add font selection
+Expand tabs during file loading
 Make "Copy to clipboard"
 Make "Home", "End" functions
 Make "Move to next diff", Move to prev diff functions

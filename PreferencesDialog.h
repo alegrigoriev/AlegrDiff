@@ -30,9 +30,21 @@ public:
 	//}}AFX_DATA
 
 	LOGFONT m_NormalLogFont;
-	CString m_NormalFontName;
+	CFont m_NormalFont;
 	DWORD m_NormalTextColor;
 
+	LOGFONT m_ErasedLogFont;
+	CFont m_ErasedFont;
+	DWORD m_ErasedTextColor;
+
+	LOGFONT m_AddedLogFont;
+	CFont m_AddedFont;
+	DWORD m_AddedTextColor;
+
+	int m_FontPointSize;
+
+	bool m_bFontChanged;
+	void FontChanged();
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CPreferencesDialog)
@@ -50,6 +62,9 @@ protected:
 	afx_msg void OnCheckIgnore();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnButtonNormalFont();
+	afx_msg void OnButtonInsertedFont();
+	afx_msg void OnButtonErasedFont();
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

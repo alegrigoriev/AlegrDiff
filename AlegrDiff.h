@@ -54,7 +54,13 @@ public:
 	CString m_sIgnoreFilesFilter;
 
 	LOGFONT m_NormalLogFont;
-	CString m_NormalFontName;
+	CFont m_NormalFont;
+	LOGFONT m_AddedLogFont;
+	CFont m_AddedFont;
+	LOGFONT m_ErasedLogFont;
+	CFont m_ErasedFont;
+	int m_FontPointSize;
+	void OnFontChanged();
 
 	void OpenFilePairView(FilePair * pPair);
 	// Overrides

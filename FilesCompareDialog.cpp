@@ -56,9 +56,9 @@ void CFilesCompareDialog::DoDataExchange(CDataExchange* pDX)
 	if (pDX->m_bSaveAndValidate)
 	{
 		AddStringToHistory(m_sSecondFileName, pApp->m_RecentFiles,
-							sizeof pApp->m_RecentFiles / sizeof pApp->m_RecentFiles[0], false);
+							countof(pApp->m_RecentFiles), false);
 		AddStringToHistory(m_sFirstFileName, pApp->m_RecentFiles,
-							sizeof pApp->m_RecentFiles / sizeof pApp->m_RecentFiles[0], false);
+							countof(pApp->m_RecentFiles), false);
 	}
 }
 
@@ -80,8 +80,7 @@ void CFilesCompareDialog::OnButtonBrowseFirstFile()
 	CString Name;
 	m_FirstCombo.GetWindowText(Name);
 	if (IDOK != BrowseForFile(IDS_OPEN_FIRST_TITLE, Name, m_FileDir1,
-							pApp->m_RecentFiles,
-							sizeof pApp->m_RecentFiles / sizeof pApp->m_RecentFiles[0]))
+							pApp->m_RecentFiles, countof(pApp->m_RecentFiles)))
 	{
 		return;
 	}
@@ -95,8 +94,7 @@ void CFilesCompareDialog::OnButtonBrowseSecondFile()
 	CString Name;
 	m_SecondCombo.GetWindowText(Name);
 	if (IDOK != BrowseForFile(IDS_OPEN_SECOND_TITLE, Name, m_FileDir2,
-							pApp->m_RecentFiles,
-							sizeof pApp->m_RecentFiles / sizeof pApp->m_RecentFiles[0]))
+							pApp->m_RecentFiles, countof(pApp->m_RecentFiles)))
 	{
 		return;
 	}
@@ -109,7 +107,7 @@ BOOL CFilesCompareDialog::OnInitDialog()
 	CDialog::OnInitDialog();
 	CThisApp * pApp = GetApp();
 	// set comboboxes
-	for (int i = 0; i < sizeof pApp->m_RecentFiles / sizeof pApp->m_RecentFiles[0]; i++)
+	for (int i = 0; i < countof(pApp->m_RecentFiles); i++)
 	{
 		if ( ! pApp->m_RecentFiles[i].IsEmpty())
 		{

@@ -1,6 +1,7 @@
 // CApplicationProfile
 #ifndef APPLICATIONPROFILE_H
 #define APPLICATIONPROFILE_H
+#pragma once
 
 class CApplicationProfile;
 class CApplicationProfileItem
@@ -329,5 +330,22 @@ template<class T> void CApplicationProfileItemBinary<T>::WriteData(BOOL bForceWr
 		m_pProfile->WriteProfileBinary(Section, Name, LPBYTE( & m_Ref), sizeof (T));
 	}
 }
+
+template<int NumStrings = 10>
+class CStringHistory
+{
+public:
+	CStringHistory(CApplicationProfile * pProfile,
+					LPCTSTR Section, LPCTSTR KeyFormat);
+	~CStringHistory();
+	void Load();
+	void Flush();
+	void LoadCombo(CComboBox & Combo);
+	void AddString(CString const & str);
+private:
+	CString m_Strings[NumStrings];
+	CApplicationProfile * m_pProfile;
+};
+
 
 #endif

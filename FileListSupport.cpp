@@ -399,7 +399,7 @@ bool FileItem::Load()
 			}
 			else
 			{
-				if (NULL == fgetws(lineW, (sizeof lineW / sizeof lineW[0]) - 1, file))
+				if (NULL == fgetws(lineW, (countof(lineW)) - 1, file))
 				{
 					break;
 				}
@@ -415,11 +415,11 @@ bool FileItem::Load()
 				break;
 			}
 #ifdef _UNICODE
-			mbstowcs(lineW, lineA, (sizeof lineW / sizeof lineW[0]) - 1);
+			mbstowcs(lineW, lineA, countof(lineW) - 1);
 #endif
 		}
 		// expand tabs
-		for (int i = 0, pos = 0; line[i] != 0 && pos < (sizeof TabExpandedLine / sizeof TabExpandedLine[0]) - 1; pos++)
+		for (int i = 0, pos = 0; line[i] != 0 && pos < countof(TabExpandedLine) - 1; pos++)
 		{
 			if (line[i] == '\t')
 			{
@@ -1568,7 +1568,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstCount,
 				};
 				// may be non-portable to big-endian
 				int pair = ((cPrevChar & TCHAR_MASK) << 16) | (c & TCHAR_MASK);
-				for (int i = 0; i < sizeof ReservedPairs / sizeof ReservedPairs[0]; i++)
+				for (int i = 0; i < countof(ReservedPairs); i++)
 				{
 					int ReservedPair = (ReservedPairs[i] & 0xFF) | ((ReservedPairs[i] & 0xFF00) << 8);
 					if (pair == ReservedPair)
@@ -2078,7 +2078,7 @@ FileLine::FileLine(LPCTSTR src, bool MakeNormalizedString, bool c_cpp_file)
 	TCHAR TmpBuf[4096];
 	char WhitespaceMask[4096 / 8];
 
-	m_NormalizedStringLength = RemoveExtraWhitespaces(TmpBuf, src, sizeof TmpBuf / sizeof TmpBuf[0],
+	m_NormalizedStringLength = RemoveExtraWhitespaces(TmpBuf, src, countof(TmpBuf),
 													WhitespaceMask, sizeof WhitespaceMask,
 													c_cpp_file);
 

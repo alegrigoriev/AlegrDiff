@@ -39,7 +39,7 @@ void CMyFindDialog::DoDataExchange(CDataExchange* pDX)
 	//}}AFX_DATA_MAP
 	if ( ! pDX->m_bSaveAndValidate)
 	{
-		for (i = 0; i < sizeof pApp->m_sFindHistory / sizeof pApp->m_sFindHistory[0]; i++)
+		for (i = 0; i < countof(pApp->m_sFindHistory); i++)
 		{
 			if ( ! pApp->m_sFindHistory[i].IsEmpty())
 			{

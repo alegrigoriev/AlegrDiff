@@ -1911,6 +1911,19 @@ bool FilePair::LoadFiles()
 
 void FilePair::UnloadFiles()
 {
+	for (int i = 0; i < m_LinePairs.GetSize(); i++)
+	{
+		LinePair * pPair = m_LinePairs[i];
+		while(pPair->pFirstSection != NULL)
+		{
+			StringSection * tmp = pPair->pFirstSection;
+			pPair->pFirstSection = tmp->pNext;
+			delete tmp;
+		}
+		delete pPair;
+	}
+	m_LinePairs.RemoveAll();
+
 	if (NULL != pFirstFile)
 	{
 		pFirstFile->Unload();
@@ -2140,6 +2153,90 @@ DWORD FilePair::CompareTextFiles(bool bCompareAll)
 	}
 	// build the array of line pairs
 	// calculate number of line pairs
+	nPrevSectionEnd1 = 0;
+	nPrevSectionEnd2 = 0;
+	int nTotalLines = 0;
+	for (pSection = pFirstSection; pSection != NULL; pSection = pSection->pNext)
+	{
+		nTotalLines += pSection->File1LineEnd - nPrevSectionEnd1
+						+ pSection->File2LineBegin - nPrevSectionEnd2;
+		nPrevSectionEnd1 = pSection->File1LineEnd;
+		nPrevSectionEnd2 = pSection->File2LineEnd;
+	}
+	// build line pair array
+	m_LinePairs.SetSize(nTotalLines);
+	nPrevSectionEnd1 = 0;
+	nPrevSectionEnd2 = 0;
+	int nLineIndex = 0;
+	for (pSection = pFirstSection; pSection != NULL; pSection = pSection->pNext)
+	{
+		int i;
+		LinePair * pPair;
+		// add lines from first file (mark as removed)
+		for (i = nPrevSectionEnd1; i < pSection->File1LineBegin; i++, nLineIndex++)
+		{
+			pPair = new LinePair;
+			if (NULL == pPair)
+			{
+				break;
+			}
+			m_LinePairs[nLineIndex] = pPair;
+
+			pPair->pFirstLine = pFirstFile->GetLine(i);
+			pPair->pSecondLine = NULL;
+
+			pPair->pFirstSection = new StringSection;
+			if (NULL == pPair->pFirstSection)
+			{
+				break;
+			}
+			pPair->pFirstSection->pNext = NULL;
+			pPair->pFirstSection->Attr = StringSection::Erased;
+			pPair->pFirstSection->pBegin = pPair->pFirstLine->GetText();
+			pPair->pFirstSection->Length = pPair->pFirstLine->GetLength();
+		}
+		// add lines from second file (mark as added)
+		for (i = nPrevSectionEnd2; i < pSection->File2LineBegin; i++, nLineIndex++)
+		{
+			pPair = new LinePair;
+			if (NULL == pPair)
+			{
+				break;
+			}
+			m_LinePairs[nLineIndex] = pPair;
+
+			pPair->pFirstLine = NULL;
+			pPair->pSecondLine = pSecondFile->GetLine(i);
+
+			pPair->pFirstSection = new StringSection;
+			if (NULL == pPair->pFirstSection)
+			{
+				break;
+			}
+			pPair->pFirstSection->pNext = NULL;
+			pPair->pFirstSection->Attr = StringSection::Inserted;
+			pPair->pFirstSection->pBegin = pPair->pSecondLine->GetText();
+			pPair->pFirstSection->Length = pPair->pSecondLine->GetLength();
+		}
+
+		for (i = 0; i < pSection->File1LineEnd - pSection->File1LineBegin; i++, nLineIndex++)
+		{
+			pPair = new LinePair;
+			if (NULL == pPair)
+			{
+				break;
+			}
+			m_LinePairs[nLineIndex] = pPair;
+			pPair->pFirstSection = NULL;
+
+			pPair->pFirstLine = pFirstFile->GetLine(i + pSection->File1LineBegin);
+			pPair->pSecondLine = pSecondFile->GetLine(i + pSection->File2LineBegin);
+			MatchStrings(pPair->pFirstLine->GetText(), pPair->pSecondLine->GetText(),
+						& pPair->pFirstSection, 3);
+		}
+		nPrevSectionEnd1 = pSection->File1LineEnd;
+		nPrevSectionEnd2 = pSection->File2LineEnd;
+	}
 
 	// deallocate the sections, don't need them anymore
 	for (pSection = pFirstSection; pSection != NULL; )

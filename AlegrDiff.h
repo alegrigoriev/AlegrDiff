@@ -30,6 +30,10 @@ public:
 	int m_MinIdenticalLines;
 	int m_MinIdenticalChars;
 	int m_TabIndent;
+
+	DWORD m_NormalTextColor;
+	DWORD m_ErasedTextColor;
+	DWORD m_AddedTextColor;
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CAlegrDiffApp)

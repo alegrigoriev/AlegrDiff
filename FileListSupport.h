@@ -4,6 +4,10 @@
 #pragma once
 #include <afxtempl.h>
 #include "SmallAllocator.h"
+#include <functional>
+#include <vector>
+
+using namespace std;
 
 struct TextPos
 {
@@ -17,36 +21,36 @@ struct TextPos
 	}
 };
 
-inline int operator >(const TextPos & p1, const TextPos & p2)
+inline bool operator >(const TextPos & p1, const TextPos & p2)
 {
 	return (p1.line > p2.line)
 		|| (p1.line == p2.line && p1.pos > p2.pos);
 }
 
-inline int operator >=(const TextPos & p1, const TextPos & p2)
+inline bool operator >=(const TextPos & p1, const TextPos & p2)
 {
 	return (p1.line > p2.line)
 		|| (p1.line == p2.line && p1.pos >= p2.pos);
 }
 
-inline int operator <(const TextPos & p1, const TextPos & p2)
+inline bool operator <(const TextPos & p1, const TextPos & p2)
 {
 	return (p1.line < p2.line)
 		|| (p1.line == p2.line && p1.pos < p2.pos);
 }
 
-inline int operator <=(const TextPos & p1, const TextPos & p2)
+inline bool operator <=(const TextPos & p1, const TextPos & p2)
 {
 	return (p1.line < p2.line)
 		|| (p1.line == p2.line && p1.pos <= p2.pos);
 }
 
-inline int operator ==(const TextPos & p1, const TextPos & p2)
+inline bool operator ==(const TextPos & p1, const TextPos & p2)
 {
 	return p1.line == p2.line && p1.pos == p2.pos;
 }
 
-inline int operator !=(const TextPos & p1, const TextPos & p2)
+inline bool operator !=(const TextPos & p1, const TextPos & p2)
 {
 	return p1.line != p2.line || p1.pos != p2.pos;
 }
@@ -94,6 +98,12 @@ public:
 private:
 	static CSmallAllocator m_Allocator;
 };
+
+bool less<FileDiffSection *>::operator()
+	(FileDiffSection * const & pS1, FileDiffSection * const & pS2) const
+{
+	return pS1->m_Begin < pS2->m_Begin;
+}
 
 class FileLine
 {
@@ -401,7 +411,7 @@ public:
 	bool m_bComparisionResultChanged;
 	//bool m_bUnderComparision;
 	CArray<LinePair *, LinePair *> m_LinePairs;
-	CArray<FileDiffSection *, FileDiffSection *> m_DiffSections;
+	vector<FileDiffSection *> m_DiffSections;
 };
 
 class FileList

@@ -31,7 +31,7 @@ class CMainFrameExT : public Parameters::BaseClass
 public:
 	BOOL ShowWindow(int CmdShow)
 	{
-		if (SW_SHOWDEFAULT == CmdShow
+		if ((SW_SHOWDEFAULT == CmdShow || SW_SHOWNORMAL == CmdShow)
 			&& m_bOpenMaximized)
 		{
 			CmdShow = SW_SHOWMAXIMIZED;

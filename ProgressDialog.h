@@ -1,5 +1,5 @@
 #pragma once
-
+#include "SimpleCriticalSection.h"
 
 // CProgressDialog dialog
 
@@ -15,6 +15,7 @@ public:
 	CStatic m_ItemName;
 	CStatic m_ProgressPercent;
 	CStatic m_ItemProgressPercent;
+	CStatic m_TimeLeft;
 	CProgressCtrl m_Progress;
 	CProgressCtrl m_ItemProgress;
 
@@ -23,6 +24,14 @@ public:
 
 	void KickDialogUpdate();
 	void SetCurrentItemDone(LONGLONG Done);
+	void SetTotalDataSize(LONGLONG size)
+	{
+		m_TotalDataSize = size;
+	}
+	void AddDoneItem(LONGLONG size);
+	void SetNextItem(LPCTSTR Name, LONGLONG size, DWORD ItemOverhead);
+
+	void SignalDialogEnd(UINT Command);
 
 	CWinThread m_Thread;
 	virtual unsigned ThreadProc();
@@ -37,8 +46,9 @@ public:
 	LONGLONG m_CurrentItemSize;
 	LONGLONG m_ProcessedItems;
 	LONGLONG m_CurrentItemDone;
-	DWORD m_DonePerSec;
 
+	LONGLONG m_DonePerSec;
+	LONGLONG m_LastDone;
 	DWORD m_TickCountStarted;
 	DWORD m_LastTickCount;
 
@@ -46,7 +56,7 @@ public:
 	int m_ItemPercentDoneShown;
 
 protected:
-	LRESULT OnKickIdle(WPARAM, LPARAM);
+	virtual LRESULT OnKickIdle(WPARAM, LPARAM);
 
 	static UINT AFX_CDECL _ThreadProc(PVOID arg)
 	{
@@ -57,4 +67,5 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnYes();
+	afx_msg void OnAbort();
 };

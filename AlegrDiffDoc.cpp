@@ -13,6 +13,7 @@
 #include <afxpriv.h>
 #include "AcceptDeclineDlg.h"
 #include "FileDialogWithHistory.h"
+#include "ComparisonProgressDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -30,7 +31,6 @@ BEGIN_MESSAGE_MAP(CAlegrDiffDoc, CAlegrDiffBaseDoc)
 	//{{AFX_MSG_MAP(CAlegrDiffDoc)
 	ON_COMMAND(ID_FILE_SAVE, OnFileSave)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
-	ON_COMMAND(ID_FILE_CANCEL, OnFileCancel)
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_VIEW_REFRESH, OnUpdateViewRefresh)
 END_MESSAGE_MAP()
@@ -46,10 +46,7 @@ void CAlegrDiffBaseDoc::OnUpdateAllViews(CView* pSender,
 CAlegrDiffDoc::CAlegrDiffDoc()
 	: m_nFilePairs(0),
 	m_bRecurseSubdirs(false),
-	m_hThread(NULL),
-	m_hEvent(CreateEvent(NULL, FALSE, FALSE, NULL)),
-	m_bCheckingFingerprint(false),
-	m_bStopThread(TRUE)
+	m_bCheckingFingerprint(false)
 {
 	m_NextPairToRefresh = m_PairList.Head();
 	m_NextPairToCompare = m_PairList.Head();
@@ -57,27 +54,11 @@ CAlegrDiffDoc::CAlegrDiffDoc()
 
 CAlegrDiffDoc::~CAlegrDiffDoc()
 {
-	if (NULL != m_hThread)
-	{
-		m_bStopThread = TRUE;
-		SetEvent(m_hEvent);
-		if (WAIT_TIMEOUT == WaitForSingleObject(m_hThread, 5000))
-		{
-			TerminateThread(m_hThread, -1);
-		}
-		CloseHandle(m_hThread);
-		m_hThread = NULL;
-	}
-	if (NULL != m_hEvent)
-	{
-		CloseHandle(m_hEvent);
-		m_hEvent = NULL;
-	}
 	FreeFilePairList();
 }
 
-bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
-									bool bRecurseSubdirs, bool BinaryComparison)
+bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
+											bool bRecurseSubdirs, bool BinaryComparison)
 {
 	// look through all files in the directory and subdirs
 	CThisApp * pApp = GetApp();
@@ -101,8 +82,6 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 	}
 
 	m_bRecurseSubdirs = bRecurseSubdirs;
-	FileList FileList1;
-	FileList FileList2;
 
 	UpdateAllViews(NULL, OnUpdateRebuildListView);
 	// make full names from the directories
@@ -115,50 +94,64 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 	GetFullPathName(dir2, MAX_PATH, buf, & pFilePart);
 	m_sSecondDir = buf;
 
-	{
-		CString title = m_sFirstDir;
-		title += _T(" - ");
-		title += m_sSecondDir;
-		SetTitle(title);
-	}
-	if (! FileList1.LoadFolder(m_sFirstDir, bRecurseSubdirs,
-								m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern,
-								m_sBinaryFilesPattern))
-	{
-		DWORD error = GetLastError();
-		FreeFilePairList();
-		CString s;
-		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sFirstDir));
-		AfxMessageBox(s);
-		return false;
-	}
-	if (! FileList2.LoadFolder(m_sSecondDir, bRecurseSubdirs,
-								m_sInclusionPattern, m_sExclusionPattern,
-								m_sCFilesPattern, m_sBinaryFilesPattern))
-	{
-		FreeFilePairList();
-		CString s;
-		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sSecondDir));
-		AfxMessageBox(s);
-		return false;
-	}
+	SetTitle(m_sFirstDir + _T(" - ") + m_sSecondDir);
 
-	if (BuildFilePairList(FileList1, FileList2))
-	{
-		UpdateAllViews(NULL, OnUpdateRebuildListView);
-	}
-	((CFrameWnd*)AfxGetMainWnd())->SetMessageText(AFX_IDS_IDLEMESSAGE);
+	CComparisonProgressDlg dlg;
+	dlg.m_pDoc = this;
+
+	m_NextPairToRefresh = m_PairList.Head();
+	m_NextPairToCompare = m_PairList.Head();
+
+	int result = dlg.DoModal();
+
 	return true;
 }
-bool operator ==(FILETIME time1, FILETIME time2)
+
+bool operator ==(const FILETIME & time1, const FILETIME & time2)
 {
 	return time1.dwLowDateTime == time2.dwLowDateTime
 			&& time1.dwHighDateTime == time2.dwHighDateTime;
 }
 
-bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2)
+bool CAlegrDiffDoc::RebuildFilePairList(CProgressDialog * pDlg)
 {
+	FileList FileList1;
+	FileList FileList2;
 
+	if (! FileList1.LoadFolder(m_sFirstDir, m_bRecurseSubdirs,
+								m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern,
+								m_sBinaryFilesPattern))
+	{
+		FreeFilePairList();
+		if (NULL != pDlg)
+		{
+			CString s;
+			s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sFirstDir));
+			pDlg->SetNextItem(s, 0, 0);
+			pDlg->SignalDialogEnd(IDYES);
+		}
+		return false;
+	}
+	if (! FileList2.LoadFolder(m_sSecondDir, m_bRecurseSubdirs,
+								m_sInclusionPattern, m_sExclusionPattern,
+								m_sCFilesPattern, m_sBinaryFilesPattern))
+	{
+		if (NULL != pDlg)
+		{
+			CString s;
+			s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sSecondDir));
+			pDlg->SetNextItem(s, 0, 0);
+			pDlg->SignalDialogEnd(IDYES);
+		}
+		return false;
+	}
+
+	return BuildFilePairList(FileList1, FileList2, pDlg);
+}
+
+bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2,
+									CProgressDialog * pDlg)
+{
 	vector<FileItem *> Files1;
 	vector<FileItem *> Files2;
 
@@ -168,6 +161,9 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 	// we don't call FreeFilePairList, because we could be performing file list refrech
 	FilePair * pInsertBefore = m_PairList.Next();
 	bool NeedUpdateViews = false;
+
+	// amount of data to process
+	ULONGLONG TotalFilesSize = 0;
 
 	for (unsigned idx1 = 0, idx2 = 0; idx1 < Files1.size() || idx2 < Files2.size(); )
 	{
@@ -252,6 +248,20 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			else
 			{
 				pPair->m_ComparisionResult = pPair->ResultUnknown;
+				// add files to the "data to process" size
+				if (pPair->pFirstFile->m_IsBinary)
+				{
+					if (pPair->pFirstFile->GetFileLength()
+						== pPair->pSecondFile->GetFileLength())
+					{
+						TotalFilesSize += 2 * pPair->pFirstFile->GetFileLength();
+					}
+				}
+				else
+				{
+					TotalFilesSize += 2 * (pPair->pFirstFile->GetFileLength()
+											+ pPair->pSecondFile->GetFileLength());
+				}
 			}
 
 			if (0) TRACE(_T("File \"%s\" exists in both \"%s\" and \"%s\"\n"),
@@ -283,7 +293,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 				FilePairChangedArg arg;
 				arg.pPair = tmp;
 
-				GetApp()->UpdateAllViews(UpdateViewsFilePairDeleted, & arg);
+				//GetApp()->UpdateAllViews(UpdateViewsFilePairDeleted, & arg);
 
 				tmp->Dereference();
 				m_nFilePairs--;
@@ -307,11 +317,11 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 					|| pPair->pSecondFile->GetLastWriteTime() ==
 					pInsertBefore->pSecondFile->GetLastWriteTime()))
 			{
-				if (pPair->pFirstFile != NULL
-					&& pPair->pFirstFile->GetLastWriteTime() ==
-					pInsertBefore->pFirstFile->GetLastWriteTime())
-				{
-				}
+				//if (pPair->pFirstFile != NULL
+				//&& pPair->pFirstFile->GetLastWriteTime() ==
+				//pInsertBefore->pFirstFile->GetLastWriteTime())
+				//{
+				//}
 				pPair->Dereference();
 				pPair = NULL;
 				pInsertBefore = pInsertBefore->Next();
@@ -325,7 +335,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 				FilePairChangedArg arg;
 				arg.pPair = tmp;
 
-				GetApp()->UpdateAllViews(UpdateViewsFilePairDeleted, & arg);
+				//GetApp()->UpdateAllViews(UpdateViewsFilePairDeleted, & arg);
 
 				tmp->Dereference();
 				m_nFilePairs--;
@@ -338,6 +348,34 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			NeedUpdateViews = true;
 			pInsertBefore->InsertTail(pPair);
 			m_nFilePairs++;
+
+			if (pPair->ResultUnknown == pPair->m_ComparisionResult)
+			{
+				// add files to the "data to process" size
+				if (pPair->NeedBinaryComparison())
+				{
+					if (pPair->pFirstFile->GetFileLength()
+						== pPair->pSecondFile->GetFileLength())
+					{
+						// todo: check which files need MD5
+						if ( ! pPair->pFirstFile->m_bMd5Calculated)
+						{
+							// overhead is ox2000
+							TotalFilesSize += 0x2000 + pPair->pFirstFile->GetFileLength();
+						}
+						if ( ! pPair->pSecondFile->m_bMd5Calculated)
+						{
+							TotalFilesSize += 0x2000 + pPair->pSecondFile->GetFileLength();
+						}
+					}
+				}
+				else
+				{
+					// text files
+					TotalFilesSize += 0x4000 + 2 * (pPair->pFirstFile->GetFileLength()
+													+ pPair->pSecondFile->GetFileLength());
+				}
+			}
 		}
 	}
 
@@ -359,7 +397,15 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 	// all files are referenced in FilePair list
 	FileList1.Detach();
 	FileList2.Detach();
-	return NeedUpdateViews;
+
+	pDlg->SetTotalDataSize(TotalFilesSize);
+
+	if (NeedUpdateViews)
+	{
+		//UpdateAllViews(NULL);
+	}
+
+	return true;
 }
 
 void CAlegrDiffDoc::FreeFilePairList()
@@ -384,7 +430,7 @@ void CAlegrDiffDoc::OnUpdateAllViews(CView* pSender,
 			FilePair * const pPairToDelete = pArg->pPair;
 			CSimpleCriticalSectionLock lock(m_FileListCs);
 			// find if it is in the list and remove from the list
-			for (FilePair * pPair = m_PairList.First(); m_PairList.NotEnd(pPair) && ! m_bStopThread; pPair = pPair->Next())
+			for (FilePair * pPair = m_PairList.First(); m_PairList.NotEnd(pPair); pPair = pPair->Next())
 			{
 				if (pPairToDelete == pPair)
 				{
@@ -492,10 +538,9 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 		if (pPair->m_LinePairs.empty())
 		{
 			//UpdateAllViews(NULL, 0);    // erase the views
-			BOOL StopOp = FALSE;
 			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(_T("Loading and comparing files..."));
 
-			pPair->m_ComparisionResult = pPair->CompareFiles(StopOp);
+			pPair->m_ComparisionResult = pPair->CompareFiles(NULL);
 		}
 
 		m_TotalLines = pPair->m_LinePairs.size();
@@ -949,32 +994,8 @@ void CAlegrDiffDoc::OnViewRefresh()
 	}
 
 	// rescan the directories again
-	FileList FileList1;
-	FileList FileList2;
-
-	if (! FileList1.LoadFolder(m_sFirstDir, m_bRecurseSubdirs,
-								m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern,
-								m_sBinaryFilesPattern))
-	{
-		DWORD error = GetLastError();
-		FreeFilePairList();
-		CString s;
-		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sFirstDir));
-		AfxMessageBox(s);
-		return;
-	}
-	if (! FileList2.LoadFolder(m_sSecondDir, m_bRecurseSubdirs,
-								m_sInclusionPattern, m_sExclusionPattern,
-								m_sCFilesPattern, m_sBinaryFilesPattern))
-	{
-		FreeFilePairList();
-		CString s;
-		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sSecondDir));
-		AfxMessageBox(s);
-		return;
-	}
-	BuildFilePairList(FileList1, FileList2);
-	RunComparisionThread();
+	CComparisonProgressDlg dlg;
+	dlg.DoModalDelay();
 }
 
 void CFilePairDoc::OnViewRefresh()
@@ -2120,40 +2141,27 @@ void CFilePairDoc::OnFileCopySecondDirFile()
 	}
 }
 
-void CAlegrDiffDoc::RunComparisionThread()
+unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg)
 {
-	unsigned threadid;
-	ResetEvent(m_hEvent);
-	m_bStopThread = false;
-	m_NextPairToRefresh = m_PairList.Head();
-	m_NextPairToCompare = m_PairList.Head();
-
-	m_hThread = (HANDLE) _beginthreadex(NULL, 0x10000,
-										_CompareThreadFunction, this, 0, & threadid);
-
-}
-
-unsigned _stdcall CAlegrDiffDoc::_CompareThreadFunction(PVOID arg)
-{
-	CAlegrDiffDoc * pDoc = static_cast<CAlegrDiffDoc *>(arg);
-
-	return pDoc->CompareThreadFunction();
-}
-
-unsigned CAlegrDiffDoc::CompareThreadFunction()
-{
+	if ( ! RebuildFilePairList(pDlg))
+	{
+		// TODO
+		pDlg->SignalDialogEnd(IDABORT);
+		return -1;
+	}
 	// preload first of binary files in pair (calculate MD5 digest)
+
 	CMd5HashCalculator HashCalc;
 	FilePair * pPair;
-	LONGLONG FileComplete;
-	HWND NotifyWnd = GetApp()->m_pMainWnd->m_hWnd;
 
 	{
 		CSimpleCriticalSectionLock lock(m_FileListCs);
 		m_NextPairToRefresh = m_PairList.First();
 		m_NextPairToCompare = m_PairList.First();
 	}
-	for (pPair = m_PairList.First(); m_PairList.NotEnd(pPair) && ! m_bStopThread; pPair = pPair->Next())
+	for (pPair = m_PairList.First();
+		m_PairList.NotEnd(pPair) && (NULL == pDlg || ! pDlg->m_StopRunThread);
+		pPair = pPair->Next())
 	{
 		TRACE("First pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisionResult);
 		if (pPair->m_ComparisionResult != FilePair::ResultUnknown
@@ -2166,12 +2174,14 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 			m_NextPairToCompare = pPair->Next();
 			continue;
 		}
-		pPair->m_ComparisionResult = FilePair::CalculatingFirstFingerprint;
-		pPair->m_bChanged = true;
-		::PostMessage(NotifyWnd, WM_KICKIDLE, 0, 0);
-		if (pPair->pFirstFile->CalculateHashes( & HashCalc, m_bStopThread,
-												FileComplete, NotifyWnd)
-			|| m_bStopThread)
+//		pPair->m_ComparisionResult = FilePair::CalculatingFirstFingerprint;
+//      pPair->m_bChanged = true;
+		CString s;
+		s.Format(IDS_STRING_CALC_FINGERPRINT, LPCTSTR(pPair->pFirstFile->GetFullName()));
+		pDlg->SetNextItem(s, pPair->pFirstFile->GetFileLength(), 0x2000);
+
+		if (pPair->pFirstFile->CalculateHashes( & HashCalc, pDlg)
+			|| pDlg->m_StopRunThread)
 		{
 			pPair->m_ComparisionResult = FilePair::ResultUnknown;
 		}
@@ -2180,10 +2190,11 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 			pPair->m_ComparisionResult = FilePair::ErrorReadingFirstFile;
 		}
 
+		pDlg->AddDoneItem(pPair->pFirstFile->GetFileLength());
+
 		pPair->m_bChanged = true;
 		m_NextPairToCompare = pPair->Next();
 
-		::PostMessage(NotifyWnd, WM_KICKIDLE, 0, 0);
 	}
 
 	{
@@ -2192,7 +2203,9 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 		m_NextPairToCompare = m_PairList.Next();
 	}
 
-	for (pPair = m_PairList.First(); m_PairList.NotEnd(pPair) && ! m_bStopThread; pPair = pPair->Next())
+	for (pPair = m_PairList.First();
+		m_PairList.NotEnd(pPair) && (NULL == pDlg || ! pDlg->m_StopRunThread);
+		pPair = pPair->Next())
 	{
 		TRACE("Second pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisionResult);
 		if (FilePair::ResultUnknown != pPair->m_ComparisionResult)
@@ -2201,9 +2214,9 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 			continue;
 		}
 
-		pPair->m_ComparisionResult = FilePair::ComparingFiles;
-		::PostMessage(NotifyWnd, WM_KICKIDLE, 0, 0);
-		pPair->m_ComparisionResult = pPair->PreCompareFiles( & HashCalc, m_bStopThread);
+		//pPair->m_ComparisionResult = FilePair::ComparingFiles;
+		//::PostMessage(NotifyWnd, WM_KICKIDLE, 0, 0);
+		pPair->m_ComparisionResult = pPair->PreCompareFiles( & HashCalc, pDlg);
 		pPair->m_bChanged = true;
 		m_NextPairToCompare = pPair->Next();
 
@@ -2214,8 +2227,7 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 		m_NextPairToRefresh = m_PairList.Head();
 		m_NextPairToCompare = m_PairList.Head();
 	}
-	m_bStopThread = true;
-	::PostMessage(NotifyWnd, WM_KICKIDLE, 0, 0);
+//    ::PostMessage(NotifyWnd, WM_KICKIDLE, 0, 0);
 	return 0;
 }
 
@@ -2240,28 +2252,6 @@ void CAlegrDiffDoc::OnIdle()
 		}
 		pPair = m_NextPairToCompare;
 	}
-
-	if (m_PairList.NotEnd(pPair))
-	{
-		((CFrameWnd*)AfxGetMainWnd())->
-			SetMessageText(pPair->GetComparisionResult());
-	}
-
-	if (m_bStopThread
-		&& NULL != m_hThread)
-	{
-		m_bStopThread = true;
-		WaitForSingleObject(m_hThread, 5000);
-		CloseHandle(m_hThread);
-		m_hThread = NULL;
-		UpdateAllViews(NULL);
-		((CFrameWnd*)AfxGetMainWnd())->SetMessageText(AFX_IDS_IDLEMESSAGE);
-	}
-}
-
-void CAlegrDiffDoc::OnFileCancel()
-{
-	m_bStopThread = true;
 
 }
 

@@ -23,6 +23,7 @@ CProgressDialog::CProgressDialog(UINT id, CWnd* pParent /*=NULL*/)
 	, m_ItemPercentDoneShown(-1)
 	, m_TickCountStarted(0)
 	, m_LastTickCount(0)
+	, m_LastDone(0)
 	, m_hThreadEvent(CreateEvent(NULL, FALSE, FALSE, NULL))
 {
 	m_Thread.m_bAutoDelete = false;
@@ -39,16 +40,34 @@ CProgressDialog::~CProgressDialog()
 void CProgressDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_STATIC_FILENAME, m_ItemName);
-	DDX_Control(pDX, IDC_STATIC_PERCENT, m_ProgressPercent);
+
+	if (NULL != GetDlgItem(IDC_STATIC_FILENAME))
+	{
+		DDX_Control(pDX, IDC_STATIC_FILENAME, m_ItemName);
+	}
+	if (NULL != GetDlgItem(IDC_STATIC_PERCENT))
+	{
+		DDX_Control(pDX, IDC_STATIC_PERCENT, m_ProgressPercent);
+	}
+
 	if (NULL != GetDlgItem(IDC_STATIC_PERCENT_ITEM))
 	{
 		DDX_Control(pDX, IDC_STATIC_PERCENT_ITEM, m_ItemProgressPercent);
 	}
-	DDX_Control(pDX, IDC_PROGRESS1, m_Progress);
+
+	if (NULL != GetDlgItem(IDC_PROGRESS1))
+	{
+		DDX_Control(pDX, IDC_PROGRESS1, m_Progress);
+	}
+
 	if (NULL != GetDlgItem(IDC_PROGRESS2))
 	{
 		DDX_Control(pDX, IDC_PROGRESS2, m_ItemProgress);
+	}
+
+	if (NULL != GetDlgItem(IDC_TIME_LEFT))
+	{
+		DDX_Control(pDX, IDC_TIME_LEFT, m_TimeLeft);
 	}
 }
 
@@ -56,6 +75,7 @@ void CProgressDialog::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CProgressDialog, CDialog)
 	ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
 	ON_COMMAND(IDYES, OnYes)
+	ON_COMMAND(IDABORT, OnAbort)
 END_MESSAGE_MAP()
 
 INT_PTR CProgressDialog::DoModalDelay(int Delay)
@@ -132,7 +152,7 @@ BOOL CProgressDialog::OnInitDialog()
 	// if the thread is already completed, or not even started, close the dialog
 	if (WAIT_TIMEOUT != WaitForSingleObject(m_Thread.m_hThread, 0))
 	{
-		PostMessage(WM_COMMAND, IDYES, 0);
+		SignalDialogEnd(IDYES);
 	}
 
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -141,10 +161,7 @@ BOOL CProgressDialog::OnInitDialog()
 
 unsigned CProgressDialog::ThreadProc()
 {
-	if (NULL != m_hWnd)
-	{
-		::PostMessage(m_hWnd, WM_COMMAND, IDYES, 0);
-	}
+	SignalDialogEnd(IDYES);
 	return 0;
 }
 
@@ -166,7 +183,8 @@ LRESULT CProgressDialog::OnKickIdle(WPARAM, LPARAM)
 		m_ItemName.SetWindowText(m_CurrentItemName);
 		m_bItemNameChanged = FALSE;
 	}
-	if (m_TotalDataSize != 0)
+	if (! m_StopRunThread
+		&& m_TotalDataSize != 0)
 	{
 		LONGLONG Done = m_ProcessedItems + m_CurrentItemDone;
 
@@ -181,19 +199,41 @@ LRESULT CProgressDialog::OnKickIdle(WPARAM, LPARAM)
 		}
 		// calculate time left
 		DWORD TicksPassed = GetTickCount() - m_LastTickCount;
-		if (TicksPassed > 5000)
+		if (TicksPassed > 2000 && m_LastTickCount != m_TickCountStarted
+			|| TicksPassed > 5000)
 		{
 			if (m_LastTickCount == m_TickCountStarted)
 			{
-				m_DonePerSec = DWORD(float(Done - m_LastDone) / TicksPassed);
-
+				// just started, don't use smoothing
+				m_DonePerSec = DWORD(double(Done - m_LastDone) * 1000. / TicksPassed);
+				TRACE("Just started, Done per sec = %I64d\n", m_DonePerSec);
 			}
 			else
 			{
-				m_DonePerSec = DWORD(m_DonePerSec * 0.9 + 0.1 *float(Done - m_LastDone) / TicksPassed);
+				m_DonePerSec = DWORD(m_DonePerSec * 0.9 + 100. * double(Done - m_LastDone) / TicksPassed);
+				TRACE("Done per sec = %I64d\n", m_DonePerSec);
 			}
 
-			DWORD TicksLeft = (m_TotalDataSize - Done) * 1000. / m_DonePerSec;
+			if (0 != m_DonePerSec
+				&& NULL != m_TimeLeft.m_hWnd)
+			{
+				CString s;
+				DWORD SecondsLeft;
+				if (Done <= m_TotalDataSize)
+				{
+					SecondsLeft = DWORD((m_TotalDataSize - Done) / m_DonePerSec);
+
+					if (SecondsLeft < 60)
+					{
+						s.Format(IDS_TIME_LEFT_SECONDS, SecondsLeft);
+					}
+					else
+					{
+						s.Format(IDS_TIME_LEFT_MINUTES, SecondsLeft / 60);
+					}
+					m_TimeLeft.SetWindowText(s);
+				}
+			}
 
 			m_LastDone = Done;
 			m_LastTickCount += TicksPassed;
@@ -211,11 +251,99 @@ LRESULT CProgressDialog::OnKickIdle(WPARAM, LPARAM)
 	return 0;
 }
 
+void CProgressDialog::SetCurrentItemDone(LONGLONG Done)
+{
+	{
+		CSimpleCriticalSectionLock lock(m_cs);
+		m_CurrentItemDone = Done;
+	}
+	// kick the update if more than 100 ms passed
+	if (0 != m_TotalDataSize
+		&& int(100. * (m_ProcessedItems + Done) / m_TotalDataSize)
+		!= m_TotalPercentDoneShown)
+	{
+		KickDialogUpdate();
+	}
+}
+
+void CProgressDialog::AddDoneItem(LONGLONG size)
+{
+	CSimpleCriticalSectionLock lock(m_cs);
+	m_ProcessedItems += size;
+}
+
+void CProgressDialog::SetNextItem(LPCTSTR Name, LONGLONG size, DWORD ItemOverhead)
+{
+	{
+		CSimpleCriticalSectionLock lock(m_cs);
+
+		m_CurrentItemName = Name;
+		m_bItemNameChanged = TRUE;
+		m_CurrentItemDone = 0;
+		m_CurrentItemSize = size;
+		m_ProcessedItems += ItemOverhead;
+	}
+	KickDialogUpdate();
+}
+
 void CProgressDialog::OnYes()
 {
-	//CString s;
-	//s.Format(IDS_STRING_FINGERPRINT_CREATED, LPCTSTR(m_sDirectory), LPCTSTR(m_FingerprintFilename));
+	m_StopRunThread = TRUE;
 	OnKickIdle(0, 0);
-	SetDlgItemText(IDCANCEL, _T("OK"));
+
+	if (NULL != m_Progress.m_hWnd)
+	{
+		m_Progress.ShowWindow(SW_HIDE);
+	}
+	if (NULL != m_ItemProgress.m_hWnd)
+	{
+		m_ItemProgress.ShowWindow(SW_HIDE);
+	}
+	if (NULL != m_TimeLeft.m_hWnd)
+	{
+		m_TimeLeft.ShowWindow(SW_HIDE);
+	}
+
+	CWnd * pCancel = GetDlgItem(IDCANCEL);
+	if (pCancel)
+	{
+		pCancel->SetDlgCtrlID(IDOK);
+		pCancel->SetWindowText(_T("OK"));
+	}
+}
+
+void CProgressDialog::OnAbort()
+{
+	m_StopRunThread = TRUE;
+	OnKickIdle(0, 0);
+	if (NULL != m_Progress.m_hWnd)
+	{
+		m_Progress.ShowWindow(SW_HIDE);
+	}
+	if (NULL != m_ItemProgress.m_hWnd)
+	{
+		m_ItemProgress.ShowWindow(SW_HIDE);
+	}
+
+	if (NULL != m_TimeLeft.m_hWnd)
+	{
+		m_TimeLeft.ShowWindow(SW_HIDE);
+	}
+
+	CWnd * pCancel = GetDlgItem(IDCANCEL);
+	if (pCancel)
+	{
+		pCancel->SetDlgCtrlID(IDABORT);
+		pCancel->SetWindowText(_T("OK"));
+	}
+}
+
+void CProgressDialog::SignalDialogEnd(UINT Command)
+{
+	if (NULL == m_hWnd)
+	{
+		return;
+	}
+	::PostMessage(m_hWnd, WM_COMMAND, Command, 0);
 }
 

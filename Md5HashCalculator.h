@@ -10,10 +10,7 @@ public:
 	BYTE * m_HashBuf;
 
 	BOOL CalculateFileMd5Hash(LPCTSTR Filename,
-							BYTE MD5Hash[16],
-							BOOL volatile & bStopOperation,
-							LONGLONG volatile & BytesComplete,
-							HWND volatile const & hNotifyWnd);
+							BYTE MD5Hash[16], class CProgressDialog * pProgressDialog);
 
 	static int const BufferSize = 0x10000;
 

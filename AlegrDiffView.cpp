@@ -462,6 +462,11 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	pListCtrl->DeleteAllItems();
 
 	CHeaderCtrl * pHeader = pListCtrl->GetHeaderCtrl();
+	// Delete all of the items.
+	for (int i = pHeader->GetItemCount(); i > 0; i--)
+	{
+		pListCtrl->DeleteColumn(i - 1);
+	}
 
 	{
 		CFont * pFont = pHeader->GetFont();
@@ -506,12 +511,6 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		}
 
 	}
-	// Delete all of the items.
-	for (int i = pHeader->GetItemCount(); i > 0; i--)
-	{
-		pListCtrl->DeleteColumn(i - 1);
-	}
-
 	CString titles[MaxColumns];
 
 	titles[ColumnName].LoadString(IDS_STRING_COLUMN_FILENAME);

@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "AlegrDiff.h"
 #include "DifferenceProgressDialog.h"
+#include "BinaryCompareDoc.h"
 
 // CDifferenceProgressDialog dialog
 

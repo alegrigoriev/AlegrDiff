@@ -22,7 +22,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	// Name of the currently processed file
-	CStatic m_Filename;
 	BOOL m_bSaveAsUnicode;
 
 	CString m_sDirectory;
@@ -36,7 +35,5 @@ public:
 
 	unsigned ThreadProc();
 
-	virtual BOOL OnInitDialog();
 protected:
-	afx_msg void OnYes();
 };

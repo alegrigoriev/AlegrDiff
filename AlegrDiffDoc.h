@@ -32,11 +32,8 @@ protected: // create from serialization only
 
 // Attributes
 	CSimpleCriticalSection m_FileListCs;
-	static unsigned _stdcall _CompareThreadFunction(PVOID arg);
-	unsigned CompareThreadFunction();
-	HANDLE m_hEvent;
-	HANDLE m_hThread;
-	volatile BOOL m_bStopThread;
+
+	unsigned CompareDirectoriesFunction(class CComparisonProgressDlg * pDlg);
 
 	FilePair * m_NextPairToRefresh;
 	FilePair * volatile m_NextPairToCompare;
@@ -53,18 +50,18 @@ public:
 	bool m_bRecurseSubdirs;
 	bool m_bCheckingFingerprint;
 
-	void RunComparisionThread();
-
 	KListEntry<FilePair> * GetFilePairList()
 	{
 		return & m_PairList;
 	}
 // Operations
 public:
-	bool BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
-							bool bRecurseSubdirs, bool BinaryComparison);
+	bool RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
+								bool bRecurseSubdirs, bool BinaryComparison);
 	// if returns true, call UpdateAllViews
-	bool BuildFilePairList(FileList & FileList1, FileList & FileList2);
+	bool BuildFilePairList(FileList & FileList1, FileList & FileList2,
+							CProgressDialog * pDlg);
+	bool RebuildFilePairList(CProgressDialog * pDlg);
 	void FreeFilePairList();
 
 // Overrides
@@ -91,7 +88,6 @@ protected:
 	//{{AFX_MSG(CAlegrDiffDoc)
 	afx_msg void OnFileSave();
 	afx_msg void OnViewRefresh();
-	afx_msg void OnFileCancel();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 public:

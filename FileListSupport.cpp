@@ -9,6 +9,7 @@
 #include <mmsystem.h>
 #endif
 #include <algorithm>
+#include "ProgressDialog.h"
 
 #undef tolower
 #undef toupper
@@ -3206,35 +3207,57 @@ void FilePair::FreeLinePairData()
 
 }
 
-FilePair::eFileComparisionResult FilePair::PreCompareFiles(CMd5HashCalculator * pMd5Calc, BOOL volatile & bStopOperation)
+FilePair::eFileComparisionResult FilePair::PreCompareFiles(CMd5HashCalculator * pMd5Calc,
+															class CProgressDialog * pProgressDialog)
 {
+	// different comparision for different modes
 	if (NeedBinaryComparison())
 	{
-		return PreCompareBinaryFiles(pMd5Calc, bStopOperation);
+		return PreCompareBinaryFiles(pMd5Calc, pProgressDialog);
 	}
-	if (! LoadFiles())
+
+	if (NULL != pProgressDialog)
 	{
-		return FileUnaccessible;
+		CString s;
+		s.Format(IDS_STRING_COMPARING,
+				LPCTSTR(pFirstFile->GetFullName()),
+				LPCTSTR(pSecondFile->GetFullName()));
+
+		pProgressDialog->SetNextItem(s,
+									2 * (pFirstFile->GetFileLength()
+										+ pSecondFile->GetFileLength()),
+									0x4000);
 	}
-#ifdef _DEBUG
-	DWORD BeginTime = timeGetTime();
-#endif
-	eFileComparisionResult result = ResultUnknown;
-	if (NULL != pFirstFile
-		&& NULL != pSecondFile)
+
+	eFileComparisionResult result = FileUnaccessible;
+
+	if (LoadFiles())
 	{
-		result = PreCompareTextFiles(bStopOperation);
-	}
 #ifdef _DEBUG
-	TRACE("Files compared in %d ms\n", timeGetTime() - BeginTime);
-	BeginTime = timeGetTime();
+		DWORD BeginTime = timeGetTime();
 #endif
-	UnloadFiles();
-	// different comparision for different modes
+		result = ResultUnknown;
+		if (NULL != pFirstFile
+			&& NULL != pSecondFile)
+		{
+			result = PreCompareTextFiles(pProgressDialog);
+		}
+#ifdef _DEBUG
+		TRACE("Files compared in %d ms\n", timeGetTime() - BeginTime);
+		BeginTime = timeGetTime();
+#endif
+		UnloadFiles();
+	}
+	if (NULL != pProgressDialog)
+	{
+		pProgressDialog->AddDoneItem(2 * (pFirstFile->GetFileLength()
+										+ pSecondFile->GetFileLength()));
+	}
+
 	return result;
 }
 
-FilePair::eFileComparisionResult FilePair::CompareFiles(BOOL volatile & bStopOperation)
+FilePair::eFileComparisionResult FilePair::CompareFiles(class CProgressDialog * pProgressDialog)
 {
 	// TODO: different function for binary comparision
 	if (! LoadFiles())
@@ -3245,7 +3268,7 @@ FilePair::eFileComparisionResult FilePair::CompareFiles(BOOL volatile & bStopOpe
 	if (NULL != pFirstFile
 		&& NULL != pSecondFile)
 	{
-		result = CompareTextFiles(bStopOperation);
+		result = CompareTextFiles(pProgressDialog);
 	}
 	else
 	{
@@ -3294,7 +3317,7 @@ FilePair::eFileComparisionResult FilePair::CompareFiles(BOOL volatile & bStopOpe
 	return result;
 }
 
-FilePair::eFileComparisionResult FilePair::PreCompareTextFiles(BOOL volatile & bStopOperation)
+FilePair::eFileComparisionResult FilePair::PreCompareTextFiles(class CProgressDialog * pProgressDialog)
 {
 	int nLine1 = 0;
 	int nLine2 = 0;
@@ -3594,14 +3617,14 @@ FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLin
 	}
 	return pFirstSection;
 }
-FilePair::eFileComparisionResult FilePair::CompareBinaryFiles(BOOL volatile & bStopOperation)
+FilePair::eFileComparisionResult FilePair::CompareBinaryFiles(class CProgressDialog * pProgressDialog)
 {
 	CThisApp * pApp = GetApp();
 	return ResultUnknown;
 }
 
 FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalculator * pMd5Calc,
-																BOOL volatile & bStopOperation)
+																class CProgressDialog * pProgressDialog)
 {
 	CThisApp * pApp = GetApp();
 	// comparison can be done through CRC, or direct comparison
@@ -3625,12 +3648,12 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 		if ( ! pFirstFile->m_bMd5Calculated)
 		{
 			m_ComparisionResult = CalculatingFirstFingerprint;
-			pFirstFile->CalculateHashes(pMd5Calc, bStopOperation, FileDone, hWnd);
+			pFirstFile->CalculateHashes(pMd5Calc, pProgressDialog);
 		}
 		if ( ! pSecondFile->m_bMd5Calculated)
 		{
 			m_ComparisionResult = CalculatingSecondFingerprint;
-			pSecondFile->CalculateHashes(pMd5Calc, bStopOperation, FileDone, hWnd);
+			pSecondFile->CalculateHashes(pMd5Calc, pProgressDialog);
 		}
 	}
 	// if files have MD5 calculated, use it
@@ -3648,7 +3671,7 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 	return m_ComparisionResult = ResultUnknown;
 }
 
-FilePair::eFileComparisionResult FilePair::CompareTextFiles(BOOL volatile & bStopOperation)
+FilePair::eFileComparisionResult FilePair::CompareTextFiles(CProgressDialog * pProgressDialog)
 {
 	// find similar lines
 	CThisApp * pApp = GetApp();
@@ -4577,12 +4600,9 @@ int LinePair::DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces)
 }
 
 BOOL FileItem::CalculateHashes(CMd5HashCalculator * pMd5Calc,
-								BOOL volatile & bStopOperation,
-								LONGLONG volatile & BytesComplete,
-								HWND volatile const & hNotifyWnd)
+								class CProgressDialog * pProgressDialog)
 {
-	BOOL res = pMd5Calc->CalculateFileMd5Hash(GetFullName(), m_Md5,
-											bStopOperation, BytesComplete, hNotifyWnd);
+	BOOL res = pMd5Calc->CalculateFileMd5Hash(GetFullName(), m_Md5, pProgressDialog);
 	if (res)
 	{
 		m_bMd5Calculated = true;

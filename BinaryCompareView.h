@@ -150,6 +150,8 @@ public:
 	afx_msg void OnUpdateViewSideBySide(CCmdUI *pCmdUI);
 protected:
 	virtual void OnActivateView(BOOL bActivate, CView* pActivateView, CView* pDeactiveView);
+public:
+	afx_msg void OnEditGoto();
 };
 
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp

@@ -1108,6 +1108,18 @@ BEGIN
                     WS_DISABLED | WS_TABSTOP,126,31,12,8
 END
 
+IDD_DIALOG_GOTO DIALOGEX 0, 0, 163, 76
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Go To File Offset"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "File Offset:",IDC_STATIC,13,26,53,8
+    EDITTEXT        IDC_EDIT1,70,24,75,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,27,55,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,86,55,50,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1406,6 +1418,14 @@ BEGIN
     IDD_DIALOG_WITH_HISTORY_TEMPLATE_V5, DIALOG
     BEGIN
         RIGHTMARGIN, 368
+    END
+
+    IDD_DIALOG_GOTO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 156
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 69
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -7,110 +7,52 @@
 #endif // _MSC_VER > 1000
 #include "SimpleCriticalSection.h"
 
+#pragma warning(disable:4355)
+
+template<class T> struct ListItem;
+
 template<class T>
-struct KListEntry
+struct ListEntry
 {
-	KListEntry<T> * pPrev;
-	KListEntry<T> * pNext;
-	// no destructor necessary
-	void Init() volatile
+protected:
+	typedef ListEntry<T> List;
+	typedef ListItem<T> Item;
+
+public:
+	List * pPrev;
+	List * pNext;
+	ListEntry()
 	{
-		pPrev = const_cast<KListEntry<T> *>(this);
-		pNext = pPrev;
-	}
-	KListEntry()
-	{
-		Init();
-	}
-	~KListEntry()
-	{
-		ASSERT(IsEmpty());
-	}
-	void InsertHead(T * entry)
-	{
-		__assume(NULL != entry);
-		KListEntry<T> * tmp = static_cast<KListEntry<T> *>(entry);
-		ASSERT(tmp->pNext == tmp);
-		ASSERT(tmp->pPrev == tmp);
-		tmp->pPrev = this;
-		tmp->pNext = pNext;
-		pNext->pPrev = tmp;
-		pNext = tmp;
-	}
-	void InsertHead(T volatile * entry) volatile
-	{
-		__assume(NULL != entry);
-		KListEntry<T> volatile * tmp = static_cast<KListEntry<T> volatile *>(entry);
-		ASSERT(tmp->pNext == tmp);
-		ASSERT(tmp->pPrev == tmp);
-		tmp->pPrev = const_cast<KListEntry<T> *>(this);
-		tmp->pNext = pNext;
-		pNext->pPrev = const_cast<KListEntry<T> *>(tmp);
-		pNext = const_cast<KListEntry<T> *>(tmp);
-	}
-	void InsertTail(T * entry)
-	{
-		__assume(NULL != entry);
-		KListEntry<T> * tmp = static_cast<KListEntry<T> *>(entry);
-		ASSERT(tmp->pNext == tmp);
-		ASSERT(tmp->pPrev == tmp);
-		tmp->pNext = this;
-		tmp->pPrev = pPrev;
-		pPrev->pNext = tmp;
-		pPrev = tmp;
-	}
-	void InsertTail(T volatile * entry) volatile
-	{
-		__assume(NULL != entry);
-		KListEntry<T> volatile * tmp = static_cast<KListEntry<T> volatile *>(entry);
-		ASSERT(tmp->pNext == tmp);
-		ASSERT(tmp->pPrev == tmp);
-		tmp->pNext = const_cast<KListEntry<T> *>(this);
-		tmp->pPrev = pPrev;
-		pPrev->pNext = const_cast<KListEntry<T> *>(tmp);
-		pPrev = const_cast<KListEntry<T> *>(tmp);
+		pPrev = this;
+		pNext = this;
 	}
 
-	bool IsEmpty() const volatile
+	~ListEntry()
 	{
-		ASSERT((pNext == this) == (pPrev == this));
-		return pNext == this;
+		// make sure the item is not in any list
+		ASSERT(pPrev == this && pNext == this);
 	}
-	T * RemoveHead()
+	void Init()
 	{
-		KListEntry<T> * tmp = pNext;
-		tmp->pNext->pPrev = this;
-		pNext = tmp->pNext;
-		tmp->Init();
-		__assume(NULL != tmp);
-		return static_cast<T *>(tmp);
+		pPrev = this;
+		pNext = this;
 	}
-	T * RemoveHead() volatile
+
+private:
+	// protection against assignment:
+	ListEntry(ListEntry<T> const &);
+	ListEntry<T> & operator =(ListEntry<T> const &);
+};
+
+template<class T>
+struct ListItem : ListEntry<T>
+{
+	//typedef ListItem<T> Item;
+	T * Next() const volatile { return static_cast<T *>(pNext); }
+	T * Prev() const volatile { return static_cast<T *>(pPrev); }
+	bool IsAlone() const volatile
 	{
-		KListEntry<T> * tmp = pNext;
-		tmp->pNext->pPrev = const_cast<KListEntry<T> *>(this);
-		pNext = tmp->pNext;
-		tmp->Init();
-		__assume(NULL != tmp);
-		return static_cast<T *>(tmp);
-	}
-	T * RemoveTail()
-	{
-		KListEntry<T> * tmp = pPrev;
-		tmp->pPrev->pNext = this;
-		pPrev = tmp->pPrev;
-		tmp->Init();
-		__assume(NULL != tmp);
-		return static_cast<T *>(tmp);
-	}
-	T * RemoveTail() volatile
-	{
-		KListEntry<T> * tmp = pPrev;
-		tmp->pPrev->pNext = const_cast<KListEntry<T> *>(this);
-		pPrev = tmp->pPrev;
-		tmp->Init();
-		__assume(NULL != tmp);
-		return static_cast<T *>(tmp);
+		return pPrev == static_cast<List const volatile *>(this);
 	}
 	void RemoveFromList()
 	{
@@ -118,320 +60,290 @@ struct KListEntry
 		pPrev->pNext = pNext;
 		Init();
 	}
-	void RemoveFromList() volatile
-	{
-		pNext->pPrev = pPrev;
-		pPrev->pNext = pNext;
-		Init();
-	}
-	static void RemoveEntry(T * entry)
+	void InsertNextItem(Item * entry)
 	{
 		__assume(NULL != entry);
-		KListEntry<T> * tmp = static_cast<KListEntry<T> *>(entry);
-		tmp->pNext->pPrev = tmp->pPrev;
-		tmp->pPrev->pNext = tmp->pNext;
-		tmp->Init();
+		// make sure the item is not in any list
+		ASSERT(entry->IsAlone());
+
+		pNext->pPrev = entry;
+		entry->pNext = pNext;
+		entry->pPrev = this;
+		pNext = entry;
 	}
 
-	static void RemoveEntry(T volatile * entry)
+	void InsertPrevItem(Item * entry)
 	{
 		__assume(NULL != entry);
-		KListEntry<T> volatile * tmp = static_cast<KListEntry<T> volatile *>(entry);
-		tmp->pNext->pPrev = tmp->pPrev;
-		tmp->pPrev->pNext = tmp->pNext;
-		tmp->Init();
+		// make sure the item is not in any list
+		ASSERT(entry->IsAlone());
+
+		pPrev->pNext = entry;
+		entry->pPrev = pPrev;
+		entry->pNext = this;
+		pPrev = entry;
+	}
+};
+
+template<class T>
+struct ListHead : ListEntry<T>
+{
+	//typename Item;
+	typedef ListHead<T> Head;
+
+	T * First() const volatile { return static_cast<T *>(pNext); }
+	T * Last() const volatile { return static_cast<T *>(pPrev); }
+	Item * FirstItem() const volatile { return static_cast<Item *>(pNext); }
+	Item * LastItem() const volatile { return static_cast<Item *>(pPrev); }
+	static T * Next(const volatile Item * pItem) { return pItem->Next(); }
+	static T * Prev(const volatile Item * pItem) { return pItem->Prev(); }
+
+	bool NotEnd(Item const volatile * entry) const volatile
+	{
+		return this != static_cast<List const volatile *>(entry);
+	}
+	bool IsEnd(Item const volatile * entry) const volatile
+	{
+		return this == static_cast<List const volatile *>(entry);
 	}
 
+	bool IsEmpty() const volatile
+	{
+		return pNext == static_cast<List const volatile *>(this);
+	}
+
+	static void RemoveEntry(Item * entry)
+	{
+		__assume(NULL != entry);
+		entry->RemoveFromList();
+	}
+
+	T * RemoveHead()
+	{
+		if (IsEmpty())
+		{
+			return NULL;
+		}
+		Item * tmp = FirstItem();
+		tmp->RemoveFromList();
+
+		return static_cast<T *> (tmp);
+	}
+	T * RemoveTail()
+	{
+		if (IsEmpty())
+		{
+			return NULL;
+		}
+		Item * tmp = LastItem();
+		tmp->RemoveFromList();
+
+		return static_cast<T *>(tmp);
+	}
+
+	void InsertHead(Item * entry)
+	{
+		// make sure the item is not in any list
+		ASSERT(entry->IsAlone());
+
+		pNext->pPrev = entry;
+		entry->pNext = pNext;
+		entry->pPrev = this;
+		pNext = entry;
+	}
+
+	void InsertTail(Item * entry)
+	{
+		// make sure the item is not in any list
+		ASSERT(entry->IsAlone());
+
+		pPrev->pNext = entry;
+		entry->pPrev = pPrev;
+		entry->pNext = this;
+		pPrev = entry;
+	}
 	// move all the list to DstList. The list becomes empty
-	void RemoveAll(KListEntry<T> & DstList)
+	void RemoveAll(Head & DstList)
 	{
+		ASSERT(DstList.IsEmpty());
+
 		if ( ! IsEmpty())
 		{
-			KListEntry<T> * pListEntry = pNext;
-			RemoveFromList();
-			Init();
-			pListEntry->InsertTailList( & DstList);
+			DstList.pNext = pNext;
+			DstList.pPrev = pPrev;
+			pNext->pPrev = & DstList;
+			pPrev->pNext = & DstList;
+			pNext = this;
+			pPrev = this;
 		}
-		else
+	}
+
+	template <typename K> T * FindByKey(const K & key)
+	{
+		// operator == (const T&, const K&) must exist
+		for (T * p = First(); NotEnd(p); p = Next(p))
 		{
-			DstList.Init();
+			if (*p == key)
+			{
+				return p;
+			}
 		}
+		return NULL;
 	}
 
-	void RemoveAll(KListEntry<T> & DstList) volatile
-	{
-		if ( ! IsEmpty())
-		{
-			KListEntry<T> * pListEntry = pNext;
-			RemoveFromList();
-			Init();
-			pListEntry->InsertTailList( & DstList);
-		}
-		else
-		{
-			DstList.Init();
-		}
-	}
-
-	T * Next() const volatile
-	{
-		__assume(NULL != pNext);
-		return static_cast<T *>(pNext);
-	}
-	T * Prev() const volatile
-	{
-		__assume(NULL != pPrev);
-		return static_cast<T *>(pPrev);
-	}
-
-	// same as Next, Prev
-	T * First() const volatile
-	{
-		__assume(NULL != pNext);
-		return static_cast<T *>(pNext);
-	}
-
-	T * Last() const volatile
-	{
-		__assume(NULL != pPrev);
-		return static_cast<T *>(pPrev);
-	}
-
-	T * Head()
-	{
-		return static_cast<T *>(this);
-	}
-	T const * Head() const
-	{
-		return static_cast<T const *>(this);
-	}
-	T volatile * Head() volatile
-	{
-		return static_cast<T volatile *>(this);
-	}
-	T const volatile * Head() const volatile
-	{
-		return static_cast<T const volatile *>(this);
-	}
-
-	bool NotEnd(KListEntry<T> const volatile * entry) const volatile
-	{
-		return this != entry;
-	}
-	bool IsEnd(KListEntry<T> const volatile * entry) const volatile
-	{
-		return this == entry;
-	}
 	// call a function with any return type
-	template <class F> void CallForEach(F function) const volatile
+	template <typename F> void CallForEach(F function)
 	{
-		for (T * p = Next(); p != this; p = p->KListEntry<T>::Next())
+		for (T * p = First(); NotEnd(p); )
 		{
+			// the item can be removed from the list during F
+			T * next = Next(p);
 			(p->*function)();
+			p = next;
 		}
 	}
 	// call a function with any return and argument type
-	template <class F, class A> void CallForEach(F function, A a) const volatile
+	template <typename F, typename A> void CallForEach(F function, A a)
 	{
-		for (T * p = Next(); p != this; p = p->KListEntry<T>::Next())
+		for (T * p = First(); NotEnd(p); )
 		{
+			// the item can be removed from the list during F
+			// CANNOT use 'List' typedef with 'p', because of possible ambiguity
+			T * next = Next(p);
 			(p->*function)(a);
+			p = next;
 		}
 	}
-	template <class F> BOOL CallForEachWhileNotSuccess(F function) const volatile
+	template <typename F> bool CallForEachWhileTrue(F function)
 	{
-		for (T * p = Next(); p != this; p = p->KListEntry<T>::Next())
+		for (T * p = First(); NotEnd(p); )
 		{
-			BOOL status = (p->*function)();
-			if (status)
-			{
-				return status;
-			}
-		}
-		return FALSE;
-	}
-	template <class F, class A> BOOL CallForEachWhileNotSuccess(F function, A a) const volatile
-	{
-		for (T * p = Next(); p != this; p = p->KListEntry<T>::Next())
-		{
-			BOOL status = (p->*function)(a);
-			if (status)
-			{
-				return status;
-			}
-		}
-		return FALSE;
-	}
-	template <class F> BOOL CallForEachWhileSuccess(F function) const volatile
-	{
-		for (T * p = Next(); p != this; p = p->KListEntry<T>::Next())
-		{
-			BOOL status = (p->*function)();
-			if ( ! status)
-			{
-				return FALSE;
-			}
-		}
-		return TRUE;
-	}
-	template <class F, class A> BOOL CallForEachWhileSuccess(F function, A a) const volatile
-	{
-		for (T * p = Next(); p != this; p = p->KListEntry<T>::Next())
-		{
-			BOOL status = (p->*function)(a);
-			if ( ! status)
-			{
-				return FALSE;
-			}
-		}
-		return TRUE;
-	}
-	template <class F> bool CallForEachWhileTrue(F function) const volatile
-	{
-		for (T * p = Next(); p != this; p = p->KListEntry<T>::Next())
-		{
+			// the item can be removed from the list during F
+			// CANNOT use 'List' typedef with 'p', because of possible ambiguity
+			T * next = Next(p);
 			if ( ! (p->*function)())
 			{
 				return false;
 			}
+			p = next;
 		}
 		return true;
 	}
-	template <class F, class A> bool CallForEachWhileTrue(F function, A a) const volatile
+	template <typename F, typename A> bool CallForEachWhileTrue(F function, A a)
 	{
-		for (T * p = Next(); p != this; p = p->KListEntry<T>::Next())
+		for (T * p = First(); NotEnd(p); )
 		{
+			// the item can be removed from the list during F
+			T * next = Next(p);
 			if ( ! (p->*function)(a))
 			{
 				return false;
 			}
+			p = next;
 		}
 		return true;
 	}
-	template <class F> bool CallForEachWhileNotTrue(F function) const volatile
+	template <typename F> bool CallForEachWhileNotTrue(F function)
 	{
-		for (T * p = Next(); p != this; p = p->KListEntry<T>::Next())
+		for (T * p = First(); NotEnd(p); )
 		{
+			// the item can be removed from the list during F
+			T * next = Next(p);
 			if ((p->*function)())
 			{
 				return true;
 			}
+			p = next;
 		}
 		return false;
 	}
-	template <class F, class A> bool CallForEachWhileNotTrue(F function, A a) const volatile
+	template <typename F, typename A> bool CallForEachWhileNotTrue(F function, A a)
 	{
-		for (T * p = Next(); p != this; p = p->KListEntry<T>::Next())
+		for (T * p = First(); NotEnd(p); )
 		{
+			// the item can be removed from the list during F
+			T * next = Next(p);
 			if ((p->*function)(a))
 			{
 				return true;
 			}
+			p = next;
 		}
 		return false;
 	}
 
 };
 
-template<class T >
-struct LockedListHead: public KListEntry<T>, public CSimpleCriticalSection
+// the list may use dispatch (thread) lock or more strong interrupt lock
+// the lock could also be a mutex
+template<class T, class L = CSimpleCriticalSection>
+struct LockedListHead : ListHead<T>, public L
 {
-	void InsertHead(T * entry)
+	// no destructor necessary
+	void InsertHead(Item * entry)
 	{
 		Lock();
-		KListEntry::InsertHead(entry);
+		Head::InsertHead(entry);
 		Unlock();
 	}
-	void InsertHead(T * entry) volatile
+	void InsertTail(Item * entry)
 	{
 		Lock();
-		KListEntry<T>::InsertHead(entry);
+		Head::InsertTail(entry);
 		Unlock();
-	}
-	void InsertHeadUnsafe(T * entry)
-	{
-		KListEntry<T>::InsertHead(entry);
-	}
-	void InsertHeadUnsafe(T * entry) volatile
-	{
-		KListEntry<T>::InsertHead(entry);
-	}
-	void InsertTail(T * entry)
-	{
-		Lock();
-		KListEntry<T>::InsertTail(entry);
-		Unlock();
-	}
-	void InsertTail(T * entry) volatile
-	{
-		Lock();
-		KListEntry<T>::InsertTail(entry);
-		Unlock();
-	}
-	void InsertTailUnsafe(T * entry)
-	{
-		KListEntry<T>::InsertTail(entry);
-	}
-	void InsertTailUnsafe(T * entry) volatile
-	{
-		KListEntry<T>::InsertTail(entry);
 	}
 	T * RemoveHead()
 	{
-		CSimpleCriticalSectionLock lock(*this);
-		if (IsEmpty())
-		{
-			return NULL;
-		}
-		return KListEntry<T>::RemoveHead();
+		Lock();
+		T * tmp = Head::RemoveHead();
+		Unlock();
+		return tmp;
 	}
-	T * RemoveHead() volatile
+
+	T * RemoveTail()
 	{
-		CSimpleCriticalSectionLock lock(*this);
-		if (IsEmpty())
-		{
-			return NULL;
-		}
-		return KListEntry<T>::RemoveHead();
+		Lock();
+		T * tmp = Head::RemoveTail();
+		Unlock();
+		return tmp;
 	}
+
+	void InsertHeadUnsafe(Item * entry)
+	{
+		Head::InsertHead(entry);
+	}
+	void InsertTailUnsafe(Item * entry)
+	{
+		Head::InsertTail(entry);
+	}
+
 	T * RemoveHeadUnsafe()
 	{
-		return KListEntry<T>::RemoveHead();
+		return Head::RemoveHead();
 	}
-	T * RemoveHeadUnsafe() volatile
+	T * RemoveTailUnsafe()
 	{
-		return KListEntry<T>::RemoveHead();
+		return Head::RemoveTail();
 	}
-	void RemoveEntry(T * Entry)
-	{
-		Lock();
-		KListEntry<T>::RemoveEntry(Entry);
-		Unlock();
-	}
-	void RemoveEntry(T * Entry) volatile
+	void RemoveEntry(Item * entry)
 	{
 		Lock();
-		KListEntry<T>::RemoveEntry(Entry);
+		Head::RemoveEntry(entry);
 		Unlock();
 	}
-	static void RemoveEntryUnsafe(T * entry)
+	void RemoveEntryUnsafe(Item * entry)
 	{
-		KListEntry<T>::RemoveEntry(Entry);
+		Head::RemoveEntry(entry);
 	}
 
 	// move all the list to DstList. The list becomes empty
-	void RemoveAll(KListEntry<T> & DstList)
+	void RemoveAll(Head & DstList)
 	{
 		Lock();
-		KListEntry<T>::RemoveAll(DstList);
+		Head::RemoveAll(DstList);
 		Unlock();
 	}
-	void RemoveAll(KListEntry<T> & DstList) volatile
-	{
-		Lock();
-		KListEntry<T>::RemoveAll(DstList);
-		Unlock();
-	}
+
 };
 
 #endif // AFX_KLISTENTRY_H__B7AA7401_4036_11D4_9ADD_00C0F0583C4B__INCLUDED_

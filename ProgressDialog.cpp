@@ -268,12 +268,19 @@ LRESULT CProgressDialog::OnKickIdle(WPARAM, LPARAM)
 			m_LastTickCount += TicksPassed;
 		}
 	}
-	if (m_ItemProgress.m_hWnd != NULL && m_CurrentItemSize != 0)
+
+	int Percent = 0;
+
+	if (m_CurrentItemSize != 0)
 	{
-		int Percent = int(100. * m_CurrentItemDone / m_CurrentItemSize);
-		if (Percent != m_ItemPercentDoneShown)
+		Percent = int(100. * m_CurrentItemDone / m_CurrentItemSize);
+	}
+
+	if (Percent != m_ItemPercentDoneShown)
+	{
+		m_ItemPercentDoneShown = Percent;
+		if (m_ItemProgress.m_hWnd != NULL)
 		{
-			m_ItemPercentDoneShown = Percent;
 			m_ItemProgress.SetPos(Percent);
 		}
 	}
@@ -286,10 +293,13 @@ void CProgressDialog::SetCurrentItemDone(LONGLONG Done)
 		CSimpleCriticalSectionLock lock(m_cs);
 		m_CurrentItemDone = Done;
 	}
-	// kick the update if more than 100 ms passed
-	if (0 != m_TotalDataSize
-		&& int(100. * (m_ProcessedItems + Done) / m_TotalDataSize)
-		!= m_TotalPercentDoneShown)
+	// kick the update if total or item percent changed
+	if ((0 != m_TotalDataSize
+			&& int(100. * (m_ProcessedItems + Done) / m_TotalDataSize)
+			!= m_TotalPercentDoneShown)
+		|| (m_ItemProgress.m_hWnd != NULL
+			&& m_CurrentItemSize != 0
+			&& m_ItemPercentDoneShown != int(100. * m_CurrentItemDone / m_CurrentItemSize)))
 	{
 		KickDialogUpdate();
 	}

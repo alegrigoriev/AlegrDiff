@@ -383,7 +383,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 		Section.Attr = Section.Identical;
 		Section.pNext = NULL;
 		StringSection * pSection = NULL;
-		if (nLine >= pFilePair->m_LinePairs.GetSize())
+		if (nLine >= (int)pFilePair->m_LinePairs.size())
 		{
 			break;
 		}
@@ -1557,7 +1557,7 @@ void CDiffFileView::OnEditGotoline()
 	}
 
 	dlg.m_CombinedFileLine = pDoc->m_CaretPos.line;
-	dlg.m_CombinedFileNumLines = pFilePair->m_LinePairs.GetSize();
+	dlg.m_CombinedFileNumLines = pFilePair->m_LinePairs.size();
 	dlg.m_GoToLineFileSelection = pApp->m_GoToLineFileSelection;
 
 	if (NULL == pFilePair->pFirstFile
@@ -1640,7 +1640,7 @@ void CDiffFileView::OnEditGotoline()
 		case 0:
 			// find corresponding line pair
 		{
-			for (int i = dlg.m_FirstFileLine; i < pFilePair->m_LinePairs.GetSize(); i++)
+			for (unsigned i = dlg.m_FirstFileLine; i < pFilePair->m_LinePairs.size(); i++)
 			{
 				LinePair * pPair = pFilePair->m_LinePairs[i];
 				if (pPair->pFirstLine != NULL
@@ -1655,7 +1655,7 @@ void CDiffFileView::OnEditGotoline()
 		case 1:
 			// find corresponding line pair
 		{
-			for (int i = dlg.m_SecondFileLine; i < pFilePair->m_LinePairs.GetSize(); i++)
+			for (unsigned i = dlg.m_SecondFileLine; i < pFilePair->m_LinePairs.size(); i++)
 			{
 				LinePair * pPair = pFilePair->m_LinePairs[i];
 				if (pPair->pSecondLine != NULL

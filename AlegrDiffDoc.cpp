@@ -86,7 +86,8 @@ CAlegrDiffDoc::~CAlegrDiffDoc()
 	FreeFilePairList();
 }
 
-bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseSubdirs)
+bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
+									bool bRecurseSubdirs, bool BinaryComparison)
 {
 	// look through all files in the directory and subdirs
 
@@ -106,7 +107,8 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 	m_sSecondDir = buf;
 
 	if (! FileList1.LoadFolder(m_sFirstDir, bRecurseSubdirs,
-								m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern))
+								m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern,
+								m_sBinaryFilesPattern))
 	{
 		DWORD error = GetLastError();
 		FreeFilePairList();
@@ -116,7 +118,8 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 		return false;
 	}
 	if (! FileList2.LoadFolder(m_sSecondDir, bRecurseSubdirs,
-								m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern))
+								m_sInclusionPattern, m_sExclusionPattern,
+								m_sCFilesPattern, m_sBinaryFilesPattern))
 	{
 		FreeFilePairList();
 		CString s;
@@ -198,17 +201,15 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 			idx1++;
 			pPair->pSecondFile = Files2[idx2];
 			idx2++;
-#if 0
-			CString s;
-			s.Format(_T("Comparing %s - %s"),
-					LPCTSTR(pPair->pFirstFile->GetFullName()),
-					LPCTSTR(pPair->pSecondFile->GetFullName()));
-			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(s);
 
-			pPair->m_ComparisionResult = pPair->PreCompareFiles();
-#else
+			if (BinaryComparison)
+			{
+				pPair->pFirstFile->m_IsBinary = true;
+				pPair->pSecondFile->m_IsBinary = true;
+			}
+
 			pPair->m_ComparisionResult = pPair->ResultUnknown;
-#endif
+
 			if (0) TRACE("File \"%s\" exists in both \"%s\" and \"%s\"\n",
 						pPair->pFirstFile->GetName(),
 						FileList1.m_BaseDir + pPair->pFirstFile->GetSubdir(),
@@ -308,14 +309,15 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 			SetTitle("");
 		}
 
-		if (0 == pPair->m_LinePairs.GetSize())
+		if (pPair->m_LinePairs.empty())
 		{
 			//UpdateAllViews(NULL, 0);    // erase the views
+			BOOL StopOp = FALSE;
 			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(_T("Loading and comparing files..."));
-			pPair->m_ComparisionResult = pPair->CompareFiles();
+			pPair->m_ComparisionResult = pPair->CompareFiles(StopOp);
 		}
 
-		m_TotalLines = pPair->m_LinePairs.GetSize();
+		m_TotalLines = pPair->m_LinePairs.size();
 		_tcsncpy(m_ComparisonResult, pPair->GetComparisionResult(),
 				sizeof m_ComparisonResult / sizeof m_ComparisonResult[0]);
 		m_ComparisonResult[sizeof m_ComparisonResult / sizeof m_ComparisonResult[0]] = 0;
@@ -814,7 +816,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 	if (NULL == m_pFilePair
 		|| NULL == pStrToFind
 		|| 0 == pStrToFind[0]
-		|| 0 == m_pFilePair->m_LinePairs.GetSize())
+		|| m_pFilePair->m_LinePairs.empty())
 	{
 		return false;
 	}
@@ -823,7 +825,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 	TextPos LineCaretPos = m_CaretPos; //DisplayPosToLinePos(m_CaretPos);
 
 	int nSearchPos;
-	int nSearchLine;
+	unsigned nSearchLine;
 	if (bBackward)
 	{
 		if (LineCaretPos > LineSelectionAnchor)
@@ -841,7 +843,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 			nSearchPos = LineCaretPos.pos;
 			nSearchLine = LineCaretPos.line;
 		}
-		if (nSearchLine >= m_pFilePair->m_LinePairs.GetSize())
+		if (nSearchLine >= m_pFilePair->m_LinePairs.size())
 		{
 			nSearchLine--;
 			nSearchPos = INT_MAX;
@@ -864,7 +866,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 			nSearchPos = LineCaretPos.pos;
 			nSearchLine = LineCaretPos.line;
 		}
-		if (nSearchLine >= m_pFilePair->m_LinePairs.GetSize())
+		if (nSearchLine >= m_pFilePair->m_LinePairs.size())
 		{
 			nSearchLine = 0;
 			nSearchPos = 0;
@@ -914,7 +916,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 			}
 			nSearchLine++;
 			nSearchPos = 0;
-			if (nSearchLine >= m_pFilePair->m_LinePairs.GetSize())
+			if (nSearchLine >= m_pFilePair->m_LinePairs.size())
 			{
 				// wraparound
 				nSearchLine = 0;
@@ -959,7 +961,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 			nSearchPos = INT_MAX;
 			if (nSearchLine == 0)
 			{
-				nSearchLine = m_pFilePair->m_LinePairs.GetSize();
+				nSearchLine = m_pFilePair->m_LinePairs.size();
 			}
 			nSearchLine--;
 		}
@@ -970,7 +972,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 
 bool CFilePairDoc::GetWordOnPos(TextPos OnPos, TextPos &Start, TextPos &End)
 {
-	if (OnPos.line >= m_pFilePair->m_LinePairs.GetSize())
+	if (OnPos.line >= (int)m_pFilePair->m_LinePairs.size())
 	{
 		return false;
 	}
@@ -1173,7 +1175,7 @@ bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvok
 LPCTSTR CFilePairDoc::GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int *pStrLen)
 {
 	if (NULL == m_pFilePair
-		|| nLineNum >= m_pFilePair->m_LinePairs.GetSize())
+		|| nLineNum >= (int)m_pFilePair->m_LinePairs.size())
 	{
 		buf[0] = 0;
 		* pStrLen = 0;
@@ -1663,7 +1665,8 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags)
 	}
 	fclose(file);
 #else
-	CFilePairDoc * pDoc = GetApp()->OpenFilePairView(pNewFilePair);
+	CFilePairDoc * pDoc = dynamic_cast<CFilePairDoc *>
+						(GetApp()->OpenFilePairView(pNewFilePair));
 	if (NULL != pDoc)
 	{
 		pDoc->m_CopyDisabled = true;
@@ -1723,7 +1726,7 @@ TextPos CFilePairDoc::DisplayPosToLinePos(TextPos position)
 LinePair * CFilePairDoc::GetLinePair(int line) const
 {
 	if (NULL == m_pFilePair
-		|| line >= m_pFilePair->m_LinePairs.GetSize())
+		|| line >= (int)m_pFilePair->m_LinePairs.size())
 	{
 		return NULL;
 	}
@@ -1811,7 +1814,7 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 			continue;
 		}
 		//m_FileListCs.Unlock();
-		pPair->m_ComparisionResult = pPair->PreCompareFiles();
+		pPair->m_ComparisionResult = pPair->PreCompareFiles(m_bStopThread);
 		pPair->m_bComparisionResultChanged = true;
 		m_NextPairToCompare = pPair->pNext;
 

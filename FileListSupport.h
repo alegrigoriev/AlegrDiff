@@ -132,8 +132,8 @@ public:
 	void SetNext(FileLine * pNext) { m_pNext = pNext; }
 	FileLine * Next() const { return m_pNext; }
 
-	int GetLineNumber() const { return m_Number; }
-	void SetLineNumber(int num) { m_Number = num; }
+	unsigned GetLineNumber() const { return m_Number; }
+	void SetLineNumber(unsigned num) { m_Number = num; }
 
 	LPCSTR GetText() const { return m_pString; }
 	unsigned GetLength() const { return m_Length; }
@@ -153,10 +153,8 @@ private:
 	DWORD m_GroupHashCode;
 	DWORD m_NormalizedHashCode;
 	DWORD m_NormalizedGroupHashCode;
-	union {
-		int m_Number; // line ordinal number in the file
-		FileLine * m_pNext;
-	};
+	unsigned m_Number; // line ordinal number in the file
+	FileLine * m_pNext;
 	// length of the source string
 	unsigned m_Length;
 	unsigned m_NormalizedStringLength;
@@ -244,17 +242,21 @@ class FileItem
 {
 public:
 	FileItem(const WIN32_FIND_DATA * pWfd,
-			const CString & BaseDir, const CString & Dir,
-			bool c_cpp);
+			const CString & BaseDir, const CString & Dir);
 	FileItem(LPCTSTR name);
 	~FileItem();
 	bool Load();
 	void Unload();
+	BOOL CalculateHashes(BOOL volatile & bStopOperation);
+
+	bool m_C_Cpp;
+	bool m_IsBinary;
+
 	// add line from memory. Assuming the file created dynamically by the program
 	void AddLine(LPCTSTR pLine);
 	const char * GetLineString(int LineNum) const;
 	const FileLine * GetLine(int LineNum) const { return m_Lines[LineNum]; }
-	int GetNumLines() const { return m_Lines.GetSize(); }
+	int GetNumLines() const { return m_Lines.size(); }
 
 	LPCTSTR GetName() const { return m_Name; }
 	int GetNameLength() const { return m_Name.GetLength(); }
@@ -269,8 +271,10 @@ public:
 	int GetFullNameLength() const { return m_BaseDir.GetLength() + m_Subdir.GetLength() + m_Name.GetLength(); }
 
 	FILETIME GetLastWriteTime() const { return m_LastWriteTime; }
-	const FileLine * FindMatchingLine(const FileLine * pLine, int nStartLineNum, int nEndLineNum);
-	const FileLine * FindMatchingLineGroupLine(const FileLine * pLine, int nStartLineNum, int nEndLineNum);
+	const FileLine * FindMatchingLine(const FileLine * pLine,
+									unsigned nStartLineNum, unsigned nEndLineNum);
+	const FileLine * FindMatchingLineGroupLine(const FileLine * pLine,
+												unsigned nStartLineNum, unsigned nEndLineNum);
 
 	enum { MaxLineGroupSize = 50 };
 
@@ -294,14 +298,18 @@ private:
 	CString m_Subdir;
 	CString m_BaseDir;
 	FILETIME m_LastWriteTime;
-	bool m_C_Cpp;
-	CArray<FileLine *, FileLine *> m_Lines;
-	CArray<FileLine *, FileLine *> m_NonBlankLines;
-	CArray<FileLine *, FileLine *> m_HashSortedLines;   // non-blank only
-	CArray<FileLine *, FileLine *> m_HashSortedLineGroups;   // non-blank only
-	CArray<FileLine *, FileLine *> m_NormalizedHashSortedLines;   // non-blank only
-	CArray<FileLine *, FileLine *> m_NormalizedHashSortedLineGroups;   // non-blank only
-	CArray<TextToken, TextToken> m_Tokens;
+	LONGLONG m_Length;
+	LONGLONG m_Crc64;   // use x64 + x4 + x3 + x + 1 polynomial
+	BYTE m_Md5[20];
+	bool m_bMd5Calculated;
+	LONG m_Crc32;
+	vector<FileLine *> m_Lines;
+	vector<FileLine *> m_NonBlankLines;
+	vector<FileLine *> m_HashSortedLines;   // non-blank only
+	vector<FileLine *> m_HashSortedLineGroups;   // non-blank only
+	vector<FileLine *> m_NormalizedHashSortedLines;   // non-blank only
+	vector<FileLine *> m_NormalizedHashSortedLineGroups;   // non-blank only
+	//vector<TextToken> m_Tokens;
 	friend class FilePair;
 };
 
@@ -386,13 +394,18 @@ public:
 		FilesDifferent,
 		OnlyFirstFile,
 		OnlySecondFile,
+		FirstFileLonger,
+		SecondFileLonger,
+		ReadingFirstFile,
+		ReadingSecondFile,
 		MemoryFile,
 	};
 
 	int ComparisionResultPriority() const;
 
-	eFileComparisionResult CompareFiles();
-	eFileComparisionResult CompareTextFiles();
+	eFileComparisionResult CompareFiles(BOOL volatile & bStopOperation);
+	eFileComparisionResult CompareTextFiles(BOOL volatile & bStopOperation);
+	eFileComparisionResult CompareBinaryFiles(BOOL volatile & bStopOperation);
 	struct FileSection
 	{
 		FileSection * pNext;
@@ -406,15 +419,16 @@ public:
 	FileSection * BuildSectionList(int NumLine1Begin, int NumLine1AfterEnd,
 									int NumLine2Begin, int NumLine2AfterEnd, bool UseLineGroups);
 
-	eFileComparisionResult PreCompareFiles();
-	eFileComparisionResult PreCompareTextFiles();
+	eFileComparisionResult PreCompareFiles(BOOL volatile & bStopOperation);
+	eFileComparisionResult PreCompareTextFiles(BOOL volatile & bStopOperation);
+	eFileComparisionResult PreCompareBinaryFiles(BOOL volatile & bStopOperation);
 
 	eFileComparisionResult m_ComparisionResult;
 	bool m_bComparisionResultChanged;
 	bool m_bHideFromListView;
 	bool m_bSelected;
 	//bool m_bUnderComparision;
-	CArray<LinePair *, LinePair *> m_LinePairs;
+	vector<LinePair *> m_LinePairs;
 	vector<FileDiffSection *> m_DiffSections;
 };
 
@@ -429,9 +443,12 @@ public:
 		m_NumFiles = 0;
 	}
 	bool LoadFolder(const CString & BaseDir, bool bRecurseSubdirs,
-					LPCTSTR sInclusionMask, LPCTSTR sExclusionMask, LPCTSTR sC_CPPMask);
+					LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
+					LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask);
 	bool LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
-						LPCTSTR sInclusionMask, LPCTSTR sExclusionMask, LPCTSTR sC_CPPMask);
+						LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
+						LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask);
+
 	void FreeFileList();
 	enum { SortNameFirst = 1, SortDirFirst = 2, SortDataModified = 4, SortBackwards = 8};
 	void GetSortedList(CArray<FileItem *, FileItem *> & ItemArray, DWORD SortFlags);

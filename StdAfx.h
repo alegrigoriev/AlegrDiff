@@ -26,6 +26,11 @@
 #define TCHAR_MASK 0xFFu
 #endif
 
+template<typename T> inline void memzero(T & obj)
+{
+	memset( & obj, 0, sizeof obj);
+}
+
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 

@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "SmallAllocator.h"
 
+#ifndef __PLACEMENT_NEW_INLINE
 static void * operator new(size_t, void * ptr)
 {
 	return ptr;
@@ -10,6 +11,7 @@ static void operator delete(void * ptr, void *)
 {
 	//::delete(ptr);
 }
+#endif
 
 CSmallAllocator::CSmallAllocator(size_t ItemSize, size_t BlockSize)
 	: m_ItemSize(ItemSize),

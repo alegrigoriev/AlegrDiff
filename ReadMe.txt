@@ -1,5 +1,6 @@
 TODO:
 
+Add Copy 1st file text, copy 2nd file text
 Refresh list view
 make word by word comparison in MatchStrings
 show version of file1, file2 of the line
@@ -26,3 +27,13 @@ screen move in two directions may corrupt the image (??)
 Fixed:
 "First file as base" button didn't work
 Done:
+
+//////////////////////////////
+Comparing files in binary mode:
+1. Load directories
+2. find which files do have a corresponding pair with the same size and calculate CRC32/CRC64/MD5 for them. First calculate for the first source directory and subdirectories, then for the second.
+3. Compare MD5 hash
+
+New state codes:
+Reading first file
+Reading second file

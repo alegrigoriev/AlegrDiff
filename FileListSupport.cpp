@@ -16,6 +16,9 @@
 #undef toupper
 static DWORD CalculateHash(void const * data, int len);
 
+#define C_CPP_FILE 1
+#define REMOVE_VERSION_INFO 2
+
 CString PatternToMultiCString(LPCTSTR src)
 {
 	// all ';', ',' are replaced with 0, another 0 is appended
@@ -82,22 +85,15 @@ CString PatternToMultiCString(LPCTSTR src)
 
 CString MiltiSzToCString(LPCTSTR pMsz)
 {
-	CString str;
 	// find string length
 	int len;
 	// limit the string length to 64K
 	for (len = 0; ('\0' != pMsz[len] || '\0' != pMsz[len + 1]) && len < 65536; len++)
 	{
 	}
-	len += 2;
-	LPTSTR pBuf = str.GetBuffer(len);
-	if (NULL != pBuf)
-	{
-		memcpy(pBuf, pMsz, len * sizeof (TCHAR));
-		str.ReleaseBuffer(len - 1);
-	}
-	return str;
+	return CString(pMsz, len + 1);
 }
+
 bool MatchWildcard(LPCTSTR name, LPCTSTR pattern)
 {
 	// '?' corresponds to any character or no character,
@@ -270,7 +266,7 @@ FileItem::~FileItem()
 
 void FileItem::AddLine(LPCTSTR pLine)
 {
-	FileLine * pFileLine = new FileLine(pLine, true, m_C_Cpp);
+	FileLine * pFileLine = new FileLine(pLine, _tcslen(pLine), true, m_C_Cpp);
 	if (pLine)
 	{
 		pFileLine->SetLineNumber(m_Lines.size());
@@ -510,7 +506,7 @@ bool FileItem::Load()
 			}
 		}
 		TabExpandedLine[pos] = 0;
-		FileLine * pLine = new FileLine(TabExpandedLine, true, m_C_Cpp);
+		FileLine * pLine = new FileLine(TabExpandedLine, pos, true, m_C_Cpp);
 		if (pLine)
 		{
 			pLine->SetNext(pLineList);
@@ -1567,11 +1563,13 @@ static DWORD CalculateHash(void const * pData, int len)
 }
 // remove the unnecessary whitespaces from the line (based on C, C++ syntax)
 // return string length
-static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstCount,
-								char * pWhitespaceMask, int WhitespaceMaskSize,
-								bool c_cpp_file)
+int FileLine::RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstCount,
+									char * pWhitespaceMask, int WhitespaceMaskSize,
+									unsigned Flags)
 {
 	// pDst buffer size must be greater or equal strlen(pSrc)
+	bool const c_cpp_file = 0 != (Flags & C_CPP_FILE);
+
 	unsigned int SrcIdx = 0;
 	unsigned int DstIdx = 0;
 	unsigned int FirstWhitespaceIndex = 0;
@@ -1600,11 +1598,65 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstCount,
 		}
 		SrcIdx++;
 	}
+
 	// check if it is preprocessor line
+	LPCTSTR VersionBegin = NULL;
+	LPCTSTR VersionEnd = NULL;
+
 	if (c_cpp_file && '#' == Src[SrcIdx])
 	{
 		// consider all characters alpha, that is don't remove all but one spaces
 		LeaveOneExtraSpace = true;
+	}
+	else if (Flags & REMOVE_VERSION_INFO)
+	{
+		VersionBegin = _tcschr(Src, '$');
+
+		if (NULL != VersionBegin)
+		{
+			VersionEnd = _tcsrchr(VersionBegin + 1, '$');
+
+			static LPCTSTR const keywords[] =
+			{
+				_T("Archive:"),
+				_T("Author:"),
+				_T("Date:"),
+				_T("Header:"),
+				_T("History:"),
+				_T("JustDate:"),
+				_T("Log:"),
+				_T("Logfile:"),
+				_T("Modtime:"),
+				_T("Revision:"),
+				_T("Workfile:"),
+			};
+
+			unsigned i;
+
+			if (NULL != VersionEnd)
+				for (i = 0; i < countof(keywords); i++)
+				{
+					int len = _tcslen(keywords[i]);
+
+					if (0 == _tcsncmp(VersionBegin + 1, keywords[i], len))
+					{
+						// revision info
+						// mark everything in between as white spaces
+
+						for (VersionBegin += len + 1 ; VersionBegin < VersionEnd;
+							VersionBegin++)
+						{
+							unsigned index = VersionBegin - Src;
+							if (index < WhitespaceMaskBits)
+							{
+								pWhitespaceMask[index / 8] |= 1 << (index & 7);
+							}
+						}
+						m_Flags |= eContainsVersionInfo;
+						break;
+					}
+				}
+		}
 	}
 
 	while (Src[SrcIdx] && DstIdx + 1 < DstCount)
@@ -1615,6 +1667,14 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstCount,
 		// that is most two-char operators
 		// strings also must be kept intact.
 		// Can remove extra spaces between alpha and non-alpha, unless LeaveOneExtraSpace = true
+		if (SrcIdx < WhitespaceMaskBits
+			&& pWhitespaceMask[SrcIdx / 8] & (1 << (SrcIdx & 7)))
+		{
+			// this was a removed version info
+			SrcIdx++;
+			continue;
+		}
+
 		c = Src[SrcIdx];
 		bool c_IsAlpha = (_istalnum(TCHAR_MASK & c)  || '_' == c);
 		if ((RemovedWhitespaces && LeaveOneExtraSpace) || (PrevCharAlpha && c_IsAlpha))
@@ -1812,7 +1872,9 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstCount,
 			SrcIdx++;
 		}
 	}
+
 	pDst[DstIdx] = 0;
+
 	return DstIdx;
 }
 
@@ -2588,8 +2650,9 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 	return nDifferentChars;
 }
 
-FileLine::FileLine(LPCTSTR src, bool /*MakeNormalizedString*/, bool c_cpp_file)
-	: //m_Flags(0),
+FileLine::FileLine(LPCTSTR src, int Length, bool /*MakeNormalizedString*/, bool c_cpp_file)
+	: m_Flags(0),
+	m_Length(Length),
 	m_pNext(NULL),
 	m_Number((unsigned)-1),
 //m_Link(NULL),
@@ -2599,20 +2662,26 @@ FileLine::FileLine(LPCTSTR src, bool /*MakeNormalizedString*/, bool c_cpp_file)
 	m_NormalizedHashCode(0),
 	m_NormalizedGroupHashCode(0)
 {
-	m_Length = _tcslen(src);
 	TCHAR TmpBuf[4096];
 	char WhitespaceMask[4096 / 8];
 
+	unsigned Flags = REMOVE_VERSION_INFO;
+	if (c_cpp_file)
+	{
+		Flags |= C_CPP_FILE;
+	}
+
 	m_NormalizedStringLength = RemoveExtraWhitespaces(TmpBuf, src, countof(TmpBuf),
 													WhitespaceMask, sizeof WhitespaceMask,
-													c_cpp_file);
+													Flags);
 
 	int WhitespaceMaskLength = (m_Length + 7) / 8;
 
-	m_pAllocatedBuf = ::new char[sizeof(TCHAR) * (m_Length + m_NormalizedStringLength + 2) + WhitespaceMaskLength];
+	m_pAllocatedBuf = ::new TCHAR[m_Length + m_NormalizedStringLength + 2 + (WhitespaceMaskLength + (sizeof(TCHAR) - 1)) / sizeof(TCHAR)];
+
 	if (NULL != m_pAllocatedBuf)
 	{
-		TCHAR * pTmp = (TCHAR*) m_pAllocatedBuf;
+		TCHAR * pTmp = m_pAllocatedBuf;
 		m_pString = pTmp;
 		memcpy(pTmp, src, sizeof(TCHAR) * (m_Length + 1));
 		m_HashCode = CalculateHash(m_pString, sizeof(TCHAR) * m_Length);
@@ -2641,7 +2710,7 @@ FileLine::FileLine(LPCTSTR src, bool /*MakeNormalizedString*/, bool c_cpp_file)
 
 FileLine::~FileLine()
 {
-	delete m_pAllocatedBuf;
+	delete[] m_pAllocatedBuf;
 }
 
 bool FileLine::LooksLike(const FileLine * pOtherLine, int PercentsDifferent) const
@@ -3109,11 +3178,13 @@ CString FilePair::GetComparisonResult() const
 		break;
 	case FirstFileLonger:
 		s.Format(sOneFileLonger,
-				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
+				pFirstFile->GetBasedir(), pFirstFile->GetSubdir(),
+				pFirstFile->GetFileLength() - pSecondFile->GetFileLength());
 		break;
 	case SecondFileLonger:
 		s.Format(sOneFileLonger,
-				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
+				pSecondFile->GetBasedir(), pSecondFile->GetSubdir(),
+				pSecondFile->GetFileLength() - pFirstFile->GetFileLength());
 		break;
 	case ErrorReadingFirstFile:
 		s.Format(sErrorReadingFile,

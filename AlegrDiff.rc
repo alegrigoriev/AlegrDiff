@@ -1619,7 +1619,7 @@ BEGIN
     IDS_COPY_FIRST_FILE_MENU_DISABLED "Copy 1st File To Folder..."
     IDS_COPY_SECOND_FILE_MENU_DISABLED "Copy 2nd File To Folder..."
     IDS_STRING_ONE_SUBDIR_EXISTS "Subdirectory exists only in ""%s%s"""
-    IDS_STRING_FILE_IS_LONGER "Longer file in ""%s%s"""
+    IDS_STRING_FILE_IS_LONGER "File in ""%s%s"" is longer by %I64d bytes"
     IDS_STRING_READING_FILE "Reading file..."
     IDS_STRING_ERROR_READING_FILE "Error while reading file ""%s"""
     IDS_STRING_ONLY_FINGERPRINT_SUBDIR_EXISTS 

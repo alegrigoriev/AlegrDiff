@@ -1,7 +1,5 @@
 TODO:
 
-2-pane mode for binary files
-No difference in file size in bytes reported in comparson result.
 No option for file size format (in kilobytes or in bytes).
 
 Customizable number of MRU items
@@ -106,6 +104,7 @@ screen move in two directions may corrupt the image (??)
 
 Done:
 
+Difference in file size in bytes reported in comparson result.
 Side-by-side viewing for binary files
 It shows the dialog with parameters instead of running the comparison for 
  the folders specified in a command line only if Shift is held

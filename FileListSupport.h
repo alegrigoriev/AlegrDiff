@@ -317,6 +317,7 @@ public:
 	FileItem * pFirstFile;
 	FileItem * pSecondFile;
 	CString GetComparisionResult();
+	static bool Compare(FilePair * p1, FilePair * p2, int param[4]);
 	static int _cdecl NameSortFunc(const void * p1, const void * p2);
 	static int _cdecl NameSortBackwardsFunc(const void * p1, const void * p2);
 	static int _cdecl DirNameSortFunc(const void * p1, const void * p2);

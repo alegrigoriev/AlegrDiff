@@ -46,6 +46,9 @@ public:
 	enum eColumns {ColumnName, ColumnSubdir, ColumnDate1, ColumnDate2, ColumnComparisionResult };
 	eColumns m_SortColumn;
 	bool m_bAscendingOrder;
+	eColumns m_PrevSortColumn;
+	bool m_bPrevAscendingOrder;
+
 	virtual ~CAlegrDiffView();
 #ifdef _DEBUG
 	virtual void AssertValid() const;

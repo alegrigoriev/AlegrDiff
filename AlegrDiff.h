@@ -66,7 +66,7 @@ public:
 
 	int m_UsedFilenameFilter;
 
-	int m_FileListSort;
+	DWORD m_FileListSort;
 
 	CString m_sFilenameFilter;
 	CString m_sBinaryFilesFilter;

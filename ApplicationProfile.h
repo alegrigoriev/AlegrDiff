@@ -258,12 +258,15 @@ public:
 	void ResetSectionToDefault(LPCTSTR szSection);
 	BOOL RevertItemToInitial(LPCTSTR szSection, LPCTSTR szName);
 	void RevertSectionToInitial(LPCTSTR szSection);
+
+	// Flush means write all changed data back to profile
 	BOOL FlushItem(LPCTSTR szSection, LPCTSTR szName);
 	void FlushSection(LPCTSTR szSection);
 	void FlushAll()
 	{
 		FlushSection(NULL);
 	}
+	// Unload is Flush item and Remove() it from the list
 	BOOL UnloadItem(LPCTSTR szSection, LPCTSTR szName);
 	void UnloadSection(LPCTSTR szSection);
 	void UnloadAll()

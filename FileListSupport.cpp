@@ -3115,7 +3115,7 @@ int FilePairComparePredicate::ComparisionSortBackwardsFunc(const FilePair * Pair
 	return 0;
 }
 
-CString FilePair::GetComparisonResult() const
+CString FilePair::GetComparisonResultStr() const
 {
 	static CString sFilesUnaccessible(MAKEINTRESOURCE(IDS_STRING_FILES_UNACCESSIBLE));
 	static CString sFilesIdentical(MAKEINTRESOURCE(IDS_STRING_FILES_IDENTICAL));
@@ -3328,7 +3328,7 @@ FilePair::eFileComparisionResult FilePair::PreCompareFiles(CMd5HashCalculator * 
 	{
 		m_ComparisonResult = ComparingFiles;
 
-		pProgressDialog->SetNextItem(GetComparisonResult(),
+		pProgressDialog->SetNextItem(GetComparisonResultStr(),
 									2 * (pFirstFile->GetFileLength() + pSecondFile->GetFileLength()),
 									FILE_OPEN_OVERHEAD * 2);
 	}
@@ -3763,7 +3763,7 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 
 			if (NULL != pProgressDialog)
 			{
-				pProgressDialog->SetNextItem(GetComparisonResult(),
+				pProgressDialog->SetNextItem(GetComparisonResultStr(),
 											pFirstFile->GetFileLength(), FILE_OPEN_OVERHEAD);
 			}
 
@@ -3789,7 +3789,7 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 
 			if (NULL != pProgressDialog)
 			{
-				pProgressDialog->SetNextItem(GetComparisonResult(),
+				pProgressDialog->SetNextItem(GetComparisonResultStr(),
 											pSecondFile->GetFileLength(), FILE_OPEN_OVERHEAD);
 			}
 

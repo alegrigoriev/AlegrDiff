@@ -147,6 +147,8 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 		pDC->LineTo(x, ur.bottom);
 	}
 
+	FileItem::Lock();
+
 	for (int CurrentY = ur.top - ur.top % LineHeight(); CurrentY < ur.bottom; CurrentY += LineHeight())
 	{
 		LONGLONG CurrentAddr = m_ScreenFilePos + CurrentY / LineHeight() * int(m_BytesPerLine);
@@ -425,6 +427,8 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 		}
 		CurrentAddr += m_BytesPerLine;
 	}
+
+	FileItem::Unlock();
 
 }
 
@@ -1137,7 +1141,7 @@ void CBinaryCompareView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHi
 		if (NULL != pArg
 			&& pArg->pPair == pDoc->GetFilePair())
 		{
-			if (FilesDeleted == pDoc->GetFilePair()->m_ComparisonResult)
+			if (FilesDeleted == pDoc->GetFilePair()->GetComparisonResult())
 			{
 				return;
 			}
@@ -1834,7 +1838,7 @@ void CBinaryCompareView::OnActivateView(BOOL bActivate, CView* pActivateView, CV
 			FilePair * pPair = GetDocument()->GetFilePair();
 			if (NULL != pPair)
 			{
-				pMainFrm->SetMessageText(pPair->GetComparisonResult());
+				pMainFrm->SetMessageText(pPair->GetComparisonResultStr());
 			}
 		}
 		else

@@ -426,6 +426,16 @@ public:
 	static int TimeCompare(FileItem const * Item1, FileItem const * Item2);
 	static int LengthCompare(FileItem const * Item1, FileItem const * Item2);
 
+	static void Lock()
+	{
+		m_Cs.Lock();
+	}
+
+	static void Unlock()
+	{
+		m_Cs.Unlock();
+	}
+
 private:
 	CString m_Name;
 	CString m_Subdir;
@@ -467,7 +477,6 @@ private:
 public:
 	FileItem * pFirstFile;
 	FileItem * pSecondFile;
-	CString GetComparisonResult() const;
 	void SetMemoryFile()
 	{
 		m_LoadedCount = 1;
@@ -543,6 +552,11 @@ public:
 		int File2LineEnd;
 	};
 
+	CString GetComparisonResultStr() const;
+	eFileComparisionResult GetComparisonResult() const
+	{
+		return m_ComparisonResult;
+	}
 	FileSection * BuildSectionList(int NumLine1Begin, int NumLine1AfterEnd,
 									int NumLine2Begin, int NumLine2AfterEnd, bool UseLineGroups);
 

@@ -36,7 +36,24 @@ CFileDialog::CFileDialog(BOOL bOpenFileDialog,
 	m_bOpenFileDialog = bOpenFileDialog;
 	m_nIDHelp = bOpenFileDialog ? AFX_IDD_FILEOPEN : AFX_IDD_FILESAVE;
 
-	m_ofn.lStructSize = sizeof(m_ofn);
+	OSVERSIONINFO vi;
+	vi.dwOSVersionInfoSize = sizeof vi;
+	GetVersionEx( & vi);
+
+	if ((vi.dwPlatformId == VER_PLATFORM_WIN32_NT
+			&& vi.dwMajorVersion >= 5)
+		|| (vi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS
+			&& (vi.dwMajorVersion > 4
+				|| (vi.dwMajorVersion == 4
+					&& vi.dwMinorVersion >= 90))))
+	{
+		m_ofn.lStructSize = sizeof(m_ofn);
+	}
+	else
+	{
+		m_ofn.lStructSize = OPENFILENAME_SIZE_VERSION_400;
+	}
+
 	m_ofn.lpstrFile = m_szFileName;
 	m_ofn.nMaxFile = _countof(m_szFileName);
 	m_ofn.lpstrDefExt = lpszDefExt;

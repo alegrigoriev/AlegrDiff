@@ -19,6 +19,17 @@
 // CAlegrDiffApp:
 // See AlegrDiff.cpp for the implementation of this class
 //
+enum eColumns
+{
+	ColumnName,
+	ColumnSubdir,
+	ColumnDate1,
+	ColumnDate2,
+	ColumnComparisionResult,
+	ColumnLength1,
+	ColumnLength2,
+	MaxColumns,
+};
 
 class CAlegrDiffApp : public CWinApp
 {
@@ -81,6 +92,9 @@ public:
 	CString m_RecentFolders[15];
 	CString m_sFilters[10];
 	CString m_RecentFiles[15];
+
+	UCHAR m_ColumnArray[MaxColumns];
+	USHORT m_ColumnWidthArray[MaxColumns];
 
 	DWORD m_FileListSort;
 

@@ -1,5 +1,8 @@
 TODO:
 
+Make sure to report read errors and file unaccessible errors during fingerprint creation.
+Directory dialog allows to select network host. It won't return anything then.
+Check that the correct OleInitialize succeeded. If not, don't call OleUninitialize.
 Save columns width and order
 Make "Show columns" menu with "reset Columns"
 For binary comparison: show file size
@@ -9,6 +12,7 @@ Refresh list view
 Add Copy 1st file text, copy 2nd file text
 Copy binary dump as text
 Switch from text view to binary view
+Add folder picture under the fingerprint picture
 
 Detect "Version stamp different only"
 Detect "Different in spaces only"
@@ -21,6 +25,7 @@ add option to keep the caret on one line during F3 and F7
 If main window is minimized, save its state before minimization
 
 V1.5:
+Consider "signed fingerprint file" (UNICODE only)
 Compare EXE version info for DLL, EXE, SYS
 Show file version (add handler code)
 Make progress dialog for binary comparision
@@ -30,6 +35,7 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+Subdirectory check fails when checking the fingerprint.
 During binary comparison, alternate "Calculating fingerprint" and "Comparing" messages shown
 screen move in two directions may corrupt the image (??)
 

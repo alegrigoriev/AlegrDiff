@@ -43,18 +43,12 @@ protected:
 public:
 	void AddListViewItem(FilePair * pPair, int item);
 	BOOL CopySelectedFiles(bool bSecondDir);
-	enum eColumns
-	{
-		ColumnName,
-		ColumnSubdir,
-		ColumnDate1,
-		ColumnDate2,
-		ColumnComparisionResult,
-		ColumnLength1,
-		ColumnLength2,
-	};
 	eColumns m_SortColumn;
 	eColumns m_PrevSortColumn;
+
+	UCHAR m_ColumnArray[MaxColumns];
+	USHORT m_ColumnWidthArray[MaxColumns];
+
 	bool m_bAscendingOrder;
 	bool m_bPrevAscendingOrder;
 	bool m_bSubdirColumnPresent;

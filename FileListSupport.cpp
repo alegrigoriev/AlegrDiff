@@ -2984,7 +2984,8 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 	if (pApp->m_bUseMd5)
 	{
 		LONGLONG FileDone = 0;
-		HWND hWnd = AfxGetMainWnd()->m_hWnd;
+		HWND hWnd = GetApp()->m_pMainWnd->m_hWnd;
+
 		if ( ! pFirstFile->m_bMd5Calculated)
 		{
 			m_ComparisionResult = CalculatingFirstFingerprint;
@@ -3901,7 +3902,7 @@ int LinePair::DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces)
 BOOL FileItem::CalculateHashes(CMd5HashCalculator * pMd5Calc,
 								BOOL volatile & bStopOperation,
 								LONGLONG volatile & BytesComplete,
-								HWND volatile & hNotifyWnd)
+								HWND volatile const & hNotifyWnd)
 {
 	BOOL res = pMd5Calc->CalculateFileMd5Hash(GetFullName(), m_Md5,
 											bStopOperation, BytesComplete, hNotifyWnd);

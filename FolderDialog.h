@@ -20,7 +20,7 @@ public:
 	CFolderDialog(LPCTSTR lpszTitle = NULL,
 				LPCTSTR lpszStartingDirectory = NULL,
 				bool EnableCreateFolder = false,
-				DWORD dwFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE,
+				DWORD dwFlags = BIF_RETURNFSANCESTORS | BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE,
 				CWnd* pParentWnd = NULL);
 
 	BROWSEINFO m_bi;
@@ -39,6 +39,15 @@ public:
 	virtual int OnInitDone();
 	virtual int OnFolderChange(LPITEMIDLIST lpItem);
 	virtual int OnValidateFailed(LPCTSTR ErrorName);
+	virtual void OnIUnknown(IUnknown * pUnknown);
+
+	void EnableOK(BOOL Enable = TRUE);
+	void SetExpanded(LPCWSTR Path);
+	void SetExpanded(LPITEMIDLIST Path);
+	void SetOkText(LPCWSTR Text);
+	void SetSelection(LPCTSTR Path);
+	void SetSelection(LPITEMIDLIST Path);
+	void SetStatusText(LPCTSTR Text);
 
 protected:
 	static int CALLBACK BrowseCallbackProc(HWND hwnd,

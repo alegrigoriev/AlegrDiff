@@ -19,7 +19,7 @@ CMd5HashCalculator::~CMd5HashCalculator()
 BOOL CMd5HashCalculator::CalculateFileMd5Hash(LPCTSTR Filename,
 											BYTE MD5Hash[16], BOOL volatile & bStopOperation,
 											LONGLONG volatile & BytesComplete,
-											HWND volatile & hNotifyWnd)
+											HWND volatile const & hNotifyWnd)
 {
 	if (NULL == m_HashBuf
 		|| NULL == m_hProv)

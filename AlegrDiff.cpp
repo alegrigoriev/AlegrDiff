@@ -74,7 +74,7 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_NumberOfIdenticalLines(5),
 	m_MinPercentWeakIdenticalLines(10),
 	m_PercentsOfLookLikeDifference(30),
-	m_FileListSort(CAlegrDiffView::ColumnSubdir),
+	m_FileListSort(ColumnSubdir),
 	m_MinIdenticalLines(5)
 {
 	m_PreferencesFlags = 0;
@@ -159,7 +159,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("TabIndent"), m_TabIndent, 4, 1, 32);
 
 	Profile.AddItem(_T("Settings"), _T("FileListSort"), m_FileListSort,
-					CAlegrDiffView::ColumnSubdir, 0, ~0);
+					ColumnSubdir, 0, ~0);
 
 	Profile.AddItem(_T("Settings"), _T("InitialDir1"), m_FileDir1, _T(""));
 	Profile.AddItem(_T("Settings"), _T("InitialDir2"), m_FileDir2, _T(""));

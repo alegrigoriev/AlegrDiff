@@ -42,6 +42,8 @@ public:
 	int m_FirstLineSeen;
 	int m_FirstPosSeen;
 	int m_NumberMarginWidth;
+	int m_NumberOfPanes;
+	int m_PaneWithFocus;
 	// visible rectangle (0-relative)
 	CRect m_VisibleRect;
 	// rectangle for BringCaretToBounds.
@@ -100,10 +102,16 @@ public:
 	void CaretToHome(int flags);
 	void CaretToEnd(int flags);
 
+	int PointToPaneNumber(int x);
+	int PointToPaneOffset(int x, int nPane = -1);
+	int GetPaneWidth();
+
 protected:
 	void DrawStringSections(CDC* pDC, CPoint point,
 							KListEntry<StringSection> const * pSection,
-							int nSkipChars, int nVisibleChars, int nTabIndent, int SelBegin, int SelEnd);
+							int nSkipChars, int nVisibleChars, int nTabIndent,
+							// nFileSelect: 1 - first only, 2 - second only, 0 - both
+							int SelBegin, int SelEnd, int nFileSelect);
 
 	virtual ~CDiffFileView();
 #ifdef _DEBUG
@@ -143,16 +151,15 @@ protected:
 	afx_msg void OnEditGotoline();
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnEditSelectAll();
-	afx_msg void OnUpdateViewFile2Version(CCmdUI* pCmdUI);
-	afx_msg void OnViewFile2Version();
-	afx_msg void OnUpdateViewFile1Version(CCmdUI* pCmdUI);
-	afx_msg void OnViewFile1Version();
 	afx_msg void OnTimer(UINT nIDEvent);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 public:
 protected:
 	virtual void OnActivateFrame(UINT nState, CFrameWnd* pDeactivateFrame);
+public:
+	afx_msg void OnViewSideBySide();
+	afx_msg void OnUpdateViewSideBySide(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -32,6 +32,8 @@ CDiffFileView::CDiffFileView()
 	m_CharOverhang(0),
 	m_ShownFileVersion(ShownAllText),
 	m_WheelAccumulator(0),
+	m_NumberOfPanes(1),
+	m_PaneWithFocus(0),
 	m_DrawnSelEnd(0, 0)
 {
 	// init font size, to avoid zero divide
@@ -76,19 +78,18 @@ BEGIN_MESSAGE_MAP(CDiffFileView, CView)
 	ON_COMMAND(ID_EDIT_GOTOLINE, OnEditGotoline)
 	ON_WM_RBUTTONDOWN()
 	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_FILE_2_VERSION, OnUpdateViewFile2Version)
-	ON_COMMAND(ID_VIEW_FILE_2_VERSION, OnViewFile2Version)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_FILE1_VERSION, OnUpdateViewFile1Version)
-	ON_COMMAND(ID_VIEW_FILE1_VERSION, OnViewFile1Version)
 	ON_WM_TIMER()
 	//}}AFX_MSG_MAP
+	ON_COMMAND(IDC_VIEW_SIDE_BY_SIDE, OnViewSideBySide)
+	ON_UPDATE_COMMAND_UI(IDC_VIEW_SIDE_BY_SIDE, OnUpdateViewSideBySide)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CDiffFileView drawing
 void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 										KListEntry<StringSection> const * SectionEntry,
-										int nSkipChars, int nVisibleChars, int nTabIndent, int SelBegin, int SelEnd)
+										int nSkipChars, int nVisibleChars, int nTabIndent,
+										int SelBegin, int SelEnd, int nFileSelect)
 {
 	TCHAR buf[2048];
 	CFilePairDoc* pDoc = GetDocument();
@@ -119,6 +120,18 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 
 	for (int nDrawnChars = 0; SectionEntry->NotEnd(pSection) && nDrawnChars < nVisibleChars; pSection = pSection->Next())
 	{
+		if ((pSection->Attr & pSection->Erased)
+			&& 2 == nFileSelect)
+		{
+			continue;
+		}
+
+		if ((pSection->Attr & pSection->Inserted)
+			&& 1 == nFileSelect)
+		{
+			continue;
+		}
+
 		if ((pSection->Attr & pSection->Whitespace)
 			&& (pSection->Attr & pSection->Erased)
 			&& pDoc->m_bIgnoreWhitespaces)
@@ -287,7 +300,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 	//TEXTMETRIC tm;
 	//pDC->GetTextMetrics( & tm);
 
-	RECT cr;
+	CRect cr;
 	GetClientRect( & cr);
 	RECT ur;    // update rect
 	if (pDC->IsKindOf(RUNTIME_CLASS(CPaintDC)))
@@ -304,142 +317,193 @@ void CDiffFileView::OnDraw(CDC* pDC)
 		pDC->GetClipBox( & ur);
 	}
 
-	//pDC->SetTextAlign
-	int PosX = 0;
-	if (m_ShowLineNumbers)
+	int nPaneWidth = cr.Width()
+					- m_LineNumberMarginWidth * m_NumberOfPanes
+					- (m_NumberOfPanes - 1);
+
+	nPaneWidth = nPaneWidth / CharWidth() / m_NumberOfPanes * CharWidth()
+				+ m_LineNumberMarginWidth + 1;
+
+	CString s;
+
+	for (int nPane = 0, nPaneBegin = 0;
+		nPane < m_NumberOfPanes; nPane++, nPaneBegin += nPaneWidth)
 	{
-		CGdiObject * pOldPen = pDC->SelectStockObject(BLACK_PEN);
-		pDC->MoveTo(m_LineNumberMarginWidth - 1, ur.top);
-		pDC->LineTo(m_LineNumberMarginWidth - 1, ur.bottom);
-		if (NULL != pFilePair->pFirstFile
-			&& NULL != pFilePair->pSecondFile)
+		int PosX = nPaneBegin;
+		int nCharsInView = CharsInView();
+		if (nPane == m_NumberOfPanes - 1)
 		{
-			pDC->MoveTo(m_LineNumberMarginWidth / 2 - 1, ur.top);
-			pDC->LineTo(m_LineNumberMarginWidth / 2 - 1, ur.bottom);
-		}
-		pDC->SelectObject(pOldPen);
-		PosX = m_LineNumberMarginWidth;
-	}
-
-	int nLineHeight = LineHeight();
-
-	int nTabIndent = GetApp()->m_TabIndent;
-	int nCharsInView = CharsInView() + 1;
-
-	pDC->SetTextAlign(pDC->GetTextAlign() | TA_UPDATECP);
-
-	for (int nLine = m_FirstLineSeen, PosY = cr.top; PosY < cr.bottom; nLine++, PosY += nLineHeight)
-	{
-		TextPos SelBegin, SelEnd;
-		if (pDoc->m_CaretPos < pDoc->m_SelectionAnchor)
-		{
-			SelBegin = pDoc->m_CaretPos;
-			SelEnd = pDoc->m_SelectionAnchor;
+			nCharsInView++;
 		}
 		else
 		{
-			SelBegin = pDoc->m_SelectionAnchor;
-			SelEnd = pDoc->m_CaretPos;
-		}
-		int nSelBegin = 0;
-		int nSelEnd = 0;
-
-		if (SelEnd.line == SelBegin.line)
-		{
-			if (SelBegin.line == nLine)
-			{
-				if (SelBegin.pos < SelEnd.pos)
-				{
-					nSelBegin = SelBegin.pos;
-					nSelEnd = SelEnd.pos;
-				}
-				else if (SelBegin.pos > SelEnd.pos)
-				{
-					nSelBegin = SelEnd.pos;
-					nSelEnd = SelBegin.pos;
-				}
-			}
-		}
-		else
-		{
-			if (SelBegin.line == nLine)
-			{
-				nSelBegin = SelBegin.pos;
-				nSelEnd = 2048;
-			}
-			else if (SelBegin.line < nLine)
-			{
-				if (SelEnd.line == nLine)
-				{
-					nSelEnd = SelEnd.pos;
-				}
-				else if (SelEnd.line > nLine)
-				{
-					nSelEnd = 2048;
-				}
-			}
+			// draw separator line
+			pDC->MoveTo(PosX + nPaneWidth - 1, ur.top);
+			pDC->LineTo(PosX + nPaneWidth - 1, ur.bottom);
 		}
 
+		if (m_ShowLineNumbers)
+		{
+			CGdiObject * pOldPen = pDC->SelectStockObject(BLACK_PEN);
 
-		KListEntry<StringSection> EmptyList;
-		KListEntry<StringSection> const * pSectionEntry = & EmptyList;
-		if (nLine >= (int)pFilePair->m_LinePairs.size())
-		{
-			break;
-		}
-		const LinePair * pPair = pFilePair->m_LinePairs[nLine];
-		ASSERT(NULL != pPair);
-		if (NULL != pPair)
-		{
-			pSectionEntry = & pPair->StrSections;
-			// draw line number
-			if (m_ShowLineNumbers)
+			PosX += m_LineNumberMarginWidth;
+			pDC->MoveTo(PosX - 1, ur.top);
+			pDC->LineTo(PosX - 1, ur.bottom);
+			if (NULL != pFilePair->pFirstFile
+				&& NULL != pFilePair->pSecondFile
+				&& 1 == m_NumberOfPanes)
 			{
-				CString s;
-				DWORD TextColor = pApp->m_NormalTextColor;
-				pDC->SetTextAlign(TA_RIGHT | TA_TOP | TA_NOUPDATECP);
-				pDC->SetBkColor(pApp->m_TextBackgroundColor);
-				pDC->SelectObject( & pApp->m_NormalFont);
-				if (NULL == pFilePair->pFirstFile
-					|| NULL == pFilePair->pSecondFile)
+				pDC->MoveTo(m_LineNumberMarginWidth / 2 - 1, ur.top);
+				pDC->LineTo(m_LineNumberMarginWidth / 2 - 1, ur.bottom);
+			}
+			pDC->SelectObject(pOldPen);
+		}
+
+		int nLineHeight = LineHeight();
+
+		int nTabIndent = GetApp()->m_TabIndent;
+
+		pDC->SetTextAlign(pDC->GetTextAlign() | TA_UPDATECP);
+
+		int nPaneToDraw = nPane + 1;
+
+		if (1 == m_NumberOfPanes)
+		{
+			nPaneToDraw = 0;
+		}
+
+		for (int nLine = m_FirstLineSeen, PosY = cr.top; PosY < cr.bottom; nLine++, PosY += nLineHeight)
+		{
+			TextPos SelBegin, SelEnd;
+			if (pDoc->m_CaretPos < pDoc->m_SelectionAnchor)
+			{
+				SelBegin = pDoc->m_CaretPos;
+				SelEnd = pDoc->m_SelectionAnchor;
+			}
+			else
+			{
+				SelBegin = pDoc->m_SelectionAnchor;
+				SelEnd = pDoc->m_CaretPos;
+			}
+			int nSelBegin = 0;
+			int nSelEnd = 0;
+
+			if (m_PaneWithFocus == nPane)
+			{
+				if (SelEnd.line == SelBegin.line)
 				{
-					s.Format(_T("%d"), pPair->pFirstLine->GetLineNumber() + 1);
-					pDC->SetTextColor(TextColor);
-					pDC->TextOut(m_LineNumberMarginWidth - 1, PosY, s);
+					if (SelBegin.line == nLine)
+					{
+						if (SelBegin.pos < SelEnd.pos)
+						{
+							nSelBegin = SelBegin.pos;
+							nSelEnd = SelEnd.pos;
+						}
+						else if (SelBegin.pos > SelEnd.pos)
+						{
+							nSelBegin = SelEnd.pos;
+							nSelEnd = SelBegin.pos;
+						}
+					}
 				}
 				else
 				{
-					if (NULL != pPair->pFirstLine)
+					if (SelBegin.line == nLine)
+					{
+						nSelBegin = SelBegin.pos;
+						nSelEnd = 2048;
+					}
+					else if (SelBegin.line < nLine)
+					{
+						if (SelEnd.line == nLine)
+						{
+							nSelEnd = SelEnd.pos;
+						}
+						else if (SelEnd.line > nLine)
+						{
+							nSelEnd = 2048;
+						}
+					}
+				}
+			}
+
+			KListEntry<StringSection> EmptyList;
+			KListEntry<StringSection> const * pSectionEntry = & EmptyList;
+
+			if (nLine >= (int)pFilePair->m_LinePairs.size())
+			{
+				break;
+			}
+
+			const LinePair * pPair = pFilePair->m_LinePairs[nLine];
+			ASSERT(NULL != pPair);
+
+			if (NULL != pPair)
+			{
+				pSectionEntry = & pPair->StrSections;
+				// draw line number
+				if (m_ShowLineNumbers)
+				{
+					DWORD TextColor = pApp->m_NormalTextColor;
+
+					pDC->SetTextAlign(TA_RIGHT | TA_TOP | TA_NOUPDATECP);
+					pDC->SetBkColor(pApp->m_TextBackgroundColor);
+					pDC->SelectObject( & pApp->m_NormalFont);
+
+					if (NULL == pFilePair->pFirstFile
+						|| NULL == pFilePair->pSecondFile)
 					{
 						s.Format(_T("%d"), pPair->pFirstLine->GetLineNumber() + 1);
-						if (NULL == pPair->pSecondLine)
-						{
-							TextColor = pApp->m_ErasedTextColor;
-						}
-						pDC->SetTextColor(TextColor);
-						pDC->TextOut(m_LineNumberMarginWidth / 2 - 1, PosY, s);
-					}
-					if (NULL != pPair->pSecondLine)
-					{
-						s.Format(_T("%d"), pPair->pSecondLine->GetLineNumber() + 1);
-						if (NULL == pPair->pFirstLine)
-						{
-							TextColor = pApp->m_AddedTextColor;
-						}
 						pDC->SetTextColor(TextColor);
 						pDC->TextOut(m_LineNumberMarginWidth - 1, PosY, s);
 					}
+					else
+					{
+						if (NULL != pPair->pFirstLine
+							&& (m_NumberOfPanes == 1 || nPane == 0))
+						{
+							s.Format(_T("%d"), pPair->pFirstLine->GetLineNumber() + 1);
+							if (NULL == pPair->pSecondLine)
+							{
+								TextColor = pApp->m_ErasedTextColor;
+							}
+							pDC->SetTextColor(TextColor);
+
+							int pos = PosX - 1;
+							if (m_NumberOfPanes == 1)
+							{
+								pos = m_LineNumberMarginWidth / 2 - 1;
+							}
+							pDC->TextOut(pos, PosY, s);
+						}
+						if (NULL != pPair->pSecondLine
+							&& (m_NumberOfPanes == 1 || nPane == 1))
+						{
+							s.Format(_T("%d"), pPair->pSecondLine->GetLineNumber() + 1);
+							if (NULL == pPair->pFirstLine)
+							{
+								TextColor = pApp->m_AddedTextColor;
+							}
+							pDC->SetTextColor(TextColor);
+							int pos = PosX - 1;
+							if (m_NumberOfPanes == 1)
+							{
+								pos = m_LineNumberMarginWidth - 1;
+							}
+							pDC->TextOut(pos, PosY, s);
+						}
+					}
+
+					pDC->SetTextAlign(TA_LEFT | TA_TOP |TA_UPDATECP);
+
 				}
-				pDC->SetTextAlign(TA_LEFT | TA_TOP |TA_UPDATECP);
-
 			}
+
+			DrawStringSections(pDC, CPoint(PosX, PosY),
+								pSectionEntry, m_FirstPosSeen, nCharsInView, nTabIndent,
+								nSelBegin, nSelEnd, nPaneToDraw);
 		}
-
-		DrawStringSections(pDC, CPoint(PosX, PosY),
-							pSectionEntry, m_FirstPosSeen, nCharsInView, nTabIndent,
-							nSelBegin, nSelEnd);
 	}
-
 	pDC->SelectObject(pOldFont);
 }
 
@@ -674,13 +738,33 @@ void CDiffFileView::HScrollToThePos(int nPos)
 	CRect cr;
 
 	GetClientRect( & cr);
+	CRect cr1 = cr;
+
+	int nPaneWidth = cr.Width()
+					- m_LineNumberMarginWidth * m_NumberOfPanes
+					- (m_NumberOfPanes - 1);
+
+	nPaneWidth = nPaneWidth / CharWidth() / m_NumberOfPanes * CharWidth()
+				+ m_LineNumberMarginWidth + 1;
 
 	cr.left = m_LineNumberMarginWidth;
-	if (cr.left < cr.right)
+	cr.right = nPaneWidth - 1;
+
+	for (int nPane = 0; nPane < m_NumberOfPanes; nPane++)
 	{
-		int ndx = (nPos - m_FirstPosSeen) * CharWidth();
-		ScrollWindowEx( -ndx, 0, & cr, & cr, NULL, NULL,
-						SW_INVALIDATE | SW_ERASE);
+		if (m_NumberOfPanes - 1 == nPane)
+		{
+			cr.right = cr1.right;
+		}
+
+		if (cr.left < cr.right)
+		{
+			int ndx = (nPos - m_FirstPosSeen) * CharWidth();
+			ScrollWindowEx( -ndx, 0, & cr, & cr, NULL, NULL,
+							SW_INVALIDATE | SW_ERASE);
+		}
+		cr.left += nPaneWidth;
+		cr.right += nPaneWidth;
 	}
 	m_FirstPosSeen = nPos;
 
@@ -882,8 +966,12 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 	ASSERT(end >= begin);
 	CRect r;
 	if (0) TRACE("InvalidateRange((%d, %d), (%d, %d))\n", begin, end);
+
 	int nLinesInView = LinesInView();
 	int nCharsInView = CharsInView() + 1;
+
+	int nViewOffset = m_LineNumberMarginWidth + m_PaneWithFocus * GetPaneWidth();
+
 	if (begin == end
 		|| end.line < m_FirstLineSeen
 		|| begin.line > m_FirstLineSeen + nLinesInView + 1)
@@ -910,10 +998,12 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 	{
 		r.top = begin.line * LineHeight();
 		r.bottom = r.top + LineHeight();
+
 		if (end.pos <= 0 || begin.pos > nCharsInView)
 		{
 			return;
 		}
+
 		if (begin.pos < 0)
 		{
 			begin.pos = 0;
@@ -922,8 +1012,9 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 		{
 			end.pos = nCharsInView;
 		}
-		r.left = begin.pos * CharWidth() + m_LineNumberMarginWidth;
-		r.right = end.pos * CharWidth() + m_LineNumberMarginWidth + m_FontMetric.tmOverhang;
+
+		r.left = begin.pos * CharWidth() + nViewOffset;
+		r.right = end.pos * CharWidth() + nViewOffset + m_FontMetric.tmOverhang;
 		InvalidateRect( & r);
 	}
 	else
@@ -936,10 +1027,11 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 			}
 			r.top = begin.line * LineHeight();
 			r.bottom = r.top + LineHeight();
-			r.left = begin.pos * CharWidth() + m_LineNumberMarginWidth;
-			r.right = (nCharsInView + 1) * CharWidth() + m_LineNumberMarginWidth + m_FontMetric.tmOverhang;
+			r.left = begin.pos * CharWidth() + nViewOffset;
+			r.right = (nCharsInView + 1) * CharWidth() + nViewOffset + m_FontMetric.tmOverhang;
 			InvalidateRect( & r);
 		}
+
 		if (end.line <= nLinesInView + 2 && end.pos > 0)
 		{
 			if (end.pos > nCharsInView + 1)
@@ -948,18 +1040,20 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 			}
 			r.top = end.line * LineHeight();
 			r.bottom = r.top + LineHeight();
-			r.right = end.pos * CharWidth() + m_LineNumberMarginWidth + m_FontMetric.tmOverhang;
-			r.left = m_LineNumberMarginWidth;
+			r.right = end.pos * CharWidth() + nViewOffset + m_FontMetric.tmOverhang;
+			r.left = nViewOffset;
 			InvalidateRect( & r);
 		}
+
 		if (end.line > nLinesInView + 2)
 		{
 			end.line = nLinesInView + 2;
 		}
+
 		if (end.line > begin.line + 1)
 		{
-			r.left = m_LineNumberMarginWidth;
-			r.right = (nCharsInView + 1) * CharWidth() + m_LineNumberMarginWidth + m_FontMetric.tmOverhang;
+			r.left = nViewOffset;
+			r.right = (nCharsInView + 1) * CharWidth() + nViewOffset + m_FontMetric.tmOverhang;
 			r.top = (begin.line + 1) * LineHeight();
 			r.bottom = end.line * LineHeight();
 			InvalidateRect( & r);
@@ -994,8 +1088,11 @@ void CDiffFileView::CreateAndShowCaret()
 		TRACE("CDiffFileView::CreateAndShowCaret - 0 == GetDocument()->GetTotalLines()\n");
 		return;
 	}
-	CPoint p((pDoc->m_CaretPos.pos - m_FirstPosSeen) * CharWidth() + m_LineNumberMarginWidth,
+
+	CPoint p((pDoc->m_CaretPos.pos - m_FirstPosSeen) * CharWidth()
+			+ m_LineNumberMarginWidth + m_PaneWithFocus * GetPaneWidth(),
 			(pDoc->m_CaretPos.line - m_FirstLineSeen) * LineHeight());
+
 	if (pDoc->m_CaretPos.pos >= m_FirstPosSeen
 		&& pDoc->m_CaretPos.line >= m_FirstLineSeen
 		&& pDoc->m_CaretPos.line <= m_FirstLineSeen + LinesInView() + 1)
@@ -1024,9 +1121,23 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 	CView::OnLButtonDown(nFlags, point);
 	m_LButtonDown = true;
 	int flags = SetPositionMakeVisible;
+
+	int nPane = PointToPaneNumber(point.x);
+	point.x = PointToPaneOffset(point.x);
+
 	// if the left margin is clicked, the whole line is selected
 	point.x -= m_LineNumberMarginWidth;
 	int nLine = point.y / LineHeight() + m_FirstLineSeen;
+
+	if (nPane != m_PaneWithFocus)
+	{
+		// Pane changes, ignore Shift
+		nFlags &= ~MK_SHIFT;
+		// reset old selection
+		SetCaretPosition(0, 0);
+	}
+
+	m_PaneWithFocus = nPane;
 
 	if (point.x < 0)
 	{
@@ -1076,7 +1187,8 @@ void CDiffFileView::OnMouseMove(UINT nFlags, CPoint point)
 	}
 	if (m_TrackingSelection)
 	{
-		point.x -= m_LineNumberMarginWidth;
+		point.x = PointToPaneOffset(point.x, m_PaneWithFocus) - m_LineNumberMarginWidth;
+
 		int nLine = point.y / LineHeight() + m_FirstLineSeen;
 
 		if (point.x < 0)
@@ -1184,7 +1296,9 @@ void CDiffFileView::OnMetricsChange()
 		}
 		m_LineNumberMarginWidth = CharWidth() * nNumChars + 1;
 		if (pFilePair->pFirstFile != NULL
-			&& pFilePair->pSecondFile != NULL)
+			&& pFilePair->pSecondFile != NULL
+			// two files, one pane
+			&& 1 == m_NumberOfPanes)
 		{
 			m_LineNumberMarginWidth *= 2;
 		}
@@ -1194,7 +1308,10 @@ void CDiffFileView::OnMetricsChange()
 	m_PreferredRect.bottom = m_VisibleRect.bottom / 4;
 	m_PreferredRect.top = m_PreferredRect.bottom; //m_VisibleRect.bottom - m_VisibleRect.bottom / 4;
 
-	m_VisibleRect.right =  (cr.Width() - m_LineNumberMarginWidth) / CharWidth();
+	int nPaneWidth = cr.Width() - m_LineNumberMarginWidth * m_NumberOfPanes - (m_NumberOfPanes - 1);
+
+	m_VisibleRect.right = nPaneWidth / CharWidth() / m_NumberOfPanes;
+
 	if (m_VisibleRect.right < 0)
 	{
 		m_VisibleRect.right = 0;
@@ -1217,6 +1334,8 @@ BOOL CDiffFileView::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 
 		GetCursorPos( & p);
 		ScreenToClient( & p);
+		int nPane = PointToPaneNumber(p.x);
+		p.x = PointToPaneOffset(p.x);
 
 		if (p.x >= m_LineNumberMarginWidth)
 		{
@@ -1738,31 +1857,6 @@ void CDiffFileView::OnEditSelectAll()
 	CreateAndShowCaret();
 }
 
-
-void CDiffFileView::OnUpdateViewFile2Version(CCmdUI* pCmdUI)
-{
-	// TODO: Add your command update UI handler code here
-
-}
-
-void CDiffFileView::OnViewFile2Version()
-{
-	// enable if there are any differences in the line, and the line is not exclusively File1
-}
-
-void CDiffFileView::OnUpdateViewFile1Version(CCmdUI* pCmdUI)
-{
-	// TODO: Add your command update UI handler code here
-
-}
-
-void CDiffFileView::OnViewFile1Version()
-{
-	// TODO: Add your command handler code here
-
-}
-
-
 void CDiffFileView::OnTimer(UINT nIDEvent)
 {
 	if (1 == nIDEvent)
@@ -1807,4 +1901,114 @@ void CDiffFileView::OnActivateFrame(UINT nState, CFrameWnd* pDeactivateFrame)
 			}
 		}
 	}
+}
+
+void CDiffFileView::OnViewSideBySide()
+{
+	FilePair * pFilePair = GetDocument()->GetFilePair();
+
+	if (pFilePair->pFirstFile != NULL
+		&& pFilePair->pSecondFile != NULL)
+	{
+		if (2 == m_NumberOfPanes)
+		{
+			m_NumberOfPanes = 1;
+			m_PaneWithFocus = 0;
+		}
+		else
+		{
+			m_NumberOfPanes = 2;
+		}
+		OnMetricsChange();
+	}
+}
+
+void CDiffFileView::OnUpdateViewSideBySide(CCmdUI *pCmdUI)
+{
+	FilePair * pFilePair = GetDocument()->GetFilePair();
+
+	if (pFilePair->pFirstFile != NULL
+		&& pFilePair->pSecondFile != NULL)
+	{
+		pCmdUI->Enable(TRUE);
+		pCmdUI->SetCheck(2 == m_NumberOfPanes);
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+		pCmdUI->SetCheck(0);
+	}
+}
+
+int CDiffFileView::PointToPaneNumber(int x)
+{
+	if (1 == m_NumberOfPanes)
+	{
+		return 0;
+	}
+
+	int nPaneWidth = GetPaneWidth();
+
+	if (nPaneWidth <= 0)
+	{
+		return 0;
+	}
+
+	int nPane = x / nPaneWidth;
+	if (nPane >= m_NumberOfPanes)
+	{
+		nPane = m_NumberOfPanes - 1;
+	}
+	return nPane;
+}
+
+int CDiffFileView::PointToPaneOffset(int x, int nPane)
+{
+	if (1 == m_NumberOfPanes)
+	{
+		return x;
+	}
+
+	int nPaneWidth = GetPaneWidth();
+
+	if (nPaneWidth <= 0)
+	{
+		return 0;
+	}
+
+	if (-1 == nPane)
+	{
+		nPane = x / nPaneWidth;
+	}
+
+	if (nPane >= m_NumberOfPanes)
+	{
+		nPane = m_NumberOfPanes - 1;
+	}
+
+	return x - nPane * nPaneWidth;
+}
+
+int CDiffFileView::GetPaneWidth()
+{
+
+	CRect cr;
+	GetClientRect( & cr);
+
+	if (1 == m_NumberOfPanes)
+	{
+		return cr.Width();
+	}
+
+	int nPaneWidth = cr.Width() - m_LineNumberMarginWidth * m_NumberOfPanes
+					- (m_NumberOfPanes - 1);
+
+	nPaneWidth = nPaneWidth / CharWidth() / m_NumberOfPanes * CharWidth()
+				+ m_LineNumberMarginWidth + 1;
+
+	if (nPaneWidth <= 0)
+	{
+		return 0;
+	}
+	return nPaneWidth;
 }

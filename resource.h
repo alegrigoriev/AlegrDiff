@@ -72,6 +72,7 @@
 #define ID_VIEW_RESETCOLUMNS            176
 #define ID_DOC_UPDATEALLVIEWS           177
 #define ID_VIEW_VIEWASTEXTFILES         178
+#define ID_VIEW_SIDEBYSIDE              179
 #define IDC_COMBO_FIRST_DIR             1000
 #define IDC_COMBO_SECOND_DIR            1001
 #define IDC_COMBO_SAVE_FILENAME         1001
@@ -269,6 +270,7 @@
 #define IDS_STRING_NO_FILES_TO_COMPARE  32885
 #define IDS_STRING_PERCENTS_DONE        32886
 #define ID_VIEW_AS_BINARY               32887
+#define IDC_VIEW_SIDE_BY_SIDE           32888
 #define IDS_UNABLE_TO_CREATE_FILE       57608
 #define ID_INDICATOR_CARET_POS          0xE705
 
@@ -277,8 +279,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        179
-#define _APS_NEXT_COMMAND_VALUE         32888
+#define _APS_NEXT_RESOURCE_VALUE        180
+#define _APS_NEXT_COMMAND_VALUE         32889
 #define _APS_NEXT_CONTROL_VALUE         1083
 #define _APS_NEXT_SYMED_VALUE           105
 #endif

@@ -43,7 +43,8 @@ CSmallAllocator::~CSmallAllocator()
 
 	while ( ! m_Blocks.IsEmpty())
 	{
-		BlockHeader * pBlock = m_Blocks.RemoveTail();
+		//BlockHeader * pBlock =
+		m_Blocks.RemoveTail();
 		TRACE("CSmallAllocator::~CSmallAllocator ItemSize= %d, %d blocks are not freed\n",
 			m_ItemSize, m_ItemsInBlock);
 	}
@@ -57,7 +58,8 @@ CSmallAllocator::BlockHeader * CSmallAllocator::AllocateBlock()
 		return NULL;
 	}
 	BlockHeader * pBlock = new (pBuf) BlockHeader(this);
-	ItemHeader * pItem = reinterpret_cast<ItemHeader *>(pBuf + sizeof BlockHeader);
+
+	//ItemHeader * pItem = reinterpret_cast<ItemHeader *>(pBuf + sizeof BlockHeader);
 	for (unsigned i = 0; i < m_ItemsInBlock; i++)
 	{
 		ItemHeader * pItem = reinterpret_cast<ItemHeader *>(

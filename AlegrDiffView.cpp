@@ -142,7 +142,7 @@ BOOL CAlegrDiffView::PreCreateWindow(CREATESTRUCT& cs)
 /////////////////////////////////////////////////////////////////////////////
 // CAlegrDiffView drawing
 
-void CAlegrDiffView::OnDraw(CDC* pDC)
+void CAlegrDiffView::OnDraw(CDC* /*pDC*/)
 {
 	CAlegrDiffDoc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
@@ -392,7 +392,7 @@ void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, ListHe
 			FilePairComparePredicate(m_SortColumns, m_AscendingSortOrder, countof (m_SortColumns)));
 }
 
-void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
+void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 {
 	CListCtrl * pListCtrl = &GetListCtrl();
 	CAlegrDiffDoc * pDoc = GetDocument();
@@ -658,7 +658,7 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
 void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 {
-	CListCtrl * pListCtrl = & GetListCtrl();
+//    CListCtrl * pListCtrl = & GetListCtrl();
 	NMLISTVIEW * pNmlv = (NMLISTVIEW *) pNMHDR;
 	// open new view for the files
 	// compare two files
@@ -677,7 +677,7 @@ void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 }
 
 
-void CAlegrDiffView::OnReturn(NMHDR* pNMHDR, LRESULT* pResult)
+void CAlegrDiffView::OnReturn(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	CListCtrl * pListCtrl = & GetListCtrl();
 	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
@@ -767,7 +767,7 @@ void CAlegrDiffView::OnUpdateFileEditSecond(CCmdUI* pCmdUI)
 						IDS_OPEN_SECOND_FILE_MENU, IDS_OPEN_SECOND_FILE_MENU_DISABLED);
 }
 
-void CAlegrDiffView::OnContextMenu(CWnd* pWnd, CPoint point)
+void CAlegrDiffView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 {
 	// make sure window is active
 	GetParentFrame()->ActivateFrame();
@@ -915,7 +915,7 @@ void CAlegrDiffView::OnFileCopySecondDir()
 
 BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 {
-	CThisApp * pApp = GetApp();
+//    CThisApp * pApp = GetApp();
 
 	CListCtrl * pListCtrl = & GetListCtrl();
 	vector<FileItem *> FilesArray;
@@ -958,7 +958,7 @@ BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 void CAlegrDiffView::SetListViewItem(FilePair *pPair, int item, bool bInsert)
 {
 	CListCtrl * pListCtrl = &GetListCtrl();
-	CAlegrDiffDoc * pDoc = GetDocument();
+//	CAlegrDiffDoc * pDoc = GetDocument();
 
 	FileItem * pFileItem = pPair->pFirstFile;
 	if (NULL == pFileItem)
@@ -1425,13 +1425,13 @@ void CAlegrDiffView::UpdateAppColumns()
 
 	for (int i = 0; i < MaxColumns; i++)
 	{
-		pApp->m_ColumnSort[i] = m_SortColumns[i];
+		pApp->m_ColumnSort[i] = (UCHAR)m_SortColumns[i];
 		if ( ! m_AscendingSortOrder[i])
 		{
 			pApp->m_ColumnSort[i] |= 0x80;
 		}
-		pApp->m_ColumnWidthArray[i] = m_ColumnWidthArray[i];
-		pApp->m_ColumnArray[i] = m_ColumnArray[i];
+		pApp->m_ColumnWidthArray[i] = (SHORT)m_ColumnWidthArray[i];
+		pApp->m_ColumnArray[i] = (UCHAR)m_ColumnArray[i];
 	}
 }
 

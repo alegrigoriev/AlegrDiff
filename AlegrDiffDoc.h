@@ -34,21 +34,21 @@ public:
 	CString m_sBinaryFilesPattern;
 	CString	m_sFirstDir;
 	CString	m_sSecondDir;
-	FilePair * m_pPairList;
+	KListEntry<FilePair> m_PairList;
 	int m_nFilePairs;
 	bool m_bRecurseSubdirs;
 
 	void RunComparisionThread();
 
-	FilePair * GetFilePairList() const
+	KListEntry<FilePair> * GetFilePairList()
 	{
-		return m_pPairList;
+		return & m_PairList;
 	}
 // Operations
 public:
 	bool BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 							bool bRecurseSubdirs, bool BinaryComparison);
-	bool BuildFilePairList(FileList & FileList1, FileList & FileList2);
+	void BuildFilePairList(FileList & FileList1, FileList & FileList2);
 	void FreeFilePairList();
 
 

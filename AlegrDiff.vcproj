@@ -526,6 +526,9 @@
 				RelativePath=".\GotoLineDialog.h">
 			</File>
 			<File
+				RelativePath="KListEntry.h">
+			</File>
+			<File
 				RelativePath=".\MainFrm.h">
 			</File>
 			<File

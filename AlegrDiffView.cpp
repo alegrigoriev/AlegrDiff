@@ -354,21 +354,24 @@ void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
-void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, FilePair * pPairs, int nCount)
+void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, KListEntry<FilePair> * pPairList, int nCount)
 {
 	PairArray.clear();
 	PairArray.reserve(nCount);
-	for (int i = 0; i < nCount && pPairs != NULL; i++, pPairs = pPairs->pNext)
+
+	FilePair * pPair = pPairList->Next();
+
+	for (int i = 0; i < nCount && pPair != pPairList->Head(); i++, pPair = pPair->Next())
 	{
-		if (NULL != pPairs->pFirstFile
-			&& NULL != pPairs->pSecondFile
-			&& pPairs->pFirstFile->IsFolder())
+		if (NULL != pPair->pFirstFile
+			&& NULL != pPair->pSecondFile
+			&& pPair->pFirstFile->IsFolder())
 		{
 			continue;
 		}
-		if ( ! pPairs->m_bHideFromListView)
+		if ( ! pPair->m_bHideFromListView)
 		{
-			PairArray.push_back(pPairs);
+			PairArray.push_back(pPair);
 		}
 	}
 
@@ -494,7 +497,7 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		m_ColumnPositionToViewItem[j] = j;
 	}
 
-	BuildSortedPairArray(m_PairArray, pDoc->m_pPairList, pDoc->m_nFilePairs);
+	BuildSortedPairArray(m_PairArray, & pDoc->m_PairList, pDoc->m_nFilePairs);
 
 	pListCtrl->SetItemCount(m_PairArray.size());
 
@@ -1044,13 +1047,13 @@ void CAlegrDiffView::OnViewShowallfiles()
 {
 	CAlegrDiffDoc * pDoc = GetDocument();
 	FilePair * pPair;
-	for (pPair = pDoc->m_pPairList; pPair != NULL; pPair = pPair->pNext)
+	for (pPair = pDoc->m_PairList.Next(); pPair != pDoc->m_PairList.Head(); pPair = pPair->Next())
 	{
 		pPair->m_bHideFromListView = false;
 		pPair->m_bSelected = true;
 	}
 	pDoc->UpdateAllViews(NULL);
-	for (pPair = pDoc->m_pPairList; pPair != NULL; pPair = pPair->pNext)
+	for (pPair = pDoc->m_PairList.Next(); pPair != pDoc->m_PairList.Head(); pPair = pPair->Next())
 	{
 		pPair->m_bSelected = false;
 	}
@@ -1058,7 +1061,8 @@ void CAlegrDiffView::OnViewShowallfiles()
 
 void CAlegrDiffView::OnUpdateViewShowallfiles(CCmdUI* pCmdUI)
 {
-	for (FilePair * pPair = GetDocument()->m_pPairList; pPair != NULL; pPair = pPair->pNext)
+	CAlegrDiffDoc * pDoc = GetDocument();
+	for (FilePair * pPair = pDoc->m_PairList.Next(); pPair != pDoc->m_PairList.Head(); pPair = pPair->Next())
 	{
 		if (pPair->m_bHideFromListView)
 		{

@@ -169,10 +169,10 @@ struct KListEntry
 
 	T * Next() const volatile { __assume(NULL != pNext); return static_cast<T *>(pNext); }
 	T * Prev() const volatile { __assume(NULL != pPrev); return static_cast<T *>(pPrev); }
-	KListEntry<T> * Head() { return this; }
-	KListEntry<T> const * Head() const { return this; }
-	KListEntry<T> volatile * Head() volatile { return this; }
-	KListEntry<T> const volatile * Head() const volatile { return this; }
+	T * Head() { return static_cast<T *>(this); }
+	T const * Head() const { return static_cast<T const *>(this); }
+	T volatile * Head() volatile { return static_cast<T volatile *>(this); }
+	T const volatile * Head() const volatile { return static_cast<T const volatile *>(this); }
 
 	// call a function with any return type
 	template <class F> void CallForEach(F function) const volatile

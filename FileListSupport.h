@@ -7,6 +7,7 @@
 #include <functional>
 #include <vector>
 #include "Md5HashCalculator.h"
+#include "KListEntry.h"
 
 using namespace std;
 
@@ -345,7 +346,7 @@ private:
 
 enum PairCheckResult { FilesDeleted, FilesUnchanged, FilesTimeChanged, };
 
-class FilePair
+class FilePair : public KListEntry<FilePair>
 {
 public:
 	FilePair();
@@ -357,7 +358,6 @@ private:
 	int m_LoadedCount;
 
 public:
-	FilePair * pNext;
 	FileItem * pFirstFile;
 	FileItem * pSecondFile;
 	CString GetComparisionResult() const;
@@ -371,6 +371,11 @@ public:
 	void UnloadFiles(bool ForceUnload = false);
 	void FreeLinePairData();
 
+	bool NeedBinaryComparison() const
+	{
+		return (pFirstFile != NULL && pFirstFile->m_IsBinary)
+			|| (pSecondFile != NULL && pSecondFile->m_IsBinary);
+	}
 
 	PairCheckResult CheckForFilesChanged();
 	PairCheckResult ReloadIfChanged();

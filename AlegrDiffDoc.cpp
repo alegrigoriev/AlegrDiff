@@ -42,8 +42,7 @@ CAlegrDiffDoc::CAlegrDiffDoc()
 	m_hEvent(CreateEvent(NULL, FALSE, FALSE, NULL)),
 	m_bStopThread(TRUE),
 	m_NextPairToRefresh(NULL),
-	m_NextPairToCompare(NULL),
-	m_pPairList(NULL)
+	m_NextPairToCompare(NULL)
 {
 }
 
@@ -134,10 +133,16 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 		AfxMessageBox(s);
 		return false;
 	}
-	return BuildFilePairList(FileList1, FileList2);
+	BuildFilePairList(FileList1, FileList2);
+	return true;
+}
+bool operator ==(FILETIME time1, FILETIME time2)
+{
+	return time1.dwLowDateTime == time2.dwLowDateTime
+			&& time1.dwHighDateTime == time2.dwHighDateTime;
 }
 
-bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2)
+void CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2)
 {
 
 	CArray<FileItem *, FileItem *> Files1;
@@ -146,13 +151,13 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 	FileList1.GetSortedList(Files1, FileList::SortDirFirst | FileList::SortBackwards);
 	FileList2.GetSortedList(Files2, FileList::SortDirFirst | FileList::SortBackwards);
 
-	FreeFilePairList();
+	// we don't call FreeFilePairList, because we could be performing file list refrech
+	FilePair * pInsertBefore = m_PairList.Next();
+	BOOL NeedUpdateViews = FALSE;
+
 	for (int idx1 = 0, idx2 = 0; idx1 < Files1.GetSize() || idx2 < Files2.GetSize(); )
 	{
 		FilePair * pPair = new FilePair;
-		pPair->pNext = m_pPairList;
-		m_pPairList = pPair;
-		m_nFilePairs++;
 
 		int comparison;
 		if (idx1 >= Files1.GetSize())
@@ -224,22 +229,100 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 						LPCTSTR(FileList1.m_BaseDir + pPair->pFirstFile->GetSubdir()),
 						LPCTSTR(FileList2.m_BaseDir + pPair->pSecondFile->GetSubdir()));
 		}
+		while (pInsertBefore != m_PairList.Head())
+		{
+			// check if we insert ir remove items, or the item is duplicate
+			FileItem * pItem1 = pPair->pFirstFile;
+			if (NULL == pItem1)
+			{
+				pItem1 = pPair->pSecondFile;
+			}
+
+			FileItem * pItem2 = pInsertBefore->pFirstFile;
+			if (NULL == pItem2)
+			{
+				pItem2 = pInsertBefore->pSecondFile;
+			}
+			comparison = FileItem::DirNameCompare(pItem1, pItem2);
+			if (comparison < 0)
+			{
+				FilePair * tmp = pInsertBefore;
+				pInsertBefore = pInsertBefore->Next();
+				tmp->RemoveFromList();
+				tmp->Dereference();
+				m_nFilePairs--;
+				NeedUpdateViews = TRUE;
+				continue;
+			}
+			else if (comparison > 0)
+			{
+				break;
+			}
+			// name is the same
+			// check if file times are the same, and both files exist/not exist
+			if ((NULL != pPair->pFirstFile) == (NULL != pInsertBefore->pFirstFile)
+				&& (NULL != pPair->pSecondFile) == (NULL != pInsertBefore->pSecondFile)
+				// also check to see if file types are the same (binary/text
+				&& (pPair->NeedBinaryComparison() == pInsertBefore->NeedBinaryComparison())
+				&& (pPair->pFirstFile == NULL
+					|| pPair->pFirstFile->GetLastWriteTime() ==
+					pInsertBefore->pFirstFile->GetLastWriteTime())
+				&& (pPair->pSecondFile == NULL
+					|| pPair->pSecondFile->GetLastWriteTime() ==
+					pInsertBefore->pSecondFile->GetLastWriteTime()))
+			{
+				if (pPair->pFirstFile != NULL
+					&& pPair->pFirstFile->GetLastWriteTime() ==
+					pInsertBefore->pFirstFile->GetLastWriteTime())
+				{
+				}
+				pPair->Dereference();
+				pPair = NULL;
+				pInsertBefore = pInsertBefore->Next();
+			}
+			else
+			{
+				FilePair * tmp = pInsertBefore;
+				pInsertBefore = pInsertBefore->Next();
+				tmp->RemoveFromList();
+				tmp->Dereference();
+				m_nFilePairs--;
+			}
+			break;
+		}
+
+		if (pPair != NULL)
+		{
+			NeedUpdateViews = TRUE;
+			pInsertBefore->InsertTail(pPair);
+			m_nFilePairs++;
+		}
+	}
+
+	while (pInsertBefore != m_PairList.Head())
+	{
+		FilePair * tmp = pInsertBefore;
+		pInsertBefore = pInsertBefore->Next();
+		tmp->RemoveFromList();
+		tmp->Dereference();
+		NeedUpdateViews = TRUE;
+		m_nFilePairs--;
 	}
 	// all files are referenced in FilePair list
 	FileList1.Detach();
 	FileList2.Detach();
+	if (NeedUpdateViews)
+	{
+		UpdateAllViews(NULL);
+	}
 	((CFrameWnd*)AfxGetMainWnd())->SetMessageText(AFX_IDS_IDLEMESSAGE);
-	return true;
 }
 
 void CAlegrDiffDoc::FreeFilePairList()
 {
-	FilePair * tmp;
-	while (NULL != m_pPairList)
+	while (! m_PairList.IsEmpty())
 	{
-		tmp = m_pPairList;
-		m_pPairList = tmp->pNext;
-		tmp->Dereference();
+		m_PairList.RemoveHead()->Dereference();
 	}
 	m_nFilePairs = 0;
 }
@@ -1898,8 +1981,8 @@ void CAlegrDiffDoc::RunComparisionThread()
 	unsigned threadid;
 	ResetEvent(m_hEvent);
 	m_bStopThread = false;
-	m_NextPairToRefresh = NULL;
-	m_NextPairToCompare = NULL;
+	m_NextPairToRefresh = m_PairList.Head();
+	m_NextPairToCompare = m_PairList.Head();
 
 	m_hThread = (HANDLE) _beginthreadex(NULL, 0x10000,
 										_CompareThreadFunction, this, 0, & threadid);
@@ -1923,18 +2006,19 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 
 	{
 		CSimpleCriticalSectionLock lock(m_FileListCs);
-		m_NextPairToRefresh = m_pPairList;
-		m_NextPairToCompare = m_pPairList;
+		m_NextPairToRefresh = m_PairList.Next();
+		m_NextPairToCompare = m_PairList.Next();
 	}
-	for (pPair = m_pPairList; pPair != NULL && ! m_bStopThread; pPair = pPair->pNext)
+	for (pPair = m_PairList.Next(); pPair != m_PairList.Head() && ! m_bStopThread; pPair = pPair->Next())
 	{
 		TRACE("First pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisionResult);
 		if (NULL == pPair->pFirstFile
 			|| NULL == pPair->pSecondFile
-			|| ! pPair->pFirstFile->m_IsBinary
+			|| ! (pPair->pFirstFile->m_IsBinary
+				|| pPair->pSecondFile->m_IsBinary)
 			|| pPair->pFirstFile->GetFileLength() != pPair->pSecondFile->GetFileLength())
 		{
-			m_NextPairToCompare = pPair->pNext;
+			m_NextPairToCompare = pPair->Next();
 			continue;
 		}
 		pPair->m_ComparisionResult = FilePair::CalculatingFirstFingerprint;
@@ -1952,23 +2036,23 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 		}
 
 		pPair->m_bChanged = true;
-		m_NextPairToCompare = pPair->pNext;
+		m_NextPairToCompare = pPair->Next();
 
 		::PostMessage(NotifyWnd, WM_KICKIDLE, 0, 0);
 	}
 
 	{
 		CSimpleCriticalSectionLock lock(m_FileListCs);
-		m_NextPairToRefresh = m_pPairList;
-		m_NextPairToCompare = m_pPairList;
+		m_NextPairToRefresh = m_PairList.Next();
+		m_NextPairToCompare = m_PairList.Next();
 	}
 
-	for (pPair = m_pPairList; pPair != NULL && ! m_bStopThread; pPair = pPair->pNext)
+	for (pPair = m_PairList.Next(); pPair != m_PairList.Head() && ! m_bStopThread; pPair = pPair->Next())
 	{
 		TRACE("Second pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisionResult);
 		if (FilePair::ResultUnknown != pPair->m_ComparisionResult)
 		{
-			m_NextPairToCompare = pPair->pNext;
+			m_NextPairToCompare = pPair->Next();
 			continue;
 		}
 
@@ -1976,14 +2060,14 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 		::PostMessage(NotifyWnd, WM_KICKIDLE, 0, 0);
 		pPair->m_ComparisionResult = pPair->PreCompareFiles( & HashCalc, m_bStopThread);
 		pPair->m_bChanged = true;
-		m_NextPairToCompare = pPair->pNext;
+		m_NextPairToCompare = pPair->Next();
 
 	}
 
 	{
 		CSimpleCriticalSectionLock lock(m_FileListCs);
-		m_NextPairToCompare = NULL;
-		m_NextPairToRefresh = NULL;
+		m_NextPairToRefresh = m_PairList.Head();
+		m_NextPairToCompare = m_PairList.Head();
 	}
 	m_bStopThread = true;
 	::PostMessage(NotifyWnd, WM_KICKIDLE, 0, 0);
@@ -1995,7 +2079,7 @@ void CAlegrDiffDoc::OnIdle()
 	FilePair * pPair;
 	{
 		CSimpleCriticalSectionLock lock(m_FileListCs);
-		while (NULL != m_NextPairToRefresh
+		while (m_PairList.Head() != m_NextPairToRefresh
 				&& m_NextPairToRefresh != m_NextPairToCompare)
 		{
 			TRACE("Foreground view refresh, pPair=%p, result=%d\n", m_NextPairToRefresh, m_NextPairToRefresh->m_ComparisionResult);
@@ -2006,12 +2090,12 @@ void CAlegrDiffDoc::OnIdle()
 				alvi.pPair = m_NextPairToRefresh;
 				UpdateAllViews(NULL, OnUpdateListViewItem, & alvi);
 			}
-			m_NextPairToRefresh = m_NextPairToRefresh->pNext;
+			m_NextPairToRefresh = m_NextPairToRefresh->Next();
 		}
 		pPair = m_NextPairToCompare;
 	}
 
-	if (NULL != pPair)
+	if (m_PairList.Head() != pPair)
 	{
 		((CFrameWnd*)AfxGetMainWnd())->
 			SetMessageText(pPair->GetComparisionResult());

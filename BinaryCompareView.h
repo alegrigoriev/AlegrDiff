@@ -6,6 +6,8 @@
 class CBinaryCompareView : public CView
 {
 	DECLARE_DYNCREATE(CBinaryCompareView)
+	typedef CBinaryCompareDoc ThisDoc;
+	typedef CView BaseClass;
 
 protected:
 	CBinaryCompareView();           // protected constructor used by dynamic creation
@@ -25,12 +27,17 @@ public:
 	int m_FirstPosSeen;
 	long m_ScrollDataScale;
 	int m_AddressMarginWidth;
+	int m_MaxAddressChars;
 	BOOL m_LButtonDown;
 	BOOL m_TrackingSelection;
 	BOOL m_bCaretOnChars;
 
+	int m_NumberOfPanes;
+	int m_PaneWithFocus;
+
 	int GetMaxChars() const;
 	BOOL m_bShowSecondFile;
+
 	CRect m_VisibleRect;
 	CRect m_PreferredRect;
 
@@ -59,6 +66,9 @@ public:
 	void CaretToHome(int flags);
 	void CaretToEnd(int flags);
 	void InvalidateRange(LONGLONG begin, LONGLONG end);
+	void InvalidatePaneLine(int Pane, int line, int BeginOffset, int EndOffset);
+	int GetXCoordOfHexData(int Pane, int LineOffset);
+	int GetXCoordOfTextData(int Pane, int LineOffset);
 
 	void MakePositionVisible(LONGLONG pos);
 	//void MakeCaretCenteredRangeVisible(LONGLONG NewPos, LONGLONG EndPos);
@@ -73,6 +83,10 @@ public:
 	}
 	void BringPositionsToBounds(LONGLONG textpos, LONGLONG endpos,
 								const CRect & AllowedBounds, const CRect & BringToBounds);
+
+	int PointToPaneNumber(int x);
+	int PointToPaneOffset(int x, int nPane = -1);
+	int GetPaneWidth();
 
 	virtual void OnDraw(CDC* pDC);      // overridden to draw this view
 #ifdef _DEBUG
@@ -122,6 +136,8 @@ public:
 	afx_msg void OnUpdateViewLessbytesinline(CCmdUI *pCmdUI);
 	afx_msg void OnViewMorebytesinline();
 	afx_msg void OnUpdateViewMorebytesinline(CCmdUI *pCmdUI);
+	afx_msg void OnViewSideBySide();
+	afx_msg void OnUpdateViewSideBySide(CCmdUI *pCmdUI);
 protected:
 	virtual void OnActivateView(BOOL bActivate, CView* pActivateView, CView* pDeactiveView);
 };

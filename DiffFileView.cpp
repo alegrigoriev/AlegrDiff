@@ -1250,7 +1250,15 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 		// reset old selection
 		SetCaretPosition(0, 0);
 	}
-	ClickPos.scope = nPane + 1;
+
+	if (m_NumberOfPanes > 1)
+	{
+		ClickPos.scope = nPane + 1;
+	}
+	else
+	{
+		ClickPos.scope = 0;
+	}
 
 	ClickPos.line = nLine;
 	//m_PaneWithFocus = nPane;

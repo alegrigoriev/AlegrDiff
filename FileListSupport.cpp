@@ -3258,7 +3258,7 @@ int FilePair::GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, bool bIgnore
 	EnumStringDiffSections(PosFrom, PosTo, GetAcceptDeclineFlagsFunc, & gfs);
 	if (~0 == gfs.Reset)
 	{
-		return FileDiffSection::FlagNoDifference;
+		return StringSection::NoDifference;
 	}
 	return gfs.Set;
 }

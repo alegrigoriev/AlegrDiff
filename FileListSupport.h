@@ -66,26 +66,14 @@ struct TextToken
 class FileDiffSection
 {
 public:
-	FileDiffSection() { m_Flags = FlagUndefined; }
+	FileDiffSection() { m_Flags = 0; }
 	~FileDiffSection() {}
 	TextPos m_Begin;
 	TextPos m_End;
 	ULONG m_Flags;
-	enum { FlagAccept = 4,
-		FlagDecline = 8,
-		FlagNoDifference = 0x20,
-		FlagUndefined = 0x10,
+	enum {
 		FlagWhitespace = 0x100,
 	};
-
-	void AcceptChange() { m_Flags &= ~FlagDecline; m_Flags |= FlagAccept; }
-	void DeclineChange() { m_Flags &= ~FlagAccept; m_Flags |= FlagDecline; }
-	void ChangeUndetermined() { m_Flags &= ~(FlagAccept | FlagDecline); }
-
-	bool IsAccepted() const { return 0 != (m_Flags & FlagAccept); }
-	bool IsDeclined() const { return 0 != (m_Flags & FlagDecline); }
-	bool IsWhitespace() const { return 0 != (m_Flags & FlagWhitespace); }
-	bool IsUndetermined() const { return 0 == (m_Flags & (FlagAccept | FlagDecline)); }
 
 	static void * operator new(size_t size)
 	{
@@ -210,12 +198,17 @@ struct StringSection
 		Declined = 8,
 		UseFile1Only = 8,
 		Undefined = 0x10,
+		NoDifference = 0x20,
+		Included = 0x40,
+		Discarded = 0x80,
 		Whitespace = 0x100,
 	};
 	USHORT Attr;
 	bool IsAccepted() const { return 0 != (Attr & Accepted); }
+	bool IsIncluded() const { return 0 != (Attr & Included); }
 	bool IsFile1Only() const { return 0 != (Attr & File1Only); }
 	bool IsDeclined() const { return 0 != (Attr & Declined); }
+	bool IsDiscarded() const { return 0 != (Attr & Discarded); }
 	bool IsWhitespace() const { return 0 != (Attr & Whitespace); }
 private:
 	static CSmallAllocator m_Allocator;

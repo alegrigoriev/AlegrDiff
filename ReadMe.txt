@@ -1,5 +1,6 @@
 TODO:
 
+Use GetFileAttributes rather than FindFirst to check whether it's file or directory
 Refresh list view
 make word by word comparison in MatchStrings
 show version of file1, file2 of the line
@@ -22,6 +23,7 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+Compare as binary is not disabled in extended "Compare Directories" dialog 
 screen move in two directions may corrupt the image (??)
 
 Fixed:

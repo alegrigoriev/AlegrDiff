@@ -651,7 +651,10 @@ HKEY CApplicationProfile::GetAppRegistryKey()
 	LPCTSTR RegistryKey = NULL;
 	if (m_pszRegistryKey.IsEmpty())
 	{
-		return NULL;
+		if ( ! m_pszProfileName.IsEmpty())
+		{
+			return NULL;
+		}
 		RegistryKey = AfxGetApp()->m_pszRegistryKey;
 	}
 	else

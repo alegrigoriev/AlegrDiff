@@ -109,6 +109,7 @@ BEGIN
     BUTTON      ID_EDIT_GOTOPREVDIFF
     BUTTON      ID_VIEW_SHOW_LINE_NUMBERS
     BUTTON      ID_VIEW_IGNORE_WHITESPACES
+    BUTTON      IDC_VIEW_SIDE_BY_SIDE
     SEPARATOR
     BUTTON      ID_EDIT_DECLINE
     BUTTON      ID_EDIT_ACCEPT
@@ -204,6 +205,7 @@ BEGIN
         MENUITEM "Ignore &Whitespaces\tCtrl+W", ID_VIEW_IGNORE_WHITESPACES
         MENUITEM SEPARATOR
         MENUITEM "View As &Binary Files",       ID_VIEW_AS_BINARY
+        MENUITEM "Side By Side",                IDC_VIEW_SIDE_BY_SIDE
     END
     POPUP "&Window"
     BEGIN
@@ -1660,6 +1662,7 @@ BEGIN
                             "Both directories are empty or no files match the filter pattern"
     IDS_STRING_PERCENTS_DONE "%d%% done"
     ID_VIEW_AS_BINARY       "Compare the files as non-text (binary) files\nBinary comparison"
+    IDC_VIEW_SIDE_BY_SIDE   "View two files side by side\nSide by side"
 END
 
 #endif    // English (U.S.) resources

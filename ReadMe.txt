@@ -1,15 +1,15 @@
 TODO:
 
-Assign an index to the files during original sort (for faster sorting)
 View files side by side
+show version of file1, file2 of the line
+Show Left-only, right-only, merged line (single line only)
+Add Copy 1st file text, copy 2nd file text
 Find full word only
+Assign an index to the files during original sort (for faster sorting)
 Make icons for the dialogs
 Allow doublequotes in the search pattern
 Use OnActivateApp to refresh the files
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
-Add Copy 1st file text, copy 2nd file text
-show version of file1, file2 of the line
-Show Left-only, right-only, merged line (single line only)
 Copy binary dump as text
 Add folder picture under the fingerprint picture
 make word by word comparison in MatchStrings
@@ -34,8 +34,7 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-History gets lost
-Creates Recent File List subkey and deletes it on exit
+History gets lost  under Win9x
 Zero byte in text file is causing text not shown
 "Length" column On/Off not saved
 Focus after hiding files
@@ -47,6 +46,7 @@ Directory dialog allows to select network host. It won't return anything then.
 screen move in two directions may corrupt the image (??)
 
 Fixed:
+Creates Recent File List subkey and deletes it on exit
 "Different only in version stamp" changes to "Files are DIFFERENT" 
  when the file is opened.
 After double click on listview item, the focus moves to the next item

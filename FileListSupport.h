@@ -247,13 +247,10 @@ enum FileCheckResult { FileDeleted, FileUnchanged, FileTimeChanged, };
 class FileItem
 {
 public:
-	FileItem(const WIN32_FIND_DATAA * pWfd,
-			const CStringA & BaseDir, const CStringA & Dir);
-	FileItem(const WIN32_FIND_DATAW * pWfd,
-			const CStringW & BaseDir, const CStringW & Dir);
+	FileItem(const WIN32_FIND_DATA * pWfd,
+			const CString & BaseDir, const CString & Dir);
 
-	FileItem(LPCSTR name);
-	FileItem(LPCWSTR name);
+	FileItem(LPCTSTR name);
 
 	~FileItem();
 	bool Load();
@@ -331,6 +328,7 @@ private:
 	CString m_Name;
 	CString m_Subdir;
 	CString m_BaseDir;
+
 	FILETIME m_LastWriteTime;
 	LONGLONG m_Length;
 	LONGLONG m_Crc64;   // use x64 + x4 + x3 + x + 1 polynomial

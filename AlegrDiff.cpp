@@ -163,7 +163,7 @@ BOOL CAlegrDiffApp::InitInstance()
 
 	SetRegistryKey(_T("AleGr SoftWare"));
 
-	LoadStdProfileSettings();  // Load standard INI file options (including MRU)
+	//LoadStdProfileSettings();  // Load standard INI file options (including MRU)
 
 	Profile.AddItem(_T("Settings"), _T("NormalTextColor"), m_NormalTextColor, 0, 0, 0xFFFFFF);
 	Profile.AddItem(_T("Settings"), _T("AddedTextColor"), m_AddedTextColor, 0x00FF0000, 0, 0xFFFFFF);

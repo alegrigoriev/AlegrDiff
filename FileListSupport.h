@@ -38,10 +38,10 @@ struct TextPosLine
 struct TextPosDisplay
 {
 	int line;
-	short pos;
-	short scope;
+	int pos;
+	int scope;
 	TextPosDisplay() {}
-	TextPosDisplay(int l, short p, short s)
+	TextPosDisplay(int l, int p, int s)
 		: line(l), pos(p), scope(s)
 	{
 	}

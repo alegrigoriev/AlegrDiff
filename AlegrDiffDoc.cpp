@@ -722,7 +722,6 @@ void CFilePairDoc::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
 	pCmdUI->SetText(s);
 }
 
-
 void CAlegrDiffDoc::OnViewRefresh()
 {
 	// TODO: Add your command handler code here

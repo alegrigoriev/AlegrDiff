@@ -23,7 +23,6 @@ public:
 	};
 
 	TCHAR m_ComparisonResult[MAX_PATH];
-	int m_TotalLines;
 	LONGLONG m_CaretPos;
 	LONGLONG m_SelectionAnchor;
 	LONGLONG m_OriginalSelectionAnchor;
@@ -33,8 +32,6 @@ public:
 	LONGLONG GetFileSize() const;
 
 	//void SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags = SetPositionMakeCentered);
-	void CaretToHome(int flags);
-	void CaretToEnd(int flags);
 	void SetCaretPosition(LONGLONG Addr, int flags);
 
 	CBinaryCompareDoc();
@@ -46,6 +43,7 @@ public:
 #endif
 
 protected:
+	afx_msg void OnUpdateCaretPosIndicator(CCmdUI* pCmdUI);
 	virtual BOOL OnNewDocument();
 	FilePair * m_pFilePair;
 

@@ -12,6 +12,9 @@ IMPLEMENT_DYNCREATE(CBinaryCompareDoc, CDocument)
 
 CBinaryCompareDoc::CBinaryCompareDoc()
 	: m_pFilePair(NULL)
+	, m_CaretPos(0)
+	,m_SelectionAnchor(0)
+	, m_OriginalSelectionAnchor(0)
 {
 }
 
@@ -19,6 +22,9 @@ BOOL CBinaryCompareDoc::OnNewDocument()
 {
 	if (!CDocument::OnNewDocument())
 		return FALSE;
+	m_CaretPos = 0;
+	m_SelectionAnchor = 0;
+	m_OriginalSelectionAnchor = 0;
 	return TRUE;
 }
 
@@ -32,6 +38,7 @@ CBinaryCompareDoc::~CBinaryCompareDoc()
 
 
 BEGIN_MESSAGE_MAP(CBinaryCompareDoc, CDocument)
+	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
 END_MESSAGE_MAP()
 
 
@@ -73,7 +80,32 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 		m_pFilePair->Dereference();
 	}
 	m_pFilePair = pPair;
-	pPair->Reference();
+	if (NULL != pPair)
+	{
+		pPair->Reference();
+		if (NULL != pPair->pFirstFile)
+		{
+			CString title(pPair->pFirstFile->GetFullName());
+			if (NULL != pPair->pSecondFile)
+			{
+				title += " - ";
+				title += pPair->pSecondFile->GetFullName();
+			}
+			SetTitle(title);
+		}
+		else if (NULL != pPair->pSecondFile)
+		{
+			CString title(pPair->pSecondFile->GetFullName());
+			SetTitle(title);
+		}
+		else
+		{
+			SetTitle(_T(""));
+		}
+	}
+	m_CaretPos = 0;
+	UpdateAllViews(NULL, FileLoaded);
+	SetCaretPosition(0, SetPositionCancelSelection);
 }
 
 LONGLONG CBinaryCompareDoc::GetFileSize() const
@@ -109,6 +141,8 @@ void CBinaryCompareDoc::SetCaretPosition(LONGLONG Addr, int flags)
 		Addr = 0;
 	}
 
+	m_CaretPos = Addr;
+
 	if (0 != (flags & SetPositionCancelSelection))
 	{
 		m_SelectionAnchor = m_CaretPos;
@@ -116,5 +150,12 @@ void CBinaryCompareDoc::SetCaretPosition(LONGLONG Addr, int flags)
 		// if canceling selection, check for word mode reset
 	}
 	UpdateAllViews(NULL, CaretPositionChanged, NULL);
+}
+
+void CBinaryCompareDoc::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
+{
+	CString s;
+	s.Format(_T("%08I64X"), m_CaretPos);
+	pCmdUI->SetText(s);
 }
 

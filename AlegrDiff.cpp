@@ -233,7 +233,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	AddDocTemplate(m_pFileDiffTemplate);
 
 	m_pBinaryDiffTemplate = new CMultiDocTemplate(
-												IDR_ALEGRDTYPE,
+												IDR_ALEGRDTYPE_BIN,
 												RUNTIME_CLASS(CBinaryCompareDoc),
 												RUNTIME_CLASS(CChildFrame), // custom MDI child frame
 												RUNTIME_CLASS(CBinaryCompareView));

@@ -38,6 +38,7 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+Set binary compare doc title
 Add extensions from the recent files to the browse for file dialog
 Remove "Use Binary filter", "Use Ignore Filter" etc checkboxes,
   replace those edit controls with comboboxes

@@ -102,6 +102,7 @@ BEGIN
     BUTTON      ID_FILE_PREFERENCES
     BUTTON      ID_FILE_SAVE
     SEPARATOR
+    BUTTON      ID_VIEW_SHOW_LINE_NUMBERS
     BUTTON      ID_EDIT_GOTONEXTDIFF
     BUTTON      ID_EDIT_GOTOPREVDIFF
     BUTTON      ID_EDIT_COPY
@@ -164,6 +165,7 @@ BEGIN
     POPUP "&Edit"
     BEGIN
         MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "Select All\tCtrl+A",          ID_EDIT_SELECT_ALL
         MENUITEM SEPARATOR
         MENUITEM "Go To Next Diff\tF7",         ID_EDIT_GOTONEXTDIFF
         MENUITEM "Go To Prev Diff\tShift+F7",   ID_EDIT_GOTOPREVDIFF
@@ -179,6 +181,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Refresh\tF5",                 ID_VIEW_REFRESH
         MENUITEM "Show Line Numbers",           ID_VIEW_SHOW_LINE_NUMBERS
+        MENUITEM "Ignore &Whitespaces",         ID_VIEW_IGNORE_WHITESPACES
     END
     POPUP "&Window"
     BEGIN
@@ -226,6 +229,7 @@ END
 IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
 BEGIN
     27,             ID_WINDOW_CLOSE_DIFF,   ASCII,  NOINVERT
+    "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
     "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     "F",            ID_EDIT_FIND,           VIRTKEY, CONTROL, NOINVERT
     "G",            ID_EDIT_GOTOLINE,       VIRTKEY, CONTROL, NOINVERT
@@ -264,7 +268,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 0.68 beta",IDC_STATIC,35,14,128,8,
+    CTEXT           "AlegrDiff Version 0.69 beta",IDC_STATIC,35,14,128,8,
                     SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001\nalegr@earthlink.net",
                     IDC_STATIC,35,34,128,21
@@ -479,8 +483,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,6,8,0
- PRODUCTVERSION 0,6,8,1
+ FILEVERSION 0,6,9,0
+ PRODUCTVERSION 0,6,9,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -498,14 +502,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "AleGr Software\0"
             VALUE "FileDescription", "AlegrDiff: file comparision and merging application\0"
-            VALUE "FileVersion", "0, 6, 8, 0\0"
+            VALUE "FileVersion", "0, 6, 9, 0\0"
             VALUE "InternalName", "AlegrDiff\0"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "AlegrDiff.EXE\0"
-            VALUE "PrivateBuild", "Beta 0.68\0"
+            VALUE "PrivateBuild", "Beta 0.69\0"
             VALUE "ProductName", "AlegrDiff Application\0"
-            VALUE "ProductVersion", "0, 6, 8, 1\0"
+            VALUE "ProductVersion", "0, 6, 9, 1\0"
             VALUE "SpecialBuild", "\0"
         END
     END
@@ -706,7 +710,7 @@ BEGIN
     ID_EDIT_PASTE           "Insert Clipboard contents\nPaste"
     ID_EDIT_REPEAT          "Repeat the last action\nRepeat"
     ID_EDIT_REPLACE         "Replace specific text with different text\nReplace"
-    ID_EDIT_SELECT_ALL      "Select the entire document\nSelect All"
+    ID_EDIT_SELECT_ALL      "Select the entire text\nSelect All"
     ID_EDIT_UNDO            "Undo the last action\nUndo"
     ID_EDIT_REDO            "Redo the previously undone action\nRedo"
 END
@@ -767,6 +771,8 @@ BEGIN
     ID_LISTVIEW_OPEN        "View the files with differences\nView"
     ID_FILE_COPY_FIRST_DIR  "Copy selected files from first directory\nCopy from first dir"
     ID_FILE_COPY_SECOND_DIR "Copy selected files from the second dir\nCopy from second dir"
+    ID_VIEW_IGNORE_WHITESPACES 
+                            "Hide or show whitespace-only difference\nIgnore whitespaces"
 END
 
 STRINGTABLE DISCARDABLE 

@@ -48,6 +48,7 @@ public:
 	bool m_bAdvancedCompareDialog;
 	bool m_BinaryComparision;
 	bool m_AutoReloadChangedFiles;
+	bool m_bIgnoreWhitespaces;
 
 	CString m_FileDir1;
 	CString m_FileDir2;

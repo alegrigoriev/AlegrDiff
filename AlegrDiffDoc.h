@@ -72,6 +72,12 @@ enum {
 	SetPositionCancelSelection = 4,
 };
 
+class InvalidatedRange : public CObject
+{
+public:
+	TextPos begin;
+	TextPos end;
+};
 class CFilePairDoc : public CDocument
 {
 protected:
@@ -91,7 +97,7 @@ public:
 	bool UseLinePairArray() const { return m_UseLinePairArray; }
 	bool BaseOnFirstFile() const { return m_BaseOnFirstFile; }
 	void SetCaretPosition(int pos, int line, int flags);
-	enum { CaretPositionChanged = 0x100, FileLoaded = 0x200};
+	enum { CaretPositionChanged = 0x100, FileLoaded = 0x200, InvalidateRange = 0x400, };
 	void SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags = SetPositionMakeCentered);
 	void OnEditGotonextdiff();
 	void OnEditGotoprevdiff();

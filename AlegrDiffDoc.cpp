@@ -79,7 +79,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 	FileList FileList1;
 	FileList FileList2;
 	if (! FileList1.LoadFolder(dir1, bRecurseSubdirs,
-								m_sInclusionPattern, m_sExclusionPattern))
+								m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern))
 	{
 		DWORD error = GetLastError();
 		FreeFilePairList();
@@ -89,7 +89,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 		return false;
 	}
 	if (! FileList2.LoadFolder(dir2, bRecurseSubdirs,
-								m_sInclusionPattern, m_sExclusionPattern))
+								m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern))
 	{
 		FreeFilePairList();
 		CString s;
@@ -1103,9 +1103,18 @@ void CFilePairDoc::OnEditAccept()
 			SetFlags = 0;
 			ResetFlags = FileDiffSection::FlagAccept | FileDiffSection::FlagDecline;
 		}
-		int FirstSectionIdx = 0, NumSections = 0;
+		int NumSections = 0;
+		FileDiffSection *const * ppSection = NULL;
+
 		m_pFilePair->ModifyAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos,
-											SetFlags, ResetFlags, & FirstSectionIdx, & NumSections);
+											SetFlags, ResetFlags, & ppSection, & NumSections);
+		for (int i = 0; i < NumSections; i++)
+		{
+			InvalidatedRange ir;
+			ir.begin = ppSection[i]->m_Begin;
+			ir.end = ppSection[i]->m_End;
+			UpdateAllViews(NULL, InvalidateRange, & ir);
+		}
 	}
 }
 
@@ -1132,9 +1141,18 @@ void CFilePairDoc::OnEditDecline()
 			SetFlags = 0;
 			ResetFlags = FileDiffSection::FlagAccept | FileDiffSection::FlagDecline;
 		}
-		int FirstSectionIdx = 0, NumSections = 0;
+		int NumSections = 0;
+		FileDiffSection *const * ppSection = NULL;
+
 		m_pFilePair->ModifyAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos,
-											SetFlags, ResetFlags, & FirstSectionIdx, & NumSections);
+											SetFlags, ResetFlags, & ppSection, & NumSections);
+		for (int i = 0; i < NumSections; i++)
+		{
+			InvalidatedRange ir;
+			ir.begin = ppSection[i]->m_Begin;
+			ir.end = ppSection[i]->m_End;
+			UpdateAllViews(NULL, InvalidateRange, & ir);
+		}
 	}
 }
 

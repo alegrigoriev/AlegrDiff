@@ -35,6 +35,30 @@ class CPathExT : public ATL::CPathT<StringType>
 		return ::GetCurrentDirectoryA(nBufferLength, lpBuffer);
 	}
 
+	static DWORD GetTempPathT(DWORD nBufferLength,
+							LPSTR lpBuffer)
+	{
+		return ::GetTempPathA(nBufferLength, lpBuffer);
+	}
+
+	static DWORD GetTempPathT(DWORD nBufferLength,
+							LPWSTR lpBuffer)
+	{
+		return ::GetTempPathW(nBufferLength, lpBuffer);
+	}
+
+	static DWORD GetModuleFileNameT(HMODULE hModule, LPSTR lpBuffer,
+									DWORD nBufferLength)
+	{
+		return ::GetModuleFileNameA(hModule, lpBuffer, nBufferLength);
+	}
+
+	static DWORD GetModuleFileNameT(HMODULE hModule, LPWSTR lpBuffer,
+									DWORD nBufferLength)
+	{
+		return ::GetModuleFileNameW(hModule, lpBuffer, nBufferLength);
+	}
+
 public:
 	CPathExT(PCXSTR pszPath)
 		: BasePath(pszPath)
@@ -43,7 +67,16 @@ public:
 	CPathExT( ) throw( ) {}
 
 	bool MakeFullPath();
+	bool MakeFullPath(PCXSTR pszPath);
+
+	bool GetTempPath();
+	bool GetModuleFileName(HMODULE hModule);  // NULL - running EXE
+
 	bool GetCurrentDirectory();
+	bool IsEmpty() const
+	{
+		return m_strPath.IsEmpty();
+	}
 
 	CPathExT & operator =(StringType const & src)
 	{
@@ -84,9 +117,45 @@ bool CPathExT<StringType>::MakeFullPath()
 }
 
 template<typename StringType>
+bool CPathExT<StringType>::MakeFullPath(PCXSTR pszPath)
+{
+	typename StringType::XCHAR tmpchar[2];
+	typename StringType::XCHAR * pFilePart;
+
+	if (NULL == pszPath
+		|| 0 == pszPath[0])
+	{
+		return false;
+	}
+
+	DWORD Length = GetFullPathNameT(pszPath, 2, tmpchar, & pFilePart);
+	if (0 == Length)
+	{
+		return false;
+	}
+
+	typename StringType::XCHAR * pBuf = m_strPath.GetBuffer(Length + 1);
+
+	if (NULL != pBuf)
+	{
+		DWORD ExpandedLength = GetFullPathNameT(pszPath, Length + 1, pBuf, & pFilePart);
+
+		if (ExpandedLength <= Length)
+		{
+			m_strPath.ReleaseBuffer(ExpandedLength);
+			return true;
+		}
+		else
+		{
+			m_strPath.ReleaseBuffer(0);
+		}
+	}
+	return false;
+}
+
+template<typename StringType>
 bool CPathExT<StringType>::GetCurrentDirectory()
 {
-	StringType tmp;
 	typename StringType::XCHAR tmpchar[2];
 
 	DWORD Length = GetCurrentDirectoryT(2, tmpchar);
@@ -95,20 +164,79 @@ bool CPathExT<StringType>::GetCurrentDirectory()
 		return false;
 	}
 
-	typename StringType::XCHAR * pBuf = tmp.GetBuffer(Length + 1);
+	typename StringType::XCHAR * pBuf = m_strPath.GetBuffer(Length + 1);
 
 	if (NULL != pBuf)
 	{
 		DWORD ExpandedLength = GetCurrentDirectoryT(Length + 1, pBuf);
 		if (ExpandedLength <= Length)
 		{
-			tmp.ReleaseBuffer(ExpandedLength);
-			static_cast<StringType &>(*this) = tmp;
+			m_strPath.ReleaseBuffer(ExpandedLength);
 			return true;
 		}
 		else
 		{
-			tmp.ReleaseBuffer(0);
+			m_strPath.ReleaseBuffer(0);
+		}
+	}
+	return false;
+}
+
+template<typename StringType>
+bool CPathExT<StringType>::GetModuleFileName(HMODULE hModule)
+{
+	typename StringType::XCHAR tmpchar[2];
+
+	DWORD Length = GetModuleFileNameT(hModule, tmpchar, 2);
+
+	if (0 == Length)
+	{
+		return false;
+	}
+
+	typename StringType::XCHAR * pBuf = m_strPath.GetBuffer(Length + 1);
+
+	if (NULL != pBuf)
+	{
+		DWORD ExpandedLength = GetModuleFileNameT(hModule, pBuf, Length + 1);
+
+		if (ExpandedLength <= Length)
+		{
+			m_strPath.ReleaseBuffer(ExpandedLength);
+			return true;
+		}
+		else
+		{
+			m_strPath.ReleaseBuffer(0);
+		}
+	}
+	return false;
+}
+
+template<typename StringType>
+bool CPathExT<StringType>::GetTempPath()
+{
+	typename StringType::XCHAR tmpchar[2];
+
+	DWORD Length = GetTempPathT(2, tmpchar);
+	if (0 == Length)
+	{
+		return false;
+	}
+
+	typename StringType::XCHAR * pBuf = m_strPath.GetBuffer(Length + 1);
+
+	if (NULL != pBuf)
+	{
+		DWORD ExpandedLength = GetTempPathT(Length + 1, pBuf);
+		if (ExpandedLength <= Length)
+		{
+			m_strPath.ReleaseBuffer(ExpandedLength);
+			return true;
+		}
+		else
+		{
+			m_strPath.ReleaseBuffer(0);
 		}
 	}
 	return false;

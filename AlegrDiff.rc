@@ -303,6 +303,31 @@ BEGIN
             MENUITEM "&Descending Order",           ID_LISTVIEW_SORTBY_DESCENDINGORDER
 
         END
+        POPUP "Show"
+        BEGIN
+            MENUITEM "DIFFERENT files",             ID_SHOW_DIFFERENTFILES
+            MENUITEM "Identical Files",             ID_SHOW_IDENTICALFILES
+            MENUITEM "Different in version info",   ID_SHOW_DIFFERENTINVERSIONINFO
+
+            MENUITEM "Different in spaces only",    ID_SHOW_DIFFERENTINSPACESONLY
+
+            MENUITEM "Files not in 2nd Directory",  ID_SHOW_FILESIN1STDIRECTORYONLY
+
+            MENUITEM "Files not in 1st Directory",  ID_SHOW_FILESIN2NDDIRECTORYONLY
+
+            MENUITEM "Subdirectories in 1st Dir Only", 
+                                                    ID_SHOW_SUBDIRECTORIESIN1STDIRONLY
+
+            MENUITEM "Subdirectories in 2nd Dir Only", 
+                                                    ID_SHOW_SUBDIRECTORIESIN2NDDIR
+
+            MENUITEM "Longer files in 1st directory", 
+                                                    ID_SHOW_LONGERFILESIN1STDIRECTORY
+
+            MENUITEM "Longer files in 2nd directory", 
+                                                    ID_SHOW_LONGERFILESIN2NDDIRECTORY
+
+        END
         MENUITEM "&Hide Selected Files\tCtrl+H", ID_VIEW_HIDESELECTEDFILES
         MENUITEM "&Unhide All Files",           ID_VIEW_SHOWALLFILES
         MENUITEM SEPARATOR
@@ -1733,6 +1758,16 @@ BEGIN
     ID_LISTVIEW_FILELENGTH  "Toggle view of file length columns\nShow length"
     ID_LISTVIEW_MODIFICATIONTIME 
                             "Toggle view of file modification time columns\nShow timestamp"
+    ID_LISTVIEW_SORTBY_NAME "Sort items by the file name"
+    ID_LISTVIEW_SORTBY_FOLDER "Sort items by the containing folder name"
+    ID_LISTVIEW_SORTBY_1STMODIFICATIONDATE 
+                            "Sort items by the modification date/time of the first file"
+    ID_LISTVIEW_SORTBY_2NDMODIFICATIONDATE 
+                            "Sort items by the modification date/time of the second file"
+    ID_LISTVIEW_SORTBY_1STLENGTH "Sort items by the length of the first file"
+    ID_LISTVIEW_SORTBY_2NDLENGTH "Sort items by the length of the second file"
+    ID_LISTVIEW_SORTBY_COMPARISONRESULT "Sort items by the comparison result"
+    ID_LISTVIEW_SORTBY_DESCENDINGORDER "Toggle sort direction"
 END
 
 STRINGTABLE 
@@ -1753,7 +1788,7 @@ BEGIN
     ID_VIEW_AS_BINARY       "Compare the files as non-text (binary) files\nBinary comparison"
     IDC_VIEW_SIDE_BY_SIDE   "Show two files side by side\nShow side by side"
     ID_SHOW_IDENTICALFILES  "Show or hide identical files"
-    ID_SHOW_DIFFERENTFILES  "Show or hide different files"
+    ID_SHOW_DIFFERENTFILES  "Show or hide files that are different"
     ID_SHOW_DIFFERENTINVERSIONINFO 
                             "Show or hide files different in version control information"
 END

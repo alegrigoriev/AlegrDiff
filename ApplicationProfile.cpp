@@ -899,7 +899,7 @@ UINT CApplicationProfile::GetProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry,
 	if (NULL != hSecKey) // use registry
 	{
 		DWORD dwValue;
-		DWORD dwType;
+		DWORD dwType = REG_NONE;
 		DWORD dwCount = sizeof(DWORD);
 		LONG lResult = RegQueryValueEx(hSecKey, (LPTSTR)lpszEntry, NULL, &dwType,
 										(LPBYTE)&dwValue, &dwCount);
@@ -929,9 +929,10 @@ CString CApplicationProfile::GetProfileString(LPCTSTR lpszSection, LPCTSTR lpszE
 	if (NULL != hSecKey) // use registry
 	{
 		CString strValue;
-		DWORD dwType, dwCount;
+		DWORD dwType = REG_NONE, dwCount = 0;
 		LONG lResult = RegQueryValueEx(hSecKey, (LPTSTR)lpszEntry, NULL, &dwType,
 										NULL, &dwCount);
+
 		if (lResult == ERROR_SUCCESS)
 		{
 			ASSERT(dwType == REG_SZ);
@@ -975,7 +976,7 @@ BOOL CApplicationProfile::GetProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntr
 	if (NULL != hSecKey) // use registry
 	{
 
-		DWORD dwType, dwCount;
+		DWORD dwType = REG_NONE, dwCount = 0;
 		LONG lResult = RegQueryValueEx(hSecKey, (LPTSTR)lpszEntry, NULL, &dwType,
 										NULL, &dwCount);
 		*pBytes = dwCount;

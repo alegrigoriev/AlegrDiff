@@ -65,6 +65,8 @@ public:
 	TEXTMETRIC m_FontMetric;
 	int m_CharOverhang;
 
+	void UpdateVisibleRectangleBounds();
+
 	int CharWidth() const { return m_FontMetric.tmAveCharWidth; }
 	int LineHeight() const { return m_FontMetric.tmHeight + m_FontMetric.tmExternalLeading; }
 	int LinesInView() const { return m_VisibleRect.bottom - m_VisibleRect.top; }

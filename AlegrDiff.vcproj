@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding = "windows-1251"?>
+<?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.00"
+	Version="7.10"
 	Name="AlegrDiff"
 	ProjectGUID="{0EB4547D-98C6-492C-A45A-42E4A6002F33}"
 	SccProjectName="&quot;$/AlegrDiff&quot;, QOAAAAAA"
@@ -80,7 +80,13 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
@@ -142,7 +148,13 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="DEMO Debug|Win32"
@@ -204,7 +216,13 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
@@ -277,7 +295,13 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Debug non-MSLU|Win32"
@@ -339,7 +363,13 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Release ANSI|Win32"
@@ -412,9 +442,17 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
+	<References>
+	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
@@ -456,10 +494,10 @@
 				RelativePath="ComparisonProgressDlg.cpp">
 			</File>
 			<File
-				RelativePath=".\DiffFileView.cpp">
+				RelativePath="DifferenceProgressDialog.cpp">
 			</File>
 			<File
-				RelativePath="DifferenceProgressDialog.cpp">
+				RelativePath=".\DiffFileView.cpp">
 			</File>
 			<File
 				RelativePath="DirectoryFingerpringCreateDlg.cpp">
@@ -487,6 +525,9 @@
 			</File>
 			<File
 				RelativePath=".\FolderDialog.cpp">
+			</File>
+			<File
+				RelativePath=".\GdiObjectSave.h">
 			</File>
 			<File
 				RelativePath=".\GotoLineDialog.cpp">
@@ -595,10 +636,10 @@
 				RelativePath="ComparisonProgressDlg.h">
 			</File>
 			<File
-				RelativePath=".\DiffFileView.h">
+				RelativePath="DifferenceProgressDialog.h">
 			</File>
 			<File
-				RelativePath="DifferenceProgressDialog.h">
+				RelativePath=".\DiffFileView.h">
 			</File>
 			<File
 				RelativePath="DirectoryFingerpringCreateDlg.h">
@@ -686,22 +727,22 @@
 				RelativePath="res\CompareDirs.ico">
 			</File>
 			<File
-				RelativePath="res\FilesDialog.ico">
-			</File>
-			<File
-				RelativePath=".\res\Toolbar.bmp">
-			</File>
-			<File
 				RelativePath=".\res\cur00002.cur">
 			</File>
 			<File
 				RelativePath=".\res\cursor1.cur">
 			</File>
 			<File
+				RelativePath="res\FilesDialog.ico">
+			</File>
+			<File
 				RelativePath=".\res\icon1.ico">
 			</File>
 			<File
 				RelativePath="res\idr_aleg.ico">
+			</File>
+			<File
+				RelativePath=".\res\Toolbar.bmp">
 			</File>
 		</Filter>
 		<Filter
@@ -834,10 +875,6 @@ echo.
 			</File>
 			<File
 				RelativePath="hlp\afx_hidd_filesave.htm"
-				DeploymentContent="TRUE">
-			</File>
-			<File
-				RelativePath="hlp\afx_hidd_newtypedlg.htm"
 				DeploymentContent="TRUE">
 			</File>
 			<File

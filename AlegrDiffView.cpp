@@ -108,6 +108,7 @@ CAlegrDiffView::CAlegrDiffView()
 	{
 		m_ColumnArray[i] = pApp->m_ColumnArray[i];
 		m_ColumnWidthArray[i] = pApp->m_ColumnWidthArray[i];
+		TRACE("Column %d width=%d\n", i, m_ColumnWidthArray[i]);
 	}
 
 	if (pApp->m_FileListSort >= 0)
@@ -404,10 +405,10 @@ void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, FilePa
 
 	switch (m_PrevSortColumn)
 	{
+	default:
 	case ColumnName:
 		comp.SecondarySort = FilePair::CompareSubitemName;
 		break;
-	default:
 	case ColumnSubdir:
 		comp.SecondarySort = FilePair::CompareSubitemDir;
 		break;
@@ -468,12 +469,11 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	pListCtrl->DeleteAllItems();
 
 	CHeaderCtrl * pHeader = pListCtrl->GetHeaderCtrl();
-	int nCount = pHeader->GetItemCount();
 
 	// Delete all of the items.
-	for (int i=0;i < nCount;i++)
+	for (int i = pHeader->GetItemCount(); i > 0; i--)
 	{
-		pHeader->DeleteItem(0);
+		pListCtrl->DeleteColumn(i - 1);
 	}
 
 	CString titles[MaxColumns];

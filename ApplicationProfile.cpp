@@ -121,13 +121,13 @@ CApplicationProfileItemShort::CApplicationProfileItemShort(
 	ShortRef(RefValue)
 {
 	// data is read in parent class constructor
-	ShortRef = m_TempInt;
+	ShortRef = short(m_TempInt);
 }
 
 void CApplicationProfileItemShort::ReadData()
 {
 	CApplicationProfileItemInt::ReadData();
-	ShortRef = m_TempInt;
+	ShortRef = short(m_TempInt);
 }
 
 void CApplicationProfileItemShort::WriteData(BOOL bForceWrite)
@@ -138,12 +138,12 @@ void CApplicationProfileItemShort::WriteData(BOOL bForceWrite)
 
 void CApplicationProfileItemShort::ResetToInitial()
 {
-	ShortRef = InitialData;
+	ShortRef = short(InitialData);
 }
 
 void CApplicationProfileItemShort::ResetToDefault()
 {
-	ShortRef = m_Default;
+	ShortRef = short(m_Default);
 }
 
 CApplicationProfileItemUint::CApplicationProfileItemUint(CApplicationProfile * pProfile,
@@ -190,13 +190,13 @@ CApplicationProfileItemUshort::CApplicationProfileItemUshort(
 	ShortRef(RefValue)
 {
 	// data is read in parent class constructor
-	ShortRef = m_TempInt;
+	ShortRef = (unsigned short)(0xFFFF & m_TempInt);
 }
 
 void CApplicationProfileItemUshort::ReadData()
 {
 	CApplicationProfileItemUint::ReadData();
-	ShortRef = m_TempInt;
+	ShortRef = (unsigned short)(0xFFFF & m_TempInt);
 }
 
 void CApplicationProfileItemUshort::WriteData(BOOL bForceWrite)
@@ -207,12 +207,12 @@ void CApplicationProfileItemUshort::WriteData(BOOL bForceWrite)
 
 void CApplicationProfileItemUshort::ResetToInitial()
 {
-	ShortRef = InitialData;
+	ShortRef = (unsigned short)(0xFFFF & InitialData);
 }
 
 void CApplicationProfileItemUshort::ResetToDefault()
 {
-	ShortRef = m_Default;
+	ShortRef = (unsigned short)(0xFFFF & m_Default);
 }
 
 CApplicationProfileItemBool::CApplicationProfileItemBool(

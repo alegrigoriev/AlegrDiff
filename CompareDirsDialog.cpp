@@ -141,11 +141,41 @@ BEGIN_MESSAGE_MAP(CCompareDirsDialog, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_SECOND_DIR, OnButtonBrowseSecondDir)
 	ON_BN_CLICKED(IDC_BUTTON_ADVANCED, OnButtonAdvanced)
 	ON_BN_CLICKED(IDC_CHECK_BINARY, OnCheckBinary)
+	ON_BN_CLICKED(IDC_CHECK_BINARY_FILES, OnCheckBinaryFiles)
+	ON_BN_CLICKED(IDC_CHECK_C_CPP, OnCheckCCpp)
+	ON_BN_CLICKED(IDC_CHECK_IGNORE, OnCheckIgnore)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CCompareDirsDialog message handlers
+
+void CCompareDirsDialog::OnCheckBinaryFiles()
+{
+	CWnd * pEdit = GetDlgItem(IDC_EDIT_BINARY_FILES);
+	if (pEdit)
+	{
+		pEdit->EnableWindow(IsDlgButtonChecked(IDC_CHECK_BINARY_FILES));
+	}
+}
+
+void CCompareDirsDialog::OnCheckCCpp()
+{
+	CWnd * pEdit = GetDlgItem(IDC_EDIT_C_CPP);
+	if (pEdit)
+	{
+		pEdit->EnableWindow(IsDlgButtonChecked(IDC_CHECK_C_CPP));
+	}
+}
+
+void CCompareDirsDialog::OnCheckIgnore()
+{
+	CWnd * pEdit = GetDlgItem(IDC_EDIT_IGNORE);
+	if (pEdit)
+	{
+		pEdit->EnableWindow(IsDlgButtonChecked(IDC_CHECK_IGNORE));
+	}
+}
 
 void CCompareDirsDialog::OnButtonBrowseFirstDir()
 {

@@ -2859,16 +2859,8 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 						if (pSection->pNext != NULL
 							&& pSection->pNext->Attr != pSection->Identical)
 						{
-							if (pSection->pNext->Attr & pSection->Whitespace)
+							if (0 == (pSection->pNext->Attr & pSection->Whitespace))
 							{
-								if (0 == (pSection->Attr & pSection->Whitespace))
-								{
-									pSection->pNext->Attr &= ~pSection->Whitespace;
-								}
-							}
-							else
-							{
-								pSection->Attr &= ~pSection->Whitespace;
 								pDiffSection->m_Flags &= ~FileDiffSection::FlagWhitespace;
 							}
 
@@ -2996,9 +2988,8 @@ TextPos FilePair::PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces)
 	return pSection->m_Begin;
 }
 
-int FilePair::GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo)
+int FilePair::GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, bool bIgnoreWhitespaces)
 {
-	int flags = 0;
 	if (0 == m_DiffSections.GetSize())
 	{
 		return FileDiffSection::FlagNoDifference;
@@ -3024,7 +3015,8 @@ int FilePair::GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo)
 	{
 		// if the range is of zero length, then PosTo inclusive.
 		if (PosFrom < pSection->m_Begin
-			|| PosFrom >= pSection->m_End)
+			|| PosFrom >= pSection->m_End
+			|| (pSection->IsWhitespace() && bIgnoreWhitespaces))
 		{
 			return FileDiffSection::FlagNoDifference;
 		}
@@ -3039,6 +3031,7 @@ int FilePair::GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo)
 		return FileDiffSection::FlagNoDifference;
 	}
 	// if the range is not of zero length, then PosTo not inclusize
+	int flags = FileDiffSection::FlagNoDifference;
 	for ( ; SectionIdx < m_DiffSections.GetSize(); SectionIdx++)
 	{
 		pSection = m_DiffSections[SectionIdx];
@@ -3046,7 +3039,12 @@ int FilePair::GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo)
 		{
 			break;
 		}
+		if (pSection->IsWhitespace() && bIgnoreWhitespaces)
+		{
+			continue;
+		}
 		flags |= pSection->m_Flags;
+		flags &= ~FileDiffSection::FlagNoDifference;
 	}
 	return flags;
 }
@@ -3140,6 +3138,7 @@ LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen, BOO
 			; pSection != NULL && StrLen + 1u < nBufChars; pSection = pSection->pNext)
 		{
 			if ((pSection->Attr & pSection->Whitespace)
+				&& (pSection->Attr & pSection->Erased)
 				&& IgnoreWhitespaces)
 			{
 				continue;   // don't show the section
@@ -3171,7 +3170,8 @@ int LinePair::LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces)
 	for (StringSection * pSection = pFirstSection; NULL != pSection; pSection = pSection->pNext)
 	{
 		pos += pSection->Length;
-		if (pSection->Attr & pSection->Whitespace)
+		if ((pSection->Attr & pSection->Whitespace)
+			&& (pSection->Attr & pSection->Erased))
 		{
 			adj += pSection->Length;
 			if (pos >= position)
@@ -3202,7 +3202,8 @@ int LinePair::DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces)
 
 	for (StringSection * pSection = pFirstSection; NULL != pSection; pSection = pSection->pNext)
 	{
-		if (pSection->Attr & pSection->Whitespace)
+		if ((pSection->Attr & pSection->Whitespace)
+			&& (pSection->Attr & pSection->Erased))
 		{
 			adj += pSection->Length;
 		}

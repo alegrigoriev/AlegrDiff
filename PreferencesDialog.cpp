@@ -220,7 +220,7 @@ BEGIN_MESSAGE_MAP(CViewPreferencesPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_BUTTON_INSERTED_FONT, OnButtonInsertedFont)
 	ON_BN_CLICKED(IDC_BUTTON_ERASED_FONT, OnButtonErasedFont)
 	ON_WM_CTLCOLOR()
-	ON_BN_CLICKED(IDC_BUTTON_NORMAL_BACKGROUND, OnButtonNormalBackground)
+//	ON_BN_CLICKED(IDC_BUTTON_NORMAL_BACKGROUND, OnButtonNormalBackground)
 	ON_BN_CLICKED(IDC_BUTTON_ADDED_BACKGROUND, OnButtonAddedBackground)
 	ON_BN_CLICKED(IDC_BUTTON_ERASED_BACKGROUND, OnButtonErasedBackground)
 	//}}AFX_MSG_MAP
@@ -440,18 +440,41 @@ void CViewPreferencesPage::OnButtonNormalBackground()
 	if (IDOK == dlg.DoModal())
 	{
 		m_NormalTextBackground = dlg.GetColor();
+		CWnd * pWnd = GetDlgItem(IDC_STATIC_NORMAL_TEXT);
+		if (pWnd)
+		{
+			pWnd->Invalidate();
+		}
 		m_bColorChanged = true;
 	}
 }
 
 void CViewPreferencesPage::OnButtonAddedBackground()
 {
-	// TODO: Add your control notification handler code here
-
+	CColorDialog dlg(m_AddedTextBackground, CC_RGBINIT | CC_PREVENTFULLOPEN | CC_SOLIDCOLOR);
+	if (IDOK == dlg.DoModal())
+	{
+		m_AddedTextBackground = dlg.GetColor();
+		CWnd * pWnd = GetDlgItem(IDC_STATIC_ADDED_TEXT);
+		if (pWnd)
+		{
+			pWnd->Invalidate();
+		}
+		m_bColorChanged = true;
+	}
 }
 
 void CViewPreferencesPage::OnButtonErasedBackground()
 {
-	// TODO: Add your control notification handler code here
-
+	CColorDialog dlg(m_ErasedTextBackground, CC_RGBINIT | CC_PREVENTFULLOPEN | CC_SOLIDCOLOR);
+	if (IDOK == dlg.DoModal())
+	{
+		m_ErasedTextBackground = dlg.GetColor();
+		CWnd * pWnd = GetDlgItem(IDC_STATIC_DELETED_TEXT);
+		if (pWnd)
+		{
+			pWnd->Invalidate();
+		}
+		m_bColorChanged = true;
+	}
 }

@@ -136,7 +136,7 @@ void CAlegrDiffView::OnInitialUpdate()
 	pList->InsertColumn(ColumnSubdir, "Subdirectory", LVCFMT_LEFT, 200, ColumnSubdir);
 	pList->InsertColumn(ColumnDate1, "1st Modified at", LVCFMT_LEFT, 150, ColumnDate1);
 	pList->InsertColumn(ColumnDate2, "2nd Modified at", LVCFMT_LEFT, 150, ColumnDate2);
-	pList->InsertColumn(ColumnComparisionResult, "Comparision result", LVCFMT_LEFT, 400, ColumnComparisionResult);
+	pList->InsertColumn(ColumnComparisionResult, "Comparison result", LVCFMT_LEFT, 400, ColumnComparisionResult);
 	pList->SetExtendedStyle(pList->GetExtendedStyle() | LVS_EX_FULLROWSELECT);
 }
 

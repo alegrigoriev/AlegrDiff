@@ -109,6 +109,7 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 	for (int nDrawnChars = 0; pSection != NULL && nDrawnChars < nVisibleChars; pSection = pSection->pNext)
 	{
 		if ((pSection->Attr & pSection->Whitespace)
+			&& (pSection->Attr & pSection->Erased)
 			&& pDoc->m_bIgnoreWhitespaces)
 		{
 			continue;   // don't show the section
@@ -158,7 +159,9 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 			DWORD BackgroundColor = pApp->m_TextBackgroundColor;
 			int nCharsToDraw = Length;
 
-			if (pSection->Attr & pSection->Inserted)
+			if ((pSection->Attr & pSection->Inserted)
+				&& ! ((pSection->Attr & pSection->Whitespace)
+					&& pDoc->m_bIgnoreWhitespaces))
 			{
 				Color = pApp->m_AddedTextColor;
 				pFont = & pApp->m_AddedFont;
@@ -271,8 +274,8 @@ void CDiffFileView::OnDraw(CDC* pDC)
 
 	CFont * pOldFont = pDC->SelectObject( & pApp->m_NormalFont);
 
-	TEXTMETRIC tm;
-	pDC->GetTextMetrics( & tm);
+	//TEXTMETRIC tm;
+	//pDC->GetTextMetrics( & tm);
 
 	RECT cr;
 	GetClientRect( & cr);
@@ -481,10 +484,10 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	// TODO: Add your message handler code here and/or call default
 	bool ShiftPressed = (0 != (0x8000 & GetKeyState(VK_SHIFT)));
 	bool CtrlPressed = (0 != (0x8000 & GetKeyState(VK_CONTROL)));
-	int bCancelSelection = SetPositionMakeVisible;
+	int SelectionFlags = SetPositionMakeVisible;
 	if ( ! ShiftPressed)
 	{
-		bCancelSelection |= SetPositionCancelSelection;
+		SelectionFlags |= SetPositionCancelSelection;
 	}
 	int nLinesInView = LinesInView();
 
@@ -497,7 +500,7 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		}
 		else
 		{
-			MoveCaretBy(0, 1, bCancelSelection);
+			MoveCaretBy(0, 1, SelectionFlags);
 		}
 		break;
 
@@ -508,7 +511,7 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		}
 		else
 		{
-			MoveCaretBy(0, -1, bCancelSelection);
+			MoveCaretBy(0, -1, SelectionFlags);
 		}
 		break;
 
@@ -517,12 +520,12 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		if (CtrlPressed)
 		{
 			// move to one word left
-			GetDocument()->CaretLeftToWord(bCancelSelection);
+			GetDocument()->CaretLeftToWord(SelectionFlags);
 			MakeCaretVisible();
 		}
 		else
 		{
-			MoveCaretBy(-1, 0, bCancelSelection);
+			MoveCaretBy(-1, 0, SelectionFlags);
 		}
 		break;
 
@@ -531,12 +534,12 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		if (CtrlPressed)
 		{
 			// move to one word right
-			GetDocument()->CaretRightToWord(bCancelSelection);
+			GetDocument()->CaretRightToWord(SelectionFlags);
 			MakeCaretVisible();
 		}
 		else
 		{
-			MoveCaretBy(1, 0, bCancelSelection);
+			MoveCaretBy(1, 0, SelectionFlags);
 		}
 		break;
 
@@ -544,11 +547,11 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		TRACE("VK_HOME\n");
 		if (CtrlPressed)
 		{
-			SetCaretPosition(0, 0, bCancelSelection);
+			SetCaretPosition(0, 0, SelectionFlags);
 		}
 		else
 		{
-			CaretToHome(bCancelSelection);
+			CaretToHome(SelectionFlags);
 		}
 		break;
 
@@ -556,11 +559,11 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		TRACE("VK_END\n");
 		if (CtrlPressed)
 		{
-			SetCaretPosition(0, GetDocument()->GetTotalLines(), bCancelSelection);
+			SetCaretPosition(0, GetDocument()->GetTotalLines(), SelectionFlags);
 		}
 		else
 		{
-			CaretToEnd(bCancelSelection);
+			CaretToEnd(SelectionFlags);
 		}
 		break;
 
@@ -568,14 +571,14 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		TRACE("VK_PRIOR\n");
 		// do VScroll and move cursor, to keep the cursor at the same line
 		DoVScroll(-(nLinesInView - 1));
-		MoveCaretBy(0, -(nLinesInView - 1), bCancelSelection);
+		MoveCaretBy(0, -(nLinesInView - 1), SelectionFlags);
 		break;
 
 	case VK_NEXT:
 		TRACE("VK_NEXT\n");
 		// do VScroll and move cursor, to keep the cursor at the same line
 		DoVScroll(nLinesInView - 1);
-		MoveCaretBy(0, nLinesInView - 1, bCancelSelection);
+		MoveCaretBy(0, nLinesInView - 1, SelectionFlags);
 		break;
 	}
 	CView::OnKeyDown(nChar, nRepCnt, nFlags);
@@ -855,7 +858,7 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 			end.pos = nCharsInView;
 		}
 		r.left = begin.pos * CharWidth() + m_LineNumberMarginWidth;
-		r.right = end.pos * CharWidth() + m_LineNumberMarginWidth;
+		r.right = end.pos * CharWidth() + m_LineNumberMarginWidth + m_FontMetric.tmOverhang;
 		InvalidateRect( & r);
 	}
 	else
@@ -869,7 +872,7 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 			r.top = begin.line * LineHeight();
 			r.bottom = r.top + LineHeight();
 			r.left = begin.pos * CharWidth() + m_LineNumberMarginWidth;
-			r.right = (nCharsInView + 1) * CharWidth() + m_LineNumberMarginWidth;
+			r.right = (nCharsInView + 1) * CharWidth() + m_LineNumberMarginWidth + m_FontMetric.tmOverhang;
 			InvalidateRect( & r);
 		}
 		if (end.line <= nLinesInView + 1 && end.pos > 0)
@@ -880,7 +883,7 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 			}
 			r.top = end.line * LineHeight();
 			r.bottom = r.top + LineHeight();
-			r.right = end.pos * CharWidth() + m_LineNumberMarginWidth;
+			r.right = end.pos * CharWidth() + m_LineNumberMarginWidth + m_FontMetric.tmOverhang;
 			r.left = m_LineNumberMarginWidth;
 			InvalidateRect( & r);
 		}
@@ -891,7 +894,7 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 		if (end.line > begin.line + 1)
 		{
 			r.left = m_LineNumberMarginWidth;
-			r.right = (nCharsInView + 1) * CharWidth() + m_LineNumberMarginWidth;
+			r.right = (nCharsInView + 1) * CharWidth() + m_LineNumberMarginWidth + m_FontMetric.tmOverhang;
 			r.top = (begin.line + 1) * LineHeight();
 			r.bottom = end.line * LineHeight();
 			InvalidateRect( & r);

@@ -27,6 +27,8 @@ CPreferencesDialog::CPreferencesDialog(CWnd* pParent /*=NULL*/)
 	m_sIgnoreFilesFilter = _T("");
 	m_nTabIndent = 0;
 	//}}AFX_DATA_INIT
+	m_FontPointSize = 100;
+	m_bFontChanged = false;
 }
 
 
@@ -53,6 +55,9 @@ BEGIN_MESSAGE_MAP(CPreferencesDialog, CDialog)
 	ON_BN_CLICKED(IDC_CHECK_C_CPP, OnCheckCCpp)
 	ON_BN_CLICKED(IDC_CHECK_IGNORE, OnCheckIgnore)
 	ON_BN_CLICKED(IDC_BUTTON_NORMAL_FONT, OnButtonNormalFont)
+	ON_BN_CLICKED(IDC_BUTTON_INSERTED_FONT, OnButtonInsertedFont)
+	ON_BN_CLICKED(IDC_BUTTON_ERASED_FONT, OnButtonErasedFont)
+	ON_WM_CTLCOLOR()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -92,39 +97,210 @@ BOOL CPreferencesDialog::OnInitDialog()
 
 	m_Spin.SetRange(1, 32);
 
-	CWnd * pEdit = GetDlgItem(IDC_EDIT_C_CPP);
-	if (pEdit)
+	CWnd * pWnd = GetDlgItem(IDC_EDIT_C_CPP);
+	if (pWnd)
 	{
-		pEdit->EnableWindow(m_bUseCppFilter);
+		pWnd->EnableWindow(m_bUseCppFilter);
 	}
 
-	pEdit = GetDlgItem(IDC_EDIT_BINARY_FILES);
-	if (pEdit)
+	pWnd = GetDlgItem(IDC_EDIT_BINARY_FILES);
+	if (pWnd)
 	{
-		pEdit->EnableWindow(m_bUseBinaryFilesFilter);
+		pWnd->EnableWindow(m_bUseBinaryFilesFilter);
 	}
 
-	pEdit = GetDlgItem(IDC_EDIT_IGNORE);
-	if (pEdit)
+	pWnd = GetDlgItem(IDC_EDIT_IGNORE);
+	if (pWnd)
 	{
-		pEdit->EnableWindow(m_bUseIgnoreFilter);
+		pWnd->EnableWindow(m_bUseIgnoreFilter);
 	}
+
+	FontChanged();
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }
 
+
+void CPreferencesDialog::FontChanged()
+{
+	m_NormalFont.DeleteObject();
+	m_AddedFont.DeleteObject();
+	m_ErasedFont.DeleteObject();
+
+	// recalculate font size
+	CDC * pDC = CWnd::GetDesktopWindow()->GetWindowDC();
+	m_NormalLogFont.lfHeight = -MulDiv(m_FontPointSize, pDC->GetDeviceCaps(LOGPIXELSY), 720);
+	CWnd::GetDesktopWindow()->ReleaseDC(pDC);
+
+	m_AddedLogFont.lfHeight = m_NormalLogFont.lfHeight;
+	m_ErasedLogFont.lfHeight = m_NormalLogFont.lfHeight;
+
+	m_NormalFont.CreateFontIndirect( & m_NormalLogFont);
+	m_AddedFont.CreateFontIndirect( & m_AddedLogFont);
+	m_ErasedFont.CreateFontIndirect( & m_ErasedLogFont);
+
+	CWnd * pWnd = GetDlgItem(IDC_STATIC_NORMAL_TEXT);
+	if (pWnd)
+	{
+		pWnd->SetFont( & m_NormalFont, TRUE);
+	}
+
+	pWnd = GetDlgItem(IDC_STATIC_ADDED_TEXT);
+	if (pWnd)
+	{
+		pWnd->SetFont( & m_AddedFont, TRUE);
+	}
+
+	pWnd = GetDlgItem(IDC_STATIC_DELETED_TEXT);
+	if (pWnd)
+	{
+		pWnd->SetFont( & m_ErasedFont, TRUE);
+	}
+}
+
+class CFontDialogTitle : public CFontDialog
+{
+public:
+	CFontDialogTitle(LOGFONT * pLogFont, DWORD flags, LPCTSTR Title)
+		: CFontDialog(pLogFont, flags),
+		m_Title(Title)
+	{
+	}
+	virtual BOOL OnInitDialog( );
+	CString m_Title;
+};
+
+BOOL CFontDialogTitle::OnInitDialog( )
+{
+	if (CFontDialog::OnInitDialog())
+	{
+		SetWindowText(m_Title);
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
 void CPreferencesDialog::OnButtonNormalFont()
 {
-	//CThisApp * pApp = GetApp();
-	CFontDialog dlg( & m_NormalLogFont,
-					CF_FIXEDPITCHONLY
-					| CF_INITTOLOGFONTSTRUCT
-					| CF_NOVECTORFONTS
-					| CF_SCREENFONTS
-					| CF_EFFECTS);
+	CFontDialogTitle dlg( & m_NormalLogFont,
+						CF_FIXEDPITCHONLY
+						| CF_INITTOLOGFONTSTRUCT
+						| CF_NOVECTORFONTS
+						| CF_SCREENFONTS
+						| CF_EFFECTS, "Normal Text Font");
 	dlg.m_cf.rgbColors = m_NormalTextColor;
 	if (IDOK == dlg.DoModal())
 	{
+		m_FontPointSize = dlg.GetSize();
+		m_NormalTextColor = dlg.GetColor();
+
+		// copy everyting to m_ErasedLogFont, m_AddedLogFont
+		m_ErasedLogFont.lfHeight = m_NormalLogFont.lfHeight;
+		m_ErasedLogFont.lfCharSet = m_NormalLogFont.lfCharSet;
+		memcpy(m_ErasedLogFont.lfFaceName, m_NormalLogFont.lfFaceName,
+				sizeof m_ErasedLogFont.lfFaceName);
+		m_AddedLogFont.lfHeight = m_NormalLogFont.lfHeight;
+		m_AddedLogFont.lfCharSet = m_NormalLogFont.lfCharSet;
+		memcpy(m_AddedLogFont.lfFaceName, m_NormalLogFont.lfFaceName,
+				sizeof m_AddedLogFont.lfFaceName);
+		m_bFontChanged = true;
+		FontChanged();
 	}
+}
+
+void CPreferencesDialog::OnButtonInsertedFont()
+{
+	CFontDialogTitle dlg( & m_AddedLogFont,
+						CF_FIXEDPITCHONLY
+						| CF_INITTOLOGFONTSTRUCT
+						| CF_NOVECTORFONTS
+						| CF_SCREENFONTS
+						| CF_EFFECTS, "Added Text Font");
+
+	dlg.m_cf.rgbColors = m_AddedTextColor;
+	if (IDOK == dlg.DoModal())
+	{
+		m_FontPointSize = dlg.GetSize();
+		m_AddedTextColor = dlg.GetColor();
+
+		// copy everyting to m_ErasedLogFont, m_NormalLogFont
+		m_ErasedLogFont.lfHeight = m_AddedLogFont.lfHeight;
+		m_ErasedLogFont.lfCharSet = m_AddedLogFont.lfCharSet;
+		memcpy(m_ErasedLogFont.lfFaceName, m_AddedLogFont.lfFaceName,
+				sizeof m_ErasedLogFont.lfFaceName);
+		m_NormalLogFont.lfHeight = m_AddedLogFont.lfHeight;
+		m_NormalLogFont.lfCharSet = m_AddedLogFont.lfCharSet;
+		memcpy(m_NormalLogFont.lfFaceName, m_AddedLogFont.lfFaceName,
+				sizeof m_AddedLogFont.lfFaceName);
+		m_bFontChanged = true;
+		FontChanged();
+	}
+}
+
+void CPreferencesDialog::OnButtonErasedFont()
+{
+	CFontDialogTitle dlg( & m_ErasedLogFont,
+						CF_FIXEDPITCHONLY
+						| CF_INITTOLOGFONTSTRUCT
+						| CF_NOVECTORFONTS
+						| CF_SCREENFONTS
+						| CF_EFFECTS, "Deleted Text Font");
+
+	dlg.m_cf.rgbColors = m_ErasedTextColor;
+	if (IDOK == dlg.DoModal())
+	{
+		m_FontPointSize = dlg.GetSize();
+		m_ErasedTextColor = dlg.GetColor();
+
+		// copy everyting to m_AddedLogFont, m_NormalLogFont
+		m_AddedLogFont.lfHeight = m_ErasedLogFont.lfHeight;
+		m_AddedLogFont.lfCharSet = m_ErasedLogFont.lfCharSet;
+		memcpy(m_AddedLogFont.lfFaceName, m_ErasedLogFont.lfFaceName,
+				sizeof m_ErasedLogFont.lfFaceName);
+
+		m_NormalLogFont.lfHeight = m_ErasedLogFont.lfHeight;
+		m_NormalLogFont.lfCharSet = m_ErasedLogFont.lfCharSet;
+		memcpy(m_NormalLogFont.lfFaceName, m_ErasedLogFont.lfFaceName,
+				sizeof m_ErasedLogFont.lfFaceName);
+		m_bFontChanged = true;
+		FontChanged();
+	}
+}
+
+HBRUSH CPreferencesDialog::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	UINT id = pWnd->GetDlgCtrlID();
+	if (pDC->m_hDC != NULL)
+	{
+		switch (id)
+		{
+		case IDC_STATIC_NORMAL_TEXT:
+			TRACE("OnCtlColor IDC_BUTTON_NORMAL_FONT\n");
+			pDC->SetTextColor(m_NormalTextColor);
+			hbr = GetSysColorBrush(COLOR_WINDOW);
+			pDC->SetBkColor(GetSysColor(COLOR_WINDOW));
+			pDC->SetBkMode(OPAQUE);
+			break;
+		case IDC_STATIC_ADDED_TEXT:
+			pDC->SetTextColor(m_AddedTextColor);
+			hbr = GetSysColorBrush(COLOR_WINDOW);
+			pDC->SetBkColor(GetSysColor(COLOR_WINDOW));
+			pDC->SetBkMode(OPAQUE);
+			break;
+		case IDC_STATIC_DELETED_TEXT:
+			pDC->SetTextColor(m_ErasedTextColor);
+			hbr = GetSysColorBrush(COLOR_WINDOW);
+			pDC->SetBkColor(GetSysColor(COLOR_WINDOW));
+			pDC->SetBkMode(OPAQUE);
+			break;
+		}
+	}
+	// TODO: Return a different brush if the default is not desired
+	return hbr;
 }

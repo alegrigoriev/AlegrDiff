@@ -99,6 +99,7 @@ IDR_MAINFRAME TOOLBAR DISCARDABLE  16, 15
 BEGIN
     BUTTON      ID_FILE_COMPAREDIRECTORIES
     BUTTON      ID_FILE_COMPAREFILES
+    BUTTON      ID_FILE_PREFERENCES
     BUTTON      ID_FILE_SAVE
     SEPARATOR
     BUTTON      ID_EDIT_GOTONEXTDIFF
@@ -147,13 +148,9 @@ BEGIN
     BEGIN
         MENUITEM "Compare &Directories...",     ID_FILE_COMPAREDIRECTORIES
         MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
-        MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
-        MENUITEM "Save &As...",                 ID_FILE_SAVE_AS
         MENUITEM "Preferences...",              ID_FILE_PREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
-        MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
-        MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP
+        MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
         MENUITEM SEPARATOR
@@ -229,7 +226,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 0.4 beta",IDC_STATIC,35,14,128,8,
+    CTEXT           "AlegrDiff Version 0.5 beta",IDC_STATIC,35,14,128,8,
                     SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001\nalegr@earthlink.net",
                     IDC_STATIC,35,34,128,21
@@ -267,7 +264,7 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,115,148,50,14
 END
 
-IDD_DIALOG_PREFERENCES DIALOG DISCARDABLE  0, 0, 187, 201
+IDD_DIALOG_PREFERENCES DIALOG DISCARDABLE  0, 0, 187, 239
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Preferences"
 FONT 8, "MS Sans Serif"
@@ -288,9 +285,17 @@ BEGIN
     CONTROL         "Spin1",IDC_SPIN1,"msctls_updown32",UDS_SETBUDDYINT | 
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
                     UDS_NOTHOUSANDS,86,130,10,14
-    DEFPUSHBUTTON   "OK",IDOK,37,180,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,100,180,50,14
-    PUSHBUTTON      "Normal Font...",IDC_BUTTON_NORMAL_FONT,7,154,60,14
+    DEFPUSHBUTTON   "OK",IDOK,37,218,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,100,218,50,14
+    PUSHBUTTON      "Font...",IDC_BUTTON_NORMAL_FONT,139,150,36,17
+    PUSHBUTTON      "Font...",IDC_BUTTON_INSERTED_FONT,139,171,36,17
+    PUSHBUTTON      "Font...",IDC_BUTTON_ERASED_FONT,138,192,37,17
+    CTEXT           " Normal Text",IDC_STATIC_NORMAL_TEXT,7,151,113,16,
+                    SS_CENTERIMAGE
+    CTEXT           " Added Text",IDC_STATIC_ADDED_TEXT,7,172,113,16,
+                    SS_CENTERIMAGE
+    CTEXT           " Deleted Text",IDC_STATIC_DELETED_TEXT,7,192,113,16,
+                    SS_CENTERIMAGE
 END
 
 IDD_DIALOG_COMPARE_DIRS_ADVANCED DIALOG DISCARDABLE  0, 0, 207, 295
@@ -345,9 +350,9 @@ VS_VERSION_INFO VERSIONINFO
  PRODUCTVERSION 1,0,0,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
- FILEFLAGS 0x1L
+ FILEFLAGS 0x9L
 #else
- FILEFLAGS 0x0L
+ FILEFLAGS 0x8L
 #endif
  FILEOS 0x4L
  FILETYPE 0x1L
@@ -360,14 +365,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "AlegrDiff: file comparision and merging application\0"
-            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "FileVersion", "0, 5, 0, 1\0"
             VALUE "InternalName", "AlegrDiff\0"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "AlegrDiff.EXE\0"
-            VALUE "PrivateBuild", "\0"
+            VALUE "PrivateBuild", "Beta 0.5\0"
             VALUE "ProductName", "AlegrDiff Application\0"
-            VALUE "ProductVersion", "1, 0, 0, 1\0"
+            VALUE "ProductVersion", "0, 5, 0, 1\0"
             VALUE "SpecialBuild", "\0"
         END
     END
@@ -409,7 +414,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 180
         TOPMARGIN, 7
-        BOTTOMMARGIN, 194
+        BOTTOMMARGIN, 232
     END
 
     IDD_DIALOG_COMPARE_DIRS_ADVANCED, DIALOG

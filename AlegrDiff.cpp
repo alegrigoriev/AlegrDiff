@@ -47,13 +47,13 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_ErasedTextColor(0x000000FF),  // red
 	m_AddedTextColor(0x00FF0000),   // blue
 	m_bRecurseSubdirs(false),
-	m_NormalFontName("Courier New"),
+	m_FontPointSize(100),
 	m_MinIdenticalLines(5)
 {
 	m_NormalLogFont.lfCharSet = ANSI_CHARSET;
 	m_NormalLogFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
 	m_NormalLogFont.lfEscapement = 0;
-	m_NormalLogFont.lfHeight = 20;
+	m_NormalLogFont.lfHeight = -12;
 	m_NormalLogFont.lfWidth = 0;
 	m_NormalLogFont.lfItalic = FALSE;
 	m_NormalLogFont.lfStrikeOut = FALSE;
@@ -63,7 +63,13 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_NormalLogFont.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
 	m_NormalLogFont.lfQuality = DEFAULT_QUALITY;
 	m_NormalLogFont.lfWeight = FW_NORMAL;
-	_tcsncpy(m_NormalLogFont.lfFaceName, LPCTSTR(m_NormalFontName), LF_FACESIZE);
+	_tcsncpy(m_NormalLogFont.lfFaceName, _T("Courier New"), LF_FACESIZE);
+
+	m_AddedLogFont = m_NormalLogFont;
+	m_AddedLogFont.lfUnderline = TRUE;
+
+	m_ErasedLogFont = m_NormalLogFont;
+	m_ErasedLogFont.lfStrikeOut = TRUE;
 }
 
 CAlegrDiffApp::~CAlegrDiffApp()
@@ -99,7 +105,14 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("NormalTextColor"), m_NormalTextColor, 0, 0, 0xFFFFFF);
 	Profile.AddItem(_T("Settings"), _T("AddedTextColor"), m_AddedTextColor, 0x00FF0000, 0, 0xFFFFFF);
 	Profile.AddItem(_T("Settings"), _T("ErasedTextColor"), m_ErasedTextColor, 0x000000FF, 0, 0xFFFFFF);
+
+	Profile.AddItem(_T("Settings"), _T("NormalFont"), m_NormalLogFont, m_NormalLogFont);
+	Profile.AddItem(_T("Settings"), _T("AddedFont"), m_AddedLogFont, m_AddedLogFont);
+	Profile.AddItem(_T("Settings"), _T("ErasedFont"), m_ErasedLogFont, m_ErasedLogFont);
+
+	Profile.AddItem(_T("Settings"), _T("FontPointSize"), m_FontPointSize, 100, 30, 500);
 	Profile.AddItem(_T("Settings"), _T("TabIndent"), m_TabIndent, 4, 1, 32);
+
 	Profile.AddItem(_T("Settings"), _T("RecurseSubdirs"), m_bRecurseSubdirs, false);
 	Profile.AddItem(_T("Settings"), _T("InitialDir1"), m_FileDir1, _T(""));
 	Profile.AddItem(_T("Settings"), _T("InitialDir2"), m_FileDir2, _T(""));
@@ -139,6 +152,7 @@ BOOL CAlegrDiffApp::InitInstance()
 		::LoadMenu(AfxFindResourceHandle(MAKEINTRESOURCE(IDR_ALEGRDTYPE),
 										RT_MENU), MAKEINTRESOURCE(IDR_ALEGRDTYPE));
 
+	OnFontChanged();
 	// create main MDI Frame window
 	CMainFrame* pMainFrame = new CMainFrame;
 	if (!pMainFrame->LoadFrame(IDR_MAINFRAME))
@@ -403,9 +417,13 @@ void CAlegrDiffApp::OnFilePreferences()
 
 	dlg.m_nTabIndent = m_TabIndent;
 
-	dlg.m_NormalFontName = m_NormalFontName;
 	dlg.m_NormalLogFont = m_NormalLogFont;
 	dlg.m_NormalTextColor = m_NormalTextColor;
+	dlg.m_AddedLogFont = m_AddedLogFont;
+	dlg.m_AddedTextColor = m_AddedTextColor;
+	dlg.m_ErasedLogFont = m_ErasedLogFont;
+	dlg.m_ErasedTextColor = m_ErasedTextColor;
+	dlg.m_FontPointSize = m_FontPointSize;
 
 	if (IDOK == dlg.DoModal())
 	{
@@ -420,8 +438,41 @@ void CAlegrDiffApp::OnFilePreferences()
 
 		m_TabIndent = dlg.m_nTabIndent;
 
-		m_NormalFontName = dlg.m_NormalFontName;
-		m_NormalLogFont = dlg.m_NormalLogFont;
-		m_NormalTextColor = dlg.m_NormalTextColor;
+
+		if (dlg.m_bFontChanged)
+		{
+			m_NormalLogFont = dlg.m_NormalLogFont;
+			m_NormalTextColor = dlg.m_NormalTextColor;
+
+			m_AddedLogFont = dlg.m_AddedLogFont;
+			m_AddedTextColor = dlg.m_AddedTextColor;
+
+			m_ErasedLogFont = dlg.m_ErasedLogFont;
+			m_ErasedTextColor = dlg.m_ErasedTextColor;
+
+			m_FontPointSize = dlg.m_FontPointSize;
+			OnFontChanged();
+		}
 	}
+}
+
+void CAlegrDiffApp::OnFontChanged()
+{
+	// recalculate font size
+	CDC * pDC = CWnd::GetDesktopWindow()->GetWindowDC();
+	m_NormalLogFont.lfHeight = -MulDiv(m_FontPointSize, pDC->GetDeviceCaps(LOGPIXELSY), 720);
+	CWnd::GetDesktopWindow()->ReleaseDC(pDC);
+
+	m_AddedLogFont.lfHeight = m_NormalLogFont.lfHeight;
+	m_ErasedLogFont.lfHeight = m_NormalLogFont.lfHeight;
+
+	m_NormalFont.DeleteObject();
+	m_NormalFont.CreateFontIndirect( & m_NormalLogFont);
+
+	m_AddedFont.DeleteObject();
+	m_AddedFont.CreateFontIndirect( & m_AddedLogFont);
+
+	m_ErasedFont.DeleteObject();
+	m_ErasedFont.CreateFontIndirect( & m_ErasedLogFont);
+
 }

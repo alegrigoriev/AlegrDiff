@@ -317,12 +317,14 @@ int _cdecl FileLine::NormalizedGroupHashAndLineNumberCompareFunc(const void * p1
 #undef new
 bool FileItem::Load()
 {
+	CThisApp * pApp = GetApp();
 	FILE * file = fopen(m_BaseDir + m_Subdir + m_Name, "rt");
 	if (NULL == file)
 	{
 		return false;
 	}
 	char line[2048];
+	char TabExpandedLine[2048];
 	m_Lines.SetSize(0, 1000);
 	for (int LinNum =0; NULL != fgets(line, sizeof line - 1, file); LinNum++)
 	{
@@ -333,8 +335,25 @@ bool FileItem::Load()
 		{
 			line[len - 1] = 0;
 		}
-
-		FileLine * pLine = new FileLine(line, true);
+		// expand tabs
+		for (int i = 0, pos = 0; line[i] != 0 && pos < sizeof TabExpandedLine - 1; pos++)
+		{
+			if (line[i] == '\t')
+			{
+				TabExpandedLine[pos] = ' ';
+				if ((pos + 1) % pApp->m_TabIndent == 0)
+				{
+					i++;
+				}
+			}
+			else
+			{
+				TabExpandedLine[pos] = line[i];
+				i++;
+			}
+		}
+		TabExpandedLine[pos] = 0;
+		FileLine * pLine = new FileLine(TabExpandedLine, true);
 		if (pLine)
 		{
 			pLine->SetLineNumber(LinNum);
@@ -360,7 +379,7 @@ bool FileItem::Load()
 	}
 	LinNum = j;
 	// before we sorted the arrays, make hash codes for groups of lines
-	CThisApp * pApp = GetApp();
+
 	for (i = 0; i < LinNum; i++)
 	{
 		DWORD GroupHash[MaxLineGroupSize];

@@ -66,6 +66,21 @@ public:
 	~CApplicationProfileItemInt() {}
 };
 
+template<class T> class CApplicationProfileItemBinary: public CApplicationProfileItem
+{
+	T & m_Ref;
+	T m_InitialData;
+	T m_Default;
+public:
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+	virtual void ResetToDefault() { m_Ref = m_Default; }
+	virtual void ResetToInitial() { m_Ref = m_InitialData; }
+	CApplicationProfileItemBinary(LPCTSTR szSection, LPCTSTR szName, T & RefValue,
+								T & Default);
+	~CApplicationProfileItemBinary() {}
+};
+
 class CApplicationProfileItemBool: public CApplicationProfileItemInt
 {
 	bool & Ref;
@@ -142,22 +157,32 @@ public:
 	// restores the section from INI file. If section name is empty,
 	// restores all of them.
 	BOOL ImportSection(LPCTSTR Section, LPCTSTR szFilename);
-	BOOL AddItem(LPCTSTR Section, LPCTSTR szName, CString & str,
+	void AddItem(LPCTSTR Section, LPCTSTR szName, CString & str,
 				LPCTSTR szDefault=_T(""),
 				int MaxLen=256);
-	BOOL AddItem(LPCTSTR szSection, LPCTSTR szName, LONG & val,
+	void AddItem(LPCTSTR szSection, LPCTSTR szName, LONG & val,
 				LONG nDefault = 0, LONG nMin = LONG_MIN, LONG nMax=LONG_MAX);
-	BOOL AddItem(LPCTSTR szSection, LPCTSTR szName, int & val,
+	void AddItem(LPCTSTR szSection, LPCTSTR szName, int & val,
 				int nDefault = 0, int nMin = LONG_MIN, int nMax=LONG_MAX);
-	BOOL AddItem(LPCTSTR szSection, LPCTSTR szName, ULONG & val,
+	void AddItem(LPCTSTR szSection, LPCTSTR szName, ULONG & val,
 				ULONG nDefault = 0, ULONG nMin = 0, ULONG nMax=ULONG_MAX);
-	BOOL AddItem(LPCTSTR szSection, LPCTSTR szName, bool & val,
+	void AddItem(LPCTSTR szSection, LPCTSTR szName, bool & val,
 				bool nDefault = false);
-	BOOL AddBoolItem(LPCTSTR szSection, LPCTSTR szName, int & val,
+	// Visual C 6 doesn't like out of class member template definition
+	template <class T> void AddItem(LPCTSTR szSection, LPCTSTR szName,
+									T & value, T & Default)
+	{
+		CApplicationProfileItem * pTmp;
+		RemoveItem(szSection, szName);
+		pTmp = new CApplicationProfileItemBinary<T>(szSection, szName, value, Default);
+		pTmp->Next = pItems;
+		pItems = pTmp;
+	}
+	void AddBoolItem(LPCTSTR szSection, LPCTSTR szName, int & val,
 					int nDefault = 0);
-	BOOL AddItem(LPCTSTR szSection, LPCTSTR szName, float & val,
+	void AddItem(LPCTSTR szSection, LPCTSTR szName, float & val,
 				double nDefault = 0., double nMin = 0., double nMax=0.);
-	BOOL AddItem(LPCTSTR szSection, LPCTSTR szName, double & val,
+	void AddItem(LPCTSTR szSection, LPCTSTR szName, double & val,
 				double nDefault = 0., double nMin = 0., double nMax=0.);
 	BOOL RemoveItem(LPCTSTR szSection, LPCTSTR szName);
 	BOOL RemoveSection(LPCTSTR szSection);
@@ -173,5 +198,40 @@ public:
 	CApplicationProfileItem * pItems;
 };
 
+template<class T>
+CApplicationProfileItemBinary<T>::CApplicationProfileItemBinary(
+																LPCTSTR szSection, LPCTSTR szName,
+																T & Reference, T & Default)
+	: CApplicationProfileItem(szSection, szName),
+	m_Ref(Reference), m_Default(Default)
+{
+	// read value
+	ReadData();
+	m_InitialData = m_Ref;
+}
+
+template<class T> void CApplicationProfileItemBinary<T>::ReadData()
+{
+	BYTE * pData = NULL;
+	UINT ReadBytes = 0;
+	BOOL res = AfxGetApp()->GetProfileBinary(Section, Name, & pData, & ReadBytes);
+	if (res && NULL != pData && ReadBytes == sizeof (T))
+	{
+		memcpy( & m_Ref, pData, sizeof (T));
+	}
+	else
+	{
+		memcpy( & m_Ref, & m_Default, sizeof (T));
+	}
+	delete[] pData;
+}
+
+template<class T> void CApplicationProfileItemBinary<T>::WriteData(BOOL bForceWrite)
+{
+	if (bForceWrite || memcmp(& m_Ref, & m_InitialData, sizeof (T)))
+	{
+		AfxGetApp()->WriteProfileBinary(Section, Name, LPBYTE( & m_Ref), sizeof (T));
+	}
+}
 
 #endif

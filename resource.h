@@ -30,6 +30,11 @@
 #define IDC_CHECK_BINARY                1014
 #define IDC_SPIN1                       1015
 #define IDC_BUTTON_NORMAL_FONT          1016
+#define IDC_BUTTON_INSERTED_FONT        1017
+#define IDC_BUTTON_ERASED_FONT          1018
+#define IDC_STATIC_NORMAL_TEXT          1019
+#define IDC_STATIC_ADDED_TEXT           1020
+#define IDC_STATIC_DELETED_TEXT         1021
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -47,8 +52,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        133
-#define _APS_NEXT_COMMAND_VALUE         32788
-#define _APS_NEXT_CONTROL_VALUE         1017
+#define _APS_NEXT_COMMAND_VALUE         32789
+#define _APS_NEXT_CONTROL_VALUE         1022
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

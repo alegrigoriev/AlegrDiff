@@ -135,17 +135,17 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 			if (pSection->Attr == pSection->Inserted)
 			{
 				Color = pApp->m_AddedTextColor;
-				pFont = & m_UnderlineFont;
+				pFont = & pApp->m_AddedFont;
 			}
 			else if (pSection->Attr == pSection->Erased)
 			{
 				Color = pApp->m_ErasedTextColor;
-				pFont = & m_StrikeoutFont;
+				pFont = & pApp->m_ErasedFont;
 			}
 			else
 			{
 				Color = pApp->m_NormalTextColor;
-				pFont = & m_NormalFont;
+				pFont = & pApp->m_NormalFont;
 			}
 
 			if (nDrawnChars < SelEnd
@@ -185,7 +185,7 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 		buf[nBeforeSelection] = 0;
 		pDC->SetBkColor(pApp->m_TextBackgroundColor);
 		pDC->SetTextColor(pApp->m_NormalTextColor);
-		pDC->SelectObject(& m_NormalFont);
+		pDC->SelectObject(& pApp->m_NormalFont);
 		// text is drawn from the current position
 		pDC->TextOut(0, 0, buf, nBeforeSelection);
 		nDrawnChars += nBeforeSelection;
@@ -201,7 +201,7 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 		buf[nMoreSelection] = 0;
 		pDC->SetBkColor(0x000000);
 		pDC->SetTextColor(pApp->m_SelectedTextColor);
-		pDC->SelectObject(& m_NormalFont);
+		pDC->SelectObject(& pApp->m_NormalFont);
 		// text is drawn from the current position
 		pDC->TextOut(0, 0, buf, nMoreSelection);
 	}
@@ -210,6 +210,7 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 void CDiffFileView::OnDraw(CDC* pDC)
 {
 	CFilePairDoc* pDoc = GetDocument();
+	CThisApp * pApp = GetApp();
 	if (NULL == pDoc)
 	{
 		return;
@@ -230,7 +231,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 		return;
 	}
 
-	CFont * pOldFont = pDC->SelectObject( & m_NormalFont);
+	CFont * pOldFont = pDC->SelectObject( & pApp->m_NormalFont);
 
 	TEXTMETRIC tm;
 	pDC->GetTextMetrics( & tm);
@@ -384,21 +385,9 @@ void CDiffFileView::OnWindowCloseDiff()
 void CDiffFileView::OnInitialUpdate()
 {
 	// create font
-	BOOL success = m_NormalFont.CreateFont(20, 0, 0, 0, FW_NORMAL,
-											false, false, false,
-											ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-											DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, NULL /*"Courier New" */);
-	success = m_UnderlineFont.CreateFont(20, 0, 0, 0, FW_NORMAL,
-										false, true, false,
-										ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-										DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, NULL /*"Courier New" */);
-	success = m_StrikeoutFont.CreateFont(20, 0, 0, 0, FW_NORMAL,
-										false, false, true,
-										ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-										DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, NULL /*"Courier New" */);
 	{
 		CWindowDC wdc(this);
-		CFont * pOldFont = wdc.SelectObject( & m_NormalFont);
+		CFont * pOldFont = wdc.SelectObject( & GetApp()->m_NormalFont);
 		wdc.GetTextMetrics( & m_FontMetric);
 		wdc.SelectObject(pOldFont);
 	}
@@ -763,7 +752,7 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 	}
 	else
 	{
-		if (begin.line >= 0 && begin.pos < nCharsInView)
+		if (begin.line >= 0 && begin.pos <= nCharsInView)
 		{
 			if (begin.pos < 0)
 			{
@@ -775,11 +764,11 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 			r.right = (nCharsInView + 1) * CharWidth();
 			InvalidateRect( & r);
 		}
-		if (end.line <= nLinesInView && end.pos > 0)
+		if (end.line <= nLinesInView + 1 && end.pos > 0)
 		{
-			if (end.pos > nCharsInView)
+			if (end.pos > nCharsInView + 1)
 			{
-				end.pos = nCharsInView;
+				end.pos = nCharsInView + 1;
 			}
 			r.top = end.line * LineHeight();
 			r.bottom = r.top + LineHeight();
@@ -787,9 +776,9 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 			r.left = 0;
 			InvalidateRect( & r);
 		}
-		if (end.line > nLinesInView)
+		if (end.line > nLinesInView + 1)
 		{
-			end.line = nLinesInView;
+			end.line = nLinesInView + 1;
 		}
 		if (end.line > begin.line + 1)
 		{

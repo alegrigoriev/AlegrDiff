@@ -279,7 +279,7 @@ CApplicationProfile::~CApplicationProfile()
 	}
 }
 
-BOOL CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, CString & str,
+void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, CString & str,
 								LPCTSTR szDefault,int MaxLen)
 {
 	CApplicationProfileItem * pTmp;
@@ -287,10 +287,9 @@ BOOL CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, CString & s
 	pTmp = new CApplicationProfileItemStr(szSection, szName, str, szDefault);
 	pTmp->Next = pItems;
 	pItems = pTmp;
-	return TRUE;
 }
 
-BOOL CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, LONG & val,
+void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, LONG & val,
 								LONG nDefault, LONG nMin, LONG nMax)
 {
 	CApplicationProfileItem * pTmp;
@@ -298,10 +297,9 @@ BOOL CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, LONG & val,
 	pTmp = new CApplicationProfileItemLong(szSection, szName, val, nDefault, nMin, nMax);
 	pTmp->Next = pItems;
 	pItems = pTmp;
-	return TRUE;
 }
 
-BOOL CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, int & val,
+void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, int & val,
 								int nDefault, int nMin, int nMax)
 {
 	CApplicationProfileItem * pTmp;
@@ -309,10 +307,9 @@ BOOL CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, int & val,
 	pTmp = new CApplicationProfileItemInt(szSection, szName, val, nDefault, nMin, nMax);
 	pTmp->Next = pItems;
 	pItems = pTmp;
-	return TRUE;
 }
 
-BOOL CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, ULONG & val,
+void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, ULONG & val,
 								ULONG nDefault, ULONG nMin, ULONG nMax)
 {
 	CApplicationProfileItem * pTmp;
@@ -320,10 +317,9 @@ BOOL CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, ULONG & val
 	pTmp = new CApplicationProfileItemUlong(szSection, szName, val, nDefault, nMin, nMax);
 	pTmp->Next = pItems;
 	pItems = pTmp;
-	return TRUE;
 }
 
-BOOL CApplicationProfile::AddBoolItem(LPCTSTR szSection, LPCTSTR szName, int & val,
+void CApplicationProfile::AddBoolItem(LPCTSTR szSection, LPCTSTR szName, int & val,
 									int nDefault)
 {
 	CApplicationProfileItem * pTmp;
@@ -331,10 +327,9 @@ BOOL CApplicationProfile::AddBoolItem(LPCTSTR szSection, LPCTSTR szName, int & v
 	pTmp = new CApplicationProfileItemInt(szSection, szName, val, nDefault, 0, 1);
 	pTmp->Next = pItems;
 	pItems = pTmp;
-	return TRUE;
 }
 
-BOOL CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, bool & val,
+void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, bool & val,
 								bool nDefault)
 {
 	CApplicationProfileItem * pTmp;
@@ -342,10 +337,9 @@ BOOL CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, bool & val,
 	pTmp = new CApplicationProfileItemBool(szSection, szName, val, nDefault);
 	pTmp->Next = pItems;
 	pItems = pTmp;
-	return TRUE;
 }
 
-BOOL CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, double & val,
+void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, double & val,
 								double nDefault, double nMin, double nMax)
 {
 	CApplicationProfileItem * pTmp;
@@ -353,10 +347,9 @@ BOOL CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, double & va
 	pTmp = new CApplicationProfileItemDouble(szSection, szName, val, nDefault, nMin, nMax);
 	pTmp->Next = pItems;
 	pItems = pTmp;
-	return TRUE;
 }
 
-BOOL CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, float & val,
+void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, float & val,
 								double nDefault, double nMin, double nMax)
 {
 	CApplicationProfileItem * pTmp;
@@ -364,7 +357,6 @@ BOOL CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, float & val
 	pTmp = new CApplicationProfileItemFloat(szSection, szName, val, nDefault, nMin, nMax);
 	pTmp->Next = pItems;
 	pItems = pTmp;
-	return TRUE;
 }
 
 BOOL CApplicationProfile::RemoveItem(LPCTSTR szSection, LPCTSTR szName)
@@ -869,7 +861,6 @@ BOOL CWinApp::WriteProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry,
 			return FALSE;
 		LONG lResult = RegSetValueEx(hSecKey, lpszEntry, NULL, REG_DWORD,
 									(LPBYTE)&nValue, sizeof(nValue));
-		//RegCloseKey(hSecKey);
 		return lResult == ERROR_SUCCESS;
 	}
 	else
@@ -901,7 +892,6 @@ BOOL CWinApp::WriteProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry,
 				hCachedSectionKey = NULL;
 			}
 			lResult = ::RegDeleteKey(hAppKey, lpszSection);
-			//RegCloseKey(hAppKey);
 		}
 		else if (lpszValue == NULL)
 		{
@@ -910,7 +900,6 @@ BOOL CWinApp::WriteProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry,
 				return FALSE;
 			// necessary to cast away const below
 			lResult = ::RegDeleteValue(hSecKey, (LPTSTR)lpszEntry);
-			//RegCloseKey(hSecKey);
 		}
 		else
 		{
@@ -919,7 +908,6 @@ BOOL CWinApp::WriteProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry,
 				return FALSE;
 			lResult = RegSetValueEx(hSecKey, lpszEntry, NULL, REG_SZ,
 									(LPBYTE)lpszValue, (lstrlen(lpszValue)+1)*sizeof(TCHAR));
-			//RegCloseKey(hSecKey);
 		}
 		return lResult == ERROR_SUCCESS;
 	}

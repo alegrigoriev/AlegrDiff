@@ -1,7 +1,4 @@
 TODO:
-If there is selection, cursor commands should move to the selection boundary
-check if whitespace difference is attached to more spaces. Try to rearrange
-    segments to avoid misreading. Glue the whitespace to more space.
 update main frame during long comparision. Process Esc key. Pump commands.
 
 show version of file1, file2 of the line
@@ -42,6 +39,8 @@ Tries to reload files during modal state
 
 Done:
 
+check if whitespace difference is attached to more spaces. Try to rearrange
+    segments to avoid misreading. Glue the whitespace to more space.
 Support Ctrl+Up, Ctrl+Down
 Caret movements now go from the selection boundaries
 save Show Toolbar, Show Status Bar options

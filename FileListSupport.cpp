@@ -1775,41 +1775,34 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection *
 
 		int nDiffChars1 = 0;
 		int nDiffChars2 = 0;
+		StringSection * pErasedSection = NULL;
+		StringSection * pAddedSection = NULL;
 
 		if (idx1 != 0
 			&& ppSections != NULL)
 		{
-			StringSection * pSection = new StringSection;
-			if (NULL != pSection)
+			pErasedSection = new StringSection;
+			if (NULL != pErasedSection)
 			{
-				pSection->pBegin = str1;
-				pSection->Length = idx1;
-				pSection->Attr = StringSection::Erased | StringSection::Undefined;
-				pSection->pNext = NULL;
+				pErasedSection->pBegin = str1;
+				pErasedSection->Length = idx1;
+				pErasedSection->Attr = StringSection::Erased | StringSection::Undefined;
+				pErasedSection->pNext = NULL;
 
 				// check if it is whitespace difference
-				pSection->Attr |= pSection->Whitespace;
+				pErasedSection->Attr |= pErasedSection->Whitespace;
 				for (unsigned i = 0, CharIdx = str1 - pStr1->GetText(); i < idx1; i++, CharIdx++)
 				{
 					if ( ! pStr1->IsExtraWhitespace(CharIdx))
 					{
 						// it is NOT whitespace diff
-						pSection->Attr &= ~pSection->Whitespace;
+						pErasedSection->Attr &= ~pErasedSection->Whitespace;
 						nDiffChars1 = idx1;
 						break;
 					}
 				}
 				// whitespace difference is not counted in nDifferentChars
 
-				if (NULL != pLastSection)
-				{
-					pLastSection->pNext = pSection;
-				}
-				else
-				{
-					* ppSections = pSection;
-				}
-				pLastSection = pSection;
 			}
 		}
 		else
@@ -1830,37 +1823,28 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection *
 		if (idx2 != 0
 			&& ppSections != NULL)
 		{
-			StringSection * pSection = new StringSection;
-			if (NULL != pSection)
+			pAddedSection = new StringSection;
+			if (NULL != pAddedSection)
 			{
-				pSection->pBegin = str2;
-				pSection->Length = idx2;
-				pSection->Attr = StringSection::Inserted | StringSection::Undefined;
-				pSection->pNext = NULL;
+				pAddedSection->pBegin = str2;
+				pAddedSection->Length = idx2;
+				pAddedSection->Attr = StringSection::Inserted | StringSection::Undefined;
+				pAddedSection->pNext = NULL;
 
 				// check if it is whitespace difference
-				pSection->Attr |= pSection->Whitespace;
+				pAddedSection->Attr |= pAddedSection->Whitespace;
 				for (unsigned i = 0, CharIdx = str2 - pStr2->GetText(); i < idx2; i++, CharIdx++)
 				{
 					if ( ! pStr2->IsExtraWhitespace(CharIdx))
 					{
 						// it is NOT whitespace diff
-						pSection->Attr &= ~pSection->Whitespace;
+						pAddedSection->Attr &= ~pAddedSection->Whitespace;
 						nDiffChars2 = idx2;
 						break;
 					}
 				}
 				// whitespace difference is not counted in nDifferentChars
 
-				if (NULL != pLastSection)
-				{
-					pLastSection->pNext = pSection;
-				}
-				else
-				{
-					* ppSections = pSection;
-				}
-				pLastSection = pSection;
 			}
 		}
 		else
@@ -1886,6 +1870,53 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection *
 		else
 		{
 			nDifferentChars += nDiffChars2;
+		}
+
+		if (NULL != pErasedSection
+			&& NULL != pAddedSection)
+		{
+			// if there is space in the beginning of the next text, or if it is end of the line,
+			// then check last chars of the deleted text. If it's
+			if ((' ' != pAddedSection->pBegin[pAddedSection->Length - 1]
+					&& ' ' == pErasedSection->pBegin[pErasedSection->Length - 1]
+					&& (' ' == pErasedSection->pBegin[pErasedSection->Length]
+						|| 0 == pErasedSection->pBegin[pErasedSection->Length]))
+
+				|| (' ' != pErasedSection->pBegin[0]
+					&& ' ' == pAddedSection->pBegin[0]
+					&& (NULL == pLastSection
+						|| ' ' == pLastSection->pBegin[pLastSection->Length - 1])))
+			{
+				StringSection * tmp = pErasedSection;
+				pErasedSection = pAddedSection;
+				pAddedSection = tmp;
+			}
+		}
+
+		if (NULL != pErasedSection)
+		{
+			if (NULL != pLastSection)
+			{
+				pLastSection->pNext = pErasedSection;
+			}
+			else
+			{
+				* ppSections = pErasedSection;
+			}
+			pLastSection = pErasedSection;
+		}
+
+		if (NULL != pAddedSection)
+		{
+			if (NULL != pLastSection)
+			{
+				pLastSection->pNext = pAddedSection;
+			}
+			else
+			{
+				* ppSections = pAddedSection;
+			}
+			pLastSection = pAddedSection;
 		}
 
 		str1 += idx1;

@@ -346,21 +346,18 @@ BOOL CAlegrDiffApp::InitInstance()
 	//  serve as the connection between documents, frame windows and views.
 
 	m_pListDiffTemplate = new CMultiDocTemplate(
-												IDR_ALEGRDTYPE,
+												IDR_ALEGRDTYPE_LIST,
 												RUNTIME_CLASS(CAlegrDiffDoc),
 												RUNTIME_CLASS(CChildFrame), // custom MDI child frame
 												RUNTIME_CLASS(CAlegrDiffView));
 	AddDocTemplate(m_pListDiffTemplate);
 
 	m_pFileDiffTemplate = new CMultiDocTemplate(
-												IDR_FILEDIFFTYPE,
+												IDR_ALEGRDTYPE,
 												RUNTIME_CLASS(CFilePairDoc),
 												RUNTIME_CLASS(CChildFrame), // custom MDI child frame
 												RUNTIME_CLASS(CDiffFileView));
 	AddDocTemplate(m_pFileDiffTemplate);
-	m_pFileDiffTemplate->m_hMenuShared =
-		::LoadMenu(AfxFindResourceHandle(MAKEINTRESOURCE(IDR_ALEGRDTYPE),
-										RT_MENU), MAKEINTRESOURCE(IDR_ALEGRDTYPE));
 
 	OnFontChanged();
 	// create main MDI Frame window
@@ -459,6 +456,24 @@ void CAlegrDiffApp::OnFileComparedirectories()
 void CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 {
 	// check if there is already a CFilePairDoc
+	POSITION position = m_pFileDiffTemplate->GetFirstDocPosition();
+	while(position)
+	{
+		CFilePairDoc * pDoc =
+			dynamic_cast<CFilePairDoc *>(m_pFileDiffTemplate->GetNextDoc(position));
+		if (NULL != pDoc
+			&& pDoc->GetFilePair() == pPair)
+		{
+			POSITION viewpos = pDoc->GetFirstViewPosition();
+			if (position)
+			{
+				CView * pView = pDoc->GetNextView(viewpos);
+				pView->GetParentFrame()->ActivateFrame();
+			}
+			return;
+		}
+	}
+
 	CFilePairDoc * pDoc = (CFilePairDoc *)m_pFileDiffTemplate->OpenDocumentFile(NULL);
 
 	if (NULL != pDoc)

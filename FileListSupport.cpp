@@ -3133,6 +3133,7 @@ TextPos FilePair::PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces)
 		return TextPos(-1, -1);
 	}
 	ppSection--;
+	SectionIdx--;
 	const FileDiffSection * pSection = *ppSection;
 	if (IgnoreWhitespaces)
 	{

@@ -31,6 +31,7 @@ CDiffFileView::CDiffFileView()
 	m_OnActivateViewEntered(false),
 	m_LineNumberMarginWidth(0),
 	m_CharOverhang(0),
+	m_ShownFileVersion(ShownAllText),
 	m_DrawnSelEnd(0, 0)
 {
 	// init font size, to avoid zero divide
@@ -74,6 +75,10 @@ BEGIN_MESSAGE_MAP(CDiffFileView, CView)
 	ON_COMMAND(ID_EDIT_GOTOLINE, OnEditGotoline)
 	ON_WM_RBUTTONDOWN()
 	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_FILE_2_VERSION, OnUpdateViewFile2Version)
+	ON_COMMAND(ID_VIEW_FILE_2_VERSION, OnViewFile2Version)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_FILE1_VERSION, OnUpdateViewFile1Version)
+	ON_COMMAND(ID_VIEW_FILE1_VERSION, OnViewFile1Version)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -840,7 +845,7 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 	int nCharsInView = CharsInView();
 	if (begin == end
 		|| end.line < m_FirstLineSeen
-		|| begin.line > m_FirstLineSeen + nLinesInView)
+		|| begin.line > m_FirstLineSeen + nLinesInView + 1)
 	{
 		return;
 	}
@@ -884,7 +889,7 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 			r.right = (nCharsInView + 1) * CharWidth() + m_LineNumberMarginWidth + m_FontMetric.tmOverhang;
 			InvalidateRect( & r);
 		}
-		if (end.line <= nLinesInView + 1 && end.pos > 0)
+		if (end.line <= nLinesInView + 2 && end.pos > 0)
 		{
 			if (end.pos > nCharsInView + 1)
 			{
@@ -896,9 +901,9 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 			r.left = m_LineNumberMarginWidth;
 			InvalidateRect( & r);
 		}
-		if (end.line > nLinesInView + 1)
+		if (end.line > nLinesInView + 2)
 		{
-			end.line = nLinesInView + 1;
+			end.line = nLinesInView + 2;
 		}
 		if (end.line > begin.line + 1)
 		{
@@ -940,10 +945,12 @@ void CDiffFileView::CreateAndShowCaret()
 	}
 	CPoint p((pDoc->m_CaretPos.pos - m_FirstPosSeen) * CharWidth() + m_LineNumberMarginWidth,
 			(pDoc->m_CaretPos.line - m_FirstLineSeen) * LineHeight());
-	if (pDoc->m_CaretPos.pos >= m_FirstPosSeen)
+	if (pDoc->m_CaretPos.pos >= m_FirstPosSeen
+		&& pDoc->m_CaretPos.line >= m_FirstLineSeen
+		&& pDoc->m_CaretPos.line <= m_FirstLineSeen + LinesInView() + 1)
 	{
 		CreateSolidCaret(2, LineHeight());
-		TRACE("CDiffFileView::CreateAndShowCaret %d %d\n", p.x, p.y);
+		if (0) TRACE("CDiffFileView::CreateAndShowCaret %d %d\n", p.x, p.y);
 		SetCaretPos(p);
 		ShowCaret();
 	}
@@ -1324,7 +1331,7 @@ void CDiffFileView::OnUpdateViewShowLineNumbers(CCmdUI* pCmdUI)
 void CDiffFileView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* pDeactivateView)
 {
 	CView::OnActivateView(bActivate, pActivateView, pDeactivateView);
-	TRACE("bActivate=%d, this=%08X, pActivateView=%08X\n", bActivate, this, pActivateView);
+	if (0) TRACE("bActivate=%d, this=%08X, pActivateView=%08X\n", bActivate, this, pActivateView);
 	if (m_OnActivateViewEntered)
 	{
 		return;
@@ -1484,5 +1491,28 @@ void CDiffFileView::UpdateTextMetrics()
 	CFont * pOldFont = wdc.SelectObject(pFont);
 	wdc.GetTextMetrics( & m_FontMetric);
 	wdc.SelectObject(pOldFont);
+
+}
+
+void CDiffFileView::OnUpdateViewFile2Version(CCmdUI* pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
+
+}
+
+void CDiffFileView::OnViewFile2Version()
+{
+// enable if there are any differences in the line, and the line is not exclusively File1
+}
+
+void CDiffFileView::OnUpdateViewFile1Version(CCmdUI* pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
+
+}
+
+void CDiffFileView::OnViewFile1Version()
+{
+	// TODO: Add your command handler code here
 
 }

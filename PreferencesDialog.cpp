@@ -49,6 +49,14 @@ CFilesPreferencePage::CFilesPreferencePage() : CPropertyPage(CFilesPreferencePag
 	m_sIgnoreFilesFilter = _T("");
 	m_AutoReloadChangedFiles = FALSE;
 	//}}AFX_DATA_INIT
+	LoadHistory(m_Profile, _T("History"), _T("BinaryFiles%d"), m_sBinaryFilterHistory,
+				sizeof m_sBinaryFilterHistory / sizeof m_sBinaryFilterHistory[0], true);
+
+	LoadHistory(m_Profile, _T("History"), _T("CppFiles%d"), m_sCppFilterHistory,
+				sizeof m_sCppFilterHistory / sizeof m_sCppFilterHistory[0], true);
+
+	LoadHistory(m_Profile, _T("History"), _T("IgnoreFiles%d"), m_sIgnoreFilterHistory,
+				sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0], true);
 }
 
 CFilesPreferencePage::~CFilesPreferencePage()
@@ -58,15 +66,28 @@ CFilesPreferencePage::~CFilesPreferencePage()
 void CFilesPreferencePage::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
-//{{AFX_DATA_MAP(CFilesPreferencePage)
+	//{{AFX_DATA_MAP(CFilesPreferencePage)
 	DDX_CBString(pDX, IDC_EDIT_BINARY_FILES, m_sBinaryFilesFilter);
 	DDX_CBString(pDX, IDC_EDIT_C_CPP, m_sCppFilesFilter);
 	DDX_CBString(pDX, IDC_EDIT_IGNORE, m_sIgnoreFilesFilter);
 	DDX_Check(pDX, IDC_CHECK_AUTO_RELOAD, m_AutoReloadChangedFiles);
-//}}AFX_DATA_MAP
+	//}}AFX_DATA_MAP
 	DDX_Control(pDX, IDC_EDIT_C_CPP, m_cbCppFilter);
 	DDX_Control(pDX, IDC_EDIT_BINARY_FILES, m_cbBinaryFilter);
 	DDX_Control(pDX, IDC_EDIT_IGNORE, m_cbIgnoreFilter);
+	if (pDX->m_bSaveAndValidate)
+	{
+		AddStringToHistory(m_sBinaryFilesFilter, m_sBinaryFilterHistory,
+							sizeof m_sBinaryFilterHistory / sizeof m_sBinaryFilterHistory[0], false);
+
+		AddStringToHistory(m_sCppFilesFilter, m_sCppFilterHistory,
+							sizeof m_sCppFilterHistory / sizeof m_sCppFilterHistory[0], false);
+
+		AddStringToHistory(m_sIgnoreFilesFilter, m_sIgnoreFilterHistory,
+							sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0], false);
+
+		m_Profile.FlushAll();
+	}
 }
 
 
@@ -82,6 +103,14 @@ BOOL CFilesPreferencePage::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 
+	LoadHistoryCombo(m_cbBinaryFilter, m_sBinaryFilterHistory,
+					sizeof m_sBinaryFilterHistory / sizeof m_sBinaryFilterHistory[0]);
+
+	LoadHistoryCombo(m_cbCppFilter, m_sCppFilterHistory,
+					sizeof m_sCppFilterHistory / sizeof m_sCppFilterHistory[0]);
+
+	LoadHistoryCombo(m_cbIgnoreFilter, m_sIgnoreFilterHistory,
+					sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0]);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -99,6 +128,7 @@ CComparisionPreferencesPage::CComparisionPreferencesPage() : CPropertyPage(CComp
 	m_NumberOfIdenticalLines = 0;
 	m_PercentsOfLookLikeDifference = 0;
 	m_MinMatchingChars = 0;
+	m_bUseMd5 = TRUE;
 	//}}AFX_DATA_INIT
 }
 
@@ -118,6 +148,7 @@ void CComparisionPreferencesPage::DoDataExchange(CDataExchange* pDX)
 	DDV_MinMaxUInt(pDX, m_PercentsOfLookLikeDifference, 0, 99);
 	DDX_Text(pDX, IDC_EDIT_MIN_MATCHING_CHARS, m_MinMatchingChars);
 	DDV_MinMaxUInt(pDX, m_MinMatchingChars, 1, 32);
+	DDX_Check(pDX, IDC_CHECK_USE_MD5, m_bUseMd5);
 	//}}AFX_DATA_MAP
 }
 

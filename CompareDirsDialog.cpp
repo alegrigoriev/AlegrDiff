@@ -28,6 +28,7 @@ CCompareDirsDialog::CCompareDirsDialog(CWnd* pParent /*=NULL*/)
 	m_sFirstDir = _T("");
 	m_BinaryComparision = FALSE;
 	//}}AFX_DATA_INIT
+	m_bUseMd5 = TRUE;
 }
 
 
@@ -47,6 +48,7 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_CBString(pDX, IDC_COMBO_SECOND_DIR, m_sSecondDir);
 	if (m_bAdvanced)
 	{
+		DDX_Check(pDX, IDC_CHECK_USE_MD5, m_bUseMd5);
 		DDX_Control(pDX, IDC_SPIN1, m_Spin);
 		DDX_Control(pDX, IDC_EDIT_BINARY_FILES, m_cbBinaryFilesFilter);
 		DDX_Control(pDX, IDC_EDIT_C_CPP, m_cbCppFilesFilter);
@@ -177,17 +179,7 @@ void CCompareDirsDialog::OnCheckBinary()
 {
 	BOOL NotBinary = ! IsDlgButtonChecked(IDC_CHECK_BINARY);
 
-	CWnd * pWnd = GetDlgItem(IDC_CHECK_C_CPP);
-	if (pWnd)
-	{
-		pWnd->EnableWindow(NotBinary);
-	}
-	pWnd = GetDlgItem(IDC_EDIT_C_CPP);
-	if (pWnd)
-	{
-		pWnd->EnableWindow(NotBinary);
-	}
-	pWnd = GetDlgItem(IDC_CHECK_BINARY_FILES);
+	CWnd * pWnd = GetDlgItem(IDC_EDIT_C_CPP);
 	if (pWnd)
 	{
 		pWnd->EnableWindow(NotBinary);

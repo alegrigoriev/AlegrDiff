@@ -405,9 +405,9 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION |
 CAPTION "About AlegrDiff"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,18,16
-    CTEXT           "AlegrDiff Version 1.04",IDC_STATIC_VERSION,35,14,128,8,
-                    SS_NOPREFIX
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
+    CTEXT           "AlegrDiff Version 1.05 Beta",IDC_STATIC_VERSION,35,14,
+                    128,8,SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001",IDC_STATIC,35,
                     29,128,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
@@ -525,31 +525,31 @@ BEGIN
     RTEXT           "",1119,7,22,265,8,NOT WS_VISIBLE
 END
 
-IDD_PROPPAGE_FILE_PREFERENCES DIALOGEX 0, 0, 184, 146
+IDD_PROPPAGE_FILE_PREFERENCES DIALOGEX 0, 0, 184, 133
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Files"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     CONTROL         "&Automatically reload modified files",
                     IDC_CHECK_AUTO_RELOAD,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,14,107,139,10
+                    WS_TABSTOP,7,107,139,10
     LTEXT           "Compare the following files as C/C++:",IDC_STATIC,7,7,
                     170,8
-    COMBOBOX        IDC_EDIT_C_CPP,7,20,170,30,CBS_DROPDOWN | CBS_SORT | 
-                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_EDIT_C_CPP,7,20,170,58,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
     LTEXT           "Compare the following files as binary:",IDC_STATIC,7,41,
                     165,8
-    COMBOBOX        IDC_EDIT_BINARY_FILES,7,53,170,30,CBS_DROPDOWN | 
-                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "&Ignore the following files:",IDC_STATIC,7,74,154,8
-    COMBOBOX        IDC_EDIT_IGNORE,7,88,170,30,CBS_DROPDOWN | CBS_SORT | 
+    COMBOBOX        IDC_EDIT_BINARY_FILES,7,53,170,61,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Ignore the following files:",IDC_STATIC,7,74,154,8
+    COMBOBOX        IDC_EDIT_IGNORE,7,88,170,51,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
 END
 
-IDD_PROPPAGE_COMPARISION_PREFERENCES DIALOG  0, 0, 226, 103
+IDD_PROPPAGE_COMPARISION_PREFERENCES DIALOGEX 0, 0, 226, 108
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Comparison"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     LTEXT           "&Number of consecutive identical lines:",IDC_STATIC,7,
                     15,164,8
@@ -565,6 +565,9 @@ BEGIN
     LTEXT           "Minimum matching &chars for in-line comparison:",
                     IDC_STATIC,7,66,168,8
     EDITTEXT        IDC_EDIT_MIN_MATCHING_CHARS,179,64,40,14,ES_AUTOHSCROLL
+    CONTROL         "Binary comparison uses &MD5 file fingerprint",
+                    IDC_CHECK_USE_MD5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    7,82,159,10
 END
 
 IDD_PROPPAGE_VIEW_PREFERENCES DIALOG  0, 0, 218, 165
@@ -787,13 +790,13 @@ VS_VERSION_INFO$(RETAIL_VERSION) VERSIONINFO
 #else
 VS_VERSION_INFO VERSIONINFO
 #endif
- FILEVERSION 1,0,4,0
- PRODUCTVERSION 1,0,4,0
+ FILEVERSION 1,0,5,0
+ PRODUCTVERSION 1,0,5,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
- FILEFLAGS 0x1L
+ FILEFLAGS 0x9L
 #else
- FILEFLAGS 0x0L
+ FILEFLAGS 0x8L
 #endif
  FILEOS 0x4L
  FILETYPE 0x1L
@@ -805,12 +808,13 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "AleGr Software"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application"
-            VALUE "FileVersion", "1, 0, 4, 0"
+            VALUE "FileVersion", "1, 0, 5, 0"
             VALUE "InternalName", "AlegrDiff"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001"
             VALUE "OriginalFilename", "AlegrDiff.EXE"
+            VALUE "PrivateBuild", "Beta 1.05"
             VALUE "ProductName", "AlegrDiff Application"
-            VALUE "ProductVersion", "1, 0, 4, 0"
+            VALUE "ProductVersion", "1, 0, 5, 0"
         END
     END
     BLOCK "VarFileInfo"
@@ -915,7 +919,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 177
         TOPMARGIN, 7
-        BOTTOMMARGIN, 139
+        BOTTOMMARGIN, 126
     END
 
     IDD_PROPPAGE_COMPARISION_PREFERENCES, DIALOG
@@ -923,7 +927,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 219
         TOPMARGIN, 7
-        BOTTOMMARGIN, 96
+        BOTTOMMARGIN, 101
     END
 
     IDD_PROPPAGE_VIEW_PREFERENCES, DIALOG

@@ -281,6 +281,7 @@ protected:
 	afx_msg void OnButtonMailto();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+public:
 };
 
 CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
@@ -422,6 +423,7 @@ void CAlegrDiffApp::OnFilePreferences()
 	dlg.m_ComparisionPage.m_NumberOfIdenticalLines = m_NumberOfIdenticalLines;
 	dlg.m_ComparisionPage.m_PercentsOfLookLikeDifference = m_PercentsOfLookLikeDifference;
 	dlg.m_ComparisionPage.m_MinMatchingChars = m_MinMatchingChars;
+	dlg.m_ComparisionPage.m_bUseMd5 = m_bUseMd5;
 
 	if (IDOK == dlg.DoModal())
 	{
@@ -440,6 +442,7 @@ void CAlegrDiffApp::OnFilePreferences()
 		m_NumberOfIdenticalLines = dlg.m_ComparisionPage.m_NumberOfIdenticalLines;
 		m_PercentsOfLookLikeDifference = dlg.m_ComparisionPage.m_PercentsOfLookLikeDifference;
 		m_MinMatchingChars = dlg.m_ComparisionPage.m_MinMatchingChars;
+		m_bUseMd5 = 0 != dlg.m_ComparisionPage.m_bUseMd5;
 
 		if (dlg.m_ViewPage.m_bFontChanged)
 		{
@@ -790,6 +793,7 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 	dlg.m_BinaryComparision = m_BinaryComparision;
 
 	dlg.m_bAdvanced = m_bAdvancedCompareDialog;
+	dlg.m_bUseMd5 = m_bUseMd5;
 
 	if (NULL != filter)
 	{
@@ -823,6 +827,8 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 		m_BinaryComparision = (0 != dlg.m_BinaryComparision);
 
 		m_bAdvancedCompareDialog = dlg.m_bAdvanced;
+
+		m_bUseMd5 = dlg.m_bUseMd5 != 0;
 
 		CAlegrDiffDoc * pDoc = (CAlegrDiffDoc *)
 								m_pListDiffTemplate->OpenDocumentFile(NULL);
@@ -1609,3 +1615,4 @@ void CAlegrDiffApp::OnFileCreatedirectoryfingerprint()
 		return;
 	}
 }
+

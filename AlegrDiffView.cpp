@@ -579,6 +579,7 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 				if (i == m_SortColumns[0])
 				{
 					HDITEM hdi;
+					hdi.mask = HDI_FORMAT;
 					pHeader->GetItem(col, & hdi);
 					if (_AfxGetComCtlVersion() >= 0x00060000)
 					{
@@ -609,7 +610,6 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 						}
 					}
 					pHeader->SetItem(col, & hdi);
-					pHeader->GetItem(col, & hdi);
 				}
 
 				col++;

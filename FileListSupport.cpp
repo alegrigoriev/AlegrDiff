@@ -1820,12 +1820,53 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection *
 	}
 
 	LPCTSTR str1 = pStr1->GetText();
-	LPCTSTR const str1VersionBegin = _tcschr(str1, '$');
+	// text without whitespaces
+	LPCTSTR str1nb = pStr1->GetNormalizedText();
+
+	LPCTSTR str1VersionBegin = _tcschr(str1, '$');
 	LPCTSTR const str1VersionEnd = _tcsrchr(str1, '$');
 
 	LPCTSTR str2 = pStr2->GetText();
-	LPCTSTR const str2VersionBegin = _tcschr(str2, '$');
+	// text without whitespaces
+	LPCTSTR str2nb = pStr2->GetNormalizedText();
+
+	LPCTSTR str2VersionBegin = _tcschr(str2, '$');
 	LPCTSTR const str2VersionEnd = _tcsrchr(str2, '$');
+
+	if (NULL != str1VersionBegin
+		&& NULL != str2VersionBegin)
+	{
+		LPCTSTR keywords[] =
+		{
+			_T("Archive:"),
+			_T("Author:"),
+			_T("Date:"),
+			_T("Header:"),
+			_T("History:"),
+			_T("JustDate:"),
+			_T("Log:"),
+			_T("Logfile:"),
+			_T("Modtime:"),
+			_T("Revision:"),
+			_T("Workfile:"),
+		};
+		unsigned i;
+		for (i = 0; i < countof(keywords); i++)
+		{
+			int len = _tcslen(keywords[i]);
+			if (0 == _tcsncmp(str1VersionBegin, keywords[i], len)
+				&& 0 == _tcsncmp(str2VersionBegin, keywords[i], len))
+			{
+				break;
+			}
+		}
+		if (countof(keywords) == i)
+		{
+			// no revision info
+			str1VersionBegin = NULL;
+			str2VersionBegin = NULL;
+		}
+	}
 
 	LPCTSTR pEqualStrBegin = str1;
 	StringSection * pLastSection = NULL;

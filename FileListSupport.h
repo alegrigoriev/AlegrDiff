@@ -257,9 +257,12 @@ public:
 	bool m_IsUnicode:1;
 	bool m_IsUnicodeBigEndian:1;
 	bool m_bMd5Calculated:1;
+	bool m_bIsFolder:1;
 
 	// add line from memory. Assuming the file created dynamically by the program
 	void AddLine(LPCTSTR pLine);
+	bool IsFolder() const { return m_bIsFolder; }
+
 	LPCTSTR GetLineString(int LineNum) const;
 	const FileLine * GetLine(int LineNum) const { return m_Lines[LineNum]; }
 	int GetNumLines() const { return m_Lines.size(); }
@@ -277,6 +280,8 @@ public:
 	int GetFullNameLength() const { return m_BaseDir.GetLength() + m_Subdir.GetLength() + m_Name.GetLength(); }
 
 	FILETIME GetLastWriteTime() const { return m_LastWriteTime; }
+
+	LONGLONG GetFileLength() const { return m_Length; }
 	const FileLine * FindMatchingLine(const FileLine * pLine,
 									unsigned nStartLineNum, unsigned nEndLineNum);
 	const FileLine * FindMatchingLineGroupLine(const FileLine * pLine,

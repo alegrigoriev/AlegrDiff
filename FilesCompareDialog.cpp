@@ -76,9 +76,12 @@ END_MESSAGE_MAP()
 
 void CFilesCompareDialog::OnButtonBrowseFirstFile()
 {
+	CThisApp * pApp = GetApp();
 	CString Name;
 	m_FirstCombo.GetWindowText(Name);
-	if (IDOK != BrowseForFile(IDS_OPEN_FIRST_TITLE, Name, m_FileDir1))
+	if (IDOK != BrowseForFile(IDS_OPEN_FIRST_TITLE, Name, m_FileDir1,
+							pApp->m_RecentFiles,
+							sizeof pApp->m_RecentFiles / sizeof pApp->m_RecentFiles[0]))
 	{
 		return;
 	}
@@ -88,9 +91,12 @@ void CFilesCompareDialog::OnButtonBrowseFirstFile()
 
 void CFilesCompareDialog::OnButtonBrowseSecondFile()
 {
+	CThisApp * pApp = GetApp();
 	CString Name;
 	m_SecondCombo.GetWindowText(Name);
-	if (IDOK != BrowseForFile(IDS_OPEN_SECOND_TITLE, Name, m_FileDir2))
+	if (IDOK != BrowseForFile(IDS_OPEN_SECOND_TITLE, Name, m_FileDir2,
+							pApp->m_RecentFiles,
+							sizeof pApp->m_RecentFiles / sizeof pApp->m_RecentFiles[0]))
 	{
 		return;
 	}

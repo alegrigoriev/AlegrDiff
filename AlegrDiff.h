@@ -171,7 +171,8 @@ void LoadHistory(CApplicationProfile & Profile, LPCTSTR szKey, LPCTSTR Format, C
 void LoadHistoryCombo(CComboBox & Combo, CString history[], int NumItems);
 
 CString CreateCustomFilter(LPCTSTR Extension);
-int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder);
+int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
+				CString const * pHistory = NULL, int HistorySize = 0);
 /////////////////////////////////////////////////////////////////////////////
 
 //{{AFX_INSERT_LOCATION}}

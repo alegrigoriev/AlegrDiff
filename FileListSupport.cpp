@@ -152,6 +152,18 @@ bool MatchWildcard(LPCTSTR name, LPCTSTR pattern)
 
 bool MultiPatternMatches(LPCTSTR name, LPCTSTR sPattern)
 {
+	// check if 'name' contains a '.' character
+	// if not, add one in a temporary buffer
+	TCHAR TmpBuf[MAX_PATH + 2];
+	if (name[0] != 0
+		&& NULL == _tcschr(name, '.'))
+	{
+		_tcsncpy(TmpBuf, name, MAX_PATH);
+		TmpBuf[MAX_PATH] = 0;
+		_tcscat(TmpBuf, _T("."));
+		name = TmpBuf;
+	}
+
 	// sPattern is MULTI_SZ
 	while ('\0' != sPattern[0])
 	{
@@ -187,6 +199,7 @@ FileItem::FileItem(const WIN32_FIND_DATA * pWfd,
 {
 	memzero(m_Md5);
 	m_LastWriteTime = pWfd->ftLastWriteTime;
+	m_bIsFolder = 0 != (pWfd->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 FileItem::FileItem(LPCTSTR name)
@@ -197,6 +210,7 @@ FileItem::FileItem(LPCTSTR name)
 	m_IsUnicode(false),
 	m_IsUnicodeBigEndian(false),
 	m_bMd5Calculated(false),
+	m_bIsFolder(false),
 	m_pNext(NULL)
 {
 	memzero(m_Md5);
@@ -1095,18 +1109,27 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 	}
 	do
 	{
+		FileItem * pFile = NULL;
 		if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
 			if (0) TRACE("Found the subdirectory %s\n", wfd.cFileName);
-			if (bRecurseSubdirs
-				&& 0 != _tcscmp(wfd.cFileName, _T("."))
-				&& 0 != _tcscmp(wfd.cFileName, _T(".."))
+			if ( ! bRecurseSubdirs
+				|| 0 == _tcscmp(wfd.cFileName, _T("."))
+				|| 0 == _tcscmp(wfd.cFileName, _T(".."))
 				)
 			{
-				// scan the subdirectory
-				CString NewDir = SubDirectory + wfd.cFileName;
-				LoadSubFolder(NewDir, true,
-							sInclusionMask, sExclusionMask, sC_CPPMask, sBinaryMask);
+				continue;
+			}
+			// add the directory item
+			// scan the subdirectory
+			CString NewDir = SubDirectory + wfd.cFileName;
+			LoadSubFolder(NewDir, true,
+						sInclusionMask, sExclusionMask, sC_CPPMask, sBinaryMask);
+
+			pFile = new FileItem( & wfd, m_BaseDir, SubDirectory);
+			if (NULL == pFile)
+			{
+				continue;
 			}
 		}
 		else
@@ -1122,7 +1145,7 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 			if (0) TRACE("New file item: Name=\"%s\", base dir=%s, subdir=%s\n",
 						wfd.cFileName, m_BaseDir, SubDirectory);
 
-			FileItem * pFile = new FileItem( & wfd, m_BaseDir, SubDirectory);
+			pFile = new FileItem( & wfd, m_BaseDir, SubDirectory);
 			if (NULL == pFile)
 			{
 				continue;
@@ -1135,11 +1158,11 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 			{
 				pFile->m_C_Cpp = MultiPatternMatches(wfd.cFileName, sC_CPPMask);
 			}
-			// add to the array
-			pFile->m_pNext = m_pList;
-			m_pList = pFile;
-			m_NumFiles++;
 		}
+		// add to the array
+		pFile->m_pNext = m_pList;
+		m_pList = pFile;
+		m_NumFiles++;
 	}
 	while (FindNextFile(hFind, & wfd));
 	FindClose(hFind);
@@ -2074,14 +2097,16 @@ int FilePair::ComparisionResultPriority() const
 	case VersionInfoDifferent:
 		return 6;
 	case FilesIdentical:
-	case OnlySecondDirectory:
 		return 7;
+	case OnlyFirstDirectory:
 	case OnlyFirstFile:
-	case OnlySecondFile:
 		return 8;
+	case OnlySecondDirectory:
+	case OnlySecondFile:
+		return 9;
 	case ReadingFirstFile:
 	case ReadingSecondFile:
-		return 9;
+		return 10;
 	}
 }
 
@@ -2734,21 +2759,23 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(BOOL volatile &
 	{
 		if (pFirstFile->m_Length > pSecondFile->m_Length)
 		{
-			return FirstFileLonger;
+			return m_ComparisionResult = FirstFileLonger;
 		}
 		else
 		{
-			return SecondFileLonger;
+			return m_ComparisionResult = SecondFileLonger;
 		}
 	}
 	if (pApp->m_bUseMd5)
 	{
 		if ( ! pFirstFile->m_bMd5Calculated)
 		{
+			m_ComparisionResult = CalculatingFirstFingerprint;
 			pFirstFile->CalculateHashes(bStopOperation);
 		}
 		if ( ! pSecondFile->m_bMd5Calculated)
 		{
+			m_ComparisionResult = CalculatingSecondFingerprint;
 			pSecondFile->CalculateHashes(bStopOperation);
 		}
 	}
@@ -2759,12 +2786,12 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(BOOL volatile &
 		if (memcmp(pFirstFile->m_Md5, pSecondFile->m_Md5,
 					sizeof pFirstFile->m_Md5))
 		{
-			return FilesDifferent;
+			return m_ComparisionResult = FilesDifferent;
 		}
-		return FilesIdentical;
+		return m_ComparisionResult = FilesIdentical;
 	}
 
-	return ResultUnknown;
+	return m_ComparisionResult = ResultUnknown;
 }
 
 FilePair::eFileComparisionResult FilePair::CompareTextFiles(BOOL volatile & bStopOperation)

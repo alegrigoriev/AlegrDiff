@@ -100,6 +100,12 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 	GetFullPathName(dir2, MAX_PATH, buf, & pFilePart);
 	m_sSecondDir = buf;
 
+	{
+		CString title = m_sFirstDir;
+		title += _T(" - ");
+		title += m_sSecondDir;
+		SetTitle(title);
+	}
 	if (! FileList1.LoadFolder(m_sFirstDir, bRecurseSubdirs,
 								m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern,
 								m_sBinaryFilesPattern))
@@ -121,12 +127,6 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 		AfxMessageBox(s);
 		return false;
 	}
-	{
-		CString title = m_sFirstDir;
-		title += _T(" - ");
-		title += m_sSecondDir;
-		SetTitle(title);
-	}
 
 
 	CArray<FileItem *, FileItem *> Files1;
@@ -142,47 +142,51 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 		pPair->pNext = m_pPairList;
 		m_pPairList = pPair;
 		m_nFilePairs++;
+
+		int comparison;
 		if (idx1 >= Files1.GetSize())
 		{
+			comparison = -1;
+		}
+		else if (idx2 >= Files2.GetSize())
+		{
+			comparison = 1;
+		}
+		else
+		{
+			comparison = FileItem::DirNameCompare(Files1[idx1], Files2[idx2]);
+		}
+
+		if (comparison < 0)
+		{
 			pPair->pFirstFile = NULL;
 			pPair->pSecondFile = Files2[idx2];
-			pPair->m_ComparisionResult = FilePair::OnlySecondFile;
+			if (pPair->pSecondFile->IsFolder())
+			{
+				pPair->m_ComparisionResult = FilePair::OnlySecondDirectory;
+			}
+			else
+			{
+				pPair->m_ComparisionResult = FilePair::OnlySecondFile;
+			}
 			idx2++;
 
 			if (0) TRACE("File \"%s\" exists only in dir \"%s\"\n",
 						pPair->pSecondFile->GetName(),
 						FileList2.m_BaseDir + pPair->pSecondFile->GetSubdir());
-			continue;
 		}
-		if (idx2 >= Files2.GetSize())
+		else if (comparison > 0)
 		{
 			pPair->pSecondFile = NULL;
 			pPair->pFirstFile = Files1[idx1];
-			pPair->m_ComparisionResult = FilePair::OnlyFirstFile;
-			idx1++;
-
-			if (0) TRACE("File \"%s\" exists only in dir \"%s\"\n",
-						pPair->pFirstFile->GetName(),
-						FileList1.m_BaseDir + pPair->pFirstFile->GetSubdir());
-			continue;
-		}
-		int comparision = FileItem::DirNameCompare(Files1[idx1], Files2[idx2]);
-		if (comparision < 0)
-		{
-			pPair->pFirstFile = NULL;
-			pPair->pSecondFile = Files2[idx2];
-			pPair->m_ComparisionResult = FilePair::OnlySecondFile;
-			idx2++;
-
-			if (0) TRACE("File \"%s\" exists only in dir \"%s\"\n",
-						pPair->pSecondFile->GetName(),
-						FileList2.m_BaseDir + pPair->pSecondFile->GetSubdir());
-		}
-		else if (comparision > 0)
-		{
-			pPair->pSecondFile = NULL;
-			pPair->pFirstFile = Files1[idx1];
-			pPair->m_ComparisionResult = FilePair::OnlyFirstFile;
+			if (pPair->pFirstFile->IsFolder())
+			{
+				pPair->m_ComparisionResult = FilePair::OnlyFirstDirectory;
+			}
+			else
+			{
+				pPair->m_ComparisionResult = FilePair::OnlyFirstFile;
+			}
 			idx1++;
 
 			if (0) TRACE("File \"%s\" exists only in dir \"%s\"\n",
@@ -195,14 +199,20 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 			idx1++;
 			pPair->pSecondFile = Files2[idx2];
 			idx2++;
-
-			if (BinaryComparison)
+			if (pPair->pFirstFile->IsFolder())
 			{
-				pPair->pFirstFile->m_IsBinary = true;
-				pPair->pSecondFile->m_IsBinary = true;
+				pPair->m_ComparisionResult = pPair->FilesIdentical;
 			}
+			else
+			{
+				if (BinaryComparison)
+				{
+					pPair->pFirstFile->m_IsBinary = true;
+					pPair->pSecondFile->m_IsBinary = true;
+				}
 
-			pPair->m_ComparisionResult = pPair->ResultUnknown;
+				pPair->m_ComparisionResult = pPair->ResultUnknown;
+			}
 
 			if (0) TRACE("File \"%s\" exists in both \"%s\" and \"%s\"\n",
 						pPair->pFirstFile->GetName(),
@@ -1862,17 +1872,19 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 	// preload first of binary files in pair (calculate MD5 digest)
 	FileItem::InitHashCalculation();
 	FilePair * pPair;
-	m_FileListCs.Lock();
-	m_NextPairToRefresh = m_pPairList;
-	m_NextPairToCompare = m_pPairList;
-	m_FileListCs.Unlock();
 
+	{
+		CSimpleCriticalSectionLock lock(m_FileListCs);
+		m_NextPairToRefresh = m_pPairList;
+		m_NextPairToCompare = m_pPairList;
+	}
 	for (pPair = m_pPairList; pPair != NULL && ! m_bStopThread; pPair = pPair->pNext)
 	{
 		TRACE("First pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisionResult);
 		if (NULL == pPair->pFirstFile
 			|| NULL == pPair->pSecondFile
-			|| ! pPair->pFirstFile->m_IsBinary)
+			|| ! pPair->pFirstFile->m_IsBinary
+			|| pPair->pFirstFile->GetFileLength() != pPair->pSecondFile->GetFileLength())
 		{
 			m_NextPairToCompare = pPair->pNext;
 			continue;
@@ -1896,10 +1908,11 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 		::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
 	}
 
-	m_FileListCs.Lock();
-	m_NextPairToRefresh = m_pPairList;
-	m_NextPairToCompare = m_pPairList;
-	m_FileListCs.Unlock();
+	{
+		CSimpleCriticalSectionLock lock(m_FileListCs);
+		m_NextPairToRefresh = m_pPairList;
+		m_NextPairToCompare = m_pPairList;
+	}
 
 	for (pPair = m_pPairList; pPair != NULL && ! m_bStopThread; pPair = pPair->pNext)
 	{
@@ -1910,15 +1923,20 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 			continue;
 		}
 
+		pPair->m_ComparisionResult = FilePair::ComparingFiles;
+		::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
 		pPair->m_ComparisionResult = pPair->PreCompareFiles(m_bStopThread);
 		pPair->m_bChanged = true;
 		m_NextPairToCompare = pPair->pNext;
 
-		::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
 	}
 
 	FileItem::DeinitHashCalculation();
-	m_NextPairToCompare = NULL;
+	{
+		CSimpleCriticalSectionLock lock(m_FileListCs);
+		m_NextPairToCompare = NULL;
+		m_NextPairToRefresh = NULL;
+	}
 	m_bStopThread = true;
 	::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
 	return 0;
@@ -1926,22 +1944,24 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 
 void CAlegrDiffDoc::OnIdle()
 {
-	m_FileListCs.Lock();
-	while (NULL != m_NextPairToRefresh
-			&& m_NextPairToRefresh != m_NextPairToCompare)
+	FilePair * pPair;
 	{
-		TRACE("Foreground view refresh, pPair=%p, result=%d\n", m_NextPairToRefresh, m_NextPairToRefresh->m_ComparisionResult);
-		if (m_NextPairToRefresh->m_bChanged)
+		CSimpleCriticalSectionLock lock(m_FileListCs);
+		while (NULL != m_NextPairToRefresh
+				&& m_NextPairToRefresh != m_NextPairToCompare)
 		{
-			m_NextPairToRefresh->m_bChanged = false;
-			AddListViewItemStruct alvi;
-			alvi.pPair = m_NextPairToRefresh;
-			UpdateAllViews(NULL, OnUpdateListViewItem, & alvi);
+			TRACE("Foreground view refresh, pPair=%p, result=%d\n", m_NextPairToRefresh, m_NextPairToRefresh->m_ComparisionResult);
+			if (m_NextPairToRefresh->m_bChanged)
+			{
+				m_NextPairToRefresh->m_bChanged = false;
+				AddListViewItemStruct alvi;
+				alvi.pPair = m_NextPairToRefresh;
+				UpdateAllViews(NULL, OnUpdateListViewItem, & alvi);
+			}
+			m_NextPairToRefresh = m_NextPairToRefresh->pNext;
 		}
-		m_NextPairToRefresh = m_NextPairToRefresh->pNext;
+		pPair = m_NextPairToCompare;
 	}
-	FilePair * pPair = m_NextPairToCompare;
-	m_FileListCs.Unlock();
 
 	if (NULL != pPair)
 	{

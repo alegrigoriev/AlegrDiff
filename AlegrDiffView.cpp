@@ -267,6 +267,12 @@ void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, FilePa
 	PairArray.reserve(nCount);
 	for (int i = 0; i < nCount && pPairs != NULL; i++, pPairs = pPairs->pNext)
 	{
+		if (NULL != pPairs->pFirstFile
+			&& NULL != pPairs->pSecondFile
+			&& pPairs->pFirstFile->IsFolder())
+		{
+			continue;
+		}
 		if ( ! pPairs->m_bHideFromListView)
 		{
 			PairArray.push_back(pPairs);
@@ -531,23 +537,33 @@ void CAlegrDiffView::OnListviewOpen()
 void CAlegrDiffView::OnUpdateListviewOpen(CCmdUI* pCmdUI)
 {
 	CListCtrl * pListCtrl = & GetListCtrl();
-	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
 	}
-	if (-1 != nItem)
+	while (-1 != nItem)
 	{
+		if (nItem >= m_PairArray.size())
+		{
+			break;
+		}
+		FilePair * pPair = m_PairArray[nItem];
+		if (pPair->m_ComparisionResult == pPair->ResultUnknown
+			|| (pPair->pFirstFile != NULL && pPair->pFirstFile->IsFolder())
+			|| (pPair->pSecondFile != NULL && pPair->pSecondFile->IsFolder()))
+		{
+			nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
+			continue;
+		}
 		if (NULL != pCmdUI->m_pMenu)
 		{
 			pCmdUI->m_pMenu->SetDefaultItem(ID_LISTVIEW_OPEN, FALSE);
 		}
 		pCmdUI->Enable(TRUE);
+		return;
 	}
-	else
-	{
-		pCmdUI->Enable(FALSE);
-	}
+	pCmdUI->Enable(FALSE);
 }
 
 void CAlegrDiffView::OnUpdateFileCopyFirstDir(CCmdUI* pCmdUI)
@@ -632,7 +648,14 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 	lvi.iSubItem = 0;
 	lvi.state = 0;
 	lvi.stateMask = 0;
-	lvi.pszText = (LPTSTR)pFileItem->GetName();
+	if (pFileItem->IsFolder())
+	{
+		lvi.pszText = _T("");
+	}
+	else
+	{
+		lvi.pszText = (LPTSTR)pFileItem->GetName();
+	}
 	lvi.lParam = LPARAM(pFileItem);
 	if (pPair->m_bSelected)
 	{
@@ -643,11 +666,18 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 
 	if (pDoc->m_bRecurseSubdirs)
 	{
-		pListCtrl->SetItemText(item, ColumnSubdir, (LPTSTR)pFileItem->GetSubdir());
+		if (pFileItem->IsFolder())
+		{
+			pListCtrl->SetItemText(item, ColumnSubdir, pFileItem->GetName());
+		}
+		else
+		{
+			pListCtrl->SetItemText(item, ColumnSubdir, pFileItem->GetSubdir());
+		}
 	}
 	// set modified time/date
 	CString datetime;
-	if (NULL != pPair->pFirstFile)
+	if (NULL != pPair->pFirstFile && ! pPair->pFirstFile->IsFolder())
 	{
 		datetime = FileTimeToStr(pPair->pFirstFile->GetLastWriteTime());
 		pListCtrl->SetItemText(item, ColumnDate1 - ! m_bSubdirColumnPresent, datetime);
@@ -656,7 +686,8 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 	{
 		pListCtrl->SetItemText(item, ColumnDate1 - ! m_bSubdirColumnPresent, _T(""));
 	}
-	if (NULL != pPair->pSecondFile)
+
+	if (NULL != pPair->pSecondFile && ! pPair->pSecondFile->IsFolder())
 	{
 		datetime = FileTimeToStr(pPair->pSecondFile->GetLastWriteTime());
 		pListCtrl->SetItemText(item, ColumnDate2 - ! m_bSubdirColumnPresent, datetime);

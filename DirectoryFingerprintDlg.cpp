@@ -48,16 +48,16 @@ void CDirectoryFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 		CThisApp * pApp = GetApp();
 
 		AddStringToHistory(m_sDirectory, pApp->m_RecentFolders,
-							sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0], false);
+							countof(pApp->m_RecentFolders), false);
 
 		AddStringToHistory(m_sIgnoreFiles, m_sIgnoreFilterHistory,
-							sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0], false);
+							countof(m_sIgnoreFilterHistory), false);
 
 		AddStringToHistory(m_sFilenameFilter, pApp->m_sFilters,
-							sizeof pApp->m_sFilters / sizeof pApp->m_sFilters[0], false);
+							countof(pApp->m_sFilters), false);
 
 		AddStringToHistory(m_sSaveFilename, m_sFingerprintFilenameHistory,
-							sizeof m_sFingerprintFilenameHistory / sizeof m_sFingerprintFilenameHistory[0], false);
+							countof(m_sFingerprintFilenameHistory), false);
 
 		m_Profile.FlushAll();
 	}
@@ -119,10 +119,10 @@ BOOL CDirectoryFingerprintDlg::OnInitDialog()
 {
 	CThisApp * pApp = GetApp();
 	LoadHistory(m_Profile, _T("History"), _T("FingerprintFile%d"), m_sFingerprintFilenameHistory,
-				sizeof m_sFingerprintFilenameHistory / sizeof m_sFingerprintFilenameHistory[0], true);
+				countof(m_sFingerprintFilenameHistory), true);
 
 	LoadHistory(m_Profile, _T("History"), _T("IgnoreFiles%d"), m_sIgnoreFilterHistory,
-				sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0], true);
+				countof(m_sIgnoreFilterHistory), true);
 
 	m_Profile.AddBoolItem(_T("Settings"), _T("IncludeDirsToFingerprint"), m_bIncludeDirectoryStructure, TRUE);
 	m_Profile.AddBoolItem(_T("Settings"), _T("SaveFingerprintAsUnicode"), m_bSaveAsUnicode, FALSE);
@@ -134,16 +134,16 @@ BOOL CDirectoryFingerprintDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	LoadHistoryCombo(m_DirCombo, pApp->m_RecentFolders,
-					sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0]);
+					countof(pApp->m_RecentFolders));
 
 	LoadHistoryCombo(m_FilenameFilterCombo, pApp->m_sFilters,
-					sizeof pApp->m_sFilters / sizeof pApp->m_sFilters[0]);
+					countof(pApp->m_sFilters));
 
 	LoadHistoryCombo(m_cbIgnoreFiles, m_sIgnoreFilterHistory,
-					sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0]);
+					countof(m_sIgnoreFilterHistory));
 
 	LoadHistoryCombo(m_SaveFilename, m_sFingerprintFilenameHistory,
-					sizeof m_sFingerprintFilenameHistory / sizeof m_sFingerprintFilenameHistory[0]);
+					countof(m_sFingerprintFilenameHistory));
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE

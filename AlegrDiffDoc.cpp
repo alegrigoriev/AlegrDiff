@@ -328,8 +328,8 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 
 		m_TotalLines = pPair->m_LinePairs.size();
 		_tcsncpy(m_ComparisonResult, pPair->GetComparisionResult(),
-				sizeof m_ComparisonResult / sizeof m_ComparisonResult[0]);
-		m_ComparisonResult[sizeof m_ComparisonResult / sizeof m_ComparisonResult[0] - 1] = 0;
+				countof(m_ComparisonResult));
+		m_ComparisonResult[countof(m_ComparisonResult) - 1] = 0;
 		((CFrameWnd*)AfxGetMainWnd())->PostMessage(WM_SETMESSAGESTRING, 0, (LPARAM)m_ComparisonResult);
 	}
 	UpdateAllViews(NULL, FileLoaded);
@@ -889,7 +889,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 	{
 		LPCTSTR pStr = NULL;
 		int StrLen = 0;
-		pStr = GetLineText(nSearchLine, line, sizeof line / sizeof line[0], & StrLen);
+		pStr = GetLineText(nSearchLine, line, countof(line), & StrLen);
 
 		int nPatternLen = _tcslen(pStrToFind);
 		if ( ! bBackward)
@@ -1138,7 +1138,7 @@ bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvok
 		{
 			TCHAR line[2048];
 			int StrLen;
-			LPCTSTR pStr = GetLineText(m_CaretPos.line, line, sizeof line / sizeof line[0], & StrLen);
+			LPCTSTR pStr = GetLineText(m_CaretPos.line, line, countof(line), & StrLen);
 			if (NULL != pStr
 				&& nBeginOffset < StrLen)
 			{
@@ -1174,7 +1174,7 @@ bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvok
 	}
 	// update MRU, case sensitive
 	AddStringToHistory(pApp->m_FindString, pApp->m_sFindHistory,
-						sizeof pApp->m_sFindHistory / sizeof pApp->m_sFindHistory[0], true);
+						countof(pApp->m_sFindHistory), true);
 
 	return FindTextString(pApp->m_FindString, bBackwards, pApp->m_bCaseSensitive);
 }

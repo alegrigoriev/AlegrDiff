@@ -50,13 +50,13 @@ CFilesPreferencePage::CFilesPreferencePage() : CPropertyPage(CFilesPreferencePag
 	m_AutoReloadChangedFiles = FALSE;
 	//}}AFX_DATA_INIT
 	LoadHistory(m_Profile, _T("History"), _T("BinaryFiles%d"), m_sBinaryFilterHistory,
-				sizeof m_sBinaryFilterHistory / sizeof m_sBinaryFilterHistory[0], true);
+				countof(m_sBinaryFilterHistory), true);
 
 	LoadHistory(m_Profile, _T("History"), _T("CppFiles%d"), m_sCppFilterHistory,
-				sizeof m_sCppFilterHistory / sizeof m_sCppFilterHistory[0], true);
+				countof(m_sCppFilterHistory), true);
 
 	LoadHistory(m_Profile, _T("History"), _T("IgnoreFiles%d"), m_sIgnoreFilterHistory,
-				sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0], true);
+				countof(m_sIgnoreFilterHistory), true);
 }
 
 CFilesPreferencePage::~CFilesPreferencePage()
@@ -78,13 +78,13 @@ void CFilesPreferencePage::DoDataExchange(CDataExchange* pDX)
 	if (pDX->m_bSaveAndValidate)
 	{
 		AddStringToHistory(m_sBinaryFilesFilter, m_sBinaryFilterHistory,
-							sizeof m_sBinaryFilterHistory / sizeof m_sBinaryFilterHistory[0], false);
+							countof(m_sBinaryFilterHistory), false);
 
 		AddStringToHistory(m_sCppFilesFilter, m_sCppFilterHistory,
-							sizeof m_sCppFilterHistory / sizeof m_sCppFilterHistory[0], false);
+							countof(m_sCppFilterHistory), false);
 
 		AddStringToHistory(m_sIgnoreFilesFilter, m_sIgnoreFilterHistory,
-							sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0], false);
+							countof(m_sIgnoreFilterHistory), false);
 
 		m_Profile.FlushAll();
 	}
@@ -104,13 +104,13 @@ BOOL CFilesPreferencePage::OnInitDialog()
 	CPropertyPage::OnInitDialog();
 
 	LoadHistoryCombo(m_cbBinaryFilter, m_sBinaryFilterHistory,
-					sizeof m_sBinaryFilterHistory / sizeof m_sBinaryFilterHistory[0]);
+					countof(m_sBinaryFilterHistory));
 
 	LoadHistoryCombo(m_cbCppFilter, m_sCppFilterHistory,
-					sizeof m_sCppFilterHistory / sizeof m_sCppFilterHistory[0]);
+					countof(m_sCppFilterHistory));
 
 	LoadHistoryCombo(m_cbIgnoreFilter, m_sIgnoreFilterHistory,
-					sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0]);
+					countof(m_sIgnoreFilterHistory));
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }

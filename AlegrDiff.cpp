@@ -205,13 +205,13 @@ BOOL CAlegrDiffApp::InitInstance()
 					_T("*.ncb"));
 
 	LoadHistory(Profile, _T("History"), _T("find%d"), m_sFindHistory,
-				sizeof m_sFindHistory / sizeof m_sFindHistory[0], false);
+				countof(m_sFindHistory), false);
 	LoadHistory(Profile, _T("History"), _T("dir%d"), m_RecentFolders,
-				sizeof m_RecentFolders / sizeof m_RecentFolders[0], true);
+				countof(m_RecentFolders), true);
 	LoadHistory(Profile, _T("History"), _T("file%d"), m_RecentFiles,
-				sizeof m_RecentFiles / sizeof m_RecentFiles[0], true);
+				countof(m_RecentFiles), true);
 	LoadHistory(Profile, _T("History"), _T("filter%d"), m_sFilters,
-				sizeof m_sFilters / sizeof m_sFilters[0], true);
+				countof(m_sFilters), true);
 
 	m_TextBackgroundColor = GetSysColor(COLOR_WINDOW);
 	m_SelectedTextColor = 0xFFFFFF;
@@ -964,9 +964,9 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 	FindClose(hFind);
 
 	AddStringToHistory(FileDir2, m_RecentFiles,
-						sizeof m_RecentFiles / sizeof m_RecentFiles[0], false);
+						countof(m_RecentFiles), false);
 	AddStringToHistory(FileDir1, m_RecentFiles,
-						sizeof m_RecentFiles / sizeof m_RecentFiles[0], false);
+						countof(m_RecentFiles), false);
 
 	*pFileName1 = 0;
 	*pFileName2 = 0;
@@ -1503,7 +1503,7 @@ BOOL COpenDiffDialog::OnFileNameOK()
 	TRACE(_T("COpenDiffDialog::OnFileNameOK Folder Path=%s\n"), LPCTSTR(sCurrDir));
 
 	AddStringToHistory(sCurrDir, pApp->m_RecentFolders,
-						sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0], false);
+						countof(pApp->m_RecentFolders), false);
 
 	return CFileDialog::OnFileNameOK();
 }
@@ -1525,7 +1525,7 @@ void COpenDiffDialog::OnInitDone()
 		pCb->SetExtendedUI();
 		CThisApp * pApp = GetApp();
 		int sel = -1;
-		for (int i = 0; i < sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0]; i++)
+		for (int i = 0; i < countof(pApp->m_RecentFolders); i++)
 		{
 			if ( ! pApp->m_RecentFolders[i].IsEmpty())
 			{
@@ -1651,7 +1651,7 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 	dlg.m_ofn.lpstrTitle = title;
 	dlg.m_ofn.nFilterIndex = 1;
 	dlg.m_ofn.lpstrCustomFilter = OfnCustomFilter;
-	dlg.m_ofn.nMaxCustFilter = sizeof OfnCustomFilter / sizeof OfnCustomFilter[0];
+	dlg.m_ofn.nMaxCustFilter = countof(OfnCustomFilter);
 
 	if (IDOK != dlg.DoModal())
 	{

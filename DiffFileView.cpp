@@ -125,7 +125,7 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 		}
 		LPCTSTR pText = pSection->pBegin;
 		int Length = pSection->Length;
-		for (int j = 0, k = 0; j < sizeof buf / sizeof buf[0] && k < Length; j++, ExpandedLinePos++)
+		for (int j = 0, k = 0; j < countof(buf) && k < Length; j++, ExpandedLinePos++)
 		{
 			if (pText[k] == '\t')
 			{

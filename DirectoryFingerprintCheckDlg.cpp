@@ -231,7 +231,7 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 
 		for (int i = 0; i < 16; i++)
 		{
-			md5[i] = MD5[i];
+			md5[i] = BYTE(MD5[i]);
 		}
 
 		// find the last '\'
@@ -283,7 +283,7 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 			NamePart = Dir + 1;
 			SubDir = CString(FileName, Dir - FileName + 1);
 		}
-		_tcsncpy(wfd.cFileName, NamePart, sizeof wfd.cFileName / sizeof wfd.cFileName[0] - 1);
+		_tcsncpy(wfd.cFileName, NamePart, countof(wfd.cFileName) - 1);
 		pFile = new FileItem(& wfd, CString(), SubDir);
 
 		pFile->SetMD5(md5);

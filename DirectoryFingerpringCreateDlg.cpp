@@ -6,48 +6,30 @@
 #include "DirectoryFingerpringCreateDlg.h"
 #include <io.h>
 #include <fcntl.h>
-#include <afxpriv.h>
-
 
 // CDirectoryFingerpringCreateDlg dialog
 
-IMPLEMENT_DYNAMIC(CDirectoryFingerpringCreateDlg, CDialog)
+IMPLEMENT_DYNAMIC(CDirectoryFingerpringCreateDlg, CProgressDialog)
 CDirectoryFingerpringCreateDlg::CDirectoryFingerpringCreateDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CDirectoryFingerpringCreateDlg::IDD, pParent)
+	: CProgressDialog(CDirectoryFingerpringCreateDlg::IDD, pParent)
 	, m_pFile(NULL)
 	, m_bIncludeSubdirectories(FALSE)
 	, m_bIncludeDirectoryStructure(FALSE)
 	, m_bSaveAsUnicode(FALSE)
-	, m_StopRunThread(FALSE)
-	, m_bFilenameChanged(TRUE)
-	, m_Thread(ThreadProc, this)
-	, m_TotalDataSize(0)
-	, m_ProcessedFiles(0)
-	, m_CurrentFileDone(0)
 {
-	m_Thread.m_bAutoDelete = FALSE;
-	m_hThreadEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 }
 
 CDirectoryFingerpringCreateDlg::~CDirectoryFingerpringCreateDlg()
 {
-	if (m_hThreadEvent)
-	{
-		CloseHandle(m_hThreadEvent);
-	}
 }
 
 void CDirectoryFingerpringCreateDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_STATIC_FILENAME, m_Filename);
-	DDX_Control(pDX, IDC_STATIC_PERCENT, m_ProgressPercent);
-	DDX_Control(pDX, IDC_PROGRESS1, m_Progress);
+	CProgressDialog::DoDataExchange(pDX);
 }
 
 
-BEGIN_MESSAGE_MAP(CDirectoryFingerpringCreateDlg, CDialog)
-	ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
+BEGIN_MESSAGE_MAP(CDirectoryFingerpringCreateDlg, CProgressDialog)
 	ON_COMMAND(IDYES, OnYes)
 END_MESSAGE_MAP()
 
@@ -71,35 +53,21 @@ INT_PTR CDirectoryFingerpringCreateDlg::DoModal()
 		fputwc(0xFEFF, m_pFile);
 	}
 
-	UINT_PTR result = CDialog::DoModal();
-	if (m_Thread.m_hThread)
-	{
-		m_StopRunThread = TRUE;
-		if (WAIT_TIMEOUT == WaitForSingleObject(m_Thread.m_hThread, 5000))
-		{
-			TerminateThread(m_Thread.m_hThread, -1);
-		}
-	}
+	return CProgressDialog::DoModal();
 
-	return result;
 }
 
 BOOL CDirectoryFingerpringCreateDlg::OnInitDialog()
 {
-	CDialog::OnInitDialog();
+	CProgressDialog::OnInitDialog();
 
 	TRACE("CDirectoryFingerpringCreateDlg::OnInitDialog()\n");
-
-	m_Progress.SetRange(0, 100);
-
-	m_StopRunThread = FALSE;
-	m_Thread.CreateThread(0, 0x10000);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }
 
-unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
+unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 {
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 	// load the directory
@@ -203,18 +171,16 @@ unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
 		{
 			CSimpleCriticalSectionLock lock(m_cs);
 
-			m_CurrentFilename = pFile->GetFullName();
-			m_bFilenameChanged = TRUE;
-			m_CurrentFileDone = 0;
-			m_ProcessedFiles += 0x2000;
+			m_CurrentItemName = pFile->GetFullName();
+			m_bItemNameChanged = TRUE;
+			m_CurrentItemDone = 0;
+			m_ProcessedItems += 0x2000;
 		}
 
-		if (NULL != m_hWnd)
-		{
-			::PostMessage(m_hWnd, WM_KICKIDLE, 0, 0);
-		}
+		KickDialogUpdate();
+
 		if (pFile->CalculateHashes( & HashCalc,
-									m_StopRunThread, m_CurrentFileDone, m_hWnd))
+									m_StopRunThread, m_CurrentItemDone, m_hWnd))
 		{
 			_ftprintf(m_pFile,
 					_T("\"%s%s\" %I64d %016I64X ")
@@ -237,7 +203,7 @@ unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
 		{
 		}
 
-		m_ProcessedFiles += pFile->GetFileLength();
+		m_ProcessedItems += pFile->GetFileLength();
 	}
 
 	fclose(m_pFile);
@@ -253,30 +219,12 @@ unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
 
 void CDirectoryFingerpringCreateDlg::OnYes()
 {
+	m_bItemNameChanged = false;
+
 	CString s;
 	s.Format(IDS_STRING_FINGERPRINT_CREATED, LPCTSTR(m_sDirectory), LPCTSTR(m_FingerprintFilename));
-	m_bFilenameChanged = false;
-	m_Filename.SetWindowText(s);
+	m_ItemName.SetWindowText(s);
+
 	SetDlgItemText(IDCANCEL, _T("OK"));
 }
 
-LRESULT CDirectoryFingerpringCreateDlg::OnKickIdle(WPARAM, LPARAM)
-{
-
-	CSimpleCriticalSectionLock lock(m_cs);
-
-	if (m_Filename.m_hWnd != NULL && m_bFilenameChanged)
-	{
-		m_Filename.SetWindowText(m_CurrentFilename);
-		m_bFilenameChanged = FALSE;
-	}
-	if (m_Progress.m_hWnd != NULL && m_TotalDataSize != 0)
-	{
-		int Percent = int(100. * (m_ProcessedFiles + m_CurrentFileDone) / m_TotalDataSize);
-		if (Percent != m_Progress.GetPos())
-		{
-			m_Progress.SetPos(Percent);
-		}
-	}
-	return 0;
-}

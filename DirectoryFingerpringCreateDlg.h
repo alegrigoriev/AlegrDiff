@@ -1,11 +1,11 @@
 #pragma once
 #include "afxwin.h"
 #include "afxcmn.h"
-
+#include "ProgressDialog.h"
 
 // CDirectoryFingerpringCreateDlg dialog
 
-class CDirectoryFingerpringCreateDlg : public CDialog
+class CDirectoryFingerpringCreateDlg : public CProgressDialog
 {
 	DECLARE_DYNAMIC(CDirectoryFingerpringCreateDlg)
 
@@ -24,8 +24,6 @@ public:
 	// Name of the currently processed file
 	CStatic m_Filename;
 	BOOL m_bSaveAsUnicode;
-	// percents complete
-	CStatic m_ProgressPercent;
 
 	CString m_sDirectory;
 	BOOL m_bIncludeSubdirectories;
@@ -36,26 +34,9 @@ public:
 	FILE * m_pFile;
 	virtual INT_PTR DoModal();
 
-	CWinThread m_Thread;
-	unsigned _ThreadProc();
-	BOOL volatile m_StopRunThread;
-	HANDLE m_hThreadEvent;
+	unsigned ThreadProc();
 
-	CSimpleCriticalSection m_cs;
-	CString m_CurrentFilename;
-	BOOL m_bFilenameChanged;
-	LONGLONG m_TotalDataSize;
-	LONGLONG m_ProcessedFiles;
-	LONGLONG m_CurrentFileDone;
-	LRESULT OnKickIdle(WPARAM, LPARAM);
-
-	static UINT AFX_CDECL ThreadProc(PVOID arg)
-	{
-		return ((CDirectoryFingerpringCreateDlg *) arg)->_ThreadProc();
-	}
 	virtual BOOL OnInitDialog();
 protected:
 	afx_msg void OnYes();
-public:
-	CProgressCtrl m_Progress;
 };

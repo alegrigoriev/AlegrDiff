@@ -4,18 +4,15 @@
 #include "stdafx.h"
 #include "AlegrDiff.h"
 #include "DifferenceProgressDialog.h"
-#include <afxpriv.h>
 
 // CDifferenceProgressDialog dialog
 
-IMPLEMENT_DYNAMIC(CDifferenceProgressDialog, CDialog)
+IMPLEMENT_DYNAMIC(CDifferenceProgressDialog, CProgressDialog)
 CDifferenceProgressDialog::CDifferenceProgressDialog(CWnd* pParent /*=NULL*/)
-	: CDialog(CDifferenceProgressDialog::IDD, pParent)
-	, m_PercentCompleted(0)
-	, m_StopSearch(FALSE)
-	, m_pView(NULL)
-	, m_PercentDisplayed(-1)
-	, m_SearchCompleted(FALSE)
+	: CProgressDialog(CDifferenceProgressDialog::IDD, pParent)
+	, m_pDoc(NULL)
+	, BeginAddr(0)
+	, EndAddr(0)
 {
 }
 
@@ -25,14 +22,11 @@ CDifferenceProgressDialog::~CDifferenceProgressDialog()
 
 void CDifferenceProgressDialog::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_PROGRESS1, m_Progress);
-	DDX_Control(pDX, IDC_STATIC_PERCENT, m_Percent);
+	CProgressDialog::DoDataExchange(pDX);
 }
 
 
-BEGIN_MESSAGE_MAP(CDifferenceProgressDialog, CDialog)
-ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
+BEGIN_MESSAGE_MAP(CDifferenceProgressDialog, CProgressDialog)
 END_MESSAGE_MAP()
 
 
@@ -40,49 +34,20 @@ END_MESSAGE_MAP()
 
 BOOL CDifferenceProgressDialog::OnInitDialog()
 {
-	CDialog::OnInitDialog();
+	CProgressDialog::OnInitDialog();
+	m_TotalDataSize = EndAddr - BeginAddr;
 
-	m_Progress.SetRange(0, 100);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }
 
-LRESULT CDifferenceProgressDialog::OnKickIdle(WPARAM, LPARAM )
+unsigned CDifferenceProgressDialog::ThreadProc()
 {
-	// update static
-	if (m_PercentDisplayed != m_PercentCompleted)
+	m_pDoc->FindDataProc(this);
+	if (NULL != m_hWnd)
 	{
-		if (NULL != m_Progress.m_hWnd)
-		{
-			m_Progress.SetPos(m_PercentCompleted);
-		}
-
-		if (NULL != m_Percent.m_hWnd)
-		{
-			CString s;
-			s.Format(_T("%d%%"), m_PercentCompleted);
-			m_Percent.SetWindowText(s);
-		}
-		m_PercentDisplayed = m_PercentCompleted;
-	}
-
-	if (m_SearchCompleted)
-	{
-		EndDialog(IDOK);
+		::PostMessage(m_hWnd, WM_COMMAND, IDOK, 0);
 	}
 	return 0;
 }
 
-void CDifferenceProgressDialog::OnCancel()
-{
-	m_StopSearch = TRUE;
-
-	CDialog::OnCancel();
-}
-
-void CDifferenceProgressDialog::OnOK()
-{
-	m_StopSearch = ! m_SearchCompleted;
-
-	CDialog::OnOK();
-}

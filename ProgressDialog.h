@@ -14,9 +14,15 @@ public:
 // Dialog Data
 	CStatic m_ItemName;
 	CStatic m_ProgressPercent;
+	CStatic m_ItemProgressPercent;
+	CProgressCtrl m_Progress;
+	CProgressCtrl m_ItemProgress;
+
 	virtual INT_PTR DoModal();
 	INT_PTR DoModalDelay(int Delay = 200);
+
 	void KickDialogUpdate();
+	void SetCurrentItemDone(LONGLONG Done);
 
 	CWinThread m_Thread;
 	virtual unsigned ThreadProc();
@@ -28,8 +34,16 @@ public:
 	BOOL m_bItemNameChanged;
 
 	LONGLONG m_TotalDataSize;
+	LONGLONG m_CurrentItemSize;
 	LONGLONG m_ProcessedItems;
 	LONGLONG m_CurrentItemDone;
+	DWORD m_DonePerSec;
+
+	DWORD m_TickCountStarted;
+	DWORD m_LastTickCount;
+
+	int m_TotalPercentDoneShown;
+	int m_ItemPercentDoneShown;
 
 protected:
 	LRESULT OnKickIdle(WPARAM, LPARAM);
@@ -43,6 +57,4 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnYes();
-public:
-	CProgressCtrl m_Progress;
 };

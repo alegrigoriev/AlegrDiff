@@ -1680,6 +1680,8 @@ void CAlegrDiffApp::OnFileCreatedirectoryfingerprint()
 	dlg1.m_sFilenameFilter = dlg.m_sFilenameFilter;
 	dlg1.m_sIgnoreFiles = dlg.m_sIgnoreFiles;
 	dlg1.m_sDirectory = dlg.m_sDirectory;
+	dlg1.m_FingerprintFilename = dlg.m_sSaveFilename;
+	dlg1.m_bSaveAsUnicode = dlg.m_bSaveAsUnicode;
 
 	dlg1.DoModal();
 }

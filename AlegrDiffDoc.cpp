@@ -1870,7 +1870,7 @@ unsigned _stdcall CAlegrDiffDoc::_CompareThreadFunction(PVOID arg)
 unsigned CAlegrDiffDoc::CompareThreadFunction()
 {
 	// preload first of binary files in pair (calculate MD5 digest)
-	FileItem::InitHashCalculation();
+	CMd5HashCalculator HashCalc;
 	FilePair * pPair;
 
 	{
@@ -1892,7 +1892,7 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 		pPair->m_ComparisionResult = FilePair::CalculatingFirstFingerprint;
 		pPair->m_bChanged = true;
 		::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
-		if (pPair->pFirstFile->CalculateHashes(m_bStopThread)
+		if (pPair->pFirstFile->CalculateHashes( & HashCalc, m_bStopThread)
 			|| m_bStopThread)
 		{
 			pPair->m_ComparisionResult = FilePair::ResultUnknown;
@@ -1925,13 +1925,12 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 
 		pPair->m_ComparisionResult = FilePair::ComparingFiles;
 		::PostMessage(GetApp()->m_pMainWnd->m_hWnd, WM_KICKIDLE, 0, 0);
-		pPair->m_ComparisionResult = pPair->PreCompareFiles(m_bStopThread);
+		pPair->m_ComparisionResult = pPair->PreCompareFiles( & HashCalc, m_bStopThread);
 		pPair->m_bChanged = true;
 		m_NextPairToCompare = pPair->pNext;
 
 	}
 
-	FileItem::DeinitHashCalculation();
 	{
 		CSimpleCriticalSectionLock lock(m_FileListCs);
 		m_NextPairToCompare = NULL;

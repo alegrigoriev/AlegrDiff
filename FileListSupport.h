@@ -6,7 +6,7 @@
 #include "SmallAllocator.h"
 #include <functional>
 #include <vector>
-#include <Wincrypt.h>
+#include "Md5HashCalculator.h"
 
 using namespace std;
 
@@ -248,9 +248,6 @@ public:
 	~FileItem();
 	bool Load();
 	void Unload();
-	static BOOL InitHashCalculation();
-	static void DeinitHashCalculation();
-	BOOL CalculateHashes(BOOL volatile & bStopOperation);
 
 	bool m_C_Cpp:1;
 	bool m_IsBinary:1;
@@ -259,6 +256,7 @@ public:
 	bool m_bMd5Calculated:1;
 	bool m_bIsFolder:1;
 
+	BOOL CalculateHashes(CMd5HashCalculator * pMd5Calc, BOOL volatile & bStopOperation);
 	// add line from memory. Assuming the file created dynamically by the program
 	void AddLine(LPCTSTR pLine);
 	bool IsFolder() const { return m_bIsFolder; }
@@ -282,6 +280,8 @@ public:
 	FILETIME GetLastWriteTime() const { return m_LastWriteTime; }
 
 	LONGLONG GetFileLength() const { return m_Length; }
+	UINT GetDigest(int idx) const { return m_Md5[idx]; }
+
 	const FileLine * FindMatchingLine(const FileLine * pLine,
 									unsigned nStartLineNum, unsigned nEndLineNum);
 	const FileLine * FindMatchingLineGroupLine(const FileLine * pLine,
@@ -311,7 +311,7 @@ private:
 	FILETIME m_LastWriteTime;
 	LONGLONG m_Length;
 	LONGLONG m_Crc64;   // use x64 + x4 + x3 + x + 1 polynomial
-	BYTE m_Md5[20];
+	BYTE m_Md5[16];
 
 	vector<FileLine *> m_Lines;
 	vector<FileLine *> m_NonBlankLines;
@@ -322,8 +322,6 @@ private:
 	//vector<TextToken> m_Tokens;
 	friend class FilePair;
 	//static CSimpleCriticalSection m_Cs;
-	static BYTE * m_HashBuf;
-	static HCRYPTPROV m_CryptProvider;
 };
 
 enum PairCheckResult { FilesDeleted, FilesUnchanged, FilesTimeChanged, };
@@ -439,9 +437,9 @@ public:
 	FileSection * BuildSectionList(int NumLine1Begin, int NumLine1AfterEnd,
 									int NumLine2Begin, int NumLine2AfterEnd, bool UseLineGroups);
 
-	eFileComparisionResult PreCompareFiles(BOOL volatile & bStopOperation);
+	eFileComparisionResult PreCompareFiles(CMd5HashCalculator * pMd5Calc, BOOL volatile & bStopOperation);
 	eFileComparisionResult PreCompareTextFiles(BOOL volatile & bStopOperation);
-	eFileComparisionResult PreCompareBinaryFiles(BOOL volatile & bStopOperation);
+	eFileComparisionResult PreCompareBinaryFiles(CMd5HashCalculator * pMd5Calc, BOOL volatile & bStopOperation);
 
 	int m_CompletedPercent;
 	eFileComparisionResult m_ComparisionResult;

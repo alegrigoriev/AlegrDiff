@@ -340,6 +340,9 @@
 				RelativePath=".\MainFrm.cpp">
 			</File>
 			<File
+				RelativePath="Md5HashCalculator.cpp">
+			</File>
+			<File
 				RelativePath=".\PreferencesDialog.cpp">
 			</File>
 			<File
@@ -438,6 +441,9 @@
 			</File>
 			<File
 				RelativePath=".\MainFrm.h">
+			</File>
+			<File
+				RelativePath="Md5HashCalculator.h">
 			</File>
 			<File
 				RelativePath=".\PreferencesDialog.h">

@@ -478,14 +478,14 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,123,286,50,14
     LTEXT           "Compare the following files as C/C+&+:",IDC_STATIC,7,
                     158,199,8
-    COMBOBOX        IDC_EDIT_C_CPP,7,171,217,30,CBS_DROPDOWN | WS_VSCROLL | 
+    COMBOBOX        IDC_EDIT_C_CPP,7,171,217,57,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
     LTEXT           "Compare the following files as binar&y:",IDC_STATIC,7,
                     189,188,8
-    COMBOBOX        IDC_EDIT_BINARY_FILES,7,204,217,30,CBS_DROPDOWN | 
+    COMBOBOX        IDC_EDIT_BINARY_FILES,7,204,217,59,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "&Ignore the following files:",IDC_STATIC,7,221,141,8
-    COMBOBOX        IDC_EDIT_IGNORE,7,235,217,30,CBS_DROPDOWN | WS_VSCROLL | 
+    COMBOBOX        IDC_EDIT_IGNORE,7,235,217,58,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
     CONTROL         "Binary comparison uses &MD5 file fingerprint",
                     IDC_CHECK_USE_MD5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
@@ -538,7 +538,7 @@ BEGIN
     COMBOBOX        IDC_EDIT_BINARY_FILES,7,53,170,61,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "&Ignore the following files:",IDC_STATIC,7,74,154,8
-    COMBOBOX        IDC_EDIT_IGNORE,7,88,170,51,CBS_DROPDOWN | WS_VSCROLL | 
+    COMBOBOX        IDC_EDIT_IGNORE,7,88,170,71,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
 END
 
@@ -747,7 +747,7 @@ BEGIN
 END
 #endif
 
-IDD_DIALOG_DIR_FINGERPRINT DIALOGEX 0, 0, 231, 154
+IDD_DIALOG_DIR_FINGERPRINT DIALOGEX 0, 0, 231, 174
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
     WS_SYSMENU
 EXSTYLE WS_EX_ACCEPTFILES
@@ -767,14 +767,16 @@ BEGIN
     COMBOBOX        IDC_COMBO_SAVE_FILENAME,7,77,189,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SAVE_FILENAME,207,76,17,14
-    LTEXT           "File&name filter: ",IDC_STATIC,7,98,56,8
-    COMBOBOX        IDC_EDITFILENAME_FILTER,67,97,157,60,CBS_DROPDOWN | 
+    LTEXT           "File&name filter: ",IDC_STATIC,7,112,56,8
+    COMBOBOX        IDC_EDITFILENAME_FILTER,67,111,157,60,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COMBO_IGNORE_FILES,67,115,157,61,CBS_DROPDOWN | 
+    COMBOBOX        IDC_COMBO_IGNORE_FILES,67,129,157,61,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,47,133,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,123,133,50,14
-    LTEXT           "Ignore files:",IDC_STATIC,7,116,56,8
+    DEFPUSHBUTTON   "OK",IDOK,47,153,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,123,153,50,14
+    LTEXT           "Ignore files:",IDC_STATIC,7,130,56,8
+    CONTROL         "Save as UNICODE file",IDC_CHECK_SAVE_AS_UNICODE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,94,145,10
 END
 
 IDD_DIALOG_FINGERPRINT_CREATE_PROGRESS DIALOGEX 0, 0, 269, 122
@@ -784,10 +786,10 @@ CAPTION "Creating directory fingerprint"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,108,101,50,14
-    LTEXT           "Reading ""File""",IDC_STATIC_FILENAME,7,7,255,27
+    LTEXT           "",IDC_STATIC_FILENAME,7,7,255,27
     CONTROL         "",IDC_PROGRESS1,"msctls_progress32",WS_BORDER,7,50,255,
                     14
-    CTEXT           "Static",IDC_STATIC_PERCENT,7,72,255,8
+    CTEXT           "",IDC_STATIC_PERCENT,7,72,255,8
 END
 
 
@@ -1012,7 +1014,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 224
         TOPMARGIN, 7
-        BOTTOMMARGIN, 147
+        BOTTOMMARGIN, 167
     END
 
     IDD_DIALOG_FINGERPRINT_CREATE_PROGRESS, DIALOG
@@ -1290,6 +1292,8 @@ BEGIN
     IDS_STRING_COLUMN_2ND_MODIFIED "2nd Modified at"
     IDS_STRING_COLUMN_COMPARISON_RESULT "Comparison result"
     IDS_STRING_UNABLE_TO_CREATE_FILE "Unable to create output file ""%s"""
+    IDS_STRING_FINGERPRINT_CREATED 
+                            "Directory ""%s"" fingerprint calculated and saved as file ""%s"""
 END
 
 #endif    // English (U.S.) resources

@@ -17,6 +17,7 @@ CDirectoryFingerprintDlg::CDirectoryFingerprintDlg(CWnd* pParent /*=NULL*/)
 	, m_sFilenameFilter(_T(""))
 	, m_sIgnoreFiles(_T(""))
 	, m_sSaveFilename(_T(""))
+	, m_bSaveAsUnicode(FALSE)
 {
 }
 
@@ -56,6 +57,7 @@ void CDirectoryFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 
 		m_Profile.FlushAll();
 	}
+	DDX_Check(pDX, IDC_CHECK_SAVE_AS_UNICODE, m_bSaveAsUnicode);
 }
 
 
@@ -110,6 +112,7 @@ BOOL CDirectoryFingerprintDlg::OnInitDialog()
 				sizeof m_sIgnoreFilterHistory / sizeof m_sIgnoreFilterHistory[0], true);
 
 	m_Profile.AddBoolItem(_T("Settings"), _T("IncludeDirsToFingerprint"), m_bIncludeDirectoryStructure, TRUE);
+	m_Profile.AddBoolItem(_T("Settings"), _T("SaveFingerprintAsUnicode"), m_bSaveAsUnicode, FALSE);
 
 	m_sSaveFilename = m_sFingerprintFilenameHistory[0];
 	m_sIgnoreFiles = m_sIgnoreFilterHistory[0];

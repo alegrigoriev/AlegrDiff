@@ -11,6 +11,7 @@
 #include "FilesPropertiesDialog.h"
 #include <process.h>
 #include <afxpriv.h>
+#include "AcceptDeclineDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1470,7 +1471,10 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 	CThisApp * pApp = GetApp();
 	if (flags & StringSection::Undefined)
 	{
-		CDialog dlg(IDD_DIALOG_ACCEPT_OR_DECLINE_ALL);
+		CAcceptDeclineDlg dlg;
+		dlg.m_File1 = m_pFilePair->pFirstFile->GetFullName();
+		dlg.m_File2 = m_pFilePair->pSecondFile->GetFullName();
+
 		int result = dlg.DoModal();
 		if (IDOK == result)
 		{
@@ -1508,7 +1512,7 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 	CString filter;
 	if ( ! FileExt.IsEmpty())
 	{
-		Filter += CreateCustomFilter(FileExt);
+		filter += CreateCustomFilter(FileExt);
 	}
 	CString AllFilter;
 	AllFilter.LoadString(IDS_ALL_FILES);

@@ -14,6 +14,7 @@
 #include "PreferencesDialog.h"
 #include "FolderDialog.h"
 #include <locale.h>
+#include <Dlgs.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1257,6 +1258,164 @@ CString CreateCustomFilter(LPCTSTR Extension)
 		RegCloseKey(hKey);
 	}
 	return ReturnValue;
+}
+
+class COpenDiffDialog : public CFileDialog
+{
+public:
+	COpenDiffDialog(BOOL bOpenFileDialog, // TRUE for FileOpen, FALSE for FileSaveAs
+					LPCTSTR lpszDefExt = NULL,
+					LPCTSTR lpszFileName = NULL,
+					DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+					LPCTSTR lpszFilter = NULL,
+					CWnd* pParentWnd = NULL)
+		: CFileDialog(bOpenFileDialog, lpszDefExt, lpszFileName, dwFlags,
+					lpszFilter, pParentWnd)
+	{}
+	~COpenDiffDialog()
+	{
+	}
+
+	virtual BOOL OnFileNameOK();
+
+	virtual void OnInitDone();
+	//{{AFX_MSG(COpenDiffDialog)
+	afx_msg void OnComboSelendOK();
+	//}}AFX_MSG
+	DECLARE_MESSAGE_MAP()
+};
+BEGIN_MESSAGE_MAP(COpenDiffDialog, CFileDialog)
+	//{{AFX_MSG_MAP(COpenDiffDialog)
+	ON_CBN_SELENDOK(IDC_COMBO_RECENT, OnComboSelendOK)
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+void COpenDiffDialog::OnComboSelendOK()
+{
+	TRACE("COpenDiffDialog::OnComboSelendOK()\n");
+	CString str;
+	CComboBox * pCb = static_cast<CComboBox *>(GetDlgItem(IDC_COMBO_RECENT));
+	if (NULL != pCb)
+	{
+		int sel = pCb->GetCurSel();
+		if (-1 == sel
+			|| sel >= pCb->GetCount())
+		{
+			return;
+		}
+		pCb->GetLBText(sel, str);
+		TRACE("COpenDiffDialog::OnComboSelendOK: %s selected\n", str);
+		if (str.IsEmpty())
+		{
+			return;
+		}
+		// check if the selected text is a folder
+		// make sure we can find a file in the folder
+		CString dir(str);
+		TCHAR c = dir[dir.GetLength() - 1];
+		if (c != ':'
+			&& c != '\\'
+			&& c != '/')
+		{
+			dir += '\\';
+		}
+		dir += '*';
+
+		WIN32_FIND_DATA wfd;
+		HANDLE hFind = FindFirstFile(dir, & wfd);
+		if (INVALID_HANDLE_VALUE == hFind)
+		{
+			DWORD error = GetLastError();
+			TRACE("FindFirstFile failed, last error = %d\n", error);
+			CString s;
+			if (ERROR_ACCESS_DENIED == error)
+			{
+				s.Format(IDS_DIRECTORY_ACCESS_DENIED, LPCTSTR(str));
+			}
+			else if (1 || ERROR_DIRECTORY == error
+					|| ERROR_PATH_NOT_FOUND == error
+					|| ERROR_INVALID_NAME == error
+					|| ERROR_BAD_NETPATH)
+			{
+				s.Format(IDS_DIRECTORY_NOT_FOUND, LPCTSTR(str));
+			}
+			AfxMessageBox(s);
+			// delete the string from combobox
+			pCb->DeleteString(sel);
+			pCb->SetCurSel(-1); // no selection
+			return;
+		}
+		else
+		{
+			TRACE("FindFirstFile success\n");
+			FindClose(hFind);
+			CWnd * pParent = GetParent();
+			pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(str)));
+			pParent->SendMessage(WM_COMMAND, IDOK, 0);
+			pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR("")));
+			CWnd * pTmp = pParent->GetDlgItem(edt1);
+			if (NULL == pTmp)
+			{
+				// new style dialog
+				pTmp = pParent->GetDlgItem(cmb13);
+			}
+			if (NULL != pTmp)
+			{
+				pTmp->SetFocus();
+			}
+		}
+
+	}
+}
+
+BOOL COpenDiffDialog::OnFileNameOK()
+{
+	// add the current directory name to MRU
+	CThisApp * pApp = GetApp();
+	CString sCurrDir;
+	GetParent()->SendMessage(CDM_GETFOLDERPATH, MAX_PATH, LPARAM(sCurrDir.GetBuffer(MAX_PATH)));
+	sCurrDir.ReleaseBuffer();
+	TRACE("COpenDiffDialog::OnFileNameOK Folder Path=%s\n", sCurrDir);
+
+	AddStringToHistory(sCurrDir, pApp->m_RecentFolders,
+						sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0], false);
+
+	return CFileDialog::OnFileNameOK();
+}
+
+void COpenDiffDialog::OnInitDone()
+{
+	CFileDialog::OnInitDone();
+	CThisApp * pApp = GetApp();
+
+	CComboBox * pCb = static_cast<CComboBox *>(GetDlgItem(IDC_COMBO_RECENT));
+	if (NULL != pCb)
+	{
+		CString dir(m_ofn.lpstrInitialDir);
+		if (dir.GetLength() > 1
+			&& dir[dir.GetLength() - 1] == '\\')
+		{
+			dir.SetAt(dir.GetLength() - 1, 0);
+		}
+		pCb->SetExtendedUI();
+		CThisApp * pApp = GetApp();
+		int sel = -1;
+		for (int i = 0; i < sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0]; i++)
+		{
+			if ( ! pApp->m_RecentFolders[i].IsEmpty())
+			{
+				pCb->AddString(pApp->m_RecentFolders[i]);
+				if (0 == pApp->m_RecentFolders[i].CompareNoCase(dir))
+				{
+					sel = i;
+				}
+			}
+		}
+		if (-1 != sel)
+		{
+			pCb->SetCurSel(sel);
+		}
+	}
 }
 
 int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder)

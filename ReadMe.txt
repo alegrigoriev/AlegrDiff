@@ -1,5 +1,4 @@
 TODO:
-Make search dialog
 check if whitespace difference is attached to more spaces. Try to rearrange
 segments to avoid misreading. Glue the whitespace to more space.
 
@@ -21,15 +20,19 @@ UNICODE file support
 //show subdir-only names in the status bar during comparision
 
 Problems:
+National characters are not recognized as letters
 horizontal autoscroll is wrong
 
 Fixed:
+Word Right doesn't skip spaces after the word
+Accept/Decline for a pair doesn't change the second
 Line numbers were zero-bazed
 Auto Scroll is too fast
 Use Collate to sort the filenames
 Tries to reload files during modal state
 
 Done:
+Make search dialog
 Add Ctrl+F6 interception for window switch
 Add progress to File list view and file diff view
 Ctrl+mouse selection - make full words

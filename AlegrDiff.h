@@ -51,11 +51,15 @@ public:
 	bool m_AutoReloadChangedFiles;
 	bool m_bIgnoreWhitespaces;
 	bool m_bShowLineNumbers;
+	bool m_bFindBackward;
 
 	CString m_FileDir1;
 	CString m_FileDir2;
 	CString m_LastSaveMergedDir;
 	CString m_CopyFilesDir;
+
+	CString m_sFindHistory[15];
+
 
 	int m_UsedFilenameFilter;
 

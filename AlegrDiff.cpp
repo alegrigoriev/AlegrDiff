@@ -60,6 +60,7 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_AutoReloadChangedFiles(false),
 	m_bCaseSensitive(true),
 	m_bIgnoreWhitespaces(true),
+	m_bFindBackward(false),
 	m_MinimalLineLength(2),
 	m_MinMatchingChars(3),
 	m_NumberOfIdenticalLines(5),
@@ -335,6 +336,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("AutoReloadChangedFiles"), m_AutoReloadChangedFiles, false);
 	Profile.AddItem(_T("Settings"), _T("IgnoreWhitespaces"), m_bIgnoreWhitespaces, true);
 	Profile.AddItem(_T("Settings"), _T("bShowLineNumbers"), m_bShowLineNumbers, false);
+	Profile.AddItem(_T("Settings"), _T("FindBackward"), m_bFindBackward, false);
 
 	Profile.AddItem(_T("Settings"), _T("MinimalLineLength"), m_MinimalLineLength, 2, 1, 2048);
 	Profile.AddItem(_T("Settings"), _T("NumberOfIdenticalLines"), m_NumberOfIdenticalLines, 5, 1, 50);
@@ -347,6 +349,13 @@ BOOL CAlegrDiffApp::InitInstance()
 					_T("*.c;*.cpp;*.h;*.hpp;*.inl;*.rc;*.h++"));
 	Profile.AddItem(_T("Settings"), _T("IgnoreFiles"), m_sIgnoreFilesFilter,
 					_T("*.ncb"));
+
+	for (int i = 0; i < sizeof m_sFindHistory / sizeof m_sFindHistory[0]; i++)
+	{
+		CString s;
+		s.Format("find%d", i);
+		Profile.AddItem(_T("History\\Find"), s, m_sFindHistory[i]);
+	}
 
 	m_TextBackgroundColor = GetSysColor(COLOR_WINDOW);
 	m_SelectedTextColor = 0xFFFFFF;
@@ -452,7 +461,7 @@ void CAlegrDiffApp::OnAppAbout()
 
 int CAlegrDiffApp::ExitInstance()
 {
-	Profile.UnloadSection(_T("Settings"));
+	Profile.UnloadSection(NULL);
 	return CWinApp::ExitInstance();
 }
 

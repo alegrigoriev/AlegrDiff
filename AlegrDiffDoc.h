@@ -150,11 +150,11 @@ public:
 	TextPos DisplayPosToLinePos(TextPos position);
 
 	bool GetWordOnPos(TextPos OnPos, TextPos & Start, TextPos & End);
-	bool FindWordOrSelection(bool bBackwards);
 	void CaretLeftToWord(int SelectionFlags);
 	void CaretRightToWord(int SelectionFlags);
 
 	bool FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive);
+	bool OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvokeDialog);
 	bool OnEditFind();
 	bool OnEditFindNext();
 	bool OnEditFindPrev();

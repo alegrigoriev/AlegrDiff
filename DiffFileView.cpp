@@ -6,7 +6,6 @@
 #include "DiffFileView.h"
 #include "GoToLineDialog.h"
 #include "ChildFrm.h"
-#include "FindDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1409,26 +1408,15 @@ void CDiffFileView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* 
 
 void CDiffFileView::OnEditFind()
 {
-	CThisApp * pApp = GetApp();
-	CMyFindDialog dlg;
-	dlg.m_sFindCombo = pApp->m_FindString;
-	dlg.m_bCaseSensitive = pApp->m_bCaseSensitive;
-
-	if (IDOK == dlg.DoModal())
+	if (GetDocument()->OnEditFind())
 	{
-		pApp->m_FindString = dlg.m_sFindCombo;
-		pApp->m_bCaseSensitive = dlg.m_bCaseSensitive;
-		if (GetDocument()->FindTextString(pApp->m_FindString, false, pApp->m_bCaseSensitive))
-		{
-			MakeCaretCentered();
-		}
+		MakeCaretCentered();
 	}
 }
 
 void CDiffFileView::OnEditFindNext()
 {
-	CThisApp * pApp = GetApp();
-	if (GetDocument()->FindTextString(pApp->m_FindString, false, pApp->m_bCaseSensitive))
+	if (GetDocument()->OnEditFindNext())
 	{
 		MakeCaretCentered();
 	}
@@ -1436,8 +1424,7 @@ void CDiffFileView::OnEditFindNext()
 
 void CDiffFileView::OnEditFindPrev()
 {
-	CThisApp * pApp = GetApp();
-	if (GetDocument()->FindTextString(pApp->m_FindString, true, pApp->m_bCaseSensitive))
+	if (GetDocument()->OnEditFindPrev())
 	{
 		MakeCaretCentered();
 	}
@@ -1445,7 +1432,7 @@ void CDiffFileView::OnEditFindPrev()
 
 void CDiffFileView::OnEditFindWordNext()
 {
-	if (GetDocument()->FindWordOrSelection(false))
+	if (GetDocument()->OnEditFindWordNext())
 	{
 		MakeCaretCentered();
 	}
@@ -1453,7 +1440,7 @@ void CDiffFileView::OnEditFindWordNext()
 
 void CDiffFileView::OnEditFindWordPrev()
 {
-	if (GetDocument()->FindWordOrSelection(true))
+	if (GetDocument()->OnEditFindWordPrev())
 	{
 		MakeCaretCentered();
 	}

@@ -146,6 +146,8 @@
 #define IDC_CHECK_DIFFERENT_IN_BLANKS   1057
 #define IDC_CHECK_FOLDER1_ONLY          1058
 #define IDC_CHECK_FOLDER2_ONLY          1059
+#define IDC_CHECK_DIFFERENT_IN_BLANKS2  1060
+#define IDC_CHECK_DIFFERENT_IN_VERSION  1060
 #define IDC_CHECK_SUBDIRECTORY          1061
 #define IDC_CHECK_TIMESTAMP             1062
 #define IDC_CHECK_COMPARISON_RESULT     1063
@@ -153,6 +155,7 @@
 #define IDC_BUTTON_BROWSE               1065
 #define IDC_RADIO_SELECTED_GROUPS       1066
 #define IDC_CHECK_CANCEL_SELECTION_ON_MERGE 1067
+#define IDC_CHECK_FILE_LENGTH           1067
 #define IDC_STATIC_QEUSTION             1068
 #define IDC_CHECK_INCLUDE_DIRECTORY_STRUCTURE 1069
 #define IDC_CHECK_IGNORE_FILES          1070
@@ -171,6 +174,7 @@
 #define IDC_STATIC_PERCENT_ITEM         1080
 #define IDC_RADIO1                      1081
 #define IDC_BUTTON1                     1082
+#define IDC_RADIO_SELECTED_FILES        1083
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -288,7 +292,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        181
 #define _APS_NEXT_COMMAND_VALUE         32891
-#define _APS_NEXT_CONTROL_VALUE         1083
+#define _APS_NEXT_CONTROL_VALUE         1084
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

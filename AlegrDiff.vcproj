@@ -30,7 +30,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
-				PreprocessorDefinitions="NDEBUG,WIN32,_WINDOWS,_WIN32_WINNT=0x0500,DEMO_VERSION=1"
+				PreprocessorDefinitions="NDEBUG,WIN32,_WINDOWS,_WIN32_WINNT=0x0501,DEMO_VERSION=1"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="FALSE"
@@ -93,7 +93,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="_DEBUG,WIN32,_WINDOWS,_WIN32_WINNT=0x0500,RETAIL_VERSION"
+				PreprocessorDefinitions="_DEBUG,WIN32,_WINDOWS,_WIN32_WINNT=0x0501,RETAIL_VERSION"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				RuntimeTypeInfo="TRUE"
@@ -155,7 +155,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="_DEBUG,WIN32,_WINDOWS,_WIN32_WINNT=0x0500,DEMO_VERSION=1"
+				PreprocessorDefinitions="_DEBUG,WIN32,_WINDOWS,_WIN32_WINNT=0x0501,DEMO_VERSION=1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				RuntimeTypeInfo="TRUE"
@@ -222,7 +222,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
-				PreprocessorDefinitions="NDEBUG,WIN32,_WINDOWS,_WIN32_WINNT=0x0500,RETAIL_VERSION"
+				PreprocessorDefinitions="NDEBUG,WIN32,_WINDOWS,_WIN32_WINNT=0x0501,RETAIL_VERSION"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="FALSE"
@@ -487,6 +487,9 @@
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
 			<File
 				RelativePath=".\res\AlegrDiff.ico">
+			</File>
+			<File
+				RelativePath="AlegrDiff.manifest">
 			</File>
 			<File
 				RelativePath=".\res\AlegrDiff.rc2">

@@ -269,6 +269,22 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Hide Selected Files",        ID_VIEW_HIDESELECTEDFILES
         MENUITEM "&Show All Files",             ID_VIEW_SHOWALLFILES
+        MENUITEM SEPARATOR
+        MENUITEM "File Length",                 163
+        MENUITEM "Modification Time",           164
+        POPUP "Sort By"
+        BEGIN
+            MENUITEM "Name",                        166
+            MENUITEM "Folder",                      167
+            MENUITEM "1st Modification Date",       168
+            MENUITEM "2nd Modification Date",       169
+            MENUITEM "1st Length",                  170
+            MENUITEM "2nd Length",                  171
+            MENUITEM "Comparison Result",           172
+            MENUITEM SEPARATOR
+            MENUITEM "Descending Order",            173
+        END
+        MENUITEM SEPARATOR
         MENUITEM "Refresh\tF5",                 ID_VIEW_REFRESH
     END
     POPUP "&Window"
@@ -1211,6 +1227,13 @@ END
 
 IDC_CURSOR_BEAM         CURSOR                  "res\\cur00002.cur"
 IDC_CURSOR_LEFT_ARROW   CURSOR                  "res\\cursor1.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RT_MANIFEST
+//
+
+_CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST             "AlegrDiff.manifest"
 
 /////////////////////////////////////////////////////////////////////////////
 //

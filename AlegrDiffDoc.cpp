@@ -28,9 +28,14 @@ END_MESSAGE_MAP()
 // CAlegrDiffDoc construction/destruction
 
 CAlegrDiffDoc::CAlegrDiffDoc()
+	: m_bRecurseSubdirs(true),
+	m_pPairList(NULL)
 {
 	// TODO: add one-time construction code here
-
+	MiltiSzToCString(m_sInclusionPattern, "*\0");
+	MiltiSzToCString(m_sExclusionPattern, "*.ncb\0");
+	MiltiSzToCString(m_sCFilesPattern, "*.C\0*.cpp\0*.h\0*.hpp\0*.inl\0*.rc\0*.h++");
+	MiltiSzToCString(m_sBinaryFilesPattern, "*.exe\0*.dll\0*.sys\0*.obj\0*.pdb\0");
 }
 
 CAlegrDiffDoc::~CAlegrDiffDoc()
@@ -48,136 +53,82 @@ BOOL CAlegrDiffDoc::OnNewDocument()
 	return TRUE;
 }
 
-#undef tolower
-#undef toupper
-
-bool MatchWildcard(LPCTSTR name, LPCTSTR pattern)
-{
-	// '?' corresponds to any character or no character,
-	// '*' corresponds to any (or none) number of characters
-	while (1)
-	{
-		switch (*pattern)
-		{
-		case 0:
-			return 0 == name[0];
-			break;
-		case '?':
-			pattern++;
-			if (name[0] != 0
-				&& MatchWildcard(name + 1, pattern))
-			{
-				return true;
-			}
-			continue;
-			break;
-		case '*':
-			while ('*' == *pattern
-					|| '?' == *pattern)
-			{
-				pattern++;
-			}
-			if (0 == *pattern)
-			{
-				// last character is '*'
-				return true;
-			}
-			for( ; 0 != name[0]; name++)
-			{
-				if (MatchWildcard(name, pattern))
-				{
-					return true;
-				}
-			}
-			return false;
-			break;
-		default:
-			if (*name != * pattern
-				&& *name != toupper(*pattern)
-				&& *name != tolower(*pattern))
-			{
-				return false;
-			}
-			name++;
-			pattern++;
-			continue;
-			break;
-		}
-	}
-}
-
-bool MultiPatternMatches(LPCTSTR name, const CString & sPattern)
-{
-	// sPattern is MULTI_SZ
-
-}
-
-bool CAlegrDiffDoc::BuildFileList(LPCTSTR dir)
-{
-	WIN32_FIND_DATA wfd;
-	CString Directory(dir);
-	// make sure the name contains '\'.
-	TCHAR c;
-	if (Directory.IsEmpty())
-	{
-		c = 0;
-	}
-	else
-	{
-		c = Directory[Directory.GetLength() - 1];
-	}
-	if (':' != c
-		&& '\\' != c
-		&& '/' != c)
-	{
-		Directory += _T("\\");
-	}
-	CString name = Directory + '*';
-	HANDLE hFind = FindFirstFile(name, & wfd);
-	if (INVALID_HANDLE_VALUE == hFind
-		|| NULL == hFind)
-	{
-		return false;
-	}
-	do
-	{
-		if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		{
-			if ( ! m_bCompareSubdirectories)
-			{
-				continue;
-			}
-			// scan the subdirectory
-		}
-		else
-		{
-			// filter the file and add it to the list, if it matches the pattern.
-			if (! MultiPatternMatches(wfd.cFileName, m_sInclusionPattern)
-				|| MultiPatternMatches(wfd.cFileName, m_sExclusionPattern))
-			{
-				continue;
-			}
-			FileItem * pFile = new FileItem(wfd.cFileName, Directory);
-			if (NULL == pFile)
-			{
-				continue;
-			}
-		}
-	}
-	while (FindNextFile(hFind, & wfd));
-	FindClose(hFind);
-	return true;
-}
-
 bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2)
 {
 	// look through all files in the directory and subdirs
-	bool res;
-	res = BuildFileList(dir1);
-	res = BuildFileList(dir2);
+	bool res1, res2;
+
+	m_FileList1.FreeFileList();
+	m_FileList2.FreeFileList();
+	res1 = m_FileList1.LoadFolder(dir1, m_bRecurseSubdirs,
+								m_sInclusionPattern, m_sExclusionPattern);
+	res2 = m_FileList2.LoadFolder(dir1, m_bRecurseSubdirs,
+								m_sInclusionPattern, m_sExclusionPattern);
+
+	if (res1 && res2)
+	{
+		CArray<FileItem *, FileItem *> Files1;
+		CArray<FileItem *, FileItem *> Files2;
+
+		m_FileList1.GetSortedList(Files1, FileList::SortDirFirst | FileList::SortBackwards);
+		m_FileList2.GetSortedList(Files2, FileList::SortDirFirst | FileList::SortBackwards);
+
+		//m_pPairList = NULL;
+
+		for (int idx1 = 0, idx2 = 0; idx1 < Files1.GetSize() || idx2 < Files2.GetSize(); )
+		{
+			FilePair * pPair = new FilePair;
+			pPair->pNext = m_pPairList;
+			m_pPairList = pPair;
+			if (idx1 >= Files1.GetSize())
+			{
+				pPair->pFirstFile = NULL;
+				pPair->pSecondFile = Files2[idx2];
+				idx2++;
+				continue;
+			}
+			if (idx2 >= Files2.GetSize())
+			{
+				pPair->pSecondFile = NULL;
+				pPair->pFirstFile = Files1[idx1];
+				idx1++;
+				continue;
+			}
+			int comparision = FileItem::FileItemDirNameCompare(Files1[idx1], Files2[idx2]);
+			if (comparision < 0)
+			{
+				pPair->pFirstFile = NULL;
+				pPair->pSecondFile = Files2[idx2];
+				idx2++;
+			}
+			else if (comparision > 0)
+			{
+				pPair->pSecondFile = NULL;
+				pPair->pFirstFile = Files1[idx1];
+				idx1++;
+			}
+			else
+			{
+				pPair->pFirstFile = Files1[idx1];
+				idx1++;
+				pPair->pSecondFile = Files2[idx2];
+				idx2++;
+			}
+		}
+	}
 	return true;
 }
 
+void CAlegrDiffDoc::FreeFilePairList()
+{
+	FilePair * tmp;
+	while (NULL != m_pPairList)
+	{
+		tmp = m_pPairList;
+		m_pPairList = tmp->pNext;
+		delete tmp;
+	}
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // CAlegrDiffDoc serialization
@@ -214,9 +165,16 @@ void CAlegrDiffDoc::Dump(CDumpContext& dc) const
 void CAlegrDiffDoc::OnFileComparedirectories()
 {
 	CCompareDirsDialog dlg;
+	dlg.m_sFirstDir = m_sFirstDir;
+	dlg.m_sSecondDir = m_sSecondDir;
+	dlg.m_bIncludeSubdirs = m_bRecurseSubdirs;
 	if (IDOK == dlg.DoModal())
 	{
-		BuildFilePairList(dlg.m_sFirstDirCombo, dlg.m_sSecondDirCombo);
+		m_sFirstDir = dlg.m_sFirstDir;
+		m_sSecondDir = dlg.m_sSecondDir;
+		m_bRecurseSubdirs = (1 == dlg.m_bIncludeSubdirs);
+		FreeFilePairList();
+		BuildFilePairList(dlg.m_sFirstDir, dlg.m_sSecondDir);
 //        CompareFileLists();
 	}
 }

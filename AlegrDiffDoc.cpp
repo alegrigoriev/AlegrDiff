@@ -1143,7 +1143,7 @@ bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvok
 			return FALSE;
 		}
 		pApp->m_FindString = dlg.m_sFindCombo;
-		pApp->m_bCaseSensitive = dlg.m_bCaseSensitive;
+		pApp->m_bCaseSensitive = ( 0 != dlg.m_bCaseSensitive);
 		pApp->m_bFindBackward = ! dlg.m_FindDown;
 		bBackwards = pApp->m_bFindBackward;
 	}

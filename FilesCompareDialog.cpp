@@ -105,7 +105,16 @@ void COpenDiffDialog::OnComboSelendOK()
 			pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(str)));
 			pParent->SendMessage(WM_COMMAND, IDOK, 0);
 			pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR("")));
-			pParent->GetDlgItem(edt1)->SetFocus();
+			CWnd * pTmp = pParent->GetDlgItem(edt1);
+			if (NULL == pTmp)
+			{
+				// new style dialog
+				pTmp = pParent->GetDlgItem(cmb13);
+			}
+			if (NULL != pTmp)
+			{
+				pTmp->SetFocus();
+			}
 		}
 
 	}

@@ -31,6 +31,7 @@ CDiffFileView::CDiffFileView()
 	m_LineNumberMarginWidth(0),
 	m_CharOverhang(0),
 	m_ShownFileVersion(ShownAllText),
+	m_WheelAccumulator(0),
 	m_DrawnSelEnd(0, 0)
 {
 	// init font size, to avoid zero divide
@@ -476,7 +477,7 @@ BOOL CDiffFileView::PreCreateWindow(CREATESTRUCT& cs)
 
 void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
-	// TODO: Add your message handler code here and/or call default
+	CFilePairDoc * pDoc = GetDocument();
 	bool ShiftPressed = (0 != (0x8000 & GetKeyState(VK_SHIFT)));
 	bool CtrlPressed = (0 != (0x8000 & GetKeyState(VK_CONTROL)));
 	int SelectionFlags = SetPositionMakeVisible;
@@ -492,6 +493,19 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		TRACE("VK_DOWN\n");
 		if (CtrlPressed)
 		{
+			// do scroll, but leave the cursor inside screen boundary
+			// if the cursor was outside boundaries, just bring it in
+			int dy = 0;
+			if (pDoc->m_CaretPos.line >= m_FirstLineSeen
+				&& pDoc->m_CaretPos.line <= m_FirstLineSeen + LinesInView())
+			{
+				DoVScroll(1);
+				if (pDoc->m_CaretPos.line < m_FirstLineSeen)
+				{
+					dy = 1;
+				}
+			}
+			MoveCaretBy(0, dy, SelectionFlags);
 		}
 		else
 		{
@@ -503,6 +517,19 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		TRACE("VK_UP\n");
 		if (CtrlPressed)
 		{
+			// do scroll, but leave the cursor inside screen boundary
+			// if the cursor was outside boundaries, just bring it in
+			int dy = 0;
+			if (pDoc->m_CaretPos.line >= m_FirstLineSeen
+				&& pDoc->m_CaretPos.line <= m_FirstLineSeen + LinesInView())
+			{
+				DoVScroll(-1);
+				if (pDoc->m_CaretPos.line > m_FirstLineSeen + LinesInView())
+				{
+					dy = -1;
+				}
+			}
+			MoveCaretBy(0, dy, SelectionFlags);
 		}
 		else
 		{
@@ -566,17 +593,38 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		TRACE("VK_PRIOR\n");
 		// do VScroll and move cursor, to keep the cursor at the same line
 		DoVScroll(-(nLinesInView - 1));
-		MoveCaretBy(0, -(nLinesInView - 1), SelectionFlags);
+		MoveCaretBy(0, -(nLinesInView - 1), SelectionFlags | MoveCaretPositionAlways);
 		break;
 
 	case VK_NEXT:
 		TRACE("VK_NEXT\n");
 		// do VScroll and move cursor, to keep the cursor at the same line
 		DoVScroll(nLinesInView - 1);
-		MoveCaretBy(0, nLinesInView - 1, SelectionFlags);
+		MoveCaretBy(0, nLinesInView - 1, SelectionFlags | MoveCaretPositionAlways);
 		break;
 	}
 	CView::OnKeyDown(nChar, nRepCnt, nFlags);
+}
+
+void CDiffFileView::MoveCaretBy(int dx, int dy, int flags)
+{
+	CFilePairDoc * pDoc = GetDocument();
+	int NewLine = pDoc->m_CaretPos.line;
+	int NewPos = pDoc->m_CaretPos.pos;
+	if ((flags & SetPositionCancelSelection)
+		&& 0 == (flags & MoveCaretPositionAlways))
+	{
+		if ((dx < 0 || dy < 0) == (pDoc->m_CaretPos > pDoc->m_SelectionAnchor))
+		{
+			NewLine = pDoc->m_SelectionAnchor.line;
+			NewPos = pDoc->m_SelectionAnchor.pos;
+		}
+		if (pDoc->m_CaretPos != pDoc->m_SelectionAnchor)
+		{
+			dx = 0;
+		}
+	}
+	SetCaretPosition(NewPos + dx, NewLine + dy, flags);
 }
 
 void CDiffFileView::DoHScroll(int nCharsToScroll)
@@ -685,14 +733,14 @@ void CDiffFileView::VScrollToTheLine(int nLine)
 {
 	int nLinesInView = LinesInView();
 
-	if (nLine < 0)
-	{
-		nLine = 0;
-	}
-
 	if (nLine > GetDocument()->GetTotalLines() - (nLinesInView - 1))
 	{
 		nLine = GetDocument()->GetTotalLines() - (nLinesInView - 1);
+	}
+
+	if (nLine < 0)
+	{
+		nLine = 0;
 	}
 
 	if (nLine == m_FirstLineSeen)
@@ -770,13 +818,12 @@ void CDiffFileView::UpdateVScrollBar()
 	{
 		return;
 	}
-	int nLinesInView = LinesInView();
 
 	SCROLLINFO sci;
 	sci.cbSize = sizeof sci;
 	sci.nMin = 0;
 	sci.nMax = GetDocument()->GetTotalLines();
-	sci.nPage = nLinesInView;
+	sci.nPage = LinesInView();
 	sci.nPos = m_FirstLineSeen;
 	sci.nTrackPos = 0;
 	sci.fMask = SIF_ALL | SIF_DISABLENOSCROLL;
@@ -790,13 +837,12 @@ void CDiffFileView::UpdateHScrollBar()
 	{
 		return;
 	}
-	int nCharsInView = CharsInView();
 
 	SCROLLINFO sci;
 	sci.cbSize = sizeof sci;
 	sci.nMin = 0;
 	sci.nMax = 2048;
-	sci.nPage = nCharsInView;
+	sci.nPage = CharsInView();
 	sci.nPos = m_FirstPosSeen;
 	sci.nTrackPos = 0;
 	sci.fMask = SIF_ALL | SIF_DISABLENOSCROLL;
@@ -820,7 +866,7 @@ void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
 	CRect r;
 	if (0) TRACE("InvalidateRange((%d, %d), (%d, %d))\n", begin, end);
 	int nLinesInView = LinesInView();
-	int nCharsInView = CharsInView();
+	int nCharsInView = CharsInView() + 1;
 	if (begin == end
 		|| end.line < m_FirstLineSeen
 		|| begin.line > m_FirstLineSeen + nLinesInView + 1)
@@ -1082,16 +1128,23 @@ void CDiffFileView::OnMouseMove(UINT nFlags, CPoint point)
 
 BOOL CDiffFileView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
-	// todo: accumulate the delta until WHEEL_DELTA is reached
-	if (WHEEL_DELTA == zDelta)
+	m_WheelAccumulator += zDelta;
+	if (m_WheelAccumulator >= 0)
 	{
-		DoVScroll( -3);
+		while (m_WheelAccumulator >= WHEEL_DELTA)
+		{
+			m_WheelAccumulator -= WHEEL_DELTA;
+			DoVScroll( -3);
+		}
 	}
-	else if ( - WHEEL_DELTA == zDelta)
+	else
 	{
-		DoVScroll( +3);
+		while (m_WheelAccumulator <= - WHEEL_DELTA)
+		{
+			m_WheelAccumulator += WHEEL_DELTA;
+			DoVScroll( +3);
+		}
 	}
-
 	return TRUE;
 }
 
@@ -1100,11 +1153,13 @@ void CDiffFileView::OnSize(UINT nType, int cx, int cy)
 	TRACE("CDiffFileView::OnSize\n");
 	CView::OnSize(nType, cx, cy);
 
+	m_VisibleRect.top = 0;
 	m_VisibleRect.bottom = cy / LineHeight() - 1;
 	m_PreferredRect.bottom = m_VisibleRect.bottom / 4;
 	m_PreferredRect.top = m_VisibleRect.bottom - m_VisibleRect.bottom / 4;
 
-	m_VisibleRect.right =  cx / CharWidth();
+	m_VisibleRect.right =  (cx - m_LineNumberMarginWidth) / CharWidth();
+	m_VisibleRect.left = 0;
 	m_PreferredRect.left = m_VisibleRect.right / 3;
 	m_PreferredRect.right = m_VisibleRect.right - m_VisibleRect.right / 3;
 

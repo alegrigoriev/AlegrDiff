@@ -22,6 +22,9 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	//{{AFX_MSG_MAP(CMainFrame)
 	ON_WM_CREATE()
 	ON_WM_DROPFILES()
+	ON_COMMAND_EX(ID_VIEW_STATUS_BAR, OnBarCheckStatusBar)
+	ON_COMMAND_EX(ID_VIEW_TOOLBAR, OnBarCheckToolbar)
+	ON_COMMAND_EX(ID_VIEW_REBAR, OnBarCheckRebar)
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
 END_MESSAGE_MAP()
@@ -83,10 +86,18 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;      // fail to create
 	}
 
-	// TODO: Remove this if you don't want tool tips
 	m_wndToolBar.SetBarStyle(m_wndToolBar.GetBarStyle() |
 							CBRS_TOOLTIPS | CBRS_FLYBY);
 
+	CThisApp * pApp = GetApp();
+	if ( ! pApp->m_bShowStatusBar)
+	{
+		ShowControlBar( & m_wndStatusBar, FALSE, FALSE);
+	}
+	if ( ! pApp->m_bShowToolbar)
+	{
+		ShowControlBar( & m_wndToolBar, FALSE, FALSE);
+	}
 	return 0;
 }
 
@@ -256,4 +267,34 @@ BOOL CMainFrame::PreTranslateMessage(MSG* pMsg)
 	}
 
 	return CMDIFrameWnd::PreTranslateMessage(pMsg);
+}
+
+BOOL CMainFrame::OnBarCheckStatusBar(UINT nID)
+{
+	if (CFrameWnd::OnBarCheck(nID))
+	{
+		GetApp()->m_bShowStatusBar = (0 != (GetControlBar(nID)->GetStyle() & WS_VISIBLE));
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOL CMainFrame::OnBarCheckToolbar(UINT nID)
+{
+	if (CFrameWnd::OnBarCheck(nID))
+	{
+		GetApp()->m_bShowToolbar = (0 != (GetControlBar(nID)->GetStyle() & WS_VISIBLE));
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOL CMainFrame::OnBarCheckRebar(UINT nID)
+{
+	if (CFrameWnd::OnBarCheck(nID))
+	{
+		GetApp()->m_bShowToolbar = (0 != (GetControlBar(nID)->GetStyle() & WS_VISIBLE));
+		return TRUE;
+	}
+	return FALSE;
 }

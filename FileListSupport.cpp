@@ -1382,7 +1382,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 		// strings also must be kept intact.
 		// Can remove extra spaces between alpha and non-alpha, unless LeaveOneExtraSpace = true
 		c = Src[SrcIdx];
-		bool c_IsAlpha = (_istalnum(c)  || '_' == c);
+		bool c_IsAlpha = (_istalnum(TCHAR_MASK & c)  || '_' == c);
 		if ((RemovedWhitespaces && LeaveOneExtraSpace) || (PrevCharAlpha && c_IsAlpha))
 		{
 			if(DstIdx + 1 >= DstLen)
@@ -1412,7 +1412,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 				SrcIdx++;
 				DstIdx++;
 				c = Src[SrcIdx];
-			} while (_istalnum(c) || '_' == c);
+			} while (_istalnum(TCHAR_MASK & c) || '_' == c);
 
 			PrevCharAlpha = true;
 		}
@@ -1560,7 +1560,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 			} while (c != 0
 					&& c != ' '
 					&& c != '\t'
-					&& ! (_istalnum(c) || '_' == c));
+					&& ! (_istalnum(TCHAR_MASK & c) || '_' == c));
 			PrevCharAlpha = false;
 		}
 		// remove whitespaces

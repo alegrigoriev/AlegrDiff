@@ -30,7 +30,7 @@ void CMyFindDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	CThisApp * pApp = GetApp();
-	int i;
+
 	//{{AFX_DATA_MAP(CMyFindDialog)
 	DDX_Control(pDX, IDC_COMBO_FIND, m_FindCombo);
 	DDX_Check(pDX, IDC_CHECK_CASE, m_bCaseSensitive);
@@ -39,13 +39,7 @@ void CMyFindDialog::DoDataExchange(CDataExchange* pDX)
 	//}}AFX_DATA_MAP
 	if ( ! pDX->m_bSaveAndValidate)
 	{
-		for (i = 0; i < countof(pApp->m_sFindHistory); i++)
-		{
-			if ( ! pApp->m_sFindHistory[i].IsEmpty())
-			{
-				m_FindCombo.AddString(pApp->m_sFindHistory[i]);
-			}
-		}
+		pApp->m_FindHistory.LoadCombo( & m_FindCombo);
 	}
 
 	DDX_CBString(pDX, IDC_COMBO_FIND, m_sFindCombo);

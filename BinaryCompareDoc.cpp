@@ -82,7 +82,8 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 	if (NULL != pPair)
 	{
 		pPair->Reference();
-		if (NULL != pPair->pFirstFile)
+
+		if (NULL != pPair->pFirstFile && ! pPair->pFirstFile->m_bIsPhantomFile)
 		{
 			CString title(pPair->pFirstFile->GetFullName());
 			if (NULL != pPair->pSecondFile)

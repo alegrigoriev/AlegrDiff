@@ -2,9 +2,10 @@
 //
 
 #include "stdafx.h"
-#include "WaveSoapFront.h"
+//#include "WaveSoapFront.h"
 #include "FileDialogWithHistory.h"
 #include <Dlgs.h>
+#include "resource.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -33,6 +34,41 @@ BEGIN_MESSAGE_MAP(CFileDialogWithHistory, CResizableFileDialog)
 	ON_CBN_SELENDOK(IDC_COMBO_RECENT, OnComboSelendOK)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
+
+CFileDialogWithHistory::CFileDialogWithHistory(BOOL bOpenFileDialog, // TRUE for FileOpen, FALSE for FileSaveAs
+												LPCTSTR lpszDefExt,
+												LPCTSTR lpszFileName,
+												DWORD dwFlags,
+												LPCTSTR lpszFilter,
+												CWnd* pParentWnd, LPCTSTR Section,
+												LPCTSTR KeyFormat, int NumStrings)
+	: CResizableFileDialog(bOpenFileDialog, lpszDefExt, lpszFileName, dwFlags, lpszFilter, pParentWnd)
+	, m_RecentFolders(& m_Profile, Section, KeyFormat, NumStrings)
+{
+	m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_OPEN_TEMPLATE);
+	m_ofn.Flags |= OFN_ENABLETEMPLATE;
+
+	static ResizableDlgItem const item = {IDC_COMBO_RECENT, ExpandRight};
+	m_pResizeItems = & item;
+	m_ResizeItemsCount = 1;
+}
+
+CFileDialogWithHistory::CFileDialogWithHistory(BOOL bOpenFileDialog, // TRUE for FileOpen, FALSE for FileSaveAs
+												CStringHistory * pSourceHistory, LPCTSTR lpszDefExt,
+												LPCTSTR lpszFileName,
+												DWORD dwFlags,
+												LPCTSTR lpszFilter,
+												CWnd* pParentWnd)
+	: CResizableFileDialog(bOpenFileDialog, lpszDefExt, lpszFileName, dwFlags, lpszFilter, pParentWnd)
+	, m_RecentFolders(pSourceHistory)
+{
+	m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_OPEN_TEMPLATE);
+	m_ofn.Flags |= OFN_ENABLETEMPLATE;
+
+	static ResizableDlgItem const item = {IDC_COMBO_RECENT, ExpandRight};
+	m_pResizeItems = & item;
+	m_ResizeItemsCount = 1;
+}
 
 void CFileDialogWithHistory::OnComboSelendOK()
 {
@@ -86,15 +122,8 @@ void CFileDialogWithHistory::OnComboSelendOK()
 			AfxMessageBox(s);
 			// delete the string from combobox
 			// delete also from the application list
-			if (sel >= 0
-				&& sel < sizeof m_RecentFolders / sizeof m_RecentFolders[0])
-			{
-				for (int i = sel; i < sizeof m_RecentFolders / sizeof m_RecentFolders[0] - 1; i++)
-				{
-					m_RecentFolders[i] = m_RecentFolders[i + 1];
-				}
-				m_RecentFolders[i].Empty();
-			}
+			m_RecentFolders.DeleteString(str, false);
+
 			pCb->DeleteString(sel);
 			pCb->SetCurSel(-1); // no selection
 			return;
@@ -137,26 +166,39 @@ void CFileDialogWithHistory::OnComboSelendOK()
 	}
 }
 
+INT_PTR CFileDialogWithHistory::DoModal()
+{
+	m_RecentFolders.Load();
+	// if there is no initial directory set, extract it from the name or get from the history
+	if (0 && (NULL == m_ofn.lpstrInitialDir
+			|| 0 == m_ofn.lpstrInitialDir[0]))
+	{
+		// get the initial dir from the name, if any specified, or the first from the history
+		TCHAR Buf[512];
+		LPTSTR NamePart = NULL;
+		if (GetFullPathName(m_ofn.lpstrFile, countof(Buf), Buf, & NamePart)
+			&& NULL != NamePart)
+		{
+			m_SubstituteInitialFolder = CString(Buf, NamePart - Buf);
+		}
+		else
+		{
+			m_SubstituteInitialFolder = m_ofn.lpstrFile;
+		}
+		m_ofn.lpstrInitialDir = m_SubstituteInitialFolder;
+	}
+	return CResizableFileDialog::DoModal();
+}
+
 void CFileDialogWithHistory::OnInitDone()
 {
 	CResizableFileDialog::OnInitDone();
+
 	CComboBox * pCb = static_cast<CComboBox *>(GetDlgItem(IDC_COMBO_RECENT));
 	if (NULL != pCb)
 	{
 		pCb->SetExtendedUI();
-
-		for (int i = 0; i < sizeof m_RecentFolders / sizeof m_RecentFolders[0]; i++)
-		{
-			CString s;
-			s.Format("Dir%d", i);
-			m_Profile.AddItem(_T("RecentOpenDirs"), s, m_RecentFolders[i]);
-			m_RecentFolders[i].TrimLeft();
-			m_RecentFolders[i].TrimRight();
-			if ( ! m_RecentFolders[i].IsEmpty())
-			{
-				pCb->AddString(m_RecentFolders[i]);
-			}
-		}
+		m_RecentFolders.LoadCombo(pCb);
 	}
 }
 
@@ -167,16 +209,14 @@ BOOL CFileDialogWithHistory::OnFileNameOK()
 	sCurrDir.ReleaseBuffer();
 	TRACE("CFileDialogWithHistory::OnFileNameOK Folder Path=%s\n", sCurrDir);
 
-	AddStringToHistory(sCurrDir, m_RecentFolders,
-						sizeof m_RecentFolders / sizeof m_RecentFolders[0], false);
+	m_RecentFolders.AddString(sCurrDir, false);
 
-	m_Profile.FlushSection(_T("RecentOpenDirs"));
+	m_RecentFolders.Flush();
 	return 0;
 }
 
 void CFileDialogWithHistory::OnFolderChange()
 {
-	CThisApp * pApp = GetApp();
 	CString dir = GetFolderPath();
 	if (dir.GetLength() > 1
 		&& (dir[dir.GetLength() - 1] == '\\'
@@ -187,17 +227,7 @@ void CFileDialogWithHistory::OnFolderChange()
 	CComboBox * pCb = static_cast<CComboBox *>(GetDlgItem(IDC_COMBO_RECENT));
 	if (NULL != pCb)
 	{
-		for (int i = 0; i < sizeof m_RecentFolders / sizeof m_RecentFolders[0]; i++)
-		{
-			if ( ! m_RecentFolders[i].IsEmpty())
-			{
-				if (0 == m_RecentFolders[i].CompareNoCase(dir))
-				{
-					pCb->SetCurSel(i);
-					break;
-				}
-			}
-		}
+		pCb->SelectString(-1, dir);
 	}
 }
 
@@ -312,10 +342,10 @@ void CResizableFileDialog::OnSize(UINT nType, int cx, int cy)
 		return;
 	}
 
-	if (0 != m_pResizeItemsCount)
+	if (0 != m_ResizeItemsCount)
 	{
-		HDWP hdwp = ::BeginDeferWindowPos(m_pResizeItemsCount);
-		for (int i = 0; i < m_pResizeItemsCount && NULL != hdwp; i++)
+		HDWP hdwp = ::BeginDeferWindowPos(m_ResizeItemsCount);
+		for (int i = 0; i < m_ResizeItemsCount && NULL != hdwp; i++)
 		{
 			HWND hWnd = ::GetDlgItem(GetSafeHwnd(), m_pResizeItems[i].Id);
 			if (NULL == hWnd) continue;
@@ -346,7 +376,7 @@ void CResizableFileDialog::OnSize(UINT nType, int cx, int cy)
 									cr.Width(), cr.Height(),
 									SWP_NOZORDER | SWP_NOOWNERZORDER// | SWP_NOACTIVATE | SWP_NOSENDCHANGING
 									);
-			if (0) TRACE("DeferWindowPos hwnd=%x dw=%d x=%d, y=%d returned %X\n",
+			if (1) TRACE("DeferWindowPos hwnd=%x dw=%d x=%d, y=%d returned %X\n",
 						hWnd, dx, cr.left, cr.top, hdwp);
 		}
 
@@ -359,8 +389,3 @@ void CResizableFileDialog::OnSize(UINT nType, int cx, int cy)
 
 }
 
-void CResizableFileDialog::OnInitDone()
-{
-	TRACE("CResizableFileDialog::OnInitDone\n");
-	CFileDialog::OnInitDone();
-}

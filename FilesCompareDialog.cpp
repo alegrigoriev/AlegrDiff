@@ -55,10 +55,8 @@ void CFilesCompareDialog::DoDataExchange(CDataExchange* pDX)
 	// save file names to history
 	if (pDX->m_bSaveAndValidate)
 	{
-		AddStringToHistory(m_sSecondFileName, pApp->m_RecentFiles,
-							countof(pApp->m_RecentFiles), false);
-		AddStringToHistory(m_sFirstFileName, pApp->m_RecentFiles,
-							countof(pApp->m_RecentFiles), false);
+		pApp->m_RecentFiles.AddString(m_sFirstFileName, false);
+		pApp->m_RecentFiles.AddString(m_sSecondFileName, false, 1);
 	}
 }
 
@@ -80,7 +78,7 @@ void CFilesCompareDialog::OnButtonBrowseFirstFile()
 	CString Name;
 	m_FirstCombo.GetWindowText(Name);
 	if (IDOK != BrowseForFile(IDS_OPEN_FIRST_TITLE, Name, m_FileDir1,
-							pApp->m_RecentFiles, countof(pApp->m_RecentFiles)))
+							& pApp->m_RecentFiles))
 	{
 		return;
 	}
@@ -94,7 +92,7 @@ void CFilesCompareDialog::OnButtonBrowseSecondFile()
 	CString Name;
 	m_SecondCombo.GetWindowText(Name);
 	if (IDOK != BrowseForFile(IDS_OPEN_SECOND_TITLE, Name, m_FileDir2,
-							pApp->m_RecentFiles, countof(pApp->m_RecentFiles)))
+							& pApp->m_RecentFiles))
 	{
 		return;
 	}
@@ -107,14 +105,9 @@ BOOL CFilesCompareDialog::OnInitDialog()
 	CDialog::OnInitDialog();
 	CThisApp * pApp = GetApp();
 	// set comboboxes
-	for (int i = 0; i < countof(pApp->m_RecentFiles); i++)
-	{
-		if ( ! pApp->m_RecentFiles[i].IsEmpty())
-		{
-			m_FirstCombo.AddString(pApp->m_RecentFiles[i]);
-			m_SecondCombo.AddString(pApp->m_RecentFiles[i]);
-		}
-	}
+	pApp->m_RecentFiles.LoadCombo( & m_FirstCombo);
+	pApp->m_RecentFiles.LoadCombo( & m_SecondCombo);
+
 	DragAcceptFiles();
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE

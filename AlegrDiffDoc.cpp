@@ -12,6 +12,7 @@
 #include <process.h>
 #include <afxpriv.h>
 #include "AcceptDeclineDlg.h"
+#include "FileDialogWithHistory.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -41,10 +42,10 @@ CAlegrDiffDoc::CAlegrDiffDoc()
 	m_bRecurseSubdirs(false),
 	m_hThread(NULL),
 	m_hEvent(CreateEvent(NULL, FALSE, FALSE, NULL)),
-	m_bStopThread(TRUE),
-	m_NextPairToRefresh(NULL),
-	m_NextPairToCompare(NULL)
+	m_bStopThread(TRUE)
 {
+	m_NextPairToRefresh = m_PairList.Head();
+	m_NextPairToCompare = m_PairList.Head();
 }
 
 CAlegrDiffDoc::~CAlegrDiffDoc()
@@ -201,13 +202,29 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 		{
 			pPair->pSecondFile = NULL;
 			pPair->pFirstFile = Files1[idx1];
-			if (pPair->pFirstFile->IsFolder())
+
+			if (pPair->pFirstFile->m_bIsPhantomFile)
 			{
-				pPair->m_ComparisionResult = FilePair::OnlyFirstDirectory;
+				// reading fingerprint
+				if (pPair->pFirstFile->IsFolder())
+				{
+					pPair->m_ComparisionResult = FilePair::DirectoryInFingerprintFileOnly;
+				}
+				else
+				{
+					pPair->m_ComparisionResult = FilePair::FileInFingerprintFileOnly;
+				}
 			}
 			else
 			{
-				pPair->m_ComparisionResult = FilePair::OnlyFirstFile;
+				if (pPair->pFirstFile->IsFolder())
+				{
+					pPair->m_ComparisionResult = FilePair::OnlyFirstDirectory;
+				}
+				else
+				{
+					pPair->m_ComparisionResult = FilePair::OnlyFirstFile;
+				}
 			}
 			idx1++;
 
@@ -386,16 +403,19 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 		if (NULL != pPair->pFirstFile)
 		{
 			CString title(pPair->pFirstFile->GetFullName());
+			title += '\\';
 			if (NULL != pPair->pSecondFile)
 			{
 				title += " - ";
 				title += pPair->pSecondFile->GetFullName();
+				title += '\\';
 			}
 			SetTitle(title);
 		}
 		else if (NULL != pPair->pSecondFile)
 		{
 			CString title(pPair->pSecondFile->GetFullName());
+			title += '\\';
 			SetTitle(title);
 		}
 		else
@@ -1330,8 +1350,7 @@ bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvok
 		bBackwards = pApp->m_bFindBackward;
 	}
 	// update MRU, case sensitive
-	AddStringToHistory(pApp->m_FindString, pApp->m_sFindHistory,
-						countof(pApp->m_sFindHistory), true);
+	pApp->m_FindHistory.AddString(pApp->m_FindString, true);
 
 	return FindTextString(pApp->m_FindString, bBackwards, pApp->m_bCaseSensitive);
 }
@@ -1630,26 +1649,38 @@ BOOL CFilePairDoc::SaveModified()
 	return TRUE;
 }
 
-class CMergedFilesSaveDlg : public CFileDialog
+class CMergedFilesSaveDlg : public CFileDialogWithHistory
 {
 public:
 	CMergedFilesSaveDlg(BOOL bOpenFileDialog, // TRUE for FileOpen, FALSE for FileSaveAs
 						LPCTSTR lpszDefExt = NULL,
 						LPCTSTR lpszFileName = NULL,
-						DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+						DWORD dwFlags = OFN_NOCHANGEDIR
+										| OFN_HIDEREADONLY
+										| OFN_NOREADONLYRETURN
+										| OFN_PATHMUSTEXIST
+										| OFN_OVERWRITEPROMPT,
 						LPCTSTR lpszFilter = NULL,
-						CWnd* pParentWnd = NULL,
-						DWORD dwSize = sizeof(OPENFILENAME))
-		: CFileDialog(bOpenFileDialog, lpszDefExt, lpszFileName,
-					dwFlags, lpszFilter, pParentWnd, dwSize),
+						CWnd* pParentWnd = NULL)
+		: CFileDialogWithHistory(bOpenFileDialog, & GetApp()->m_RecentFolders, lpszDefExt, lpszFileName,
+								dwFlags, lpszFilter, pParentWnd),
 		m_bUnicode(FALSE)
 	{
-		m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_SAVE_MERGED_TEMPLATE);
+		if (OPENFILENAME_SIZE_VERSION_400 == m_ofn.lStructSize)
+		{
+			m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_SAVE_MERGED_TEMPLATE_V4);
+		}
+		else
+		{
+			m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_SAVE_MERGED_TEMPLATE_V5);
+		}
+
 		m_ofn.Flags |= OFN_ENABLETEMPLATE;
 	}
 	BOOL m_bUnicode;
 	virtual void OnInitDone( )
 	{
+		CFileDialogWithHistory::OnInitDone();
 		CheckDlgButton(IDC_CHECK_UNICODE, m_bUnicode);
 	}
 

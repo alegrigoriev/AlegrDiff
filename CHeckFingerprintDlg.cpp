@@ -6,6 +6,7 @@
 #include "CheckFingerprintDlg.h"
 #include "FolderDialog.h"
 #include <afxpriv.h>
+#include "FileDialogWithHistory.h"
 
 // CCheckFingerprintDlg dialog
 
@@ -15,6 +16,7 @@ CCheckFingerprintDlg::CCheckFingerprintDlg(CWnd* pParent /*=NULL*/)
 	, m_sDirectory(_T(""))
 	, m_sFilename(_T(""))
 	, m_bNeedUpdateControls(TRUE)
+	, m_FingerprintFilenameHistory( & m_Profile, _T("History"), _T("FingerprintFile%d"), 15)
 {
 }
 
@@ -34,11 +36,8 @@ void CCheckFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 	{
 		CThisApp * pApp = GetApp();
 
-		AddStringToHistory(m_sDirectory, pApp->m_RecentFolders,
-							countof(pApp->m_RecentFolders), false);
-
-		AddStringToHistory(m_sFilename, m_sFingerprintFilenameHistory,
-							countof(m_sFingerprintFilenameHistory), false);
+		pApp->m_RecentFolders.AddString(m_sDirectory, false);
+		m_FingerprintFilenameHistory.AddString(m_sFilename, false);
 
 		m_Profile.FlushAll();
 	}
@@ -83,9 +82,9 @@ void CCheckFingerprintDlg::OnBnClickedButtonBrowseOpenFilename()
 
 	m_cbFilename.GetWindowText(m_sFilename);
 
-	CFileDialog dlg(TRUE, _T("md5fp"), m_sFilename,
-					OFN_HIDEREADONLY | OFN_FILEMUSTEXIST,
-					Filter);
+	CFileDialogWithHistory dlg(TRUE, & GetApp()->m_RecentFolders, _T("md5fp"), m_sFilename,
+								OFN_HIDEREADONLY | OFN_FILEMUSTEXIST,
+								Filter);
 
 	dlg.m_ofn.lpstrTitle = Title;
 
@@ -101,19 +100,16 @@ void CCheckFingerprintDlg::OnBnClickedButtonBrowseOpenFilename()
 BOOL CCheckFingerprintDlg::OnInitDialog()
 {
 	CThisApp * pApp = GetApp();
-	LoadHistory(m_Profile, _T("History"), _T("FingerprintFile%d"), m_sFingerprintFilenameHistory,
-				countof(m_sFingerprintFilenameHistory), true);
 
-	m_sFilename = m_sFingerprintFilenameHistory[0];
+	m_FingerprintFilenameHistory.Load();
+
+	m_sFilename = m_FingerprintFilenameHistory[0];
 	m_sDirectory = pApp->m_RecentFolders[0];
 
 	CDialog::OnInitDialog();
 
-	LoadHistoryCombo(m_cbDirectory, pApp->m_RecentFolders,
-					countof(pApp->m_RecentFolders));
-
-	LoadHistoryCombo(m_cbFilename, m_sFingerprintFilenameHistory,
-					countof(m_sFingerprintFilenameHistory));
+	pApp->m_RecentFolders.LoadCombo( & m_cbDirectory);
+	m_FingerprintFilenameHistory.LoadCombo( & m_cbFilename);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE

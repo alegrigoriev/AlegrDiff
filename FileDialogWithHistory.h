@@ -7,7 +7,7 @@
 // FileDialogWithHistory.h : header file
 //
 #include "ApplicationProfile.h"
-/////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 // CFileDialogWithHistory dialog
 
 class CResizableFileDialog : public CFileDialog
@@ -25,7 +25,7 @@ public:
 					lpszFileName, dwFlags, lpszFilter, pParentWnd,
 					OpenfilenameSize()),
 		m_pResizeItems(NULL),
-		m_pResizeItemsCount(0)
+		m_ResizeItemsCount(0)
 	{
 		m_PrevSize.cx = -1;
 		m_PrevSize.cy = -1;
@@ -49,8 +49,7 @@ protected:
 	};
 
 	ResizableDlgItem const * m_pResizeItems;
-	int m_pResizeItemsCount;
-	virtual void OnInitDone();
+	int m_ResizeItemsCount;
 	//{{AFX_MSG(CResizableFileDialog)
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	//}}AFX_MSG
@@ -69,14 +68,21 @@ public:
 							LPCTSTR lpszFileName = NULL,
 							DWORD dwFlags = OFN_HIDEREADONLY,
 							LPCTSTR lpszFilter = NULL,
-							CWnd* pParentWnd = NULL)
-		: CResizableFileDialog(bOpenFileDialog, lpszDefExt, lpszFileName, dwFlags, lpszFilter, pParentWnd)
-	{
-	}
+							CWnd* pParentWnd = NULL, LPCTSTR Section = _T("RecentOpenDirs"),
+							LPCTSTR KeyFormat = _T("Dir%d"), int NumStrings = 15);
+	CFileDialogWithHistory(BOOL bOpenFileDialog, // TRUE for FileOpen, FALSE for FileSaveAs
+							CStringHistory * pSourceHistory, LPCTSTR lpszDefExt = NULL,
+							LPCTSTR lpszFileName = NULL,
+							DWORD dwFlags = OFN_HIDEREADONLY,
+							LPCTSTR lpszFilter = NULL,
+							CWnd* pParentWnd = NULL);
+
+	virtual INT_PTR DoModal();
 
 protected:
-	CString m_RecentFolders[15];
 	CApplicationProfile m_Profile;
+	CStringHistory m_RecentFolders;
+	CString m_SubstituteInitialFolder;
 
 	virtual void OnFolderChange();
 	virtual void OnInitDone();

@@ -6,6 +6,7 @@
 #endif // _MSC_VER > 1000
 // CompareDirsDialog.h : header file
 //
+#include "ApplicationProfile.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CCompareDirsDialog dialog
@@ -42,11 +43,12 @@ public:
 	CString	m_sIgnoreFilesFilter;
 	UINT	m_nTabIndent;
 
-	CString m_sBinaryFilterHistory[5];
-	CString m_sCppFilterHistory[5];
-	CString m_sIgnoreFilterHistory[10];
-
 	CApplicationProfile m_Profile;
+
+	CStringHistory m_BinaryFilterHistory;
+	CStringHistory m_CppFilterHistory;
+	CStringHistory m_IgnoreFilterHistory;
+
 
 // Overrides
 	// ClassWizard generated virtual function overrides

@@ -281,7 +281,7 @@
 			ConfigurationType="1"
 			UseOfMFC="1"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="1">
+			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
@@ -292,9 +292,9 @@
 				UsePrecompiledHeader="3"
 				PrecompiledHeaderThrough="stdafx.h"
 				PrecompiledHeaderFile=".\Debug/AlegrDiff.pch"
-				AssemblerListingLocation=".\Debug/"
-				ObjectFile=".\Debug/"
-				ProgramDataBaseFileName=".\Debug/"
+				AssemblerListingLocation=".\Debug non-MSLU/"
+				ObjectFile=".\Debug non-MSLU/"
+				ProgramDataBaseFileName=".\Debug non-MSLU/"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="4"
@@ -305,14 +305,14 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386 "
 				AdditionalDependencies="winmm.lib"
-				OutputFile=".\Debug/AlegrDiff.exe"
+				OutputFile=".\Debug non-MSLU/AlegrDiff.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile=".\Debug/AlegrDiff.pdb"
+				ProgramDatabaseFile=".\Debug non-MSLU/AlegrDiff.pdb"
 				GenerateMapFile="TRUE"
-				MapFileName=".\Debug/AlegrDiff.map"
+				MapFileName=".\Debug non-MSLU/AlegrDiff.map"
 				SubSystem="2"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -388,6 +388,9 @@
 			</File>
 			<File
 				RelativePath="DirectoryFingerprintDlg.cpp">
+			</File>
+			<File
+				RelativePath="FileDialogWithHistory.cpp">
 			</File>
 			<File
 				RelativePath=".\FileListSupport.cpp">
@@ -506,6 +509,9 @@
 			</File>
 			<File
 				RelativePath="DirectoryFingerprintDlg.h">
+			</File>
+			<File
+				RelativePath="FileDialogWithHistory.h">
 			</File>
 			<File
 				RelativePath=".\FileListSupport.h">

@@ -1,5 +1,7 @@
 TODO:
 
+Unicode file starts with 0xFEFF
+Place marker when writing UNICODE file
 For binary comparison: show file size
 UNICODE file support
 Choose format to save a merged file

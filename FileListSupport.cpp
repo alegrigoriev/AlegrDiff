@@ -553,7 +553,7 @@ int FileItem::NameCompare(FileItem * Item1, FileItem * Item2)
 	{
 		return -1;
 	}
-	int result = Item1->m_Name.CompareNoCase(Item2->m_Name);
+	int result = Item1->m_Name.CollateNoCase(Item2->m_Name);
 	if (0 != result)
 	{
 		return result;
@@ -571,7 +571,7 @@ int FileItem::NameCompare(FileItem * Item1, FileItem * Item2)
 		return -1;
 	}
 
-	return Item1->m_Subdir.CompareNoCase(Item2->m_Subdir);
+	return Item1->m_Subdir.CollateNoCase(Item2->m_Subdir);
 }
 
 
@@ -1609,7 +1609,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection *
 		{
 			pSection->pBegin = pStr1->GetText();
 			pSection->Length = pStr1->GetLength();
-			pSection->Attr = StringSection::Erased;
+			pSection->Attr = StringSection::Erased | StringSection::Undefined;
 			pSection->pNext = NULL;
 
 			// check if it is whitespace difference
@@ -1633,7 +1633,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection *
 		{
 			pSection->pBegin = pStr2->GetText();
 			pSection->Length = pStr2->GetLength();
-			pSection->Attr = StringSection::Inserted;
+			pSection->Attr = StringSection::Inserted | StringSection::Undefined;
 			pSection->pNext = NULL;
 
 			// check if it is whitespace difference
@@ -1784,7 +1784,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection *
 			{
 				pSection->pBegin = str1;
 				pSection->Length = idx1;
-				pSection->Attr = StringSection::Erased;
+				pSection->Attr = StringSection::Erased | StringSection::Undefined;
 				pSection->pNext = NULL;
 
 				// check if it is whitespace difference
@@ -1835,7 +1835,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection *
 			{
 				pSection->pBegin = str2;
 				pSection->Length = idx2;
-				pSection->Attr = StringSection::Inserted;
+				pSection->Attr = StringSection::Inserted | StringSection::Undefined;
 				pSection->pNext = NULL;
 
 				// check if it is whitespace difference
@@ -2874,7 +2874,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 					break;
 				}
 				pSection->pNext = NULL;
-				pSection->Attr = StringSection::Erased;
+				pSection->Attr = StringSection::Erased | StringSection::Undefined;
 				pSection->pBegin = pPair->pFirstLine->GetText();
 				pSection->Length = pPair->pFirstLine->GetLength();
 				pSection->pDiffSection = pDiffSection;
@@ -2920,7 +2920,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 					break;
 				}
 				pSection->pNext = NULL;
-				pSection->Attr = StringSection::Inserted;
+				pSection->Attr = StringSection::Inserted | StringSection::Undefined;
 				pSection->pBegin = pPair->pSecondLine->GetText();
 				pSection->Length = pPair->pSecondLine->GetLength();
 				pSection->pDiffSection = pDiffSection;

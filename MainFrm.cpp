@@ -158,32 +158,61 @@ BOOL CMainFrame::PreTranslateMessage(MSG* pMsg)
 	// catch Ctrl key down and up
 	if (WM_KEYDOWN == pMsg->message)
 	{
-#if 0
 		if (VK_CONTROL == pMsg->wParam
 			&& 0 == (0x40000000 & pMsg->lParam))
 		{
 			TRACE("Ctrl key was just pressed\n");
+			m_nRotateChildIndex = 0;
 		}
 		else
-#endif
-		if (VK_TAB == pMsg->wParam && (0x8000 & GetKeyState(VK_CONTROL)))
 		{
-			CMDIChildWnd * pActive = MDIGetActive();
-			if (NULL == pActive)
+			if ((VK_TAB == pMsg->wParam || VK_F6 == pMsg->wParam)
+				&& (0x8000 & GetKeyState(VK_CONTROL)))
 			{
-				return TRUE;
-			}
-			CWnd * pBottom = pActive->GetWindow(GW_HWNDLAST);
-
-			if (pBottom != pActive)
-			{
-				CWnd * pPlaceWnd = pActive;
-				CWnd * pFrameToActivate;
-				if (0x8000 & GetKeyState(VK_SHIFT))
+				CMDIChildWnd * pActive = MDIGetActive();
+				if (NULL == pActive)
 				{
-					if (m_nRotateChildIndex > 0)
+					return TRUE;
+				}
+				CWnd * pBottom = pActive->GetWindow(GW_HWNDLAST);
+
+				if (pBottom != pActive)
+				{
+					CWnd * pPlaceWnd = pActive;
+					CWnd * pFrameToActivate;
+					if (0x8000 & GetKeyState(VK_SHIFT))
 					{
-						for (int i = 0; i < m_nRotateChildIndex - 1; i++)
+						if (m_nRotateChildIndex > 0)
+						{
+							for (int i = 0; i < m_nRotateChildIndex - 1; i++)
+							{
+								pPlaceWnd = pPlaceWnd->GetWindow(GW_HWNDNEXT);
+								if (pPlaceWnd == pBottom)
+								{
+									break;
+								}
+							}
+							m_nRotateChildIndex = i;
+							if (pPlaceWnd == pBottom)
+							{
+								pFrameToActivate = pBottom;
+								pPlaceWnd = pBottom->GetWindow(GW_HWNDPREV);
+							}
+							else
+							{
+								pFrameToActivate = pPlaceWnd->GetWindow(GW_HWNDNEXT);
+							}
+						}
+						else
+						{
+							pFrameToActivate = pBottom;
+							pPlaceWnd = pFrameToActivate;
+							m_nRotateChildIndex = 1000;  // arbitrary big
+						}
+					}
+					else
+					{
+						for (int i = 0; i < m_nRotateChildIndex; i++)
 						{
 							pPlaceWnd = pPlaceWnd->GetWindow(GW_HWNDNEXT);
 							if (pPlaceWnd == pBottom)
@@ -191,60 +220,33 @@ BOOL CMainFrame::PreTranslateMessage(MSG* pMsg)
 								break;
 							}
 						}
-						m_nRotateChildIndex = i;
+						m_nRotateChildIndex = i + 1;
+
 						if (pPlaceWnd == pBottom)
 						{
-							pFrameToActivate = pBottom;
-							pPlaceWnd = pBottom->GetWindow(GW_HWNDPREV);
+							pFrameToActivate = pActive->GetWindow(GW_HWNDNEXT);
+							m_nRotateChildIndex = 0;
 						}
 						else
 						{
 							pFrameToActivate = pPlaceWnd->GetWindow(GW_HWNDNEXT);
 						}
 					}
-					else
-					{
-						pFrameToActivate = pBottom;
-						pPlaceWnd = pFrameToActivate;
-						m_nRotateChildIndex = 1000;  // arbitrary big
-					}
+
+					if (0) TRACE("m_nRotateChildIndex=%d, prev active=%X, pFrameToActivate=%X, pPlaceWnd=%X\n",
+								m_nRotateChildIndex, pActive, pFrameToActivate, pPlaceWnd);
+
+					// first activate new frame
+					((CMDIChildWnd *) pFrameToActivate)->MDIActivate();
+					// then move previously active window under pPlaceWnd
+					pActive->SetWindowPos(pPlaceWnd, 0, 0, 0, 0,
+										SWP_NOACTIVATE
+										| SWP_NOMOVE
+										| SWP_NOOWNERZORDER
+										| SWP_NOSIZE);
 				}
-				else
-				{
-					for (int i = 0; i < m_nRotateChildIndex; i++)
-					{
-						pPlaceWnd = pPlaceWnd->GetWindow(GW_HWNDNEXT);
-						if (pPlaceWnd == pBottom)
-						{
-							break;
-						}
-					}
-					m_nRotateChildIndex = i + 1;
-
-					if (pPlaceWnd == pBottom)
-					{
-						pFrameToActivate = pActive->GetWindow(GW_HWNDNEXT);
-						m_nRotateChildIndex = 0;
-					}
-					else
-					{
-						pFrameToActivate = pPlaceWnd->GetWindow(GW_HWNDNEXT);
-					}
-				}
-
-				if (0) TRACE("m_nRotateChildIndex=%d, prev active=%X, pFrameToActivate=%X, pPlaceWnd=%X\n",
-							m_nRotateChildIndex, pActive, pFrameToActivate, pPlaceWnd);
-
-				// first activate new frame
-				((CMDIChildWnd *) pFrameToActivate)->MDIActivate();
-				// then move previously active window under pPlaceWnd
-				pActive->SetWindowPos(pPlaceWnd, 0, 0, 0, 0,
-									SWP_NOACTIVATE
-									| SWP_NOMOVE
-									| SWP_NOOWNERZORDER
-									| SWP_NOSIZE);
+				return TRUE;  // message eaten
 			}
-			return TRUE;  // message eaten
 		}
 	}
 	else if (WM_KEYUP == pMsg->message

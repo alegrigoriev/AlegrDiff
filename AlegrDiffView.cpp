@@ -250,9 +250,20 @@ void CAlegrDiffView::BuildSortedPairArray(CArray<FilePair *,FilePair *> & PairAr
 
 void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 {
+	CListCtrl * pListCtrl = &GetListCtrl();
+	if (OnUpdateAddListViewItem == lHint)
+	{
+		AddListViewItemStruct * alvi = static_cast<AddListViewItemStruct *>(pHint);
+		if (NULL != alvi)
+		{
+			int item = pListCtrl->GetItemCount();
+			AddListViewItem(alvi->pPair, item);
+			pListCtrl->UpdateWindow();
+		}
+		return;
+	}
 	// fill the list control
 	LockWindowUpdate();
-	CListCtrl * pListCtrl = &GetListCtrl();
 	pListCtrl->DeleteAllItems();
 	CAlegrDiffDoc * pDoc = GetDocument();
 
@@ -265,45 +276,7 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	for (int item = 0; item < m_PairArray.GetSize(); item++)
 	{
 		FilePair * pPair = m_PairArray[item];
-		FileItem * pFileItem = pPair->pFirstFile;
-		if (NULL == pFileItem)
-		{
-			pFileItem = pPair->pSecondFile;
-		}
-		LVITEM lvi;
-		lvi.mask = LVIF_TEXT | LVIF_PARAM;
-		lvi.iItem = item;
-		lvi.iSubItem = 0;
-		lvi.pszText = (LPTSTR)pFileItem->GetName();
-		lvi.lParam = LPARAM(pFileItem);
-		pListCtrl->InsertItem(& lvi);
-
-		if (pDoc->m_bRecurseSubdirs)
-		{
-			pListCtrl->SetItemText(item, ColumnSubdir, (LPTSTR)pFileItem->GetSubdir());
-		}
-		// set modified time/date
-		CString datetime;
-		if (NULL != pPair->pFirstFile)
-		{
-			datetime = FileTimeToStr(pPair->pFirstFile->GetLastWriteTime());
-			pListCtrl->SetItemText(item, ColumnDate1, datetime);
-		}
-		else
-		{
-			pListCtrl->SetItemText(item, ColumnDate1, _T(""));
-		}
-		if (NULL != pPair->pSecondFile)
-		{
-			datetime = FileTimeToStr(pPair->pSecondFile->GetLastWriteTime());
-			pListCtrl->SetItemText(item, ColumnDate2, datetime);
-		}
-		else
-		{
-			pListCtrl->SetItemText(item, ColumnDate2, _T(""));
-		}
-		CString ComparisionResult = pPair->GetComparisionResult();
-		pListCtrl->SetItemText(item, ColumnComparisionResult, ComparisionResult);
+		AddListViewItem(pPair, item);
 	}
 	if (! pDoc->m_bRecurseSubdirs)
 	{
@@ -540,4 +513,50 @@ BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 
 	CopyFilesToFolder(FilesArray.GetData(), FilesArray.GetSize(), true);
 	return TRUE;
+}
+
+void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
+{
+	CListCtrl * pListCtrl = &GetListCtrl();
+	CAlegrDiffDoc * pDoc = GetDocument();
+
+	FileItem * pFileItem = pPair->pFirstFile;
+	if (NULL == pFileItem)
+	{
+		pFileItem = pPair->pSecondFile;
+	}
+	LVITEM lvi;
+	lvi.mask = LVIF_TEXT | LVIF_PARAM;
+	lvi.iItem = item;
+	lvi.iSubItem = 0;
+	lvi.pszText = (LPTSTR)pFileItem->GetName();
+	lvi.lParam = LPARAM(pFileItem);
+	pListCtrl->InsertItem(& lvi);
+
+	if (pDoc->m_bRecurseSubdirs)
+	{
+		pListCtrl->SetItemText(item, ColumnSubdir, (LPTSTR)pFileItem->GetSubdir());
+	}
+	// set modified time/date
+	CString datetime;
+	if (NULL != pPair->pFirstFile)
+	{
+		datetime = FileTimeToStr(pPair->pFirstFile->GetLastWriteTime());
+		pListCtrl->SetItemText(item, ColumnDate1, datetime);
+	}
+	else
+	{
+		pListCtrl->SetItemText(item, ColumnDate1, _T(""));
+	}
+	if (NULL != pPair->pSecondFile)
+	{
+		datetime = FileTimeToStr(pPair->pSecondFile->GetLastWriteTime());
+		pListCtrl->SetItemText(item, ColumnDate2, datetime);
+	}
+	else
+	{
+		pListCtrl->SetItemText(item, ColumnDate2, _T(""));
+	}
+	CString ComparisionResult = pPair->GetComparisionResult();
+	pListCtrl->SetItemText(item, ColumnComparisionResult, ComparisionResult);
 }

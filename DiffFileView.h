@@ -38,7 +38,7 @@ protected:
 
 // Implementation
 public:
-	void UpdateTextMetrics();
+
 	int m_FirstLineSeen;
 	int m_FirstPosSeen;
 	int m_NumberMarginWidth;
@@ -148,6 +148,7 @@ protected:
 	afx_msg void OnViewFile2Version();
 	afx_msg void OnUpdateViewFile1Version(CCmdUI* pCmdUI);
 	afx_msg void OnViewFile1Version();
+	afx_msg void OnTimer(UINT nIDEvent);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -50,6 +50,7 @@ public:
 	bool m_BinaryComparision;
 	bool m_AutoReloadChangedFiles;
 	bool m_bIgnoreWhitespaces;
+	bool m_bShowLineNumbers;
 
 	CString m_FileDir1;
 	CString m_FileDir2;

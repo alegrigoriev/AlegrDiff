@@ -94,15 +94,6 @@ LINK32=link.exe
 # Begin Source File
 
 SOURCE=.\AlegrDiff.cpp
-
-!IF  "$(CFG)" == "AlegrDiff - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "AlegrDiff - Win32 Debug"
-
-# SUBTRACT CPP /FA<none>
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -135,6 +126,10 @@ SOURCE=.\DiffFileView.cpp
 # Begin Source File
 
 SOURCE=.\FileListSupport.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\FindDialog.cpp
 # End Source File
 # Begin Source File
 
@@ -196,6 +191,10 @@ SOURCE=.\DiffFileView.h
 # Begin Source File
 
 SOURCE=.\FileListSupport.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\FindDialog.h
 # End Source File
 # Begin Source File
 

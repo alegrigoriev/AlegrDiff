@@ -67,6 +67,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 	FileList FileList1;
 	FileList FileList2;
 
+	UpdateAllViews(NULL);
 	// make full names from the directories
 	LPTSTR pFilePart;
 	TCHAR buf[MAX_PATH];
@@ -183,6 +184,9 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 						FileList1.m_BaseDir + pPair->pFirstFile->GetSubdir(),
 						FileList2.m_BaseDir + pPair->pSecondFile->GetSubdir());
 		}
+		AddListViewItemStruct alvi;
+		alvi.pPair = pPair;
+		UpdateAllViews(NULL, OnUpdateAddListViewItem, & alvi);
 	}
 	// all files are referenced in FilePair list
 	FileList1.Detach();
@@ -884,23 +888,23 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 	return false;
 }
 
-bool CFilePairDoc::GetWordUnderCaret(TextPos &Start, TextPos &End)
+bool CFilePairDoc::GetWordOnPos(TextPos OnPos, TextPos &Start, TextPos &End)
 {
-	if (m_CaretPos.line >= m_pFilePair->m_LinePairs.GetSize())
+	if (OnPos.line >= m_pFilePair->m_LinePairs.GetSize())
 	{
 		return false;
 	}
-	LinePair * pPair = m_pFilePair->m_LinePairs[m_CaretPos.line];
+	LinePair * pPair = m_pFilePair->m_LinePairs[OnPos.line];
 	if (NULL == pPair)
 	{
 		return false;
 	}
 
-	Start.line = m_CaretPos.line;
-	End.line = m_CaretPos.line;
+	Start.line = OnPos.line;
+	End.line = OnPos.line;
 
 	int nPos = 0;
-	int CaretPos = m_CaretPos.pos;
+	int CaretPos = OnPos.pos;
 	for (StringSection * pSection = pPair->pFirstSection
 		; pSection != NULL; pSection = pSection->pNext)
 	{
@@ -989,7 +993,7 @@ bool CFilePairDoc::FindWordOrSelection(bool bBackwards)
 		|| m_CaretPos.line != m_SelectionAnchor.line)
 	{
 		TextPos Begin, End;
-		if ( ! GetWordUnderCaret(Begin, End))
+		if ( ! GetWordOnPos(m_CaretPos, Begin, End))
 		{
 			return false;
 		}
@@ -1200,10 +1204,10 @@ void CFilePairDoc::OnEditAccept()
 		int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
 
 		int SetFlags = FileDiffSection::FlagAccept;
-		int ResetFlags = FileDiffSection::FlagDecline;
+		int ResetFlags = FileDiffSection::FlagDecline | FileDiffSection::FlagUndefined;
 		if (flags & FileDiffSection::FlagAccept)
 		{
-			SetFlags = 0;
+			SetFlags = FileDiffSection::FlagUndefined;
 			ResetFlags = FileDiffSection::FlagAccept | FileDiffSection::FlagDecline;
 		}
 
@@ -1233,10 +1237,10 @@ void CFilePairDoc::OnEditDecline()
 	{
 		int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
 		int SetFlags = FileDiffSection::FlagDecline;
-		int ResetFlags = FileDiffSection::FlagAccept;
+		int ResetFlags = FileDiffSection::FlagAccept | FileDiffSection::FlagUndefined;
 		if (flags & FileDiffSection::FlagDecline)
 		{
-			SetFlags = 0;
+			SetFlags = FileDiffSection::FlagUndefined;
 			ResetFlags = FileDiffSection::FlagAccept | FileDiffSection::FlagDecline;
 		}
 		TextPos begin = DisplayPosToLinePos(m_SelectionAnchor);

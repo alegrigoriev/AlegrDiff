@@ -246,6 +246,21 @@ BOOL CCompareDirsDialog::OnInitDialog()
 
 	DragAcceptFiles();
 
+	HICON hIcon = (HICON) LoadImage(AfxFindResourceHandle
+									(MAKEINTRESOURCE(IDI_COMPARE_DIRS), RT_GROUP_ICON),
+									MAKEINTRESOURCE(IDI_COMPARE_DIRS),
+									IMAGE_ICON,
+									GetSystemMetrics(SM_CXICON),
+									GetSystemMetrics(SM_CYICON), 0);
+	SetIcon(hIcon, TRUE);			// Set big icon
+	hIcon = (HICON) LoadImage(AfxFindResourceHandle
+							(MAKEINTRESOURCE(IDI_COMPARE_DIRS), RT_GROUP_ICON),
+							MAKEINTRESOURCE(IDI_COMPARE_DIRS),
+							IMAGE_ICON,
+							GetSystemMetrics(SM_CXSMICON),
+							GetSystemMetrics(SM_CYSMICON), 0);
+	SetIcon(hIcon, FALSE);			// Set small icon
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }

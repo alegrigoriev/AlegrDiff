@@ -7,7 +7,6 @@
 #include "AlegrDiffDoc.h"
 #include "CompareDirsDialog.h"
 #include "DiffFileView.h"
-#include "FindDialog.h"
 #include "FilesPropertiesDialog.h"
 #include <process.h>
 #include <afxpriv.h>
@@ -542,25 +541,36 @@ void CFilePairDoc::SetSelection(TextPosDisplay CaretPos, TextPosDisplay AnchorPo
 
 void CFilePairDoc::SetCaretPosition(int pos, int line, int flags)
 {
-	if (line > GetTotalLines())
-	{
-		line = GetTotalLines();
-	}
-	if (line < 0)
-	{
-		line = 0;
-	}
-	m_CaretPos.line = line;
+	SetCaretPosition(TextPosDisplay(line, short(pos), m_CaretPos.scope), flags);
+}
 
-	if (pos < 0)
+void CFilePairDoc::SetCaretPosition(TextPosLine pos, int FileScope, int flags)
+{
+	SetCaretPosition(LinePosToDisplayPos(pos, FileScope), flags);
+}
+
+void CFilePairDoc::SetCaretPosition(TextPosDisplay pos, int flags)
+{
+	if (pos.line > GetTotalLines())
 	{
-		pos = 0;
+		pos.line = GetTotalLines();
 	}
-	if (pos > 2048)
+	if (pos.line < 0)
 	{
-		pos = 2048;
+		pos.line = 0;
 	}
-	m_CaretPos.pos = pos;
+	m_CaretPos.line = pos.line;
+
+	if (pos.pos < 0)
+	{
+		pos.pos = 0;
+	}
+	if (pos.pos > 2048)
+	{
+		pos.pos = 2048;
+	}
+	m_CaretPos.pos = pos.pos;
+	m_CaretPos.scope = pos.scope;
 
 	if (0 != (flags & SetPositionCancelSelection))
 	{
@@ -1104,7 +1114,7 @@ void CFilePairDoc::OnViewRefresh()
 	m_pFilePair->UnloadFiles(); // decrement extra reference
 	m_pFilePair->Dereference();
 
-	SetCaretPosition(caretpos.pos, caretpos.line, SetPositionCancelSelection);
+	SetCaretPosition(caretpos, SetPositionCancelSelection);
 
 	GetApp()->NotifyFilePairChanged(m_pFilePair);
 }
@@ -1163,6 +1173,12 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 
 	int nSearchPos;
 	unsigned nSearchLine;
+
+	if (0 == SearchScope)
+	{
+		WholeWord = false;
+	}
+
 	if (bBackward)
 	{
 		if (LineCaretPos > LineSelectionAnchor)
@@ -1212,6 +1228,12 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 
 	int nStartSearchPos = nSearchPos;
 	int nStartSearchLine = nSearchLine;
+	int nPatternLen = _tcslen(pStrToFind);
+
+	if (0 == nPatternLen)
+	{
+		return FALSE;
+	}
 
 	while(1)
 	{
@@ -1219,11 +1241,36 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 		int StrLen = 0;
 		pStr = GetLineText(nSearchLine, line, countof(line), & StrLen, SearchScope);
 
-		int nPatternLen = _tcslen(pStrToFind);
 		if ( ! bBackward)
 		{
 			for ( ;nSearchPos <= StrLen - nPatternLen; nSearchPos++)
 			{
+				if (WholeWord)
+				{
+					// check if it is word boundary
+					if ('_' == pStrToFind[0] || _istalnum(TCHAR_MASK & pStrToFind[0]))
+					{
+						// check that the previous character is NOT alphanum
+						if (nSearchPos > 0
+							&& ('_' == pStr[nSearchPos - 1]
+								|| _istalnum(TCHAR_MASK & pStr[nSearchPos - 1])))
+						{
+							continue;
+						}
+					}
+					// check if the pattern end is on word boundary
+					if ('_' == pStrToFind[nPatternLen - 1] ||
+						_istalnum(TCHAR_MASK & pStrToFind[nPatternLen - 1]))
+					{
+						// check that the next character is NOT alphanum
+						if (nSearchPos + nPatternLen < StrLen
+							&& ('_' == pStr[nSearchPos + nPatternLen] ||
+								_istalnum(TCHAR_MASK & pStr[nSearchPos + nPatternLen])))
+						{
+							continue;
+						}
+					}
+				}
 				if (bCaseSensitive)
 				{
 					if (0 == _tcsncmp(pStr + nSearchPos, pStrToFind, nPatternLen))
@@ -1270,6 +1317,32 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 			}
 			for (nSearchPos -= nPatternLen; nSearchPos >= 0; nSearchPos--)
 			{
+				if (WholeWord)
+				{
+					// check if it is word boundary
+					if ('_' == pStrToFind[0] || _istalnum(TCHAR_MASK & pStrToFind[0]))
+					{
+						// check that the previous character is NOT alphanum
+						if (nSearchPos > 0
+							&& ('_' == pStr[nSearchPos - 1]
+								|| _istalnum(TCHAR_MASK & pStr[nSearchPos - 1])))
+						{
+							continue;
+						}
+					}
+					// check if the pattern end is on word boundary
+					if ('_' == pStrToFind[nPatternLen - 1] ||
+						_istalnum(TCHAR_MASK & pStrToFind[nPatternLen - 1]))
+					{
+						// check that the next character is NOT alphanum
+						if (nSearchPos + nPatternLen < StrLen
+							&& ('_' == pStr[nSearchPos + nPatternLen] ||
+								_istalnum(TCHAR_MASK & pStr[nSearchPos + nPatternLen])))
+						{
+							continue;
+						}
+					}
+				}
 				if (bCaseSensitive)
 				{
 					if (0 == _tcsncmp(pStr + nSearchPos, pStrToFind, nPatternLen))
@@ -1328,8 +1401,42 @@ bool CFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, Tex
 
 	int nPos = 0;
 	int CaretPos = OnPos.pos;
-	for (StringSection * pSection = pPair->StrSections.First();
-		pPair->StrSections.NotEnd(pSection); pSection = pSection->Next())
+
+	KListEntry<StringSection> StrSections;
+	StringSection Section;
+	KListEntry<StringSection> * pStrSections;
+	if (0 == OnPos.scope)
+	{
+		pStrSections = & pPair->StrSections;
+	}
+	else
+	{
+		pStrSections = & StrSections;
+		Section.Attr = 0;
+		Section.pDiffSection = NULL;
+		if (1 == OnPos.scope)
+		{
+			if (NULL == pPair->pFirstLine)
+			{
+				return false;
+			}
+			Section.pBegin = pPair->pFirstLine->GetText();
+			Section.Length = pPair->pFirstLine->GetLength();
+		}
+		else
+		{
+			if (NULL == pPair->pSecondLine)
+			{
+				return false;
+			}
+			Section.pBegin = pPair->pSecondLine->GetText();
+			Section.Length = pPair->pSecondLine->GetLength();
+		}
+		StrSections.InsertHead( & Section);
+	}
+
+	for (StringSection * pSection = pStrSections->First();
+		pStrSections->NotEnd(pSection); pSection = pSection->Next())
 	{
 		if ((pSection->Attr & pSection->Whitespace)
 			&& (pSection->Attr & pSection->Erased)
@@ -1347,7 +1454,7 @@ bool CFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, Tex
 		{
 			continue;   // don't copy the section
 		}
-		// if position is on the endo of line or on space, and the previous char is alpha, get the word to the left
+		// if position is on the end of line or on space, and the previous char is alpha, get the word to the left
 		if (CaretPos < nPos + pSection->Length
 			|| (NULL == pSection->pNext && CaretPos == nPos + pSection->Length))
 		{
@@ -1373,11 +1480,17 @@ bool CFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, Tex
 					}
 					else
 					{
+#ifdef _DEBUG
+						StrSections.RemoveHead();
+#endif
 						return false;
 					}
 				}
 				else
 				{
+#ifdef _DEBUG
+					StrSections.RemoveHead();
+#endif
 					return false;
 				}
 			}
@@ -1405,136 +1518,76 @@ bool CFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, Tex
 				if (' ' == c)
 				{
 					// todo: look for the next non-space char
+#ifdef _DEBUG
+					StrSections.RemoveHead();
+#endif
 					return false;
 				}
 				// get one char under the cursor
 				Start.pos = CaretPos;
 				End.pos = CaretPos + 1;
 			}
+#ifdef _DEBUG
+			StrSections.RemoveHead();
+#endif
 			return true;
 		}
 		nPos += pSection->Length;
 	}
 
+#ifdef _DEBUG
+	StrSections.RemoveHead();
+#endif
 	return false;
 }
 
-bool CFilePairDoc::OnEditFind()
+void CFilePairDoc::GetWordUnderCursor(CString & Str)
 {
-	return OnFind(true, false, true);
-}
-
-bool CFilePairDoc::OnEditFindNext()
-{
-	return OnFind(false, false, false);
-}
-
-bool CFilePairDoc::OnEditFindPrev()
-{
-	return OnFind(false, true, false);
-}
-
-bool CFilePairDoc::OnEditFindWordNext()
-{
-	return OnFind(true, false, false);
-}
-
-bool CFilePairDoc::OnEditFindWordPrev()
-{
-	return OnFind(true, true, false);
-}
-
-bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvokeDialog)
-{
-	CThisApp * pApp = GetApp();
 	int nBeginOffset;
 	int nLength = 0;
-	if (PickWordOrSelection)
+	if (m_CaretPos == m_SelectionAnchor
+		|| m_CaretPos.line != m_SelectionAnchor.line)
 	{
-		pApp->m_FindString.Empty();
-
-		if (m_CaretPos == m_SelectionAnchor
-			|| m_CaretPos.line != m_SelectionAnchor.line)
+		TextPosDisplay Begin, End;
+		if (GetWordOnPos(m_CaretPos, Begin, End))
 		{
-			TextPosDisplay Begin, End;
-			if (GetWordOnPos(m_CaretPos, Begin, End))
-			{
-				nBeginOffset = Begin.pos;
-				nLength = End.pos - Begin.pos;
-			}
+			nBeginOffset = Begin.pos;
+			nLength = End.pos - Begin.pos;
+		}
+	}
+	else
+	{
+		if (m_CaretPos.pos < m_SelectionAnchor.pos)
+		{
+			nBeginOffset = m_CaretPos.pos;
+			nLength = m_SelectionAnchor.pos - m_CaretPos.pos;
 		}
 		else
 		{
-			if (m_CaretPos.pos < m_SelectionAnchor.pos)
-			{
-				nBeginOffset = m_CaretPos.pos;
-				nLength = m_SelectionAnchor.pos - m_CaretPos.pos;
-			}
-			else
-			{
-				nBeginOffset = m_SelectionAnchor.pos;
-				nLength = m_CaretPos.pos - m_SelectionAnchor.pos;
-			}
-		}
-		if (nLength)
-		{
-			TCHAR line[2048];
-			int StrLen;
-			LPCTSTR pStr = GetLineText(m_CaretPos.line, line, countof(line), & StrLen, 0);
-			if (NULL != pStr
-				&& nBeginOffset < StrLen)
-			{
-				if (nBeginOffset + nLength > StrLen)
-				{
-					nLength = StrLen - nBeginOffset;
-				}
-				LPTSTR StrBuf = pApp->m_FindString.GetBuffer(nLength);
-				if (NULL != StrBuf)
-				{
-					_tcsncpy(StrBuf, pStr + nBeginOffset, nLength);
-					pApp->m_FindString.ReleaseBuffer(nLength);
-				}
-			}
+			nBeginOffset = m_SelectionAnchor.pos;
+			nLength = m_CaretPos.pos - m_SelectionAnchor.pos;
 		}
 	}
-
-	if (bInvokeDialog || pApp->m_FindString.IsEmpty())
+	if (nLength)
 	{
-		CMyFindDialog dlg;
-		dlg.m_sFindCombo = pApp->m_FindString;
-		dlg.m_bCaseSensitive = pApp->m_bCaseSensitive;
-		dlg.m_FindDown =  ! pApp->m_bFindBackward;
-		dlg.m_bWholeWord = pApp->m_bFindWholeWord;
-		dlg.m_SearchScope = pApp->m_SearchScope;
-		// if only one file, disable search scope
-		if (NULL == m_pFilePair->pFirstFile
-			|| m_pFilePair->pFirstFile->m_bIsPhantomFile
-			|| NULL == m_pFilePair->pSecondFile
-			|| m_pFilePair->pSecondFile->m_bIsPhantomFile)
+		TCHAR line[2048];
+		int StrLen;
+		LPCTSTR pStr = GetLineText(m_CaretPos.line, line, countof(line), & StrLen, m_CaretPos.scope);
+		if (NULL != pStr
+			&& nBeginOffset < StrLen)
 		{
-			dlg.m_SearchScope = -1;
+			if (nBeginOffset + nLength > StrLen)
+			{
+				nLength = StrLen - nBeginOffset;
+			}
+			LPTSTR StrBuf = Str.GetBuffer(nLength);
+			if (NULL != StrBuf)
+			{
+				_tcsncpy(StrBuf, pStr + nBeginOffset, nLength);
+				Str.ReleaseBuffer(nLength);
+			}
 		}
-
-		if (IDOK != dlg.DoModal())
-		{
-			return FALSE;
-		}
-		pApp->m_FindString = dlg.m_sFindCombo;
-		pApp->m_bCaseSensitive = ( 0 != dlg.m_bCaseSensitive);
-		pApp->m_bFindBackward = ! dlg.m_FindDown;
-		bBackwards = pApp->m_bFindBackward;
-		if (-1 != dlg.m_SearchScope)
-		{
-			pApp->m_SearchScope = dlg.m_SearchScope;
-		}
-
-		pApp->m_bFindWholeWord = (0 != dlg.m_bWholeWord);
 	}
-	// update MRU, case sensitive
-	pApp->m_FindHistory.AddString(pApp->m_FindString);
-
-	return FindTextString(pApp->m_FindString, bBackwards,
-						pApp->m_bCaseSensitive, pApp->m_bFindWholeWord, pApp->m_SearchScope);
 }
 
 // returns a pointer to a line text

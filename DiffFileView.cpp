@@ -6,6 +6,7 @@
 #include "DiffFileView.h"
 #include "GoToLineDialog.h"
 #include "ChildFrm.h"
+#include "FindDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1136,6 +1137,35 @@ void CDiffFileView::InvalidateRange(TextPosDisplay begin, TextPosDisplay end)
 	}
 }
 
+void CDiffFileView::SetCaretPosition(TextPosDisplay pos, int flags)
+{
+	CFilePairDoc * pDoc = GetDocument();
+	pDoc->SetCaretPosition(pos, flags);
+	if (flags & SetPositionMakeVisible)
+	{
+		MakeCaretVisible();
+	}
+	else if (flags & SetPositionMakeCentered)
+	{
+		MakeCaretCentered();
+	}
+}
+
+void CDiffFileView::SetCaretPosition(TextPosLine pos, int FileScope, int flags)
+{
+	CFilePairDoc * pDoc = GetDocument();
+	pDoc->SetCaretPosition(pos, FileScope, flags);
+
+	if (flags & SetPositionMakeVisible)
+	{
+		MakeCaretVisible();
+	}
+	else if (flags & SetPositionMakeCentered)
+	{
+		MakeCaretCentered();
+	}
+}
+
 void CDiffFileView::SetCaretPosition(int pos, int line, int flags)
 {
 	CFilePairDoc * pDoc = GetDocument();
@@ -1198,38 +1228,40 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 	int flags = SetPositionMakeVisible;
 
 	int nPane = PointToPaneNumber(point.x);
-	point.x = PointToPaneOffset(point.x);
+	point.x = PointToPaneOffset(point.x) - m_LineNumberMarginWidth;
 
-	// if the left margin is clicked, the whole line is selected
-	point.x -= m_LineNumberMarginWidth;
 	int nLine = point.y / LineHeight() + m_FirstLineSeen;
+
+	TextPosDisplay ClickPos(0, 0, 0);
 
 	if (nPane != m_PaneWithFocus)
 	{
 		// Pane changes, ignore Shift
 		nFlags &= ~MK_SHIFT;
 		// reset old selection
-		GetDocument()->m_CaretPos.scope = nPane + 1;
 		SetCaretPosition(0, 0);
 	}
+	ClickPos.scope = nPane + 1;
 
-	m_PaneWithFocus = nPane;
+	ClickPos.line = nLine;
+	//m_PaneWithFocus = nPane;
 
+	// if the left margin is clicked, the whole line is selected
 	if (point.x < 0)
 	{
 		if (0 == (nFlags & MK_SHIFT))
 		{
-			SetCaretPosition(0, nLine, SetPositionCancelSelection);
+			SetCaretPosition(ClickPos, SetPositionCancelSelection);
 		}
 		if (GetDocument()->m_SelectionAnchor.line <= nLine)
 		{
-			nLine++;
+			ClickPos.line++;
 		}
-		SetCaretPosition(0, nLine, SetPositionMakeVisible);
+		SetCaretPosition(ClickPos, SetPositionMakeVisible);
 	}
 	else
 	{
-		TextPos ClickPos(nLine, m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth());
+		ClickPos.pos = short(m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth());
 		if (0 == (nFlags & MK_SHIFT))
 		{
 			flags |= SetPositionCancelSelection;
@@ -1238,7 +1270,7 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 		{
 			flags |= SetWordSelectionMode;
 		}
-		SetCaretPosition(ClickPos.pos, ClickPos.line, flags);
+		SetCaretPosition(ClickPos, flags);
 	}
 }
 
@@ -1458,7 +1490,7 @@ void CDiffFileView::OnEditGotonextdiff()
 		return;
 	}
 
-	SetCaretPosition(NewPos.pos, NewPos.line, SetPositionCancelSelection);
+	SetCaretPosition(NewPos, SetPositionCancelSelection);
 	// make caret position centered and the whole diff visible, if possible
 	MakeCaretCenteredRangeVisible(NewPos, EndPos);
 }
@@ -1475,7 +1507,7 @@ void CDiffFileView::OnEditGotoprevdiff()
 		return;
 	}
 
-	SetCaretPosition(NewPos.pos, NewPos.line, SetPositionCancelSelection);
+	SetCaretPosition(NewPos, SetPositionCancelSelection);
 	// make caret position centered and the whole diff visible, if possible
 	MakeCaretCenteredRangeVisible(NewPos, EndPos);
 }
@@ -1535,6 +1567,16 @@ void CDiffFileView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		// array is sorted
 		InvalidateRange(Sel[0], Sel[1]);
 		InvalidateRange(Sel[2], Sel[3]);
+
+		if (m_NumberOfPanes > 1 && pDoc->m_CaretPos.scope > 0)
+		{
+			m_PaneWithFocus = pDoc->m_CaretPos.scope - 1;
+		}
+		else
+		{
+			m_PaneWithFocus = 0;
+		}
+		TRACE("m_PaneWithFocus=%d\n", m_PaneWithFocus);
 	}
 	else if (lHint == CFilePairDoc::InvalidateRange)
 	{
@@ -1694,7 +1736,7 @@ void CDiffFileView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* 
 
 void CDiffFileView::OnEditFind()
 {
-	if (GetDocument()->OnEditFind())
+	if (OnFind(true, false, true))
 	{
 		MakeCaretCentered();
 	}
@@ -1702,7 +1744,7 @@ void CDiffFileView::OnEditFind()
 
 void CDiffFileView::OnEditFindNext()
 {
-	if (GetDocument()->OnEditFindNext())
+	if (OnFind(false, false, false))
 	{
 		MakeCaretCentered();
 	}
@@ -1710,7 +1752,7 @@ void CDiffFileView::OnEditFindNext()
 
 void CDiffFileView::OnEditFindPrev()
 {
-	if (GetDocument()->OnEditFindPrev())
+	if (OnFind(false, true, false))
 	{
 		MakeCaretCentered();
 	}
@@ -1718,7 +1760,7 @@ void CDiffFileView::OnEditFindPrev()
 
 void CDiffFileView::OnEditFindWordNext()
 {
-	if (GetDocument()->OnEditFindWordNext())
+	if (OnFind(true, false, false))
 	{
 		MakeCaretCentered();
 	}
@@ -1726,12 +1768,72 @@ void CDiffFileView::OnEditFindWordNext()
 
 void CDiffFileView::OnEditFindWordPrev()
 {
-	if (GetDocument()->OnEditFindWordPrev())
+	if (OnFind(true, true, false))
 	{
 		MakeCaretCentered();
 	}
 }
 
+bool CDiffFileView::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvokeDialog)
+{
+	CThisApp * pApp = GetApp();
+	ThisDoc * pDoc = GetDocument();
+	CString FindString;
+
+	int SearchScope = 0;
+	if (m_NumberOfPanes > 1)
+	{
+		SearchScope = m_PaneWithFocus + 1;
+	}
+
+	if (PickWordOrSelection)
+	{
+		pDoc->GetWordUnderCursor(FindString);
+	}
+	else
+	{
+		FindString = pApp->m_FindHistory[0];
+	}
+
+
+	if (bInvokeDialog || FindString.IsEmpty())
+	{
+		CMyFindDialog dlg;
+		dlg.m_sFindCombo = FindString;
+		dlg.m_bCaseSensitive = pApp->m_bCaseSensitive;
+		dlg.m_FindDown =  ! pApp->m_bFindBackward;
+		dlg.m_bWholeWord = pApp->m_bFindWholeWord;
+		dlg.m_SearchScope = SearchScope;
+
+		FilePair * pPair = pDoc->GetFilePair();
+		if (NULL == pPair->pFirstFile
+			|| pPair->pFirstFile->m_bIsPhantomFile
+			|| NULL == pPair->pSecondFile
+			|| pPair->pSecondFile->m_bIsPhantomFile)
+		{
+			dlg.m_SearchScope = -1;
+		}
+
+		// if only one file, disable search scope
+
+		if (IDOK != dlg.DoModal())
+		{
+			return FALSE;
+		}
+
+		FindString = dlg.m_sFindCombo;
+		pApp->m_bCaseSensitive = ( 0 != dlg.m_bCaseSensitive);
+		pApp->m_bFindBackward = ! dlg.m_FindDown;
+		bBackwards = pApp->m_bFindBackward;
+
+		pApp->m_bFindWholeWord = (0 != dlg.m_bWholeWord);
+	}
+	// update MRU, case sensitive
+	pApp->m_FindHistory.AddString(FindString);
+
+	return pDoc->FindTextString(FindString, bBackwards,
+								pApp->m_bCaseSensitive, pApp->m_bFindWholeWord, SearchScope);
+}
 
 void CDiffFileView::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
@@ -1739,11 +1841,13 @@ void CDiffFileView::OnLButtonDblClk(UINT nFlags, CPoint point)
 	TRACE("CDiffFileView::OnLButtonDblClk\n");
 	// select a word
 	m_LButtonDown = true;
-	point.x -= m_LineNumberMarginWidth;
+	point.x = PointToPaneOffset(point.x) - m_LineNumberMarginWidth;
+
 	if (point.x < 0)
 	{
 		return;
 	}
+	// TODO!!!
 	SetCaretPosition(m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth(),
 					point.y / LineHeight() + m_FirstLineSeen,
 					SetWordSelectionMode | SetPositionMakeVisible);
@@ -1904,7 +2008,9 @@ void CDiffFileView::OnEditGotoline()
 void CDiffFileView::OnRButtonDown(UINT nFlags, CPoint point)
 {
 	CPoint point1 = point;
-	point1.x -= m_LineNumberMarginWidth;
+	int nPane = PointToPaneNumber(point.x);
+	point1.x = PointToPaneOffset(point1.x) - m_LineNumberMarginWidth;
+
 	int flags = SetPositionMakeVisible | SetPositionCancelSelection;
 	// if the left margin is clicked, the whole line is selected
 	int nLine = point1.y / LineHeight() + m_FirstLineSeen;

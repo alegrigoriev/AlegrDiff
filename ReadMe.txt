@@ -1,7 +1,5 @@
 TODO:
 
-Find full word only
-In 2-pane mode, go to another pane when added/removed text encountered
 2-pane mode for binary files
 Allow doublequotes in the search pattern
 Assign an index to the files during original sort (for faster sorting)
@@ -9,7 +7,6 @@ Make icons for the dialogs
 Use OnActivateApp to refresh the files
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
 Copy binary dump as text
-Add folder picture under the fingerprint picture
 make word by word comparison in MatchStrings
 Make HTML help
 Check that all dialog boxes got HWND, for the correct monitor
@@ -95,6 +92,9 @@ insufficient space allocated for copying files
 
 Done:
 
+Add folder picture under the fingerprint picture
+Find full word only
+In 2-pane mode, go to another pane when added/removed text encountered
 Big-endian UNICODE files supported
 View files side by side
 Add Copy 1st file text, copy 2nd file text

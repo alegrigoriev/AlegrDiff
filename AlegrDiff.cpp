@@ -133,6 +133,7 @@ CAlegrDiffApp::CAlegrDiffApp()
 
 	m_ErasedLogFont = m_NormalLogFont;
 	m_ErasedLogFont.lfStrikeOut = TRUE;
+	EnableHtmlHelp();
 }
 
 CAlegrDiffApp::~CAlegrDiffApp()
@@ -151,15 +152,8 @@ BOOL CAlegrDiffApp::InitInstance()
 {
 	//char * Locale = setlocale(LC_ALL, ".ACP");
 	//TRACE("Locale set : %s\n", Locale);
-	// Standard initialization
-	// If you are not using these features and wish to reduce the size
-	//  of your final executable, you should remove from the following
-	//  the specific initialization routines you do not need.
-
-	// Change the registry key under which our settings are stored.
-
-	// use _AfxGetComCtlVersion() instead
-	//AtlGetCommCtrlVersion( & m_MajorComctlrVer, & m_MinorComcctrlVer);
+	InitCommonControls();
+	CWinApp::InitInstance();
 
 	SetRegistryKey(_T("AleGr SoftWare"));
 

@@ -127,7 +127,7 @@ public:
 	virtual void ResetToInitial() { m_Ref = m_InitialData; }
 	CApplicationProfileItemBinary(CApplicationProfile * pProfile,
 								LPCTSTR szSection, LPCTSTR szName, T & RefValue,
-								T & Default);
+								T const & Default);
 	~CApplicationProfileItemBinary() {}
 };
 
@@ -233,7 +233,7 @@ public:
 				bool nDefault = false);
 	// Visual C 6 doesn't like out of class member template definition
 	template <class T> void AddItem(LPCTSTR szSection, LPCTSTR szName,
-									T & value, T & Default)
+									T & value, T const & Default)
 	{
 		CApplicationProfileItem * pTmp;
 		RemoveItem(szSection, szName);
@@ -297,7 +297,7 @@ public:
 template<class T>
 CApplicationProfileItemBinary<T>::CApplicationProfileItemBinary(
 	CApplicationProfile * pProfile, LPCTSTR szSection, LPCTSTR szName,
-	T & Reference, T & Default)
+	T & Reference, T const & Default)
 	: CApplicationProfileItem(pProfile, szSection, szName),
 	m_Ref(Reference), m_Default(Default)
 {

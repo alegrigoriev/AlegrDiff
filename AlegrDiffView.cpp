@@ -10,6 +10,7 @@
 #include <functional>
 #include <algorithm>
 #include "SaveFileListDlg.h"
+#include "FilesPropertiesDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -79,6 +80,9 @@ ON_NOTIFY(HDN_ENDDRAG, 0, OnHdnEnddrag)
 ON_NOTIFY(HDN_ENDTRACKA, 0, OnHdnEndtrack)
 ON_NOTIFY(HDN_ENDTRACKW, 0, OnHdnEndtrack)
 ON_COMMAND(ID_VIEW_RESETCOLUMNS, OnViewResetcolumns)
+//ON_NOTIFY_REFLECT(LVN_GETINFOTIP, OnLvnGetInfoTip)
+ON_COMMAND(ID_FILE_PROPERTIES, OnFileProperties)
+ON_UPDATE_COMMAND_UI(ID_FILE_PROPERTIES, OnUpdateFileProperties)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -191,7 +195,9 @@ void CAlegrDiffView::OnInitialUpdate()
 //    CAlegrDiffDoc * pDoc = GetDocument();
 
 	pList->SetExtendedStyle(pList->GetExtendedStyle()
-							| LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP);
+							| LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP
+							| LVS_EX_HEADERDRAGDROP
+							| LVS_EX_INFOTIP);
 
 	// validate the column array, make the initial value for it
 	int i, j;
@@ -830,7 +836,7 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 		CString Length;
 		if (NULL != pPair->pFirstFile && ! pPair->pFirstFile->IsFolder())
 		{
-			Length = FileLengthToStr(pPair->pFirstFile->GetFileLength());
+			Length = FileLengthToStrKb(pPair->pFirstFile->GetFileLength());
 			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength1], Length);
 		}
 		else
@@ -840,7 +846,7 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 
 		if (NULL != pPair->pSecondFile && ! pPair->pSecondFile->IsFolder())
 		{
-			Length = FileLengthToStr(pPair->pSecondFile->GetFileLength());
+			Length = FileLengthToStrKb(pPair->pSecondFile->GetFileLength());
 			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength2], Length);
 		}
 		else
@@ -1301,4 +1307,74 @@ void CAlegrDiffView::OnViewResetcolumns()
 	ResetColumnsArray();
 	UpdateAppColumns();
 	OnUpdate(NULL, 0, NULL);
+}
+#if 0
+void CAlegrDiffView::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMLVGETINFOTIP pGetInfoTip = reinterpret_cast<LPNMLVGETINFOTIP>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	// we only provide tooltips for file length columns
+	if (pGetInfoTip->iSubItem < 0
+		|| pGetInfoTip->iSubItem >= MaxColumns
+		|| pGetInfoTip->iItem < 0
+		|| pGetInfoTip->iItem >= m_PairArray.size())
+	{
+		return;
+	}
+
+	eColumns nColumn = m_ViewItemToColumnType[pGetInfoTip->iSubItem];
+	FilePair * pPair = m_PairArray[pGetInfoTip->iItem];
+	if (NULL == pPair)
+	{
+		return;
+	}
+
+	CString str;
+	switch (nColumn)
+	{
+	case ColumnLength1:
+		if (NULL == pPair->pFirstFile)
+		{
+			return;
+		}
+		str = UlonglongToStr(pPair->pFirstFile->GetFileLength());
+		break;
+	case ColumnLength2:
+		if (NULL == pPair->pSecondFile)
+		{
+			return;
+		}
+		str = UlonglongToStr(pPair->pSecondFile->GetFileLength());
+		break;
+	default:
+		return;
+	}
+
+	if (pGetInfoTip->dwFlags)
+	{
+		_tcsncpy(pGetInfoTip->pszText, str, pGetInfoTip->cchTextMax - 1);
+	}
+	else
+	{
+		_tcsncat(pGetInfoTip->pszText, str, pGetInfoTip->cchTextMax - 1);
+	}
+
+	*pResult = 0;
+}
+#endif
+void CAlegrDiffView::OnFileProperties()
+{
+	UINT item = GetListCtrl().GetNextItem(-1, LVNI_SELECTED);
+	if (item != -1
+		&& item < m_PairArray.size())
+	{
+		CFilesPropertiesDialog dlg(m_PairArray[item]);
+
+		dlg.DoModal();
+	}
+}
+
+void CAlegrDiffView::OnUpdateFileProperties(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(GetListCtrl().GetNextItem(-1, LVNI_SELECTED) != -1);
 }

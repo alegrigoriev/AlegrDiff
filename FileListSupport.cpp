@@ -1805,7 +1805,12 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection *
 	}
 
 	LPCTSTR str1 = pStr1->GetText();
+	LPCTSTR const str1VersionBegin = _tcschr(str1, '$');
+	LPCTSTR const str1VersionEnd = _tcsrchr(str1, '$');
+
 	LPCTSTR str2 = pStr2->GetText();
+	LPCTSTR const str2VersionBegin = _tcschr(str2, '$');
+	LPCTSTR const str2VersionEnd = _tcsrchr(str2, '$');
 
 	LPCTSTR pEqualStrBegin = str1;
 	StringSection * pLastSection = NULL;
@@ -1948,6 +1953,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection *
 				pErasedSection->pNext = NULL;
 
 				// check if it is whitespace difference
+				// whitespace difference is not counted in nDifferentChars
 				pErasedSection->Attr |= pErasedSection->Whitespace;
 				for (unsigned i = 0, CharIdx = str1 - pStr1->GetText(); i < idx1; i++, CharIdx++)
 				{
@@ -1956,11 +1962,15 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection *
 						// it is NOT whitespace diff
 						pErasedSection->Attr &= ~pErasedSection->Whitespace;
 						nDiffChars1 = idx1;
+
+						if (str1 > str1VersionBegin
+							&& str1 + idx1 <= str1VersionEnd)
+						{
+							pErasedSection->Attr |= pErasedSection->VersionInfo;
+						}
 						break;
 					}
 				}
-				// whitespace difference is not counted in nDifferentChars
-
 			}
 		}
 		else
@@ -1990,6 +2000,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection *
 				pAddedSection->pNext = NULL;
 
 				// check if it is whitespace difference
+				// whitespace difference is not counted in nDifferentChars
 				pAddedSection->Attr |= pAddedSection->Whitespace;
 				for (unsigned i = 0, CharIdx = str2 - pStr2->GetText(); i < idx2; i++, CharIdx++)
 				{
@@ -1998,10 +2009,15 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection *
 						// it is NOT whitespace diff
 						pAddedSection->Attr &= ~pAddedSection->Whitespace;
 						nDiffChars2 = idx2;
+
+						if (str1 > str1VersionBegin
+							&& str1 + idx1 <= str1VersionEnd)
+						{
+							pAddedSection->Attr |= pAddedSection->VersionInfo;
+						}
 						break;
 					}
 				}
-				// whitespace difference is not counted in nDifferentChars
 
 			}
 		}
@@ -3560,19 +3576,30 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles(BOOL volatile & bSto
 						pDiffSection->m_End.line = nLineIndex;
 						pos += pSection->Length;
 						pDiffSection->m_End.pos = pos;
+
 						if (pSection->Attr & pSection->Whitespace)
 						{
 							pDiffSection->m_Flags |= FileDiffSection::FlagWhitespace;
 						}
+						else if (pSection->Attr & pSection->VersionInfo)
+						{
+							pDiffSection->m_Flags |= FileDiffSection::FlagVersionInfoDifferent;
+						}
+
 						if (pSection->pNext != NULL
 							&& pSection->pNext->Attr != pSection->Identical)
 						{
-							if (0 == (pSection->pNext->Attr & pSection->Whitespace))
+							pSection = pSection->pNext;
+
+							if (0 == (pSection->Attr & pSection->Whitespace))
 							{
 								pDiffSection->m_Flags &= ~FileDiffSection::FlagWhitespace;
 							}
+							if (0 == (pSection->Attr & pSection->VersionInfo))
+							{
+								pDiffSection->m_Flags &= ~FileDiffSection::FlagVersionInfoDifferent;
+							}
 
-							pSection = pSection->pNext;
 							pSection->pDiffSection = pDiffSection;
 							pos += pSection->Length;
 							pDiffSection->m_End.pos = pos;
@@ -3599,7 +3626,28 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles(BOOL volatile & bSto
 		pSection = pSection->pNext;
 		delete tmp;
 	}
-	return FilesDifferent;
+	// check difference sections, see what is difference
+	eFileComparisionResult Result = FilesIdentical;
+	for (unsigned i = 0; i < m_DiffSections.size(); i++)
+	{
+		if (0 != (m_DiffSections[i]->m_Flags & FileDiffSection::FlagVersionInfoDifferent))
+		{
+			Result = VersionInfoDifferent;
+		}
+		else if (0 != (m_DiffSections[i]->m_Flags & FileDiffSection::FlagWhitespace))
+		{
+			if (FilesIdentical == Result)
+			{
+				Result = DifferentInSpaces;
+			}
+		}
+		else
+		{
+			Result = FilesDifferent;
+			break;
+		}
+	}
+	return Result;
 }
 
 inline int CompareTextPosBegin(const TextPos * pos,  FileDiffSection * const *sec, int)

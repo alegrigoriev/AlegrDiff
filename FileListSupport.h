@@ -74,6 +74,7 @@ public:
 	ULONG m_Flags;
 	enum {
 		FlagWhitespace = 0x100,
+		FlagVersionInfoDifferent = 0x200,
 	};
 
 	static void * operator new(size_t size)
@@ -201,6 +202,7 @@ struct StringSection
 		Included = 0x40,
 		Discarded = 0x80,
 		Whitespace = 0x100,
+		VersionInfo = 0x200,
 	};
 	USHORT Attr;
 	bool IsAccepted() const { return 0 != (Attr & Accepted); }

@@ -76,7 +76,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG,DEMO_VERSION"
-				Culture="1049"/>
+				Culture="1033"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
@@ -138,7 +138,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG,RETAIL_VERSION"
-				Culture="1049"/>
+				Culture="1033"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
@@ -200,7 +200,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG,DEMO_VERSION"
-				Culture="1049"/>
+				Culture="1033"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
@@ -268,7 +268,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG,RETAIL_VERSION"
-				Culture="1049"/>
+				Culture="1033"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
@@ -330,7 +330,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG,RETAIL_VERSION"
-				Culture="1049"/>
+				Culture="1033"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool

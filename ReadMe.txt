@@ -6,11 +6,11 @@ Set line size for binary view
 Switch from text view to binary view
 Single file pair binary comparison
 Add toolbar buttons for Create Fingerprint, Check Fingerprint.
-Open Binary file difference
 Support comparison of BIG lists
 Save columns width and order
 Make "Show columns" dialog with reset button
 Add Copy 1st file text, copy 2nd file text
+Copy binary dump as text
 For binary comparison: show file size
 In Properties dialog: show file size
 Add 1st file size, 2nd file size (with exact size tooltips?)
@@ -34,6 +34,7 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+Cursor up out of screen
 "Hasbani" text files make it crash (in text mode comparison).
 During binary comparison, alternate "Calculating fingerprint" and "Comparing" messages shown
 screen move in two directions may corrupt the image (??)
@@ -47,6 +48,7 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+Open Binary file difference
 Address granularity is word size. Selection granularity too.
 Add an icon for binary files' MDI child
 Make "Show 1st, show 2nd for binary files

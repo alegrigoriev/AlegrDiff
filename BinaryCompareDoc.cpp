@@ -11,6 +11,7 @@
 IMPLEMENT_DYNCREATE(CBinaryCompareDoc, CDocument)
 
 CBinaryCompareDoc::CBinaryCompareDoc()
+	: m_pFilePair(NULL)
 {
 }
 
@@ -23,6 +24,10 @@ BOOL CBinaryCompareDoc::OnNewDocument()
 
 CBinaryCompareDoc::~CBinaryCompareDoc()
 {
+	if (NULL != m_pFilePair)
+	{
+		m_pFilePair->Dereference();
+	}
 }
 
 
@@ -61,3 +66,12 @@ void CBinaryCompareDoc::Serialize(CArchive& ar)
 
 
 // CBinaryCompareDoc commands
+void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
+{
+	if (NULL != m_pFilePair)
+	{
+		m_pFilePair->Dereference();
+	}
+	m_pFilePair = pPair;
+	pPair->Reference();
+}

@@ -139,6 +139,7 @@ public:
 	afx_msg void OnHelpUsing();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+	afx_msg void OnFileCreatedirectoryfingerprint();
 };
 
 typedef CAlegrDiffApp CThisApp;

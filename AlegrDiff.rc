@@ -127,8 +127,10 @@ BEGIN
     BEGIN
         MENUITEM "Compare &Directories...",     ID_FILE_COMPAREDIRECTORIES
         MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
-        MENUITEM "Preferences...",              ID_FILE_PREFERENCES
+        MENUITEM "&Create Directory Fingerprint...", 146
+        MENUITEM "C&heck Directory Fingerprint...", 147
         MENUITEM SEPARATOR
+        MENUITEM "&Preferences...",             ID_FILE_PREFERENCES
         MENUITEM "E&xit",                       ID_APP_EXIT
     END
     POPUP "&View"
@@ -150,10 +152,14 @@ BEGIN
         MENUITEM "Compare &Directories...",     ID_FILE_COMPAREDIRECTORIES
         MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
         MENUITEM "Merge Files And Save...",     ID_FILE_MERGE_SAVE
-        MENUITEM SEPARATOR
-        MENUITEM "Create directory fingerprint...", 
-                                                ID_FILE_CREATEDIRECTORYFINGERPRINT
+        POPUP "Directory fingerprint"
+        BEGIN
+            MENUITEM "Create...",                   ID_FILE_CREATEDIRECTORYFINGERPRINT
 
+            MENUITEM "Check...",                    ID_FILE_CHECKDIRECTORYFILNGERPRINT
+
+        END
+        MENUITEM SEPARATOR
         MENUITEM "Edit 1st File",               ID_FILE_EDIT_FIRST
         MENUITEM "Edit 2nd File",               ID_FILE_EDIT_SECOND
         MENUITEM "Properties...\tAlt+Enter",    ID_FILE_PROPERTIES
@@ -215,6 +221,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Copy files from 1st dir...",  ID_FILE_COPY_FIRST_DIR
         MENUITEM "Copy files from 2nd dir...",  ID_FILE_COPY_SECOND_DIR
+        MENUITEM "Hide",                        32818
     END
 END
 
@@ -236,16 +243,21 @@ BEGIN
     BEGIN
         MENUITEM "Compare &Directories...",     ID_FILE_COMPAREDIRECTORIES
         MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
+        POPUP "Directory Fin&gerprint"
+        BEGIN
+            MENUITEM "&Create...",                  146
+            MENUITEM "C&heck...",                   147
+        END
         MENUITEM SEPARATOR
         MENUITEM "&View differences\tEnter",    ID_LISTVIEW_OPEN1
-        MENUITEM "Edit 1st File",               ID_FILE_EDIT_FIRST
-        MENUITEM "Edit 2nd File",               ID_FILE_EDIT_SECOND
+        MENUITEM "Edit &1st File",              ID_FILE_EDIT_FIRST
+        MENUITEM "Edit &2nd File",              ID_FILE_EDIT_SECOND
         MENUITEM SEPARATOR
         MENUITEM "Copy Files From 1st Folder",  ID_FILE_COPY_FIRST_DIR
         MENUITEM "Copy Files From 2nd Folder",  ID_FILE_COPY_SECOND_DIR
-        MENUITEM "Save File List...",           ID_FILE_SAVE_LIST
+        MENUITEM "&Save File List...",          ID_FILE_SAVE_LIST
         MENUITEM SEPARATOR
-        MENUITEM "Preferences...",              ID_FILE_PREFERENCES
+        MENUITEM "P&references...",             ID_FILE_PREFERENCES
         MENUITEM SEPARATOR
         MENUITEM "E&xit\tAlt+F4",               ID_APP_EXIT
     END
@@ -277,6 +289,11 @@ BEGIN
         MENUITEM "Compare &Directories...",     ID_FILE_COMPAREDIRECTORIES
         MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
         MENUITEM "Merge Files And Save...",     ID_FILE_MERGE_SAVE
+        POPUP "Directory &Fingerprint"
+        BEGIN
+            MENUITEM "Create...",                   146
+            MENUITEM "Check...",                    147
+        END
         MENUITEM SEPARATOR
         MENUITEM "Edit 1st File",               ID_FILE_EDIT_FIRST
         MENUITEM "Edit 2nd File",               ID_FILE_EDIT_SECOND
@@ -379,15 +396,16 @@ END
 
 #if defined(APSTUDIO_INVOKED) || defined(RETAIL_VERSION)
 #if defined(APSTUDIO_INVOKED)
-IDD_ABOUTBOX$(RETAIL_VERSION) DIALOG  0, 0, 235, 68
+IDD_ABOUTBOX$(RETAIL_VERSION) DIALOGEX 0, 0, 235, 68
 #else
-IDD_ABOUTBOX DIALOG  0, 0, 235, 68
+IDD_ABOUTBOX DIALOGEX 0, 0, 235, 68
 #endif
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
 CAPTION "About AlegrDiff"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,18,16
     CTEXT           "AlegrDiff Version 1.04",IDC_STATIC_VERSION,35,14,128,8,
                     SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001",IDC_STATIC,35,
@@ -405,10 +423,12 @@ BEGIN
     LTEXT           "TODO: layout dialog bar ",IDC_STATIC,12,4,300,8
 END
 
-IDD_DIALOG_COMPARE_DIRS DIALOG  0, 0, 230, 169
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_DIALOG_COMPARE_DIRS DIALOGEX 0, 0, 230, 169
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+EXSTYLE WS_EX_ACCEPTFILES
 CAPTION "Compare directories"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT           "&First directory:",IDC_STATIC,7,7,64,8
     COMBOBOX        IDC_COMBO_FIRST_DIR,7,25,189,69,CBS_DROPDOWN | 
@@ -422,7 +442,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,115,10
     PUSHBUTTON      "&More options >>",IDC_BUTTON_ADVANCED,160,86,63,14
     CONTROL         "&Binary comparison only",IDC_CHECK_BINARY,"Button",
-                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,99,126,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,99,126,10
     LTEXT           "File&name filter: ",IDC_STATIC,7,117,53,8
     DEFPUSHBUTTON   "OK",IDOK,47,148,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,123,148,50,14
@@ -430,10 +450,11 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_DIALOG_COMPARE_DIRS_ADVANCED DIALOG  0, 0, 230, 295
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_DIALOG_COMPARE_DIRS_ADVANCED DIALOGEX 0, 0, 230, 295
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
 CAPTION "Compare directories"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT           "&First directory:",IDC_STATIC,7,7,59,8
     COMBOBOX        IDC_COMBO_FIRST_DIR,7,25,189,69,CBS_DROPDOWN | 
@@ -447,7 +468,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,122,10
     PUSHBUTTON      "&Less options <<",IDC_BUTTON_ADVANCED,160,86,63,14
     CONTROL         "&Binary comparison only",IDC_CHECK_BINARY,"Button",
-                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,99,126,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,99,126,10
     LTEXT           "File&name filter: ",IDC_STATIC,7,117,56,8
     COMBOBOX        IDC_EDITFILENAME_FILTER,66,116,157,56,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
@@ -456,9 +477,8 @@ BEGIN
     EDITTEXT        IDC_EDIT_C_CPP,7,151,216,14,ES_AUTOHSCROLL
     CONTROL         "Compare the following files as binary:",
                     IDC_CHECK_BINARY_FILES,"Button",BS_AUTOCHECKBOX | 
-                    WS_DISABLED | WS_TABSTOP,7,173,172,10
-    EDITTEXT        IDC_EDIT_BINARY_FILES,7,191,216,14,ES_AUTOHSCROLL | 
-                    WS_DISABLED
+                    WS_TABSTOP,7,173,172,10
+    EDITTEXT        IDC_EDIT_BINARY_FILES,7,191,216,14,ES_AUTOHSCROLL
     CONTROL         "&Ignore the following files:",IDC_CHECK_IGNORE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,213,149,10
     EDITTEXT        IDC_EDIT_IGNORE,7,231,216,14,ES_AUTOHSCROLL
@@ -472,10 +492,11 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,123,274,50,14
 END
 
-IDD_DIALOG_GOTO_LINE DIALOG  0, 0, 142, 86
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_DIALOG_GOTO_LINE DIALOGEX 0, 0, 142, 86
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
 CAPTION "Go To Line"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT           "Line:",IDC_STATIC,8,10,29,8
     EDITTEXT        IDC_EDIT_LINE_NUMBER,42,7,40,14,ES_AUTOHSCROLL | 
@@ -485,7 +506,7 @@ BEGIN
     CONTROL         "In the file &2",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,
                     7,37,89,10
     CONTROL         "In the combined file",IDC_RADIO3,"Button",
-                    BS_AUTORADIOBUTTON,7,49,89,10
+                    BS_AUTORADIOBUTTON,7,49,113,10
     DEFPUSHBUTTON   "OK",IDOK,16,65,50,14,WS_GROUP
     PUSHBUTTON      "Cancel",IDCANCEL,76,65,50,14
 END
@@ -500,19 +521,18 @@ BEGIN
     RTEXT           "",1119,7,22,265,8,NOT WS_VISIBLE
 END
 
-IDD_PROPPAGE_FILE_PREFERENCES DIALOG  0, 0, 195, 127
+IDD_PROPPAGE_FILE_PREFERENCES DIALOGEX 0, 0, 195, 127
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Files"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     CONTROL         "Compare the following files as &C/C++:",IDC_CHECK_C_CPP,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,9,142,10
     EDITTEXT        IDC_EDIT_C_CPP,7,21,173,14,ES_AUTOHSCROLL
     CONTROL         "Compare the following files as &binary:",
                     IDC_CHECK_BINARY_FILES,"Button",BS_AUTOCHECKBOX | 
-                    WS_DISABLED | WS_TABSTOP,7,39,138,10
-    EDITTEXT        IDC_EDIT_BINARY_FILES,7,51,173,14,ES_AUTOHSCROLL | 
-                    WS_DISABLED
+                    WS_TABSTOP,7,39,138,10
+    EDITTEXT        IDC_EDIT_BINARY_FILES,7,51,173,14,ES_AUTOHSCROLL
     CONTROL         "&Ignore the following files:",IDC_CHECK_IGNORE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,69,119,10
     EDITTEXT        IDC_EDIT_IGNORE,7,81,173,14,ES_AUTOHSCROLL
@@ -575,10 +595,11 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,34,164,10
 END
 
-IDD_DIALOG_ACCEPT_OR_DECLINE_ALL DIALOG  0, 0, 215, 149
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_DIALOG_ACCEPT_OR_DECLINE_ALL DIALOGEX 0, 0, 215, 149
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
 CAPTION "Accept Or Decline Differences"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "File &2",IDOK,64,128,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,121,128,50,14
@@ -595,25 +616,26 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,13,78,10
 END
 
-IDD_DIALOG_FIND DIALOG  0, 0, 246, 72
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_DIALOG_FIND DIALOGEX 0, 0, 263, 72
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
 CAPTION "Find"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT           "Find what:",IDC_STATIC,7,10,38,8
-    COMBOBOX        IDC_COMBO_FIND,47,8,133,77,CBS_DROPDOWN | WS_VSCROLL | 
+    COMBOBOX        IDC_COMBO_FIND,47,8,150,77,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
     CONTROL         "Match &whole word only",IDC_CHECK_WHOLE_WORD,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,29,105,10
     CONTROL         "Match &case",IDC_CHECK_CASE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,7,43,66,10
     CONTROL         "&Up",IDC_RADIO_UP,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP | WS_TABSTOP,126,39,42,10
-    CONTROL         "&Down",IDC_RADIO_DOWN,"Button",BS_AUTORADIOBUTTON,126,
+                    WS_GROUP | WS_TABSTOP,146,39,42,10
+    CONTROL         "&Down",IDC_RADIO_DOWN,"Button",BS_AUTORADIOBUTTON,146,
                     51,44,10
-    GROUPBOX        "Direction",IDC_STATIC,119,28,59,37,WS_GROUP
-    DEFPUSHBUTTON   "Find",IDOK,189,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,189,24,50,14
+    GROUPBOX        "Direction",IDC_STATIC,138,28,59,37,WS_GROUP
+    DEFPUSHBUTTON   "Find",IDOK,206,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,206,24,50,14
 END
 
 IDD_DIALOG_PROPERTIES DIALOG  0, 0, 265, 188
@@ -635,10 +657,11 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,107,167,50,14
 END
 
-IDD_DIALOG_COMPARE_FILES DIALOG  0, 0, 249, 113
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_DIALOG_COMPARE_FILES DIALOGEX 0, 0, 249, 113
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
 CAPTION "Compare files"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT           "&First file:",-1,7,7,42,8
     COMBOBOX        IDC_COMBO_FIRST_FILE,7,21,208,69,CBS_DROPDOWN | 
@@ -649,7 +672,7 @@ BEGIN
     PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_FILE,225,20,17,14
     PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SECOND_FILE,225,54,17,14
     CONTROL         "&Binary comparison",IDC_CHECK_BINARY,"Button",
-                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,77,126,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,77,126,10
     CONTROL         "Compare as C/C++ files",IDC_CHECK_COMPARE_C_CPP,"Button",
                     BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_DISABLED | 
                     WS_TABSTOP,143,76,99,10
@@ -657,41 +680,42 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,133,92,50,14
 END
 
-IDD_DIALOG_SAVE_FILE_LIST DIALOG  0, 0, 228, 182
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_DIALOG_SAVE_FILE_LIST DIALOGEX 0, 0, 246, 182
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
 CAPTION "Save list of files"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT           "&File name:",IDC_STATIC,7,7,58,9
-    EDITTEXT        IDC_EDIT_FILENAME,7,21,189,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_BUTTON_BROWSE,203,21,18,14
-    GROUPBOX        "&Attributes to include: ",IDC_STATIC,7,40,101,49
+    EDITTEXT        IDC_EDIT_FILENAME,7,21,207,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE,221,21,18,14
+    GROUPBOX        "&Attributes to include: ",IDC_STATIC,7,40,110,49
     CONTROL         "S&ubdirectory name",IDC_CHECK_SUBDIRECTORY,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,50,93,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,50,94,10
     CONTROL         "Files &modification time",IDC_CHECK_TIMESTAMP,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,62,93,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,62,99,10
     CONTROL         "&Comparison result",IDC_CHECK_COMPARISON_RESULT,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,74,93,10
-    GROUPBOX        "Include to list: ",IDC_STATIC,120,40,101,114
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,74,94,10
+    GROUPBOX        "Include to list: ",IDC_STATIC,124,40,115,114
     CONTROL         "&All files",IDC_RADIO_INCLUDE_FILES,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,126,51,88,10
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,132,51,88,10
     CONTROL         "&Selected files",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,
-                    126,63,88,10
+                    132,63,88,10
     CONTROL         "Selected &groups:",IDC_RADIO_SELECTED_GROUPS,"Button",
-                    BS_AUTORADIOBUTTON,126,75,88,10
+                    BS_AUTORADIOBUTTON,132,75,88,10
     CONTROL         "&Identical files",IDC_CHECK_IDENTICAL,"Button",
-                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,126,89,88,10
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,132,89,88,10
     CONTROL         "&Different files",IDC_CHECK_DIFFERENT,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,126,101,88,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,132,101,88,10
     CONTROL         "Different in &blanks only",
                     IDC_CHECK_DIFFERENT_IN_BLANKS,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,126,113,88,10
+                    WS_TABSTOP,132,113,100,10
     CONTROL         "Folder &1 only files",IDC_CHECK_FOLDER1_ONLY,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,126,125,88,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,132,125,88,10
     CONTROL         "Folder &2 only files",IDC_CHECK_FOLDER2_ONLY,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,126,137,88,10
-    DEFPUSHBUTTON   "OK",IDOK,56,161,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,122,161,50,14
+                    BS_AUTOCHECKBOX | WS_TABSTOP,132,137,88,10
+    DEFPUSHBUTTON   "OK",IDOK,64,161,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,130,161,50,14
 END
 
 #if defined(APSTUDIO_INVOKED) || defined(DEMO_VERSION)
@@ -714,6 +738,37 @@ BEGIN
                     105,14
 END
 #endif
+
+IDD_DIALOG_DIR_FINGERPRINT DIALOGEX 0, 0, 230, 166
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+EXSTYLE WS_EX_ACCEPTFILES
+CAPTION "Create directory fingerprint file"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "&Directory:",IDC_STATIC,7,7,64,8
+    COMBOBOX        IDC_COMBO_FIRST_DIR,7,20,189,69,CBS_DROPDOWN | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_DIR,206,19,17,14
+    CONTROL         "Include &subdirectories",IDC_CHECK_INCLUDE_SUBDIRS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,38,115,10
+    CONTROL         "In&clude directory tree structure",
+                    IDC_CHECK_INCLUDE_DIRECTORY_STRUCTURE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,52,127,10
+    LTEXT           "Save &as file:",IDC_STATIC,7,65,83,8
+    COMBOBOX        IDC_COMBO_SAVE_FILENAME,7,77,189,69,CBS_DROPDOWN | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SAVE_FILENAME,206,76,17,14
+    LTEXT           "File&name filter: ",IDC_STATIC,7,98,56,8
+    COMBOBOX        IDC_EDITFILENAME_FILTER,66,97,157,60,CBS_DROPDOWN | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "I&gnore files:",IDC_CHECK_IGNORE_FILES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,114,70,10
+    COMBOBOX        IDC_COMBO_IGNORE_FILES,7,127,216,61,CBS_DROPDOWN | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,47,145,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,123,145,50,14
+END
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -893,7 +948,7 @@ BEGIN
     IDD_DIALOG_FIND, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 239
+        RIGHTMARGIN, 256
         TOPMARGIN, 7
         BOTTOMMARGIN, 65
     END
@@ -917,7 +972,7 @@ BEGIN
     IDD_DIALOG_SAVE_FILE_LIST, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 221
+        RIGHTMARGIN, 239
         TOPMARGIN, 7
         BOTTOMMARGIN, 175
     END
@@ -928,6 +983,14 @@ BEGIN
         RIGHTMARGIN, 228
         TOPMARGIN, 7
         BOTTOMMARGIN, 61
+    END
+
+    IDD_DIALOG_DIR_FINGERPRINT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 223
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 159
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -1156,6 +1219,10 @@ BEGIN
     IDS_COPY_FILE_TO_FOLDER "Copy %s To Folder..."
     IDS_COPY_FIRST_FILE_MENU_DISABLED "Copy 1st File To Folder..."
     IDS_COPY_SECOND_FILE_MENU_DISABLED "Copy 2nd File To Folder..."
+    IDS_STRING_ONE_SUBDIR_EXISTS "Subdirectory exists only in ""%s%s"""
+    IDS_STRING_FILE_IS_LONGER "Longer file in ""%s%s"""
+    IDS_STRING_READING_FILE "Reading file..."
+    IDS_STRING_ERROR_READING_FILE "Error while reading file ""%s"""
 END
 
 STRINGTABLE 
@@ -1165,6 +1232,20 @@ BEGIN
     ID_VIEW_HIDESELECTEDFILES 
                             "Hide the selected files from the file list\nHide selected files"
     ID_VIEW_SHOWALLFILES    "Show files previously hidden\nUnhide files"
+    IDS_STRING_CALC_FINGERPRINT "Calculating fingerprint of ""%s"""
+    IDS_STRING_COMPARING    "Comparing ""%s"" - ""%s"""
+    IDS_STRING_DIR_FINGERPRINT "Select directory to create fingerprint file"
+    IDS_STRING_FILGERPRINT_FILTER 
+                            "Fingerprint file (*.md5fp)|*.md5fp|All files (*.*)|*||"
+    IDS_STRING_FINGERPRINT_TITLE "Save Fingerprint File As"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_FILE_CREATEDIRECTORYFINGERPRINT 
+                            "Create directory fingerprint information file\nCreate dir fingerprint"
+    ID_FILE_CHECKDIRECTORYFILNGERPRINT 
+                            "Check the files against previously created fingerprint information\nCheck dir fingerprint"
 END
 
 #endif    // English (U.S.) resources

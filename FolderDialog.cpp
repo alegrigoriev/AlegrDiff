@@ -22,7 +22,7 @@ CFolderDialog::CFolderDialog(LPCTSTR lpszTitle, LPCTSTR lpszStartingDirectory,
 	szStartupDir(lpszStartingDirectory),
 	m_bEnableCreateDir(EnableCreateFolder)
 {
-	memset( & m_bi, 0, sizeof m_bi);
+	memzero(m_bi);
 	m_bi.ulFlags = dwFlags;
 	if (EnableCreateFolder)
 	{

@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "FileListSupport.h"
 #include "AlegrDiff.h"
-#include <Wincrypt.h>
 
 #ifdef _DEBUG
 #include <mmsystem.h>
@@ -1893,9 +1892,10 @@ FilePair::FilePair()
 	pSecondFile(NULL),
 	m_RefCount(1),
 	m_LoadedCount(0),
-	m_bComparisionResultChanged(false),
+	m_bChanged(false),
 	m_bHideFromListView(false),
 	m_bSelected(false),
+	m_CompletedPercent(0),
 	m_ComparisionResult(ResultUnknown)
 {
 }
@@ -2038,22 +2038,31 @@ int FilePair::ComparisionResultPriority() const
 	switch (m_ComparisionResult)
 	{
 	default:
+	case ErrorReadingFirstFile:
+	case ErrorReadingSecondFile:
 	case ResultUnknown:
 		return 0;
 	case FileUnaccessible:
 		return 1;
 	case FilesDifferent:
 		return 2;
-	case VersionInfoDifferent:
+	case FirstFileLonger:
 		return 3;
-	case DifferentInSpaces:
+	case SecondFileLonger:
 		return 4;
-	case FilesIdentical:
+	case DifferentInSpaces:
 		return 5;
-	case OnlyFirstFile:
+	case VersionInfoDifferent:
 		return 6;
-	case OnlySecondFile:
+	case FilesIdentical:
+	case OnlySecondDirectory:
 		return 7;
+	case OnlyFirstFile:
+	case OnlySecondFile:
+		return 8;
+	case ReadingFirstFile:
+	case ReadingSecondFile:
+		return 9;
 	}
 }
 
@@ -2131,24 +2140,19 @@ int FilePair::ComparisionSortFunc(const FilePair * Pair1, const FilePair * Pair2
 
 CString FilePair::GetComparisionResult() const
 {
-	static CString sFilesUnaccessible;
-	static CString sFilesIdentical;
-	static CString sVersionInfoDifferent;
-	static CString sDifferentInSpaces;
-	static CString sFilesDifferent;
-	static CString sOnlyOneExists;
-	static bool bResultStringsLoaded = false;
+	static CString sFilesUnaccessible(MAKEINTRESOURCE(IDS_STRING_FILES_UNACCESSIBLE));
+	static CString sFilesIdentical(MAKEINTRESOURCE(IDS_STRING_FILES_IDENTICAL));
+	static CString sVersionInfoDifferent(MAKEINTRESOURCE(IDS_VERSION_INFO_DIFFERENT));
+	static CString sDifferentInSpaces(MAKEINTRESOURCE(IDS_DIFFERENT_IN_SPACES));
+	static CString sFilesDifferent(MAKEINTRESOURCE(IDS_FILES_DIFFERENT));
+	static CString sOnlyOneExists(MAKEINTRESOURCE(IDS_STRING_ONLY_ONE_EXISTS));
+	static CString sOnlyOneSubdirExists(MAKEINTRESOURCE(IDS_STRING_ONE_SUBDIR_EXISTS));
+	static CString sOneFileLonger(MAKEINTRESOURCE(IDS_STRING_FILE_IS_LONGER));
+	static CString sReadingFile(MAKEINTRESOURCE(IDS_STRING_READING_FILE));
+	static CString sErrorReadingFile(MAKEINTRESOURCE(IDS_STRING_ERROR_READING_FILE));
+	static CString sCalculatingFingerprint(MAKEINTRESOURCE(IDS_STRING_CALC_FINGERPRINT));
+	static CString sComparingFiles(MAKEINTRESOURCE(IDS_STRING_COMPARING));
 
-	if ( ! bResultStringsLoaded)
-	{
-		sFilesUnaccessible.LoadString(IDS_STRING_FILES_UNACCESSIBLE);
-		sFilesIdentical.LoadString(IDS_STRING_FILES_IDENTICAL);
-		sVersionInfoDifferent.LoadString(IDS_VERSION_INFO_DIFFERENT);
-		sDifferentInSpaces.LoadString(IDS_DIFFERENT_IN_SPACES);
-		sFilesDifferent.LoadString(IDS_FILES_DIFFERENT);
-		sOnlyOneExists.LoadString(IDS_STRING_ONLY_ONE_EXISTS);
-		bResultStringsLoaded = true;
-	}
 	CString s;
 	switch(m_ComparisionResult)
 	{
@@ -2176,6 +2180,59 @@ CString FilePair::GetComparisionResult() const
 	case OnlySecondFile:
 		s.Format(sOnlyOneExists,
 				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
+		break;
+	case OnlyFirstDirectory:
+		s.Format(sOnlyOneSubdirExists,
+				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
+		break;
+	case OnlySecondDirectory:
+		s.Format(sOnlyOneSubdirExists,
+				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
+		break;
+	case FirstFileLonger:
+		s.Format(sOneFileLonger,
+				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
+		break;
+	case SecondFileLonger:
+		s.Format(sOneFileLonger,
+				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
+		break;
+	case ErrorReadingFirstFile:
+		s.Format(sErrorReadingFile,
+				LPCTSTR(pFirstFile->GetFullName()));
+		break;
+	case ErrorReadingSecondFile:
+		s.Format(sErrorReadingFile,
+				LPCTSTR(pSecondFile->GetFullName()));
+		break;
+	case ReadingFirstFile:
+		return sReadingFile;
+		break;
+	case ReadingSecondFile:
+		return sReadingFile;
+		break;
+	case CalculatingFirstFingerprint:
+		s.Format(sCalculatingFingerprint, LPCTSTR(pFirstFile->GetFullName()));
+		if (m_CompletedPercent != 0)
+		{
+			CString Percent;
+			Percent.Format(_T(" %d%%"), m_CompletedPercent);
+			s += Percent;
+		}
+		break;
+	case CalculatingSecondFingerprint:
+		s.Format(sCalculatingFingerprint, LPCTSTR(pSecondFile->GetFullName()));
+		if (m_CompletedPercent != 0)
+		{
+			CString Percent;
+			Percent.Format(_T(" %d%%"), m_CompletedPercent);
+			s += Percent;
+		}
+		break;
+	case ComparingFiles:
+		s.Format(sComparingFiles,
+				LPCTSTR(pFirstFile->GetFullName()),
+				LPCTSTR(pSecondFile->GetFullName()));
 		break;
 	}
 	return s;
@@ -3578,9 +3635,37 @@ int LinePair::DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces)
 	return position + adj;
 }
 
+BOOL FileItem::InitHashCalculation()
+{
+	DeinitHashCalculation();
+	m_HashBuf = (PBYTE)VirtualAlloc(NULL, 0x10000, MEM_COMMIT, PAGE_READWRITE);
+	CryptAcquireContext( & m_CryptProvider, NULL, MS_DEF_PROV, PROV_RSA_FULL,
+						CRYPT_VERIFYCONTEXT);
+	return NULL != m_HashBuf
+			&& NULL != m_CryptProvider;
+}
+
+void FileItem::DeinitHashCalculation()
+{
+	if (NULL != m_CryptProvider)
+	{
+		CryptReleaseContext(m_CryptProvider, 0);
+		m_CryptProvider = NULL;
+	}
+	if (NULL != m_HashBuf)
+	{
+		VirtualFree(m_HashBuf, 0, MEM_RELEASE);
+		m_HashBuf = NULL;
+	}
+}
+
 BOOL FileItem::CalculateHashes(BOOL volatile & bStopOperation)
 {
-	HCRYPTPROV crypt = NULL;
+	if (NULL == m_HashBuf
+		|| NULL == m_CryptProvider)
+	{
+		return FALSE;
+	}
 	HCRYPTHASH hash = NULL;
 	HANDLE hFile = NULL;
 	BOOL res = TRUE;
@@ -3590,39 +3675,29 @@ BOOL FileItem::CalculateHashes(BOOL volatile & bStopOperation)
 	{
 		return FALSE;
 	}
-	BYTE * Buf = (PBYTE)VirtualAlloc(NULL, 0x10000, MEM_COMMIT, PAGE_READWRITE);
-	if (NULL != Buf
-		&& CryptAcquireContext( & crypt, NULL, NULL, PROV_RSA_SIG,
-								CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
+
+	if (CryptCreateHash(m_CryptProvider, CALG_MD5, NULL, NULL, & hash))
 	{
-		if (CryptCreateHash(crypt, CALG_MD5, NULL, NULL, & hash))
+		for (ULONGLONG BytesLeft = m_Length; BytesLeft != 0 && ! bStopOperation; )
 		{
-			for (ULONGLONG BytesLeft = m_Length; BytesLeft != 0 && ! bStopOperation; )
+			DWORD ToRead = 0x10000;
+			if (ToRead > BytesLeft)
 			{
-				DWORD ToRead = 0x10000;
-				if (BytesLeft < ToRead)
-				{
-					BytesLeft = ToRead;
-				}
-				DWORD BytesRead;
-				if ( ! ReadFile(hFile, Buf, 0x10000, & BytesRead, NULL)
-					|| BytesRead != ToRead)
-				{
-					res = FALSE;
-					break;
-				}
-				CryptHashData(hash, Buf, BytesRead, 0);
-				BytesLeft -= BytesRead;
+				ToRead = BytesLeft;
 			}
-			DWORD HashLen = 20;
-			CryptGetHashParam(hash, HP_HASHVAL, m_Md5, & HashLen, 0);
-			CryptDestroyHash(hash);
+			DWORD BytesRead;
+			if ( ! ReadFile(hFile, m_HashBuf, 0x10000, & BytesRead, NULL)
+				|| BytesRead != ToRead)
+			{
+				res = FALSE;
+				break;
+			}
+			CryptHashData(hash, m_HashBuf, BytesRead, 0);
+			BytesLeft -= BytesRead;
 		}
-		CryptReleaseContext(crypt, 0);
-	}
-	if (NULL != Buf)
-	{
-		VirtualFree(Buf, 0, MEM_RELEASE);
+		DWORD HashLen = 20;
+		CryptGetHashParam(hash, HP_HASHVAL, m_Md5, & HashLen, 0);
+		CryptDestroyHash(hash);
 	}
 	CloseHandle(hFile);
 	if (res)
@@ -3637,3 +3712,6 @@ CSmallAllocator StringSection::m_Allocator(sizeof StringSection);
 CSmallAllocator LinePair::m_Allocator(sizeof LinePair);
 CSmallAllocator FileDiffSection::m_Allocator(sizeof FileDiffSection);
 
+//CSimpleCriticalSection FileItem::m_Cs;
+BYTE * FileItem::m_HashBuf = NULL;
+HCRYPTPROV FileItem::m_CryptProvider = NULL;

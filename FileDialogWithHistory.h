@@ -10,7 +10,6 @@
 #include "ApplicationProfile.h"
 ////////////////////////////////////////////////////////////////////////////
 // CFileDialogWithHistory dialog
-bool SupportsV5FileDialog();
 
 class CResizableFileDialog : public CFileDialog
 {
@@ -34,6 +33,9 @@ public:
 		m_ofn.Flags |= OFN_ENABLESIZING;
 	}
 	CString GetNextPathName(POSITION& pos) const;
+
+	static bool SupportsV5FileDialog();
+
 protected:
 	static size_t OpenfilenameSize();
 

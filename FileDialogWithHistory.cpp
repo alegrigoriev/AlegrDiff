@@ -19,7 +19,7 @@ static char THIS_FILE[] = __FILE__;
 BOOL AFXAPI AfxUnhookWindowCreate();
 /////////////////////////////////////////////////////////////////////////////
 // CFileDialogWithHistory
-bool SupportsV5FileDialog()
+bool CResizableFileDialog::SupportsV5FileDialog()
 {
 	OSVERSIONINFO VersionInfo;
 	VersionInfo.dwOSVersionInfoSize = sizeof VersionInfo;

@@ -1,13 +1,11 @@
 TODO:
 
-Add "Ignore folders" option
 Assign an index to the files during original sort (for faster sorting)
 View files side by side
 Find full word only
+Make icons for the dialogs
 Allow doublequotes in the search pattern
-Resync file list when compare result changed.
 Use OnActivateApp to refresh the files
-Make radio buttons in file compare dialog: Binary Text Default
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
 Add Copy 1st file text, copy 2nd file text
 show version of file1, file2 of the line
@@ -91,6 +89,11 @@ insufficient space allocated for copying files
 
 Done:
 
+Save sizes of resizable dialogs for this session
+Make File Compare dialog resizable
+Make radio buttons in file compare dialog: Binary Text Default
+Resync file list when compare result changed.
+Add "Ignore folders" option
 Must indicate time-consuming operations (like sorting a file list) with Hour Glass cursor.
 Make progress dialog for binary comparision
 Swap "File 2 Text" (V) "File 1 Text" (X) buttons in toolbar.

@@ -66,6 +66,7 @@ protected:
 
 // Implementation
 protected:
+	static int m_PrevWidth;
 
 	virtual void OnMetricsChange();
 	// Generated message map functions

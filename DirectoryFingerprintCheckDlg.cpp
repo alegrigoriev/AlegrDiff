@@ -112,6 +112,11 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 			m_sIgnoreFiles = buf + 13;
 			m_sIgnoreFiles.Trim();
 		}
+		else if (0 == _tcsnicmp(buf, _T("ExcludeFolders="), 15))
+		{
+			m_sIgnoreFolders = buf + 13;
+			m_sIgnoreFolders.Trim();
+		}
 		else if (0 == _tcsnicmp(buf, _T("IncludeSubdirs="), 15))
 		{
 			TCHAR * Endptr;

@@ -247,9 +247,14 @@ enum FileCheckResult { FileDeleted, FileUnchanged, FileTimeChanged, };
 class FileItem
 {
 public:
-	FileItem(const WIN32_FIND_DATA * pWfd,
-			const CString & BaseDir, const CString & Dir);
-	FileItem(LPCTSTR name);
+	FileItem(const WIN32_FIND_DATAA * pWfd,
+			const CStringA & BaseDir, const CStringA & Dir);
+	FileItem(const WIN32_FIND_DATAW * pWfd,
+			const CStringW & BaseDir, const CStringW & Dir);
+
+	FileItem(LPCSTR name);
+	FileItem(LPCWSTR name);
+
 	~FileItem();
 	bool Load();
 	void Unload();
@@ -261,6 +266,7 @@ public:
 	bool m_bMd5Calculated:1;
 	bool m_bIsFolder:1;
 	bool m_bIsPhantomFile:1;
+	bool m_bUnicodeName:1;
 
 	BOOL CalculateHashes(CMd5HashCalculator * pMd5Calc,
 						class CProgressDialog * pProgressDialog);
@@ -329,6 +335,7 @@ private:
 	LONGLONG m_Length;
 	LONGLONG m_Crc64;   // use x64 + x4 + x3 + x + 1 polynomial
 	BYTE m_Md5[16];
+
 	BYTE * m_pFileReadBuf;
 	size_t m_FileReadBufSize;
 	LONGLONG m_FileReadPos;
@@ -446,6 +453,10 @@ public:
 	bool m_bHideFromListView;
 	bool m_bSelected;
 	bool m_bDeleted;
+
+	// used to speed up file list sort
+	ULONG m_FilenameSortOrder;
+	ULONG m_DirectorySortOrder;
 
 	vector<LinePair *> m_LinePairs;
 	vector<FileDiffSection *> m_DiffSections;

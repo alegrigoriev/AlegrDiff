@@ -1,10 +1,10 @@
 #pragma once
 #include "afxwin.h"
-#include "UiUpdatedDlg.h"
+#include "ResizableDialog.h"
 
 // CCheckFingerprintDlg dialog
 
-class CCheckFingerprintDlg : public CUiUpdatedDlg
+class CCheckFingerprintDlg : public CResizableDialog
 {
 	DECLARE_DYNAMIC(CCheckFingerprintDlg)
 
@@ -17,6 +17,7 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	virtual void OnMetricsChange();
 
 	DECLARE_MESSAGE_MAP()
 public:

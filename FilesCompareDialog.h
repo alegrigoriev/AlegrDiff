@@ -6,11 +6,12 @@
 #endif // _MSC_VER > 1000
 // FilesCompareDialog.h : header file
 //
+#include "ResizableDialog.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CFilesCompareDialog dialog
 
-class CFilesCompareDialog : public CDialog
+class CFilesCompareDialog : public CResizableDialog
 {
 // Construction
 public:
@@ -21,8 +22,6 @@ public:
 	enum { IDD = IDD_DIALOG_COMPARE_FILES };
 	CComboBox	m_SecondCombo;
 	CComboBox	m_FirstCombo;
-	BOOL	m_bBinaryFile;
-	BOOL	m_bCCppFile;
 	//}}AFX_DATA
 	CString	m_sFirstFileName;
 	CString	m_sSecondFileName;
@@ -35,6 +34,7 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
+	virtual void OnMetricsChange();
 
 // Implementation
 protected:
@@ -43,10 +43,16 @@ protected:
 	//{{AFX_MSG(CFilesCompareDialog)
 	afx_msg void OnButtonBrowseFirstFile();
 	afx_msg void OnButtonBrowseSecondFile();
+	afx_msg void OnChangeFile();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnDropFiles(HDROP hDropInfo);
+	afx_msg void OnUpdateOk(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+	static int m_PrevWidth;
+public:
+	// 0 - default, 1 - text, 2 - binary
+	int m_ComparisonMode;
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -101,6 +101,11 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 		m_IgnoreFoldersHistory.AddString(m_sIgnoreFoldersFilter);
 
 		m_Profile.UnloadAll();
+		m_PrevWidth = m_DlgWidth;
+	}
+	else
+	{
+		m_DlgWidth = m_PrevWidth;
 	}
 }
 
@@ -326,3 +331,5 @@ void CCompareDirsDialog::OnMetricsChange()
 	m_mmxi.ptMaxTrackSize.y = m_mmxi.ptMinTrackSize.y;
 	m_mmxi.ptMaxSize.y = m_mmxi.ptMinTrackSize.y;
 }
+
+int CCompareDirsDialog::m_PrevWidth;

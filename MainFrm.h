@@ -9,8 +9,11 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-class CMainFrame : public CMDIFrameWnd
+#include "MainFrameEx.h"
+
+class CMainFrame : public CMainFrameEx
 {
+	typedef CMainFrameEx BaseClass;
 	DECLARE_DYNAMIC(CMainFrame)
 public:
 	CMainFrame();
@@ -26,7 +29,6 @@ public:
 	//{{AFX_VIRTUAL(CMainFrame)
 public:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
-	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -43,7 +45,6 @@ protected:  // control bar embedded members
 	CReBar      m_wndReBar;
 	CDialogBar      m_wndDlgBar;
 
-	int m_nRotateChildIndex;  // used for Ctrl+Tab handling
 // Generated message map functions
 protected:
 	void OnUpdateCaretPosIndicator(CCmdUI* pCmdUI);
@@ -54,7 +55,6 @@ protected:
 	afx_msg BOOL OnBarCheckStatusBar(UINT nID);
 	afx_msg BOOL OnBarCheckToolbar(UINT nID);
 	afx_msg BOOL OnBarCheckRebar(UINT nID);
-	afx_msg void OnDestroy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

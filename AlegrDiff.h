@@ -103,7 +103,7 @@ public:
 		{
 			bool m_bShowToolbar:1;
 			bool m_bShowStatusBar:1;
-			bool m_bOpenMaximized:1;
+			bool :1;
 			bool m_bOpenChildMaximized:1;
 		};
 	};

@@ -1,6 +1,5 @@
 TODO:
-in InvalidateRange, add for letter overlap.
-Make combobox for last file filters
+Open directories or files from the command line
 Cancel selection on Accept/Decline commands (to see the result immediately). ???
 Maybe different color for selected accepted/declined
 Add Save differences
@@ -9,7 +8,6 @@ Make search dialog
 Make Go To Line to first or second file line number
 Import font settings from Visual C/VisualStudio
 Add progress to File list view and file diff view
-Open directories or files from the command line
 Make binary comparision
 Compare EXE version info for DLL, EXE, SYS
 Make progress dialog for binary comparision
@@ -32,6 +30,8 @@ File with differences: last lines not drawn
 Wrong status for inserted and removed parts of strings
 
 Done:
+Make combobox for last file filters
+in InvalidateRange, add for letter overlap.
 Make Word Left, Word Right.
 Show added whitespaces
 Add color selection for background.

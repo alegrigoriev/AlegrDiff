@@ -34,7 +34,6 @@ CAlegrDiffDoc::CAlegrDiffDoc()
 	m_bRecurseSubdirs(false),
 	m_pPairList(NULL)
 {
-	// TODO: add one-time construction code here
 	CThisApp * pApp = GetApp();
 	m_sInclusionPattern = PatternToMultiCString(pApp->m_sFilenameFilter);
 	if (m_sInclusionPattern.IsEmpty())
@@ -58,17 +57,6 @@ CAlegrDiffDoc::CAlegrDiffDoc()
 CAlegrDiffDoc::~CAlegrDiffDoc()
 {
 	FreeFilePairList();
-}
-
-BOOL CAlegrDiffDoc::OnNewDocument()
-{
-	if (!CDocument::OnNewDocument())
-		return FALSE;
-
-	// TODO: add reinitialization code here
-	// (SDI documents will reuse this document)
-
-	return TRUE;
 }
 
 bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseSubdirs)
@@ -209,21 +197,6 @@ void CAlegrDiffDoc::FreeFilePairList()
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// CAlegrDiffDoc serialization
-
-void CAlegrDiffDoc::Serialize(CArchive& ar)
-{
-	if (ar.IsStoring())
-	{
-		// TODO: add storing code here
-	}
-	else
-	{
-		// TODO: add loading code here
-	}
-}
-
-/////////////////////////////////////////////////////////////////////////////
 // CAlegrDiffDoc diagnostics
 
 #ifdef _DEBUG
@@ -252,13 +225,6 @@ CFilePairDoc::CFilePairDoc()
 	m_CaretPos(0, 0)
 {
 	m_bIgnoreWhitespaces = GetApp()->m_bIgnoreWhitespaces;
-}
-
-BOOL CFilePairDoc::OnNewDocument()
-{
-	if (!CDocument::OnNewDocument())
-		return FALSE;
-	return TRUE;
 }
 
 CFilePairDoc::~CFilePairDoc()

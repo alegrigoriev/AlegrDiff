@@ -38,6 +38,7 @@ protected:
 
 // Implementation
 public:
+	void UpdateTextMetrics();
 	int m_FirstLineSeen;
 	int m_FirstPosSeen;
 	int m_NumberMarginWidth;
@@ -55,6 +56,7 @@ public:
 	int m_LineNumberMarginWidth;
 
 	TEXTMETRIC m_FontMetric;
+	int m_CharOverhang;
 
 	int CharWidth() const { return m_FontMetric.tmAveCharWidth; }
 	int LineHeight() const { return m_FontMetric.tmHeight + m_FontMetric.tmExternalLeading; }

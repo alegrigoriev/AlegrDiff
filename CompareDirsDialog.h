@@ -21,15 +21,17 @@ public:
 	enum { IDD = IDD_DIALOG_COMPARE_DIRS };
 	CComboBox	m_FirstDirCombo;
 	CComboBox	m_SecondDirCombo;
-	BOOL	m_bIncludeSubdirs;
-	CString	m_FilenameFilter;
+	BOOL	    m_bIncludeSubdirs;
+	CComboBox   m_cFilenameFilter;
 	BOOL	m_BinaryComparision;
 	//}}AFX_DATA
 	CSpinButtonCtrl	m_Spin;
 
+	CString	m_FilenameFilter;
 	CString	m_sFirstDir;
 	CString	m_sSecondDir;
-	CString m_sHistory[10];
+	CString m_sHistory[15];
+	CString m_sFilters[10];
 	bool m_bAdvanced;
 
 	// Advanced items:

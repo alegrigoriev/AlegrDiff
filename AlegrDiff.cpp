@@ -108,7 +108,7 @@ public:
 		GetApp()->Profile.RemoveSection(_T("History"));
 	}
 
-	CString m_RecentFolders[10];
+	CString m_RecentFolders[15];
 	bool m_bBinaryMode;
 	virtual BOOL OnFileNameOK();
 	//virtual void OnLBSelChangedNotify(UINT nIDBox, UINT iCurSel, UINT nCode);
@@ -319,7 +319,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("LastSaveMergedDir"), m_LastSaveMergedDir, _T("."));
 	Profile.AddItem(_T("Settings"), _T("CopyFilesDir"), m_CopyFilesDir, _T("."));
 
-	Profile.AddItem(_T("Settings"), _T("FilenameFilter"), m_sFilenameFilter, _T("*"));
+	//Profile.AddItem(_T("Settings"), _T("FilenameFilter"), m_sFilenameFilter, _T("*"));
 	Profile.AddItem(_T("Settings"), _T("UseBinaryFilesFilter"), m_bUseBinaryFilesFilter, true);
 	Profile.AddItem(_T("Settings"), _T("UseCppFilter"), m_bUseCppFilter, true);
 	Profile.AddItem(_T("Settings"), _T("UseIgnoreFilter"), m_bUseIgnoreFilter, true);
@@ -450,7 +450,7 @@ void CAlegrDiffApp::OnFileComparedirectories()
 {
 	CCompareDirsDialog dlg;
 	dlg.m_bIncludeSubdirs = m_bRecurseSubdirs;
-	dlg.m_FilenameFilter = m_sFilenameFilter;
+	//dlg.m_FilenameFilter = m_sFilenameFilter;
 
 	dlg.m_bUseBinaryFilesFilter = m_bUseBinaryFilesFilter;
 	dlg.m_sBinaryFilesFilter = m_sBinaryFilesFilter;
@@ -733,7 +733,7 @@ void CAlegrDiffApp::OnFontChanged()
 	m_ErasedFont.DeleteObject();
 	m_ErasedFont.CreateFontIndirect( & m_ErasedLogFont);
 
-	UpdateAllDiffViews();
+	UpdateAllDiffViews(CFilePairDoc::FontChanged);
 }
 
 void CAlegrDiffApp::NotifyFilePairChanged(FilePair *pPair)
@@ -746,11 +746,12 @@ void CAlegrDiffApp::NotifyFilePairChanged(FilePair *pPair)
 		if (NULL != pDoc
 			&& pPair == pDoc->GetFilePair())
 		{
+			pDoc->UpdateAllViews(NULL, CFilePairDoc::FileLoaded);
 		}
 	}
 }
 
-void CAlegrDiffApp::UpdateAllDiffViews()
+void CAlegrDiffApp::UpdateAllDiffViews(LPARAM lHint, CObject* pHint)
 {
 	POSITION position = m_pFileDiffTemplate->GetFirstDocPosition();
 	while(position)
@@ -759,7 +760,7 @@ void CAlegrDiffApp::UpdateAllDiffViews()
 			dynamic_cast<CFilePairDoc *>(m_pFileDiffTemplate->GetNextDoc(position));
 		if (NULL != pDoc)
 		{
-			pDoc->UpdateAllViews(NULL);
+			pDoc->UpdateAllViews(NULL, lHint, pHint);
 		}
 	}
 }

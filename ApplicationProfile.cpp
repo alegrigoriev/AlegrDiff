@@ -348,13 +348,13 @@ CApplicationProfileItemFloat::CApplicationProfileItemFloat(CApplicationProfile *
 {
 	// read value
 	ReadData();
-	FloatReference = IntermediateValue;
+	FloatReference = float(IntermediateValue);
 }
 
 void CApplicationProfileItemFloat::ReadData()
 {
 	CApplicationProfileItemDouble::ReadData();
-	FloatRef = IntermediateValue;
+	FloatRef = float(IntermediateValue);
 }
 
 void CApplicationProfileItemFloat::WriteData(BOOL bForceWrite)
@@ -365,13 +365,13 @@ void CApplicationProfileItemFloat::WriteData(BOOL bForceWrite)
 
 void CApplicationProfileItemFloat::ResetToInitial()
 {
-	FloatRef = InitialData;
+	FloatRef = float(InitialData);
 }
 
 void CApplicationProfileItemFloat::ResetToDefault()
 {
 	CApplicationProfileItemDouble::ResetToDefault();
-	FloatRef = IntermediateValue;
+	FloatRef = float(IntermediateValue);
 }
 
 CApplicationProfile::CApplicationProfile()
@@ -947,7 +947,7 @@ CString CApplicationProfile::GetProfileString(LPCTSTR lpszSection, LPCTSTR lpszE
 		ASSERT(ProfileName != NULL);
 
 		if (lpszDefault == NULL)
-			lpszDefault = &afxChNil;    // don't pass in NULL
+			lpszDefault = "";    // don't pass in NULL
 		TCHAR szT[4096];
 		DWORD dw = ::GetPrivateProfileString(lpszSection, lpszEntry,
 											lpszDefault, szT, 4096, ProfileName);

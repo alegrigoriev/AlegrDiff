@@ -41,7 +41,8 @@ public:
 	void RunComparisionThread();
 // Operations
 public:
-	bool BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseSubdirs);
+	bool BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
+							bool bRecurseSubdirs, bool BinaryComparison);
 	void FreeFilePairList();
 
 
@@ -76,22 +77,6 @@ protected:
 
 /////////////////////////////////////////////////////////////////////////////
 // CFilePairDoc document
-
-enum {
-	SetPositionMakeVisible = 1,
-	SetPositionMakeCentered = 2,
-	SetPositionCancelSelection = 4,
-	MoveCaretPositionAlways = 8,
-	SetWordSelectionMode = 0x10,
-	OnUpdateListViewItem = 0x100,
-};
-
-class InvalidatedRange : public CObject
-{
-public:
-	TextPos begin;
-	TextPos end;
-};
 
 class AddListViewItemStruct : public CObject
 {
@@ -145,6 +130,7 @@ protected:
 // Implementation
 	int m_TotalLines;
 	FilePair * m_pFilePair;
+
 public:
 	virtual ~CFilePairDoc();
 #ifdef _DEBUG

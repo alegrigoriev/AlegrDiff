@@ -319,7 +319,7 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		AddListViewItemStruct * alvi = static_cast<AddListViewItemStruct *>(pHint);
 		if (NULL != alvi)
 		{
-			for (int i = 0; i < m_PairArray.size(); i++)
+			for (unsigned i = 0; i < m_PairArray.size(); i++)
 			{
 				if (m_PairArray[i] == alvi->pPair)
 				{
@@ -334,12 +334,12 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		return;
 	}
 	// fill the list control
-	for (int i = 0; i < m_PairArray.size(); i++)
+	for (unsigned i = 0; i < m_PairArray.size(); i++)
 	{
 		m_PairArray[i]->m_bSelected = false;
 	}
 	// get all currently selected items
-	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	while(-1 != nItem)
 	{
 		if (nItem < m_PairArray.size())
@@ -366,7 +366,7 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		m_bSubdirColumnPresent = false;
 		pListCtrl->DeleteColumn(ColumnSubdir);
 	}
-	for (int item = 0; item < m_PairArray.size(); item++)
+	for (unsigned item = 0; item < m_PairArray.size(); item++)
 	{
 		FilePair * pPair = m_PairArray[item];
 		AddListViewItem(pPair, item);
@@ -383,7 +383,7 @@ void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 	// compare two files
 	if (_AfxGetComCtlVersion() >= 0x00040070)
 	{
-		if (pNmlv->iItem >= 0 && pNmlv->iItem < m_PairArray.size())
+		if (unsigned(pNmlv->iItem) < m_PairArray.size())
 		{
 			// try to find if a view is already open
 			// view not found, create a new
@@ -399,7 +399,7 @@ void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 void CAlegrDiffView::OnReturn(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	CListCtrl * pListCtrl = & GetListCtrl();
-	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
@@ -419,7 +419,7 @@ void CAlegrDiffView::OnReturn(NMHDR* pNMHDR, LRESULT* pResult)
 void CAlegrDiffView::OnFileEditFirst()
 {
 	CListCtrl * pListCtrl = & GetListCtrl();
-	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
@@ -435,7 +435,7 @@ void CAlegrDiffView::OnFileEditFirst()
 void CAlegrDiffView::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
 {
 	CListCtrl * pListCtrl = & GetListCtrl();
-	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
@@ -454,7 +454,7 @@ void CAlegrDiffView::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
 void CAlegrDiffView::OnFileEditSecond()
 {
 	CListCtrl * pListCtrl = & GetListCtrl();
-	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
@@ -470,7 +470,7 @@ void CAlegrDiffView::OnFileEditSecond()
 void CAlegrDiffView::OnUpdateFileEditSecond(CCmdUI* pCmdUI)
 {
 	CListCtrl * pListCtrl = & GetListCtrl();
-	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
@@ -508,7 +508,7 @@ void CAlegrDiffView::OnContextMenu(CWnd* pWnd, CPoint point)
 void CAlegrDiffView::OnListviewOpen()
 {
 	CListCtrl * pListCtrl = & GetListCtrl();
-	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	while(-1 != nItem)
 	{
 		if (nItem < m_PairArray.size())
@@ -572,7 +572,7 @@ BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 	CListCtrl * pListCtrl = & GetListCtrl();
 	CArray<FileItem *, FileItem *> FilesArray;
 
-	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
@@ -685,7 +685,7 @@ void CAlegrDiffView::OnFileSaveList()
 	int MaxDateTimeLength = 0;
 	for (int pass = 0; pass < 2; pass++)
 	{
-		for (int item = 0; item < m_PairArray.size(); item++)
+		for (unsigned item = 0; item < m_PairArray.size(); item++)
 		{
 			FilePair * pFilePair = m_PairArray[item];
 			if (1 == dlg.m_IncludeFilesSelect)  // selected files
@@ -820,7 +820,7 @@ void CAlegrDiffView::OnUpdateFileSaveList(CCmdUI* pCmdUI)
 void CAlegrDiffView::OnViewHideselectedfiles()
 {
 	CListCtrl * pListCtrl = &GetListCtrl();
-	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		return;

@@ -59,6 +59,7 @@ public:
 			bool m_bFindBackward:1;
 			bool m_bCaseSensitive:1;
 			bool m_bCancelSelectionOnMerge:1;
+			bool m_bUseMd5:1;
 		};
 	};
 	union
@@ -113,7 +114,7 @@ public:
 	void OnFontChanged();
 	void UpdateAllDiffViews(LPARAM lHint = 0L, CObject* pHint = NULL);
 
-	class CFilePairDoc * OpenFilePairView(FilePair * pPair);
+	CDocument * OpenFilePairView(FilePair * pPair);
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CAlegrDiffApp)
@@ -123,6 +124,7 @@ public:
 	//}}AFX_VIRTUAL
 // Implementation
 	CMultiDocTemplate * m_pFileDiffTemplate;
+	CMultiDocTemplate * m_pBinaryDiffTemplate;
 	CMultiDocTemplate * m_pListDiffTemplate;
 
 	//{{AFX_MSG(CAlegrDiffApp)
@@ -144,6 +146,22 @@ inline CThisApp * GetApp()
 {
 	return (CThisApp *) AfxGetApp();
 }
+
+enum {
+	SetPositionMakeVisible = 1,
+	SetPositionMakeCentered = 2,
+	SetPositionCancelSelection = 4,
+	MoveCaretPositionAlways = 8,
+	SetWordSelectionMode = 0x10,
+	OnUpdateListViewItem = 0x100,
+};
+
+class InvalidatedRange : public CObject
+{
+public:
+	TextPos begin;
+	TextPos end;
+};
 
 void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, UINT FormatID, UINT DisabledItemID);
 void OpenFileForEditing(class FileItem * pFile);

@@ -113,7 +113,6 @@ CAlegrDiffApp::CAlegrDiffApp()
 	// then init subfields:
 	m_bShowToolbar = true;
 	m_bShowStatusBar = true;
-	m_bOpenChildMaximized = true;
 
 	m_NormalLogFont.lfCharSet = ANSI_CHARSET;
 	m_NormalLogFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
@@ -195,7 +194,6 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("CancelSelectionOnMerge"), m_bCancelSelectionOnMerge, false);
 	Profile.AddItem(_T("Settings"), _T("ShowToolbar"), m_bShowToolbar, true);
 	Profile.AddItem(_T("Settings"), _T("ShowStatusBar"), m_bShowStatusBar, true);
-	Profile.AddItem(_T("Settings"), _T("OpenChildMaximized"), m_bOpenChildMaximized, true);
 #else
 	Profile.AddItem(_T("Settings"), _T("PreferencesFlags"), m_PreferencesFlags, m_PreferencesFlags, 0, 0xFFFFFFFF);
 	Profile.AddItem(_T("Settings"), _T("StatusFlags"), m_StatusFlags, m_StatusFlags, 0, 0xFFFFFFFF);

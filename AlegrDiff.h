@@ -64,6 +64,7 @@ public:
 	CString m_sFindHistory[15];
 	CString m_RecentFolders[15];
 	CString m_sFilters[10];
+	CString m_RecentFiles[15];
 
 	int m_UsedFilenameFilter;
 
@@ -130,6 +131,8 @@ void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, UINT FormatID, U
 void OpenFileForEditing(class FileItem * pFile);
 void CopyFilesToFolder(FileItem ** ppFiles, int nCount, bool bAddSubdirToTarget);
 CString FileTimeToStr(FILETIME FileTime, LCID locale = LOCALE_USER_DEFAULT);
+void AddStringToHistory(const CString & str, CString history[], int NumItems, bool CaseSensitive = false);
+
 /////////////////////////////////////////////////////////////////////////////
 
 //{{AFX_INSERT_LOCATION}}

@@ -189,6 +189,15 @@ BOOL CAlegrDiffApp::InitInstance()
 		m_RecentFolders[i].TrimRight();
 	}
 
+	for (i = 0; i < sizeof m_RecentFiles / sizeof m_RecentFiles[0]; i++)
+	{
+		CString s;
+		s.Format("file%d", i);
+		Profile.AddItem(_T("History"), s, m_RecentFiles[i]);
+		m_RecentFiles[i].TrimLeft();
+		m_RecentFiles[i].TrimRight();
+	}
+
 	// read last filters from the registry
 	for (i = 0; i < sizeof m_sFilters / sizeof m_sFilters[0]; i++)
 	{
@@ -1117,4 +1126,39 @@ void CAboutDlg::OnButtonMailto()
 	shex.lpFile = file;
 	shex.nShow = SW_SHOWDEFAULT;
 	ShellExecuteEx( & shex);
+	EndDialog(IDOK);
+}
+
+void AddStringToHistory(const CString & str, CString history[], int NumItems, bool CaseSensitive)
+{
+	// remove those that match the currently selected dirs
+	int i, j;
+	for (i = 0, j = 0; i < NumItems; i++)
+	{
+		if (CaseSensitive)
+		{
+			if (0 == str.Compare(history[i]))
+			{
+				continue;
+			}
+		}
+		else
+		{
+			if (0 == str.CompareNoCase(history[i]))
+			{
+				continue;
+			}
+		}
+		if (i != j)
+		{
+			history[j] = history[i];
+		}
+		j++;
+	}
+	// remove last dir from the list
+	for (i = NumItems - 1; i >= 1; i--)
+	{
+		history[i] = history[i - 1];
+	}
+	history[0] = str;
 }

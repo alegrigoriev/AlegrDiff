@@ -100,66 +100,14 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 	}
 	else
 	{
-		// don't need to read dirs from the combobox
-		// remove those that match the currently selected dirs
-		int j;
-		for (i = 0, j = 0; i < sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0]; i++)
-		{
-			if (0 == m_sSecondDir.CompareNoCase(pApp->m_RecentFolders[i]))
-			{
-				continue;
-			}
-			if (i != j)
-			{
-				pApp->m_RecentFolders[j] = pApp->m_RecentFolders[i];
-			}
-			j++;
-		}
-		// remove last dir from the list
-		for (i = (sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0]) - 1; i >= 1; i--)
-		{
-			pApp->m_RecentFolders[i] = pApp->m_RecentFolders[i - 1];
-		}
-		pApp->m_RecentFolders[0] = m_sSecondDir;
+		// Update MRU, case insensitive
+		AddStringToHistory(m_sSecondDir, pApp->m_RecentFolders,
+							sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0], false);
+		AddStringToHistory(m_sFirstDir, pApp->m_RecentFolders,
+							sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0], false);
+		AddStringToHistory(m_FilenameFilter, pApp->m_sFilters,
+							sizeof pApp->m_sFilters / sizeof pApp->m_sFilters[0], false);
 
-		for (i = 0, j = 0; i < sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0]; i++)
-		{
-			if (0 == m_sFirstDir.CompareNoCase(pApp->m_RecentFolders[i]))
-			{
-				continue;
-			}
-			if (i != j)
-			{
-				pApp->m_RecentFolders[j] = pApp->m_RecentFolders[i];
-			}
-			j++;
-		}
-		// remove last dir from the list
-		for (i = (sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0]) - 1; i >= 1; i--)
-		{
-			pApp->m_RecentFolders[i] = pApp->m_RecentFolders[i - 1];
-		}
-		pApp->m_RecentFolders[0] = m_sFirstDir;
-
-		for (i = 0, j = 0; i < sizeof pApp->m_sFilters / sizeof pApp->m_sFilters[0]; i++)
-		{
-			if (0 == m_FilenameFilter.CompareNoCase(pApp->m_sFilters[i]))
-			{
-				continue;
-			}
-			if (i != j)
-			{
-				pApp->m_sFilters[j] = pApp->m_sFilters[i];
-			}
-			j++;
-		}
-		// remove last filter from the list
-		for (i = (sizeof pApp->m_sFilters / sizeof pApp->m_sFilters[0]) - 1; i >= 1; i--)
-		{
-			pApp->m_sFilters[i] = pApp->m_sFilters[i - 1];
-		}
-
-		pApp->m_sFilters[0] = m_FilenameFilter;
 	}
 }
 

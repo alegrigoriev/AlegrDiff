@@ -261,6 +261,7 @@ CFilePairDoc::CFilePairDoc()
 	m_pFilePair(NULL),
 	m_CaretPos(0, 0)
 {
+	m_ComparisonResult[0] = 0;
 	m_bIgnoreWhitespaces = GetApp()->m_bIgnoreWhitespaces;
 }
 
@@ -310,10 +311,13 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 			//UpdateAllViews(NULL, 0);    // erase the views
 			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(_T("Loading and comparing files..."));
 			pPair->CompareFiles();
-			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(AFX_IDS_IDLEMESSAGE);
 		}
 
 		m_TotalLines = pPair->m_LinePairs.GetSize();
+		_tcsncpy(m_ComparisonResult, pPair->GetComparisionResult(),
+				sizeof m_ComparisonResult / sizeof m_ComparisonResult[0]);
+		m_ComparisonResult[sizeof m_ComparisonResult / sizeof m_ComparisonResult[0]] = 0;
+		((CFrameWnd*)AfxGetMainWnd())->PostMessage(WM_SETMESSAGESTRING, 0, (LPARAM)m_ComparisonResult);
 	}
 	UpdateAllViews(NULL, FileLoaded);
 	SetCaretPosition(0, 0, SetPositionCancelSelection);
@@ -857,7 +861,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 		int nPatternLen = strlen(pStrToFind);
 		if ( ! bBackward)
 		{
-			for ( ;nSearchPos < StrLen - nPatternLen; nSearchPos++)
+			for ( ;nSearchPos <= StrLen - nPatternLen; nSearchPos++)
 			{
 				if (bCaseSensitive)
 				{
@@ -1105,27 +1109,9 @@ bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvok
 		pApp->m_bFindBackward = ! dlg.m_FindDown;
 		bBackwards = pApp->m_bFindBackward;
 	}
-	// update MRU
-	// remove those that match the currently selected dirs
-	int j, i;
-	for (i = 0, j = 0; i < sizeof pApp->m_sFindHistory / sizeof pApp->m_sFindHistory[0]; i++)
-	{
-		if (0 == pApp->m_FindString.Compare(pApp->m_sFindHistory[i]))
-		{
-			continue;
-		}
-		if (i != j)
-		{
-			pApp->m_sFindHistory[j] = pApp->m_sFindHistory[i];
-		}
-		j++;
-	}
-	// remove last dir from the list
-	for (i = (sizeof pApp->m_sFindHistory / sizeof pApp->m_sFindHistory[0]) - 1; i >= 1; i--)
-	{
-		pApp->m_sFindHistory[i] = pApp->m_sFindHistory[i - 1];
-	}
-	pApp->m_sFindHistory[0] = pApp->m_FindString;
+	// update MRU, case sensitive
+	AddStringToHistory(pApp->m_FindString, pApp->m_sFindHistory,
+						sizeof pApp->m_sFindHistory / sizeof pApp->m_sFindHistory[0], true);
 
 	return FindTextString(pApp->m_FindString, bBackwards, pApp->m_bCaseSensitive);
 }

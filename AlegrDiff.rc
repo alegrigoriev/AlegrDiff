@@ -434,7 +434,7 @@ CAPTION "Files"
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "Compare the following files as C/C++:",IDC_CHECK_C_CPP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,9,126,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,9,142,10
     EDITTEXT        IDC_EDIT_C_CPP,7,21,173,14,ES_AUTOHSCROLL
     CONTROL         "Compare the following files as binary:",
                     IDC_CHECK_BINARY_FILES,"Button",BS_AUTOCHECKBOX | 
@@ -442,31 +442,31 @@ BEGIN
     EDITTEXT        IDC_EDIT_BINARY_FILES,7,51,173,14,ES_AUTOHSCROLL | 
                     WS_DISABLED
     CONTROL         "Ignore the following files:",IDC_CHECK_IGNORE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,69,88,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,69,119,10
     EDITTEXT        IDC_EDIT_IGNORE,7,81,173,14,ES_AUTOHSCROLL
     CONTROL         "Automatically reload modified files",
                     IDC_CHECK_AUTO_RELOAD,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,100,118,10
+                    WS_TABSTOP,7,100,139,10
 END
 
-IDD_PROPPAGE_COMPARISION_PREFERENCES DIALOG DISCARDABLE  0, 0, 206, 103
+IDD_PROPPAGE_COMPARISION_PREFERENCES DIALOG DISCARDABLE  0, 0, 226, 103
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Comparison"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "Number of consecutive identical lines:",IDC_STATIC,7,15,
-                    125,8
-    EDITTEXT        IDC_EDIT_NUMBER_OF_IDENTICAL_LINES,159,13,40,14,
+                    164,8
+    EDITTEXT        IDC_EDIT_NUMBER_OF_IDENTICAL_LINES,179,13,40,14,
                     ES_AUTOHSCROLL
     LTEXT           "Minimal line length for search: ",IDC_STATIC,7,32,120,8
-    EDITTEXT        IDC_EDIT_MINIMAL_LINE_LENGTH,159,30,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MINIMAL_LINE_LENGTH,179,30,40,14,ES_AUTOHSCROLL
     LTEXT           "Percent of difference in ""looking like"" lines:",
-                    IDC_STATIC,7,49,126,8
-    EDITTEXT        IDC_EDIT_PERCENT_OF_LOOKLIKE_DIFFERENCE,159,47,40,14,
+                    IDC_STATIC,7,49,165,8
+    EDITTEXT        IDC_EDIT_PERCENT_OF_LOOKLIKE_DIFFERENCE,179,47,40,14,
                     ES_AUTOHSCROLL
     LTEXT           "Minimum matching chars for in-line comparison:",
-                    IDC_STATIC,7,66,141,8
-    EDITTEXT        IDC_EDIT_MIN_MATCHING_CHARS,159,64,40,14,ES_AUTOHSCROLL
+                    IDC_STATIC,7,66,168,8
+    EDITTEXT        IDC_EDIT_MIN_MATCHING_CHARS,179,64,40,14,ES_AUTOHSCROLL
 END
 
 IDD_PROPPAGE_VIEW_PREFERENCES DIALOG DISCARDABLE  0, 0, 208, 143
@@ -483,12 +483,12 @@ BEGIN
     CTEXT           "Common Text",IDC_STATIC_NORMAL_TEXT,8,35,132,16,
                     SS_CENTERIMAGE
     PUSHBUTTON      "Font...",IDC_BUTTON_NORMAL_FONT,149,35,36,17
-    CTEXT           "File 2 Only Text",IDC_STATIC_ADDED_TEXT,8,56,132,16,
+    CTEXT           "File 1 Only Text",IDC_STATIC_DELETED_TEXT,8,56,132,16,
                     SS_CENTERIMAGE
-    PUSHBUTTON      "Font...",IDC_BUTTON_INSERTED_FONT,149,56,36,17
-    CTEXT           "File 1 Only Text",IDC_STATIC_DELETED_TEXT,8,77,132,16,
+    PUSHBUTTON      "Font...",IDC_BUTTON_ERASED_FONT,149,56,36,17
+    CTEXT           "File 2 Only Text",IDC_STATIC_ADDED_TEXT,8,77,132,16,
                     SS_CENTERIMAGE
-    PUSHBUTTON      "Font...",IDC_BUTTON_ERASED_FONT,149,77,37,17
+    PUSHBUTTON      "Font...",IDC_BUTTON_INSERTED_FONT,149,77,36,17
     CTEXT           "Text Accepted For Merge",IDC_STATIC_ACCEPTED_TEXT,8,98,
                     132,16,SS_CENTERIMAGE
     PUSHBUTTON      "Background...",IDC_BUTTON_ADDED_BACKGROUND,149,98,50,17
@@ -687,7 +687,7 @@ BEGIN
     IDD_PROPPAGE_COMPARISION_PREFERENCES, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 199
+        RIGHTMARGIN, 219
         TOPMARGIN, 7
         BOTTOMMARGIN, 96
     END

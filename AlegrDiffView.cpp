@@ -194,7 +194,7 @@ void CAlegrDiffView::OnInitialUpdate()
 
 	// set style, header columns
 	CListCtrl * pList = &GetListCtrl();
-//    CAlegrDiffDoc * pDoc = GetDocument();
+	//    CAlegrDiffDoc * pDoc = GetDocument();
 
 	pList->SetExtendedStyle(pList->GetExtendedStyle()
 							| LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP
@@ -365,12 +365,12 @@ void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
-void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, KListEntry<FilePair> * pPairList, int nCount)
+void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, ListHead<FilePair> * pPairList, int nCount)
 {
 	PairArray.clear();
 	PairArray.reserve(nCount);
 
-	FilePair * pPair = pPairList->Next();
+	FilePair * pPair = pPairList->First();
 
 	for (int i = 0; i < nCount && pPairList->NotEnd(pPair); i++, pPair = pPair->Next())
 	{
@@ -1224,6 +1224,7 @@ void CAlegrDiffView::OnListviewFilelength()
 {
 	m_ColumnWidthArray[ColumnLength1] = ~m_ColumnWidthArray[ColumnLength1];
 	m_ColumnWidthArray[ColumnLength2] = ~m_ColumnWidthArray[ColumnLength2];
+	UpdateAppColumns();
 	OnUpdate(NULL, OnUpdateRebuildListView, NULL);
 }
 
@@ -1236,6 +1237,7 @@ void CAlegrDiffView::OnListviewModificationtime()
 {
 	m_ColumnWidthArray[ColumnDate1] = ~m_ColumnWidthArray[ColumnDate1];
 	m_ColumnWidthArray[ColumnDate2] = ~m_ColumnWidthArray[ColumnDate2];
+	UpdateAppColumns();
 	OnUpdate(NULL, OnUpdateRebuildListView, NULL);
 }
 

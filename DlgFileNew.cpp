@@ -85,7 +85,7 @@ int CFileDialog::DoModal()
 	//  which sometimes pumps while it is coming up but before it has
 	//  disabled the main window.
 	int nResult;
-#if 1
+
 	HWND hWndFocus = ::GetFocus();
 	BOOL bEnableParent = FALSE;
 	m_ofn.hwndOwner = PreModal();
@@ -120,15 +120,7 @@ int CFileDialog::DoModal()
 		::SetFocus(hWndFocus);
 
 	PostModal();
-#else
-	CoInitialize(NULL);
-	m_ofn.Flags &= ~OFN_ENABLEHOOK;
-	if (m_bOpenFileDialog)
-		nResult = ::GetOpenFileName(&m_ofn);
-	else
-		nResult = ::GetSaveFileName(&m_ofn);
-	CoUninitialize();
-#endif
+
 	return nResult ? nResult : IDCANCEL;
 }
 

@@ -18,9 +18,13 @@ protected: // create from serialization only
 
 // Attributes
 public:
-
+	CString m_sInclusionPattern;
+	CString m_sExclusionPattern;
+	CString m_sCFilesPattern;
 // Operations
 public:
+	bool BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2);
+	bool BuildFileList(LPCTSTR dir);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -43,8 +47,7 @@ protected:
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CAlegrDiffDoc)
-	// NOTE - the ClassWizard will add and remove member functions here.
-	//    DO NOT EDIT what you see in these blocks of generated code !
+	afx_msg void OnFileComparedirectories();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -86,6 +86,7 @@ public:
 	DWORD	m_MinMatchingChars;
 	int m_MaxSearchDistance;
 	int m_MinIdenticalLines;
+	int m_MinPercentWeakIdenticalLines; // default 10
 	int m_TabIndent;
 	int m_GoToLineFileSelection;
 

@@ -45,9 +45,10 @@ public:
 	BOOL CopySelectedFiles(bool bSecondDir);
 	enum eColumns {ColumnName, ColumnSubdir, ColumnDate1, ColumnDate2, ColumnComparisionResult };
 	eColumns m_SortColumn;
-	bool m_bAscendingOrder;
 	eColumns m_PrevSortColumn;
+	bool m_bAscendingOrder;
 	bool m_bPrevAscendingOrder;
+	bool m_bSubdirColumnPresent;
 
 	virtual ~CAlegrDiffView();
 #ifdef _DEBUG

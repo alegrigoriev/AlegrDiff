@@ -53,6 +53,7 @@ END_MESSAGE_MAP()
 
 CAlegrDiffView::CAlegrDiffView()
 {
+	m_bSubdirColumnPresent = true;
 	CThisApp * pApp = GetApp();
 	if (pApp->m_FileListSort >= 0)
 	{
@@ -144,14 +145,15 @@ void CAlegrDiffView::OnInitialUpdate()
 
 	// set style, header columns
 	CListCtrl * pList = &GetListCtrl();
-	CHeaderCtrl * pHeader = pList->GetHeaderCtrl();
-	CAlegrDiffDoc * pDoc = GetDocument();
+//    CAlegrDiffDoc * pDoc = GetDocument();
 
 	pList->InsertColumn(ColumnName, "File Name", LVCFMT_LEFT, 200, ColumnName);
 	pList->InsertColumn(ColumnSubdir, "Subdirectory", LVCFMT_LEFT, 200, ColumnSubdir);
 	pList->InsertColumn(ColumnDate1, "1st Modified at", LVCFMT_LEFT, 150, ColumnDate1);
 	pList->InsertColumn(ColumnDate2, "2nd Modified at", LVCFMT_LEFT, 150, ColumnDate2);
 	pList->InsertColumn(ColumnComparisionResult, "Comparison result", LVCFMT_LEFT, 400, ColumnComparisionResult);
+	m_bSubdirColumnPresent = true;
+
 	pList->SetExtendedStyle(pList->GetExtendedStyle() | LVS_EX_FULLROWSELECT);
 }
 
@@ -159,7 +161,13 @@ void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
 	// change sort order
-	if (m_SortColumn == pNMListView->iSubItem)
+	int nColumn = pNMListView->iSubItem;
+	if ( ! m_bSubdirColumnPresent
+		&& nColumn > ColumnName)
+	{
+		nColumn++;
+	}
+	if (m_SortColumn == nColumn)
 	{
 		m_bAscendingOrder = ! m_bAscendingOrder;
 	}
@@ -168,7 +176,7 @@ void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
 		m_bPrevAscendingOrder = m_bAscendingOrder;
 		m_PrevSortColumn = m_SortColumn;
 
-		m_SortColumn = eColumns(pNMListView->iSubItem);
+		m_SortColumn = eColumns(nColumn);
 		m_bAscendingOrder = true;
 	}
 	CThisApp * pApp = GetApp();
@@ -306,7 +314,9 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 				if (m_PairArray[i] == alvi->pPair)
 				{
 					CString ComparisionResult = alvi->pPair->GetComparisionResult();
-					pListCtrl->SetItemText(i, ColumnComparisionResult, ComparisionResult);
+					pListCtrl->SetItemText(i,
+											ColumnComparisionResult - ! m_bSubdirColumnPresent,
+											ComparisionResult);
 					break;
 				}
 			}
@@ -324,15 +334,17 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
 	pListCtrl->SetItemCount(m_PairArray.size());
 
+	if (! pDoc->m_bRecurseSubdirs
+		&& m_bSubdirColumnPresent)
+	{
+		// delete the subdirectory column
+		m_bSubdirColumnPresent = false;
+		pListCtrl->DeleteColumn(ColumnSubdir);
+	}
 	for (int item = 0; item < m_PairArray.size(); item++)
 	{
 		FilePair * pPair = m_PairArray[item];
 		AddListViewItem(pPair, item);
-	}
-	if (! pDoc->m_bRecurseSubdirs)
-	{
-		// Hide the subdirectory column
-		pListCtrl->SetColumnWidth(ColumnSubdir, 0);
 	}
 	pListCtrl->SetItemState(0, LVIS_FOCUSED, 0xFF);
 	UnlockWindowUpdate();
@@ -597,21 +609,21 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 	if (NULL != pPair->pFirstFile)
 	{
 		datetime = FileTimeToStr(pPair->pFirstFile->GetLastWriteTime());
-		pListCtrl->SetItemText(item, ColumnDate1, datetime);
+		pListCtrl->SetItemText(item, ColumnDate1 - ! m_bSubdirColumnPresent, datetime);
 	}
 	else
 	{
-		pListCtrl->SetItemText(item, ColumnDate1, _T(""));
+		pListCtrl->SetItemText(item, ColumnDate1 - ! m_bSubdirColumnPresent, _T(""));
 	}
 	if (NULL != pPair->pSecondFile)
 	{
 		datetime = FileTimeToStr(pPair->pSecondFile->GetLastWriteTime());
-		pListCtrl->SetItemText(item, ColumnDate2, datetime);
+		pListCtrl->SetItemText(item, ColumnDate2 - ! m_bSubdirColumnPresent, datetime);
 	}
 	else
 	{
-		pListCtrl->SetItemText(item, ColumnDate2, _T(""));
+		pListCtrl->SetItemText(item, ColumnDate2 - ! m_bSubdirColumnPresent, _T(""));
 	}
 	CString ComparisionResult = pPair->GetComparisionResult();
-	pListCtrl->SetItemText(item, ColumnComparisionResult, ComparisionResult);
+	pListCtrl->SetItemText(item, ColumnComparisionResult - ! m_bSubdirColumnPresent, ComparisionResult);
 }

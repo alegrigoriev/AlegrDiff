@@ -908,7 +908,7 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 	}
 
 	// if both directories are specified and Shift is not held, then skip the dialog
-	if ((NULL != dir1 && 0 != dir1[0] && NULL != dir2 && 0 != dir1[0] && 0 == (0x8000 & GetKeyState(VK_SHIFT)))
+	if ((NULL != dir1 && 0 != dir1[0] && NULL != dir2 && 0 != dir2[0] && 0 == (0x8000 & GetKeyState(VK_SHIFT)))
 		|| IDOK == dlg.DoModal())
 	{
 		m_sFilenameFilter = dlg.m_FilenameFilter;
@@ -955,7 +955,7 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 		Name1 = pName1;
 	}
 
-	if (pName2 != NULL && 0 != pName1[0])
+	if (pName2 != NULL && 0 != pName2[0])
 	{
 		Name2 = pName2;
 	}

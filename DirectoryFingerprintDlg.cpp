@@ -151,6 +151,7 @@ BOOL CDirectoryFingerprintDlg::OnInitDialog()
 	CThisApp * pApp = GetApp();
 
 	m_IgnoreFilterHistory.Load();
+	m_IgnoreFolderHistory.Load();
 	m_FingerprintFilenameHistory.Load();
 
 	m_Profile.AddBoolItem(_T("Settings"), _T("IncludeDirsToFingerprint"), m_bIncludeDirectoryStructure, TRUE);

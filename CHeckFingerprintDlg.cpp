@@ -22,8 +22,8 @@ CCheckFingerprintDlg::CCheckFingerprintDlg(CWnd* pParent /*=NULL*/)
 		IDOK, CenterHorizontally,
 		IDCANCEL, CenterHorizontally,
 	};
-	m_pResizeItems = items;
-	m_pResizeItemsCount = countof (items);
+	SetResizeableItems(items, countof(items));
+
 	m_Profile.AddItem(_T("Settings"), _T("CheckFpDlgWidth"), m_DlgWidth, 0, 0, 2048);
 }
 

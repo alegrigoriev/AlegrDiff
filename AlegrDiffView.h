@@ -49,7 +49,9 @@ public:
 #endif
 
 protected:
-	void SortPairArray(CArray<FilePair *,FilePair *> & PairArray, FilePair * pPairs, int nCount);
+	CArray<FilePair *,FilePair *> m_PairArray;
+
+	void BuildSortedPairArray(CArray<FilePair *,FilePair *> & PairArray, FilePair * pPairs, int nCount);
 
 // Generated message map functions
 protected:

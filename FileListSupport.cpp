@@ -1,6 +1,8 @@
 // FileListSupport.cpp
 #include "stdafx.h"
 #include "FileListSupport.h"
+#include "AlegrDiff.h"
+
 #undef tolower
 #undef toupper
 
@@ -151,20 +153,20 @@ int _cdecl FileLine::HashAndLineNumberCompareFunc(const void * p1, const void * 
 	FileLine const * pLine2 = *(FileLine **) p2;
 	if (pLine1->GetHash() > pLine2->GetHash())
 	{
-		return -1;
+		return 1;
 	}
 	if (pLine1->GetHash() < pLine2->GetHash())
 	{
-		return 1;
+		return -1;
 	}
 	// if hash is the same, compare line numbers
 	if (pLine1->GetLineNumber() > pLine2->GetLineNumber())
 	{
-		return -1;
+		return 1;
 	}
 	if (pLine1->GetLineNumber() < pLine2->GetLineNumber())
 	{
-		return 1;
+		return -1;
 	}
 	return 0;
 }
@@ -175,20 +177,20 @@ int _cdecl FileLine::NormalizedHashAndLineNumberCompareFunc(const void * p1, con
 	FileLine const * pLine2 = *(FileLine **) p2;
 	if (pLine1->GetNormalizedHash() > pLine2->GetNormalizedHash())
 	{
-		return -1;
+		return 1;
 	}
 	if (pLine1->GetNormalizedHash() < pLine2->GetNormalizedHash())
 	{
-		return 1;
+		return -1;
 	}
 	// if hash is the same, compare line numbers
 	if (pLine1->GetLineNumber() > pLine2->GetLineNumber())
 	{
-		return -1;
+		return 1;
 	}
 	if (pLine1->GetLineNumber() < pLine2->GetLineNumber())
 	{
-		return 1;
+		return -1;
 	}
 	return 0;
 }
@@ -196,7 +198,7 @@ int _cdecl FileLine::NormalizedHashAndLineNumberCompareFunc(const void * p1, con
 #undef new
 bool FileItem::Load()
 {
-	FILE * file = fopen(m_Subdir + m_Name, "rt");
+	FILE * file = fopen(m_BaseDir + m_Subdir + m_Name, "rt");
 	if (NULL == file)
 	{
 		return false;
@@ -213,25 +215,59 @@ bool FileItem::Load()
 	}
 	fclose(file);
 
-	int i;
+	int i, j;
 	// make sorted array of the string hash values
 	m_HashSortedLines.SetSize(LinNum);
-	for (i = 0; i < LinNum; i++)
+	for (i = 0, j = 0; i < LinNum; i++)
 	{
-		m_HashSortedLines[i] = m_Lines[i];
+		if ( ! m_Lines[i]->IsBlank())
+		{
+			m_HashSortedLines[j] = m_Lines[i];
+			j++;
+		}
 	}
+	if (j != m_HashSortedLines.GetSize())
+	{
+		m_HashSortedLines.SetSize(j);
+	}
+	m_NormalizedHashSortedLines.Copy(m_HashSortedLines);
 
 	qsort(m_HashSortedLines.GetData(), LinNum,
 		sizeof m_HashSortedLines[0], FileLine::HashAndLineNumberCompareFunc);
-	// make sorted array of the normalized string hash values
-	m_NormalizedHashSortedLines.SetSize(LinNum);
-	for (i = 0; i < LinNum; i++)
-	{
-		m_NormalizedHashSortedLines[i] = m_Lines[i];
-	}
-
 	qsort(m_NormalizedHashSortedLines.GetData(), LinNum,
 		sizeof m_NormalizedHashSortedLines[0], FileLine::NormalizedHashAndLineNumberCompareFunc);
+#ifdef _DEBUG
+	// check if the array is sorted correctly
+	{
+		int i;
+		for (i = 1; i < m_HashSortedLines.GetSize(); i++)
+		{
+			if (m_HashSortedLines[i]->GetHash() < m_HashSortedLines[i - 1]->GetHash()
+				|| (m_HashSortedLines[i]->GetHash() == m_HashSortedLines[i - 1]->GetHash()
+					&& m_HashSortedLines[i]->GetLineNumber() < m_HashSortedLines[i - 1]->GetLineNumber()))
+			{
+				TRACE("Item %d: hash=%x, lineNum=%d, item %d: hash=%x, LineNum=%d\n",
+					i - 1, m_HashSortedLines[i - 1]->GetHash(), m_HashSortedLines[i - 1]->GetLineNumber(),
+					i, m_HashSortedLines[i]->GetHash(), m_HashSortedLines[i]->GetLineNumber());
+				//break;
+			}
+		}
+		for (i = 1; i < m_NormalizedHashSortedLines.GetSize(); i++)
+		{
+			if (m_NormalizedHashSortedLines[i]->GetNormalizedHash() < m_NormalizedHashSortedLines[i - 1]->GetNormalizedHash()
+				|| (m_NormalizedHashSortedLines[i]->GetNormalizedHash() == m_NormalizedHashSortedLines[i - 1]->GetNormalizedHash()
+					&& m_NormalizedHashSortedLines[i]->GetLineNumber() < m_NormalizedHashSortedLines[i - 1]->GetLineNumber()))
+			{
+				TRACE("Item %d: NormHash=%x, lineNum=%d, item %d: NormHash=%x, LineNum=%d\n",
+					i - 1, m_NormalizedHashSortedLines[i - 1]->GetNormalizedHash(), m_NormalizedHashSortedLines[i - 1]->GetLineNumber(),
+					i, m_NormalizedHashSortedLines[i]->GetNormalizedHash(), m_NormalizedHashSortedLines[i]->GetLineNumber());
+				//break;
+			}
+		}
+	}
+#endif
+	// make sorted array of the normalized string hash values
+
 	return true;
 }
 
@@ -481,13 +517,13 @@ void * BinLookup(
 	return(NULL);
 }
 // find equal or the next greater
-template<class T, class A> T * BinLookupAbout(
-											const T *key,
-											A ComparisionContext,
-											const T *base,
-											size_t num,
-											int (__cdecl *compare)(const T * item1, const T * item2, A ComparisionContext)
-											)
+template<class T, class A> const T * BinLookupAbout(
+													const T *key,
+													A ComparisionContext,
+													const T *base,
+													size_t num,
+													int (*compare)(const T * item1, const T * item2, A ComparisionContext)
+													)
 {
 	const T *lo = base;
 	const T *hi = base + (num - 1);
@@ -1339,3 +1375,182 @@ bool FileLine::IsNormalizedEqual(const FileLine * pOtherLine) const
 	}
 	return 0 == memcmp(m_pNormalizedString, pOtherLine->m_pNormalizedString, m_NormalizedStringLength);
 }
+
+DWORD FilePair::CompareFiles(bool bCompareAll)
+{
+	if (NULL == pFirstFile
+		|| NULL == pSecondFile)
+	{
+		return 0;
+	}
+	// TODO: different function for binary comparision
+	if (! pFirstFile->Load()
+		|| ! pSecondFile->Load())
+	{
+		pFirstFile->Unload();
+		return 0;
+	}
+	// different comparision for different modes
+	//return CompareTextFiles(bCompareAll);
+	pFirstFile->Unload();
+	pSecondFile->Unload();
+	return 1;
+}
+
+int LineHashComparisionFunc(const FileLine * const * ppKeyLine,
+							const FileLine * const * ppLine2, int LineNum)
+{
+	// use hash from *ppKeyLine, and LineNum as line number
+	if ((*ppKeyLine)->GetNormalizedHash() > (*ppLine2)->GetNormalizedHash())
+	{
+		return 1;
+	}
+	if ((*ppKeyLine)->GetNormalizedHash() < (*ppLine2)->GetNormalizedHash())
+	{
+		return -1;
+	}
+	if (LineNum > (*ppLine2)->GetLineNumber())
+	{
+		return 1;
+	}
+	if (LineNum < (*ppLine2)->GetLineNumber())
+	{
+		return -1;
+	}
+	return 0;
+}
+DWORD FilePair::CompareTextFiles(bool bCompareAll)
+{
+	// find similar lines
+	CThisApp * pApp = GetApp();
+	int nLine1 = 0;
+	int nLine2 = 0;
+	int NumLines1 = pFirstFile->GetNumLines();
+	int NumLines2 = pSecondFile->GetNumLines();
+	// build list of equal sections
+	while (nLine1 < NumLines1
+			&& nLine2 < NumLines2)
+	{
+		// find the beginning of the section
+		// find a few identical lines
+		while (nLine1 < NumLines1
+				&& nLine2 < NumLines2)
+		{
+			for (int dist = 0; dist < pApp->m_MaxSearchDistance; dist++)
+			{
+				const FileLine * Line1 = pFirstFile->GetLine(nLine1+dist);
+				if ( ! Line1->IsBlank())
+				{
+					// check the lines in file2 in range Line2 to Line2+dist
+#if 0
+					for (int i = 0; i < dist && i + nLine2 < NumLines2; i++)
+					{
+						const FileLine * Line2 = pSecondFile->GetLine(nLine2 + i);
+						if (Line1->IsEqual(Line2))
+						{
+							int n1 = nLine1 + 1;
+							int n2 = nLine2 + i + 1;
+							int NumEqual = 1;
+							// check if a few non-blank lines more are the same
+							while(n1 < NumLines1 && n2 < NumLines2
+								&& NumEqual < pApp->m_MinIdenticalLines
+								&& n1 - nLine1 < pApp->m_MaxSearchDistance)
+							{
+								const FileLine * L1 = pFirstFile->GetLine(n1);
+								if (L1->IsBlank())
+								{
+									n1++;
+									continue;
+								}
+								const FileLine * L2 = pSecondFile->GetLine(n2);
+								if (L2->IsBlank())
+								{
+									n2++;
+									continue;
+								}
+								if ( ! L1->IsEqual(L2))
+								{
+									break;
+								}
+								n1++;
+								n2++;
+								NumEqual++;
+							}
+							if (NumEqual >= pApp->m_MinIdenticalLines)
+							{
+								break;
+							}
+						}
+					}
+#else
+					// find the similar string in the normalized string array
+					// the line should go on or after nLine2
+					FileLine const * const* ppLine = BinLookupAbout<const FileLine *, int>( & Line1, nLine2,
+						(FileLine *const *) pSecondFile->m_NormalizedHashSortedLines.GetData(),
+						pSecondFile->m_NormalizedHashSortedLines.GetSize(),
+						LineHashComparisionFunc);
+#ifdef _DEBUG
+					{
+						// verify that the correct position found
+						int nIndex = ppLine - pSecondFile->m_NormalizedHashSortedLines.GetData();
+						if (nIndex < 0 || nIndex >= pSecondFile->m_NormalizedHashSortedLines.GetSize())
+						{
+							TRACE("Wrong pointer in m_NormalizedHashSortedLines array\n");
+						}
+						else
+						{
+							//if (
+						}
+					}
+#endif
+#endif
+				}
+			}
+		}
+		int Line1Begin = nLine1;
+		int Line2Begin = nLine2;
+
+		while (nLine1 < NumLines1
+				&& nLine2 < NumLines2)
+		{
+			const FileLine * Line1 = pFirstFile->GetLine(nLine1);
+			const FileLine * Line2 = pSecondFile->GetLine(nLine2);
+			if (Line1->IsEqual(Line2))
+			{
+				nLine1++;
+				nLine2++;
+			}
+			else
+			{
+				// the lines are different
+				if (! bCompareAll)
+				{
+					// if we don't need to compare the while file (just scanning)
+					// return now
+					return 1;
+				}
+				// check if the lines are similar enough
+				// the lines can be considered similar if < 1/4 of the characters is different,
+				// or the only difference is in whitespaces
+				if (Line1->LooksLike(Line2, 25))
+				{
+					nLine1++;
+					nLine2++;
+				}
+				else
+				{
+					break;
+				}
+			}
+		}
+		FileSection * pSection = new FileSection;
+		pSection->File1LineBegin = Line1Begin;
+
+		pSection->File2LineBegin = Line2Begin;
+		pSection->File1LineEnd = nLine1 - 1;
+		pSection->File2LineEnd = nLine2 - 1;
+
+	}
+	return 1;
+}
+

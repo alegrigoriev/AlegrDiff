@@ -6,6 +6,7 @@
 #ifdef _DEBUG
 #include <mmsystem.h>
 #endif
+#include <algorithm>
 
 #undef tolower
 #undef toupper
@@ -2373,11 +2374,11 @@ void FilePair::FreeLinePairData()
 		delete pPair;
 	}
 	m_LinePairs.RemoveAll();
-	for (i = 0; i < m_DiffSections.GetSize(); i++)
+	for (i = 0; i < m_DiffSections.size(); i++)
 	{
 		delete m_DiffSections[i];
 	}
-	m_DiffSections.RemoveAll();
+	m_DiffSections.clear();
 
 }
 
@@ -2926,7 +2927,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 				pDiffSection->m_End.line = nLineIndex + pSection->File1LineBegin - nPrevSectionEnd1;
 				pDiffSection->m_End.pos = 0;
 				pDiffSection->m_Flags |= FileDiffSection::FlagWhitespace;
-				m_DiffSections.Add(pDiffSection);
+				m_DiffSections.push_back(pDiffSection);
 			}
 			for (i = nPrevSectionEnd1; i < pSection->File1LineBegin; i++, nLineIndex++)
 			{
@@ -2971,7 +2972,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 				pDiffSection->m_End.line = nLineIndex + pSection->File2LineBegin - nPrevSectionEnd2;
 				pDiffSection->m_End.pos = 0;
 				pDiffSection->m_Flags |= FileDiffSection::FlagWhitespace;
-				m_DiffSections.Add(pDiffSection);
+				m_DiffSections.push_back(pDiffSection);
 			}
 			// add lines from second file (mark as added)
 			for (i = nPrevSectionEnd2; i < pSection->File2LineBegin; i++, nLineIndex++)
@@ -3103,7 +3104,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 							pos += pSection->Length;
 							pDiffSection->m_End.pos = pos;
 						}
-						m_DiffSections.Add(pDiffSection);
+						m_DiffSections.push_back(pDiffSection);
 					}
 				}
 				else
@@ -3149,42 +3150,31 @@ inline int CompareTextPosEnd(const TextPos * pos,  FileDiffSection * const *sec,
 bool FilePair::NextDifference(TextPos PosFrom, BOOL IgnoreWhitespaces,
 							TextPos * DiffPos, TextPos * EndPos)
 {
-	if (0 == m_DiffSections.GetSize())
+	if (m_DiffSections.empty())
 	{
 		return FALSE;
 	}
-	FileDiffSection const *const * ppSection =
-		BinLookupAbout<FileDiffSection *, TextPos, int>
-	(& PosFrom, 0,
-		m_DiffSections.GetData(), m_DiffSections.GetSize(),
-		CompareTextPosBegin);
-	int SectionIdx = ppSection - m_DiffSections.GetData();
-	if (SectionIdx > m_DiffSections.GetUpperBound())
+	FileDiffSection diff;
+	diff.m_Begin = PosFrom;
+	vector<FileDiffSection *>::iterator pFound = upper_bound(m_DiffSections.begin(),
+															m_DiffSections.end(), & diff, less<FileDiffSection *>());
+
+	if (pFound >= m_DiffSections.end())
 	{
 		return FALSE;
 	}
-	const FileDiffSection * pSection = *ppSection;
-	if (PosFrom >= pSection->m_Begin)
-	{
-		if (SectionIdx == m_DiffSections.GetUpperBound())
-		{
-			return FALSE;
-		}
-		ppSection++;
-		SectionIdx++;
-		pSection = *ppSection;
-	}
+	const FileDiffSection * pSection = *pFound;
+
 	if (IgnoreWhitespaces)
 	{
 		while (pSection->m_Flags & pSection->FlagWhitespace)
 		{
-			if (SectionIdx == m_DiffSections.GetUpperBound())
+			pFound++;
+			if (pFound >= m_DiffSections.end())
 			{
 				return FALSE;
 			}
-			ppSection++;
-			SectionIdx++;
-			pSection = *ppSection;
+			pSection = *pFound;
 		}
 	}
 	if (NULL != DiffPos)
@@ -3201,34 +3191,30 @@ bool FilePair::NextDifference(TextPos PosFrom, BOOL IgnoreWhitespaces,
 bool FilePair::PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces,
 							TextPos * DiffPos, TextPos * EndPos)
 {
-	if (0 == m_DiffSections.GetSize())
+	if (m_DiffSections.empty())
 	{
 		return FALSE;
 	}
-	FileDiffSection const *const * ppSection =
-		BinLookupAbout<FileDiffSection *, TextPos, int>
-	(& PosFrom, 0,
-		m_DiffSections.GetData(), m_DiffSections.GetSize(),
-		CompareTextPosEnd);
-	int SectionIdx = ppSection - m_DiffSections.GetData();
-	if (0 == SectionIdx)
+	FileDiffSection diff;
+	diff.m_Begin = PosFrom;
+	vector<FileDiffSection *>::iterator pFound = lower_bound(m_DiffSections.begin(),
+															m_DiffSections.end(), & diff, less<FileDiffSection *>());
+	if (pFound == m_DiffSections.begin())
 	{
 		return FALSE;
 	}
-	ppSection--;
-	SectionIdx--;
-	const FileDiffSection * pSection = *ppSection;
+	pFound--;
+	const FileDiffSection * pSection = *pFound;
 	if (IgnoreWhitespaces)
 	{
 		while (pSection->m_Flags & pSection->FlagWhitespace)
 		{
-			if (0 == SectionIdx)
+			if (pFound == m_DiffSections.begin())
 			{
 				return FALSE;
 			}
-			ppSection--;
-			SectionIdx--;
-			pSection = *ppSection;
+			pFound--;
+			pSection = *pFound;
 		}
 	}
 	if (NULL != DiffPos)

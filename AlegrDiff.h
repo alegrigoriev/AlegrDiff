@@ -128,6 +128,8 @@ public:
 	void UpdateAllDiffViews(LPARAM lHint = 0L, CObject* pHint = NULL);
 
 	CDocument * OpenFilePairView(FilePair * pPair);
+	void CloseFilePairView(FilePair * pPair);
+	void ReloadFilePairView(FilePair * pPair);
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CAlegrDiffApp)

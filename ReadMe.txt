@@ -1,8 +1,11 @@
 TODO:
 
+Refresh list view
+If main window is minimized, save its state before minimization
+Show sort order arrows with comctrl version < 6.0
+make word by word comparison in MatchStrings
 Add "CStringHistory" class
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
-Refresh list view
 Add Copy 1st file text, copy 2nd file text
 Copy binary dump as text
 Switch from text view to binary view
@@ -11,16 +14,11 @@ Update comparison result on load and reload
 replace edit box with a combobox in FolderDialog
 Add history to SaveListOf Files
 
-Detect "Version control information different only"
-Detect "Different in spaces only"
-make word by word comparison in MatchStrings
 show version of file1, file2 of the line
 Show Left-only, right-only, merged line (single line only)
 Import font settings from Visual C/VisualStudio
 Maybe different color for selected accepted/declined
 add option to keep the caret on one line during F3 and F7
-If main window is minimized, save its state before minimization
-Show sort order arrows with comctrl version < 6.0
 
 V1.5:
 Consider "signed fingerprint file" (UNICODE only)
@@ -33,7 +31,6 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-Status line for single file shows "Files DIFFERENT"
 Directory share name cannot be selected if no '\' appended
 Blank lines prevent from proper line matching inside difference blocks
 "   if()" and "  if ()" shows non-whitespace difference	- need full word mode
@@ -43,6 +40,7 @@ screen move in two directions may corrupt the image (??)
 Directory dialog allows to select network host. It won't return anything then.
 
 Fixed:
+Status line for single file shows "Files DIFFERENT"
 Non-UNICODE OS: wrong status string
 Non-UNICODE OS: clipboard
 File Date/time not shown in non-UNICODE OS
@@ -62,6 +60,7 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+In Properties dialog: show file size
 In Properties dialog: show file size
 Add 1st file size, 2nd file size (with exact size tooltips?)
 Make "Show columns" menu with "reset Columns"

@@ -2170,8 +2170,7 @@ bool FileLine::LooksLike(const FileLine * pOtherLine, int PercentsDifferent) con
 }
 
 FilePair::FilePair()
-	: pNext(NULL),
-	pFirstFile(NULL),
+	: pFirstFile(NULL),
 	pSecondFile(NULL),
 	m_RefCount(1),
 	m_LoadedCount(0),
@@ -2759,9 +2758,7 @@ void FilePair::FreeLinePairData()
 
 FilePair::eFileComparisionResult FilePair::PreCompareFiles(CMd5HashCalculator * pMd5Calc, BOOL volatile & bStopOperation)
 {
-	// TODO: different function for binary comparision
-	if ((pFirstFile != NULL && pFirstFile->m_IsBinary)
-		|| (pSecondFile != NULL && pSecondFile->m_IsBinary))
+	if (NeedBinaryComparison())
 	{
 		return PreCompareBinaryFiles(pMd5Calc, bStopOperation);
 	}
@@ -2856,14 +2853,10 @@ FilePair::eFileComparisionResult FilePair::PreCompareTextFiles(BOOL volatile & b
 
 	int NumLines2 = pSecondFile->GetNumLines();
 	int NumNonBlankLines2 = pSecondFile->m_NormalizedHashSortedLines.size();
-#if 0
-	// files may differ in version stamp only, for example
-	if (NumNonBlankLines1 != NumNonBlankLines2)
-	{
-		return FilesDifferent;
-	}
-#endif
+
 	bool SpacesDifferent = false;
+	bool OnlyVersionInfoDifferent = false;
+
 	while (nLine1 < NumLines1
 			|| nLine2 < NumLines2)
 	{
@@ -2919,14 +2912,40 @@ FilePair::eFileComparisionResult FilePair::PreCompareTextFiles(BOOL volatile & b
 				}
 				else
 				{
-					return FilesDifferent;
+					// check if the lines differs only in the version control information
+					LPCTSTR str1 = Line1->GetNormalizedText();
+					LPCTSTR pVersionStart1 = _tcschr(str1, '$');
+					LPCTSTR pVersionEnd1 = _tcsrchr(str1, '$');
+
+					LPCTSTR str2 = Line2->GetNormalizedText();
+					LPCTSTR pVersionStart2 = _tcschr(str2, '$');
+					LPCTSTR pVersionEnd2 = _tcsrchr(str2, '$');
+
+					if (NULL == pVersionStart1
+						|| NULL == pVersionEnd1
+						|| NULL == pVersionStart2
+						|| NULL == pVersionEnd2
+						|| pVersionStart1 == pVersionEnd1
+						|| pVersionStart2 == pVersionEnd2
+						|| pVersionStart1 - str1 != pVersionStart2 - str2
+						|| 0 != memcmp(str1, str2, (pVersionStart1 - str1) * sizeof (TCHAR))
+						|| 0 != _tcscmp(pVersionEnd1 + 1, pVersionEnd2 + 1))
+					{
+						return FilesDifferent;
+					}
+					OnlyVersionInfoDifferent = true;
 				}
 			}
 			nLine1++;
 			nLine2++;
 		}
 	}
-	if (SpacesDifferent)
+
+	if (OnlyVersionInfoDifferent)
+	{
+		return VersionInfoDifferent;
+	}
+	else if (SpacesDifferent)
 	{
 		return DifferentInSpaces;
 	}

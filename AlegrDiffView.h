@@ -81,7 +81,7 @@ public:
 protected:
 	vector<FilePair *> m_PairArray;
 
-	void BuildSortedPairArray(vector<FilePair *> & PairArray, FilePair * pPairs, int nCount);
+	void BuildSortedPairArray(vector<FilePair *> & PairArray, KListEntry<FilePair> * pPairList, int nCount);
 
 // Generated message map functions
 protected:

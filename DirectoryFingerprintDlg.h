@@ -1,10 +1,11 @@
 #pragma once
 #include "afxwin.h"
 #include "ApplicationProfile.h"
+#include "ResizableDialog.h"
 
 // CDirectoryFingerprintDlg dialog
 
-class CDirectoryFingerprintDlg : public CDialog
+class CDirectoryFingerprintDlg : public CResizableDialog
 {
 	DECLARE_DYNAMIC(CDirectoryFingerprintDlg)
 
@@ -21,12 +22,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedButtonBrowseDir();
+	afx_msg void OnBnClickedIncludeSubdirs();
 	afx_msg void OnBnClickedButtonBrowseSaveFilename();
 
 	BOOL m_bIncludeDirectoryStructure;
 	BOOL m_bIncludeSubdirectories;
 	BOOL m_bSaveAsUnicode;
-	BOOL m_bNeedUpdateControls;
 
 	CComboBox m_DirCombo;
 	CString m_sDirectory;
@@ -39,19 +40,25 @@ public:
 	CString m_sIgnoreFiles;
 	CStringHistory m_IgnoreFilterHistory;
 
+	CComboBox m_cbIgnoreFolders;
+	CString m_sIgnoreFolders;
+	CStringHistory m_IgnoreFolderHistory;
+
 	CComboBox m_SaveFilename;
 	CString m_sSaveFilename;
 	BOOL m_bOkToOverwriteFile;
 	CStringHistory m_FingerprintFilenameHistory;
 
+protected:
 	virtual BOOL OnInitDialog();
+	virtual void OnMetricsChange();
 
-	LRESULT OnKickIdle(WPARAM, LPARAM);
 	afx_msg void OnCbnEditchangeComboFirstDir();
 	afx_msg void OnCbnSelchangeComboFirstDir();
 	afx_msg void OnCbnEditchangeComboSaveFilename();
 	afx_msg void OnCbnSelchangeComboSaveFilename();
+
 	void OnUpdateOk(CCmdUI * pCmdUI);
-protected:
+	void OnUpdateIgnoreDirs(CCmdUI * pCmdUI);
 	virtual void OnOK();
 };

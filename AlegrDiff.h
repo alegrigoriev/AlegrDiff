@@ -123,6 +123,7 @@ public:
 	CString m_sBinaryFilesFilter;
 	CString m_sCppFilesFilter;
 	CString m_sIgnoreFilesFilter;
+	CString m_sIgnoreFoldersFilter;
 
 	CString m_FindString;
 

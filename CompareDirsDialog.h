@@ -7,11 +7,12 @@
 // CompareDirsDialog.h : header file
 //
 #include "ApplicationProfile.h"
+#include "ResizableDialog.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CCompareDirsDialog dialog
 
-class CCompareDirsDialog : public CDialog
+class CCompareDirsDialog : public CResizableDialog
 {
 // Construction
 public:
@@ -38,9 +39,13 @@ public:
 	CComboBox m_cbBinaryFilesFilter;
 	CComboBox m_cbCppFilesFilter;
 	CComboBox m_cbIgnoreFilesFilter;
+	CComboBox m_cbIgnoreFoldersFilter;
+
 	CString	m_sBinaryFilesFilter;
 	CString	m_sCppFilesFilter;
 	CString	m_sIgnoreFilesFilter;
+	CString	m_sIgnoreFoldersFilter;
+
 	UINT	m_nTabIndent;
 
 	CApplicationProfile m_Profile;
@@ -48,7 +53,7 @@ public:
 	CStringHistory m_BinaryFilterHistory;
 	CStringHistory m_CppFilterHistory;
 	CStringHistory m_IgnoreFilterHistory;
-
+	CStringHistory m_IgnoreFoldersHistory;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -62,14 +67,20 @@ protected:
 // Implementation
 protected:
 
+	virtual void OnMetricsChange();
 	// Generated message map functions
 	//{{AFX_MSG(CCompareDirsDialog)
 	afx_msg void OnButtonBrowseFirstDir();
 	afx_msg void OnButtonBrowseSecondDir();
 	afx_msg void OnButtonAdvanced();
 	afx_msg void OnCheckBinary();
+	afx_msg void OnCheckIncludeSubdirs();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnDropFiles(HDROP hDropInfo);
+	afx_msg void OnUpdateIgnoreDirs(CCmdUI * pCmdUI);
+	afx_msg void OnUpdateEditBinaryFiles(CCmdUI * pCmdUI);
+	afx_msg void OnUpdateEditCCpp(CCmdUI * pCmdUI);
+	afx_msg void OnUpdateTabIndent(CCmdUI * pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

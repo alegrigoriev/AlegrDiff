@@ -4,7 +4,6 @@
 #include "stdafx.h"
 #include "AlegrDiff.h"
 #include "FindDialog.h"
-#include <afxpriv.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -17,9 +16,8 @@ static char THIS_FILE[] = __FILE__;
 
 
 CMyFindDialog::CMyFindDialog(CWnd* pParent /*=NULL*/)
-	: CDialog(CMyFindDialog::IDD, pParent)
+	: CUiUpdatedDlg(CMyFindDialog::IDD, pParent)
 	, m_SearchScope(0)
-	, m_bNeedUpdateControls(TRUE)
 {
 	//{{AFX_DATA_INIT(CMyFindDialog)
 	m_bCaseSensitive = FALSE;
@@ -31,7 +29,7 @@ CMyFindDialog::CMyFindDialog(CWnd* pParent /*=NULL*/)
 
 void CMyFindDialog::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
+	CUiUpdatedDlg::DoDataExchange(pDX);
 	CThisApp * pApp = GetApp();
 
 	//{{AFX_DATA_MAP(CMyFindDialog)
@@ -77,7 +75,7 @@ void CMyFindDialog::DoDataExchange(CDataExchange* pDX)
 }
 
 
-BEGIN_MESSAGE_MAP(CMyFindDialog, CDialog)
+BEGIN_MESSAGE_MAP(CMyFindDialog, CUiUpdatedDlg)
 	//{{AFX_MSG_MAP(CMyFindDialog)
 	ON_CBN_EDITCHANGE(IDC_COMBO_FIND, OnEditchangeComboFind)
 	//}}AFX_MSG_MAP
@@ -89,7 +87,7 @@ BEGIN_MESSAGE_MAP(CMyFindDialog, CDialog)
 	ON_CBN_SELENDOK(IDC_COMBO_FIND, OnEditchangeComboFind)
 	ON_CBN_SELENDCANCEL(IDC_COMBO_FIND, OnEditchangeComboFind)
 	ON_CBN_CLOSEUP(IDC_COMBO_FIND, OnEditchangeComboFind)
-	ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
+
 	ON_UPDATE_COMMAND_UI(IDC_CHECK_WHOLE_WORD, OnUpdateCheckWholeWord)
 	ON_UPDATE_COMMAND_UI(IDOK, OnUpdateOk)
 END_MESSAGE_MAP()
@@ -99,7 +97,7 @@ END_MESSAGE_MAP()
 
 void CMyFindDialog::OnEditchangeComboFind()
 {
-	m_bNeedUpdateControls = TRUE;
+	NeedUpdateControls();
 }
 
 void CMyFindDialog::OnUpdateCheckWholeWord(CCmdUI* pCmdUI)
@@ -116,19 +114,19 @@ void CMyFindDialog::OnUpdateOk(CCmdUI* pCmdUI)
 void CMyFindDialog::OnBnClickedRadio1()
 {
 	m_SearchScope = 1;
-	m_bNeedUpdateControls = TRUE;
+	NeedUpdateControls();
 }
 
 void CMyFindDialog::OnBnClickedRadio2()
 {
 	m_SearchScope = 2;
-	m_bNeedUpdateControls = TRUE;
+	NeedUpdateControls();
 }
 
 void CMyFindDialog::OnBnClickedRadio3()
 {
 	m_SearchScope = 0;
-	m_bNeedUpdateControls = TRUE;
+	NeedUpdateControls();
 }
 
 void CMyFindDialog::OnBnClickedCheckWholeWord()
@@ -136,12 +134,3 @@ void CMyFindDialog::OnBnClickedCheckWholeWord()
 	m_bWholeWord = IsDlgButtonChecked(IDC_CHECK_WHOLE_WORD);
 }
 
-LRESULT CMyFindDialog::OnKickIdle(WPARAM, LPARAM)
-{
-	if (m_bNeedUpdateControls)
-	{
-		UpdateDialogControls(this, FALSE);
-	}
-	m_bNeedUpdateControls = FALSE;
-	return 0;
-}

@@ -458,6 +458,8 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
 	// TODO: keep focus on the same item
 	// fill the list control
+	CWaitCursor WaitCursor;
+
 	LockWindowUpdate();
 	pListCtrl->DeleteAllItems();
 

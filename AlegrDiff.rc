@@ -556,9 +556,9 @@ BEGIN
     LTEXT           "TODO: layout dialog bar ",IDC_STATIC,12,4,300,8
 END
 
-IDD_DIALOG_COMPARE_DIRS DIALOGEX 0, 0, 230, 169
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
-    WS_SYSMENU
+IDD_DIALOG_COMPARE_DIRS DIALOGEX 0, 0, 230, 170
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | 
+    WS_THICKFRAME
 EXSTYLE WS_EX_ACCEPTFILES
 CAPTION "Compare directories"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -579,13 +579,13 @@ BEGIN
     LTEXT           "File&name filter: ",IDC_STATIC,7,117,53,8
     COMBOBOX        IDC_EDITFILENAME_FILTER,66,116,157,60,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,47,148,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,123,148,50,14
+    DEFPUSHBUTTON   "OK",IDOK,47,149,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,123,149,50,14
 END
 
-IDD_DIALOG_COMPARE_DIRS_ADVANCED DIALOGEX 0, 0, 231, 307
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
-    WS_SYSMENU
+IDD_DIALOG_COMPARE_DIRS_ADVANCED DIALOGEX 0, 0, 230, 311
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | 
+    WS_THICKFRAME
 CAPTION "Compare directories"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -595,38 +595,42 @@ BEGIN
     LTEXT           "&Second directory:",IDC_STATIC,7,43,101,8
     COMBOBOX        IDC_COMBO_SECOND_DIR,7,59,189,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_DIR,207,24,17,14
-    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SECOND_DIR,207,58,17,14
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_DIR,206,24,17,14
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SECOND_DIR,206,58,17,14
     CONTROL         "Include s&ubdirectories",IDC_CHECK_INCLUDE_SUBDIRS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,122,10
-    PUSHBUTTON      "&Less options <<",IDC_BUTTON_ADVANCED,161,86,63,14
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,133,10
+    PUSHBUTTON      "&Less options <<",IDC_BUTTON_ADVANCED,153,86,70,14
     CONTROL         "&Binary comparison only",IDC_CHECK_BINARY,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,99,126,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,99,139,10
     CONTROL         "Binary comparison uses &MD5 file fingerprint",
                     IDC_CHECK_USE_MD5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     7,116,209,10
     LTEXT           "File&name filter: ",IDC_STATIC,7,140,56,8
-    COMBOBOX        IDC_EDITFILENAME_FILTER,67,139,157,56,CBS_DROPDOWN | 
+    COMBOBOX        IDC_EDITFILENAME_FILTER,66,139,157,56,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "Compare the following files as C/C+&+:",IDC_STATIC,7,
-                    158,199,8
-    COMBOBOX        IDC_EDIT_C_CPP,7,171,217,57,CBS_DROPDOWN | WS_VSCROLL | 
+                    156,199,8
+    COMBOBOX        IDC_EDIT_C_CPP,7,168,216,57,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
     LTEXT           "Compare the following files as binar&y:",IDC_STATIC,7,
-                    189,188,8
-    COMBOBOX        IDC_EDIT_BINARY_FILES,7,204,217,59,CBS_DROPDOWN | 
+                    184,188,8
+    COMBOBOX        IDC_EDIT_BINARY_FILES,7,196,216,59,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "&Ignore the following files:",IDC_STATIC,7,221,141,8
-    COMBOBOX        IDC_EDIT_IGNORE,7,235,217,58,CBS_DROPDOWN | WS_VSCROLL | 
+    LTEXT           "&Ignore the following files:",IDC_STATIC,7,212,141,8
+    COMBOBOX        IDC_EDIT_IGNORE,7,224,216,58,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "&Tab indent:",IDC_STATIC,7,265,43,8
-    EDITTEXT        IDC_EDIT_TAB_INDENT,56,262,29,14,ES_AUTOHSCROLL | 
+    LTEXT           "&Ignore the following subdirectories:",IDC_STATIC,7,240,
+                    169,8
+    COMBOBOX        IDC_EDIT_IGNORE_DIRS,7,252,216,58,CBS_DROPDOWN | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Tab indent:",IDC_STATIC,7,273,43,8
+    EDITTEXT        IDC_EDIT_TAB_INDENT,56,270,29,14,ES_AUTOHSCROLL | 
                     ES_NUMBER
     CONTROL         "Spin1",IDC_SPIN1,"msctls_updown32",UDS_SETBUDDYINT | 
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
-                    UDS_NOTHOUSANDS,85,262,12,14
-    DEFPUSHBUTTON   "OK",IDOK,47,286,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,123,286,50,14
+                    UDS_NOTHOUSANDS,85,270,12,14
+    DEFPUSHBUTTON   "OK",IDOK,47,290,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,123,290,50,14
 END
 
 IDD_DIALOG_GOTO_LINE DIALOGEX 0, 0, 142, 86
@@ -660,25 +664,29 @@ BEGIN
     LTEXT           "",IDC_STATIC,9,31,8,8
 END
 
-IDD_PROPPAGE_FILE_PREFERENCES DIALOGEX 0, 0, 184, 133
+IDD_PROPPAGE_FILE_PREFERENCES DIALOGEX 0, 0, 184, 150
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Files"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    LTEXT           "Compare the following files as C/C++:",IDC_STATIC,7,7,
+    LTEXT           "Compare the following files as &C/C++:",IDC_STATIC,7,7,
                     170,8
     COMBOBOX        IDC_EDIT_C_CPP,7,20,170,58,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "Compare the following files as binary:",IDC_STATIC,7,41,
-                    165,8
-    COMBOBOX        IDC_EDIT_BINARY_FILES,7,53,170,61,CBS_DROPDOWN | 
+    LTEXT           "Compare the following files as &binary:",IDC_STATIC,7,
+                    36,165,8
+    COMBOBOX        IDC_EDIT_BINARY_FILES,7,48,170,61,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "&Ignore the following files:",IDC_STATIC,7,74,154,8
-    COMBOBOX        IDC_EDIT_IGNORE,7,88,170,71,CBS_DROPDOWN | WS_VSCROLL | 
+    LTEXT           "I&gnore the following files:",IDC_STATIC,7,65,154,8
+    COMBOBOX        IDC_EDIT_IGNORE,7,79,170,71,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
     CONTROL         "&Automatically reload modified files",
                     IDC_CHECK_AUTO_RELOAD,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,107,139,10
+                    WS_TABSTOP,7,127,139,10
+    LTEXT           "Ignore the following &subdirectories:",IDC_STATIC,7,95,
+                    154,8
+    COMBOBOX        IDC_EDIT_IGNORE_DIRS,7,109,170,71,CBS_DROPDOWN | 
+                    WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGE_COMPARISION_PREFERENCES DIALOGEX 0, 0, 226, 108
@@ -887,9 +895,9 @@ BEGIN
 END
 #endif
 
-IDD_DIALOG_DIR_FINGERPRINT DIALOGEX 0, 0, 231, 174
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
-    WS_SYSMENU
+IDD_DIALOG_DIR_FINGERPRINT DIALOGEX 0, 0, 230, 193
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | 
+    WS_THICKFRAME
 EXSTYLE WS_EX_ACCEPTFILES
 CAPTION "Create directory fingerprint file"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -897,7 +905,7 @@ BEGIN
     LTEXT           "&Directory:",IDC_STATIC,7,7,64,8
     COMBOBOX        IDC_COMBO_FIRST_DIR,7,20,189,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_DIR,207,19,17,14
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_DIR,206,19,17,14
     CONTROL         "Include &subdirectories",IDC_CHECK_INCLUDE_SUBDIRS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,38,115,10
     CONTROL         "In&clude directory tree structure",
@@ -906,17 +914,20 @@ BEGIN
     LTEXT           "Save &as file:",IDC_STATIC,7,65,83,8
     COMBOBOX        IDC_COMBO_SAVE_FILENAME,7,77,189,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SAVE_FILENAME,207,76,17,14
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SAVE_FILENAME,206,76,17,14
     CONTROL         "Save as UNICODE file",IDC_CHECK_SAVE_AS_UNICODE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,94,145,10
     LTEXT           "File&name filter: ",IDC_STATIC,7,112,56,8
-    COMBOBOX        IDC_EDITFILENAME_FILTER,67,111,157,60,CBS_DROPDOWN | 
+    COMBOBOX        IDC_EDITFILENAME_FILTER,66,111,157,60,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "Ignore files:",IDC_STATIC,7,130,56,8
-    COMBOBOX        IDC_COMBO_IGNORE_FILES,67,129,157,61,CBS_DROPDOWN | 
+    COMBOBOX        IDC_COMBO_IGNORE_FILES,66,129,157,61,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,52,153,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,128,153,50,14
+    LTEXT           "Ignore folders:",IDC_STATIC,7,148,56,8
+    COMBOBOX        IDC_COMBO_IGNORE_DIRS,66,147,157,61,CBS_DROPDOWN | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,52,172,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,128,172,50,14
 END
 
 IDD_DIALOG_COMPARISON_PROGRESS DIALOGEX 0, 0, 270, 140
@@ -1028,6 +1039,15 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,108,101,50,14
 END
 
+IDD_UIUPDATEDDLG DIALOG  0, 0, 186, 95
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,7,50,16
+    PUSHBUTTON      "Cancel",IDCANCEL,129,26,50,16
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1040,8 +1060,8 @@ VS_VERSION_INFO$(RETAIL_VERSION) VERSIONINFO
 #else
 VS_VERSION_INFO VERSIONINFO
 #endif
- FILEVERSION 1,0,24,0
- PRODUCTVERSION 1,0,24,0
+ FILEVERSION 1,0,25,0
+ PRODUCTVERSION 1,0,25,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -1058,13 +1078,13 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "AleGr Software"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application"
-            VALUE "FileVersion", "1, 0, 24, 0"
+            VALUE "FileVersion", "1, 0, 25, 0"
             VALUE "InternalName", "AlegrDiff"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001-2002"
             VALUE "OriginalFilename", "AlegrDiff.EXE"
-            VALUE "PrivateBuild", "Beta 1.24"
+            VALUE "PrivateBuild", "Beta 1.25"
             VALUE "ProductName", "AlegrDiff Application"
-            VALUE "ProductVersion", "1, 0, 24, 0"
+            VALUE "ProductVersion", "1, 0, 25, 0"
         END
     END
     BLOCK "VarFileInfo"
@@ -1138,15 +1158,15 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 223
         TOPMARGIN, 7
-        BOTTOMMARGIN, 162
+        BOTTOMMARGIN, 163
     END
 
     IDD_DIALOG_COMPARE_DIRS_ADVANCED, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 224
+        RIGHTMARGIN, 223
         TOPMARGIN, 7
-        BOTTOMMARGIN, 300
+        BOTTOMMARGIN, 304
     END
 
     IDD_DIALOG_GOTO_LINE, DIALOG
@@ -1170,7 +1190,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 177
         TOPMARGIN, 7
-        BOTTOMMARGIN, 126
+        BOTTOMMARGIN, 143
     END
 
     IDD_PROPPAGE_COMPARISION_PREFERENCES, DIALOG
@@ -1240,9 +1260,9 @@ BEGIN
     IDD_DIALOG_DIR_FINGERPRINT, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 224
+        RIGHTMARGIN, 223
         TOPMARGIN, 7
-        BOTTOMMARGIN, 167
+        BOTTOMMARGIN, 186
     END
 
     IDD_DIALOG_COMPARISON_PROGRESS, DIALOG
@@ -1307,6 +1327,14 @@ BEGIN
         RIGHTMARGIN, 262
         TOPMARGIN, 7
         BOTTOMMARGIN, 115
+    END
+
+    IDD_UIUPDATEDDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -341,6 +341,79 @@
 			<Tool
 				Name="VCWebDeploymentTool"/>
 		</Configuration>
+		<Configuration
+			Name="Release ANSI|Win32"
+			OutputDirectory="Release ANSI"
+			IntermediateDirectory="Release ANSI"
+			ConfigurationType="1"
+			UseOfMFC="1"
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
+			<Tool
+				Name="VCCLCompilerTool"
+				GlobalOptimizations="TRUE"
+				InlineFunctionExpansion="1"
+				EnableIntrinsicFunctions="TRUE"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="TRUE"
+				OptimizeForProcessor="2"
+				PreprocessorDefinitions="NDEBUG,WIN32,_WINDOWS,_WIN32_WINNT=0x0501,RETAIL_VERSION"
+				StringPooling="TRUE"
+				RuntimeLibrary="0"
+				BufferSecurityCheck="FALSE"
+				EnableFunctionLevelLinking="TRUE"
+				RuntimeTypeInfo="TRUE"
+				UsePrecompiledHeader="3"
+				PrecompiledHeaderThrough="stdafx.h"
+				PrecompiledHeaderFile=".\ReleaseANSI/AlegrDiff.pch"
+				AssemblerListingLocation=".\ReleaseANSI/"
+				ObjectFile=".\ReleaseANSI/"
+				ProgramDataBaseFileName=".\ReleaseANSI/"
+				WarningLevel="3"
+				SuppressStartupBanner="TRUE"
+				Detect64BitPortabilityProblems="FALSE"
+				DebugInformationFormat="3"
+				CallingConvention="2"/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalOptions="/MACHINE:I386 /nodefaultlib:kernel32.lib /nodefaultlib:advapi32.lib /nodefaultlib:user32.lib /nodefaultlib:gdi32.lib /nodefaultlib:shell32.lib /nodefaultlib:comdlg32.lib /nodefaultlib:version.lib /nodefaultlib:mpr.lib /nodefaultlib:rasapi32.lib /nodefaultlib:winmm.lib /nodefaultlib:winspool.lib /nodefaultlib:vfw32.lib /nodefaultlib:secur32.lib /nodefaultlib:oleacc.lib /nodefaultlib:oledlg.lib /nodefaultlib:sensapi.lib"
+				AdditionalDependencies="kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib"
+				OutputFile=".\ReleaseANSI/AlegrDiff.exe"
+				LinkIncremental="1"
+				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames=""
+				GenerateDebugInformation="FALSE"
+				ProgramDatabaseFile=".\ReleaseANSI/AlegrDiff.pdb"
+				GenerateMapFile="TRUE"
+				MapFileName=".\ReleaseANSI/AlegrDiff.map"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				OptimizeForWindows98="1"/>
+			<Tool
+				Name="VCMIDLTool"
+				PreprocessorDefinitions="NDEBUG"
+				MkTypLibCompatible="TRUE"
+				SuppressStartupBanner="TRUE"
+				TargetEnvironment="1"
+				TypeLibraryName=".\Release/AlegrDiff.tlb"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="NDEBUG,RETAIL_VERSION"
+				Culture="1033"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCWebDeploymentTool"/>
+		</Configuration>
 	</Configurations>
 	<Files>
 		<Filter
@@ -431,6 +504,9 @@
 				RelativePath="ProgressDialog.cpp">
 			</File>
 			<File
+				RelativePath="ResizableDialog.cpp">
+			</File>
+			<File
 				RelativePath=".\SaveFileListDlg.cpp">
 			</File>
 			<File
@@ -468,6 +544,15 @@
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release ANSI|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="UiUpdatedDlg.cpp">
 			</File>
 		</Filter>
 		<Filter
@@ -561,6 +646,9 @@
 				RelativePath="ProgressDialog.h">
 			</File>
 			<File
+				RelativePath="ResizableDialog.h">
+			</File>
+			<File
 				RelativePath=".\Resource.h">
 			</File>
 			<File
@@ -574,6 +662,9 @@
 			</File>
 			<File
 				RelativePath=".\StdAfx.h">
+			</File>
+			<File
+				RelativePath="UiUpdatedDlg.h">
 			</File>
 		</Filter>
 		<Filter

@@ -221,6 +221,8 @@ BOOL CAlegrDiffApp::InitInstance()
 					_T("*.c;*.cpp;*.h;*.hpp;*.inl;*.rc;*.h++"));
 	Profile.AddItem(_T("Settings"), _T("IgnoreFiles"), m_sIgnoreFilesFilter,
 					_T("*.ncb"));
+	Profile.AddItem(_T("Settings"), _T("IgnoreFolders"), m_sIgnoreFoldersFilter,
+					_T(""));
 
 	static UCHAR DefaultColumnArray[MaxColumns] =
 	{
@@ -884,6 +886,7 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 	dlg.m_sCppFilesFilter = m_sCppFilesFilter;
 
 	dlg.m_sIgnoreFilesFilter = m_sIgnoreFilesFilter;
+	dlg.m_sIgnoreFoldersFilter = m_sIgnoreFoldersFilter;
 
 	dlg.m_nTabIndent = m_TabIndent;
 
@@ -918,6 +921,7 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 		m_sCppFilesFilter = dlg.m_sCppFilesFilter;
 
 		m_sIgnoreFilesFilter = dlg.m_sIgnoreFilesFilter;
+		m_sIgnoreFoldersFilter = dlg.m_sIgnoreFoldersFilter;
 
 		m_TabIndent = dlg.m_nTabIndent;
 

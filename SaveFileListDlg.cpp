@@ -4,7 +4,6 @@
 #include "stdafx.h"
 #include "AlegrDiff.h"
 #include "SaveFileListDlg.h"
-#include <afxpriv.h>
 #include "FileDialogWithHistory.h"
 
 #ifdef _DEBUG
@@ -18,7 +17,7 @@ static char THIS_FILE[] = __FILE__;
 
 
 CSaveFileListDlg::CSaveFileListDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CSaveFileListDlg::IDD, pParent)
+	: CUiUpdatedDlg(CSaveFileListDlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CSaveFileListDlg)
 	m_bIncludeComparisonResult = FALSE;
@@ -49,7 +48,7 @@ CSaveFileListDlg::CSaveFileListDlg(CWnd* pParent /*=NULL*/)
 
 void CSaveFileListDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
+	CUiUpdatedDlg::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CSaveFileListDlg)
 	DDX_Control(pDX, IDC_EDIT_FILENAME, m_eFilename);
 	DDX_Check(pDX, IDC_CHECK_COMPARISON_RESULT, m_bIncludeComparisonResult);
@@ -71,10 +70,9 @@ void CSaveFileListDlg::DoDataExchange(CDataExchange* pDX)
 }
 
 
-BEGIN_MESSAGE_MAP(CSaveFileListDlg, CDialog)
+BEGIN_MESSAGE_MAP(CSaveFileListDlg, CUiUpdatedDlg)
 	//{{AFX_MSG_MAP(CSaveFileListDlg)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE, OnButtonBrowse)
-	ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(IDOK, OnUpdateOk)
 	ON_UPDATE_COMMAND_UI(IDC_CHECK_IDENTICAL, OnUpdateCheckIncludeGroup)
@@ -143,20 +141,10 @@ void CSaveFileListDlg::OnButtonBrowse()
 	m_eFilename.SetWindowText(dlg.GetPathName());
 }
 
-LRESULT CSaveFileListDlg::OnKickIdle(WPARAM, LPARAM)
-{
-	if (m_bNeedUpdateControls)
-	{
-		UpdateDialogControls(this, FALSE);
-	}
-	m_bNeedUpdateControls = FALSE;
-	return 0;
-}
-
 BOOL CSaveFileListDlg::OnInitDialog()
 {
-	m_bNeedUpdateControls = true;
-	CDialog::OnInitDialog();
+	NeedUpdateControls();
+	CUiUpdatedDlg::OnInitDialog();
 	UpdateDialogControls(this, FALSE);
 	// TODO: Add extra initialization here
 
@@ -166,8 +154,8 @@ BOOL CSaveFileListDlg::OnInitDialog()
 
 BOOL CSaveFileListDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-	m_bNeedUpdateControls = true;
-	return CDialog::OnCommand(wParam, lParam);
+	NeedUpdateControls();
+	return CUiUpdatedDlg::OnCommand(wParam, lParam);
 }
 
 void CSaveFileListDlg::OnOK()

@@ -493,10 +493,10 @@ public:
 	}
 	bool LoadFolder(const CString & BaseDir, bool bRecurseSubdirs,
 					LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
-					LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask);
+					LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask, LPCTSTR sIgnoreDirs);
 	bool LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 						LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
-						LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask);
+						LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask, LPCTSTR sIgnoreDirs);
 
 	void FreeFileList();
 	enum { SortNameFirst = 1, SortDirFirst = 2, SortDataModified = 4, SortBackwards = 8};

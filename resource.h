@@ -6,6 +6,7 @@
 #define IDD_ABOUTBOX                    100
 #define IDD_PROPPAGE_FILE_PREFERENCES   102
 #define IDD_PROGRESSDIALOG              103
+#define IDD_UIUPDATEDDLG                104
 #define IDR_MAINFRAME                   128
 #define IDR_ALEGRDTYPE                  129
 #define IDD_DIALOG_COMPARE_DIRS         130
@@ -85,12 +86,14 @@
 #define IDC_CHECK_IGNORE                1009
 #define IDC_EDIT_IGNORE                 1010
 #define IDC_EDIT_TAB_INDENT             1011
+#define IDC_EDIT_IGNORE2                1011
 #define IDC_EDITFILENAME_FILTER         1012
 #define IDC_BUTTON_ADVANCED             1013
 #define IDC_COMBO_RECENT                1013
 #define IDC_CHECK_BINARY                1014
 #define IDC_SPIN1                       1015
 #define IDC_BUTTON_NORMAL_FONT          1016
+#define IDC_EDIT_IGNORE_DIRS            1016
 #define IDC_BUTTON_INSERTED_FONT        1017
 #define IDC_BUTTON_ERASED_FONT          1018
 #define IDC_STATIC_NORMAL_TEXT          1019
@@ -147,6 +150,8 @@
 #define IDC_CHECK_INCLUDE_DIRECTORY_STRUCTURE 1069
 #define IDC_CHECK_IGNORE_FILES          1070
 #define IDC_COMBO_IGNORE_FILES          1071
+#define IDC_COMBO_IGNORE_FILES2         1072
+#define IDC_COMBO_IGNORE_DIRS           1072
 #define IDC_CHECK_USE_MD5               1073
 #define IDC_CHECK1                      1074
 #define IDC_CHECK_UNICODE               1074
@@ -275,6 +280,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        179
 #define _APS_NEXT_COMMAND_VALUE         32888
 #define _APS_NEXT_CONTROL_VALUE         1083
-#define _APS_NEXT_SYMED_VALUE           104
+#define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

@@ -68,6 +68,7 @@ bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
 	}
 
 	m_sExclusionPattern = PatternToMultiCString(pApp->m_sIgnoreFilesFilter);
+	m_sIgnoreDirsPattern = PatternToMultiCString(pApp->m_sIgnoreFoldersFilter);
 
 	m_sCFilesPattern = PatternToMultiCString(pApp->m_sCppFilesFilter);
 
@@ -146,7 +147,7 @@ bool CAlegrDiffDoc::RebuildFilePairList(CProgressDialog * pDlg)
 
 	if (! FileList1.LoadFolder(m_sFirstDir, m_bRecurseSubdirs,
 								m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern,
-								m_sBinaryFilesPattern))
+								m_sBinaryFilesPattern, m_sIgnoreDirsPattern))
 	{
 		FreeFilePairList();
 		if (NULL != pDlg)
@@ -159,7 +160,7 @@ bool CAlegrDiffDoc::RebuildFilePairList(CProgressDialog * pDlg)
 	}
 	if (! FileList2.LoadFolder(m_sSecondDir, m_bRecurseSubdirs,
 								m_sInclusionPattern, m_sExclusionPattern,
-								m_sCFilesPattern, m_sBinaryFilesPattern))
+								m_sCFilesPattern, m_sBinaryFilesPattern, m_sIgnoreDirsPattern))
 	{
 		if (NULL != pDlg)
 		{

@@ -10,6 +10,7 @@ class CUiUpdatedDlg : public CDialog
 public:
 	CUiUpdatedDlg(UINT Id, CWnd* pParent = NULL);   // standard constructor
 	virtual ~CUiUpdatedDlg();
+	INT_PTR DoModal();
 
 // Dialog Data
 

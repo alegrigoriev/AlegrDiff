@@ -38,10 +38,13 @@ protected: // create from serialization only
 public:
 	CString m_sInclusionPattern;
 	CString m_sExclusionPattern;
+	CString m_sIgnoreDirsPattern;
 	CString m_sCFilesPattern;
 	CString m_sBinaryFilesPattern;
+
 	CString	m_sFirstDir;
 	CString	m_sSecondDir;
+
 	KListEntry<FilePair> m_PairList;
 	int m_nFilePairs;
 	bool m_bRecurseSubdirs;

@@ -75,6 +75,7 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 
 	CString ExclusionPattern(PatternToMultiCString(m_sIgnoreFiles));
 	CString InclusionPattern(PatternToMultiCString(m_sFilenameFilter));
+	CString IgnoreDirsPattern(PatternToMultiCString(m_sIgnoreFolders));
 
 	if (InclusionPattern.IsEmpty())
 	{
@@ -88,7 +89,7 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 
 	if (! FileList1.LoadFolder(FullDirectoryName, m_bIncludeSubdirectories != 0,
 								InclusionPattern, ExclusionPattern, PatternToMultiCString(_T("")),
-								PatternToMultiCString(_T(""))))
+								PatternToMultiCString(_T("")), IgnoreDirsPattern))
 	{
 		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, FullDirectoryName);
 

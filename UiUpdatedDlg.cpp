@@ -34,3 +34,8 @@ LRESULT CUiUpdatedDlg::OnKickIdle(WPARAM, LPARAM)
 	return 0;
 }
 
+INT_PTR CUiUpdatedDlg::DoModal()
+{
+	m_bNeedUpdateControls = TRUE;
+	return CDialog::DoModal();
+}

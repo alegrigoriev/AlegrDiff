@@ -118,7 +118,7 @@ public:
 	void SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags = SetPositionMakeCentered);
 	void CaretToHome(int flags);
 	void CaretToEnd(int flags);
-	ULONG CopyTextToMemory(PUCHAR pBuf, ULONG BufLen, TextPos pFrom, TextPos pTo);
+	ULONG CopyTextToMemory(LPTSTR pBuf, ULONG BufLen, TextPos pFrom, TextPos pTo);
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CFilePairDoc)

@@ -403,7 +403,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 				if (NULL == pFilePair->pFirstFile
 					|| NULL == pFilePair->pSecondFile)
 				{
-					s.Format("%d", pPair->pFirstLine->GetLineNumber() + 1);
+					s.Format(_T("%d"), pPair->pFirstLine->GetLineNumber() + 1);
 					pDC->SetTextColor(TextColor);
 					pDC->TextOut(m_LineNumberMarginWidth - 1, PosY, s);
 				}
@@ -411,7 +411,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 				{
 					if (NULL != pPair->pFirstLine)
 					{
-						s.Format("%d", pPair->pFirstLine->GetLineNumber() + 1);
+						s.Format(_T("%d"), pPair->pFirstLine->GetLineNumber() + 1);
 						if (NULL == pPair->pSecondLine)
 						{
 							TextColor = pApp->m_ErasedTextColor;
@@ -421,7 +421,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 					}
 					if (NULL != pPair->pSecondLine)
 					{
-						s.Format("%d", pPair->pSecondLine->GetLineNumber() + 1);
+						s.Format(_T("%d"), pPair->pSecondLine->GetLineNumber() + 1);
 						if (NULL == pPair->pFirstLine)
 						{
 							TextColor = pApp->m_AddedTextColor;

@@ -153,12 +153,21 @@ void CAlegrDiffView::OnInitialUpdate()
 	// set style, header columns
 	CListCtrl * pList = &GetListCtrl();
 //    CAlegrDiffDoc * pDoc = GetDocument();
+	CString s;
+	s.LoadString(IDS_STRING_COLUMN_FILENAME);
+	pList->InsertColumn(ColumnName, s, LVCFMT_LEFT, 200, ColumnName);
 
-	pList->InsertColumn(ColumnName, "File Name", LVCFMT_LEFT, 200, ColumnName);
-	pList->InsertColumn(ColumnSubdir, "Subdirectory", LVCFMT_LEFT, 200, ColumnSubdir);
-	pList->InsertColumn(ColumnDate1, "1st Modified at", LVCFMT_LEFT, 150, ColumnDate1);
-	pList->InsertColumn(ColumnDate2, "2nd Modified at", LVCFMT_LEFT, 150, ColumnDate2);
-	pList->InsertColumn(ColumnComparisionResult, "Comparison result", LVCFMT_LEFT, 400, ColumnComparisionResult);
+	s.LoadString(IDS_STRING_COLUMN_SUBDIRECTORY);
+	pList->InsertColumn(ColumnSubdir, s, LVCFMT_LEFT, 200, ColumnSubdir);
+
+	s.LoadString(IDS_STRING_COLUMN_1ST_MODIFIED);
+	pList->InsertColumn(ColumnDate1, s, LVCFMT_LEFT, 150, ColumnDate1);
+
+	s.LoadString(IDS_STRING_COLUMN_2ND_MODIFIED);
+	pList->InsertColumn(ColumnDate2, s, LVCFMT_LEFT, 150, ColumnDate2);
+
+	s.LoadString(IDS_STRING_COLUMN_COMPARISON_RESULT);
+	pList->InsertColumn(ColumnComparisionResult, s, LVCFMT_LEFT, 400, ColumnComparisionResult);
 	m_bSubdirColumnPresent = true;
 
 	pList->SetExtendedStyle(pList->GetExtendedStyle() | LVS_EX_FULLROWSELECT);
@@ -669,7 +678,7 @@ void CAlegrDiffView::OnFileSaveList()
 	{
 		return;
 	}
-	FILE * file = fopen(dlg.m_sFilename, "wt");
+	FILE * file = _tfopen(dlg.m_sFilename, _T("wt"));
 	if (NULL == file)
 	{
 		CString s;
@@ -679,7 +688,7 @@ void CAlegrDiffView::OnFileSaveList()
 	}
 	CString s1;
 	s1.LoadString(IDS_DIFF_FILE_BANNER);
-	fprintf(file, s1, LPCTSTR(pDoc->m_sFirstDir), LPCTSTR(pDoc->m_sSecondDir));
+	_ftprintf(file, s1, LPCTSTR(pDoc->m_sFirstDir), LPCTSTR(pDoc->m_sSecondDir));
 
 	int MaxNameLength = 0;
 	int MaxDateTimeLength = 0;
@@ -777,7 +786,7 @@ void CAlegrDiffView::OnFileSaveList()
 				}
 				line.TrimRight();
 				line += '\n';
-				fputs(line, file);
+				_fputts(line, file);
 			}
 			else
 			{

@@ -297,12 +297,14 @@ void CViewPreferencesPage::FontChanged()
 
 void CViewPreferencesPage::OnButtonNormalFont()
 {
+	CString Title;
+	Title.LoadString(IDS_STRING_NORMAL_FONT_TITLE);
 	CFontDialogTitle dlg( & m_NormalLogFont,
 						CF_FIXEDPITCHONLY
 						| CF_INITTOLOGFONTSTRUCT
 						| CF_NOVECTORFONTS
 						| CF_SCREENFONTS
-						| CF_EFFECTS, "Normal Text Font");
+						| CF_EFFECTS, Title);
 	dlg.m_cf.rgbColors = m_NormalTextColor;
 	if (IDOK == dlg.DoModal())
 	{
@@ -325,12 +327,14 @@ void CViewPreferencesPage::OnButtonNormalFont()
 
 void CViewPreferencesPage::OnButtonInsertedFont()
 {
+	CString Title;
+	Title.LoadString(IDS_STRING_ADDED_TEXT_TITLE);
 	CFontDialogTitle dlg( & m_AddedLogFont,
 						CF_FIXEDPITCHONLY
 						| CF_INITTOLOGFONTSTRUCT
 						| CF_NOVECTORFONTS
 						| CF_SCREENFONTS
-						| CF_EFFECTS, "Added Text Font");
+						| CF_EFFECTS, Title);
 
 	dlg.m_cf.rgbColors = m_AddedTextColor;
 	if (IDOK == dlg.DoModal())
@@ -354,12 +358,14 @@ void CViewPreferencesPage::OnButtonInsertedFont()
 
 void CViewPreferencesPage::OnButtonErasedFont()
 {
+	CString Title;
+	Title.LoadString(IDS_STRING_DELETED_FONT_TITLE);
 	CFontDialogTitle dlg( & m_ErasedLogFont,
 						CF_FIXEDPITCHONLY
 						| CF_INITTOLOGFONTSTRUCT
 						| CF_NOVECTORFONTS
 						| CF_SCREENFONTS
-						| CF_EFFECTS, "Deleted Text Font");
+						| CF_EFFECTS, Title);
 
 	dlg.m_cf.rgbColors = m_ErasedTextColor;
 	if (IDOK == dlg.DoModal())

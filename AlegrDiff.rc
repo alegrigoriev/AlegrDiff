@@ -1238,6 +1238,13 @@ BEGIN
     IDS_STRING_FILGERPRINT_FILTER 
                             "Fingerprint file (*.md5fp)|*.md5fp|All files (*.*)|*||"
     IDS_STRING_FINGERPRINT_TITLE "Save Fingerprint File As"
+    IDS_STRING_NORMAL_FONT_TITLE "Normal Text Font"
+    IDS_STRING_ADDED_TEXT_TITLE "Added Text Font"
+    IDS_STRING_DELETED_FONT_TITLE "Deleted Text Font"
+    IDS_STRING_CANT_OPEN_FILE "Unable to open ""%s"""
+    IDS_STRING_COLUMN_FILENAME "File Name"
+    IDS_STRING_COLUMN_SUBDIRECTORY "Subdirectory"
+    IDS_STRING_COLUMN_1ST_MODIFIED "1st Modified at"
 END
 
 STRINGTABLE 
@@ -1246,6 +1253,12 @@ BEGIN
                             "Create directory fingerprint information file\nCreate dir fingerprint"
     ID_FILE_CHECKDIRECTORYFILNGERPRINT 
                             "Check the files against previously created fingerprint information\nCheck dir fingerprint"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_STRING_COLUMN_2ND_MODIFIED "2nd Modified at"
+    IDS_STRING_COLUMN_COMPARISON_RESULT "Comparison result"
 END
 
 #endif    // English (U.S.) resources

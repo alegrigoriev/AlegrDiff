@@ -137,7 +137,7 @@ void CMainFrame::Dump(CDumpContext& dc) const
 
 void CMainFrame::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
 {
-	pCmdUI->SetText("           ");
+	pCmdUI->SetText(_T("           "));
 }
 
 

@@ -98,7 +98,7 @@ class FileLine
 {
 public:
 
-	FileLine(const char * src, bool MakeNormalizedString, bool c_cpp_file);
+	FileLine(LPCTSTR src, bool MakeNormalizedString, bool c_cpp_file);
 	~FileLine();
 
 	static void * operator new(size_t size)
@@ -136,10 +136,10 @@ public:
 	unsigned GetLineNumber() const { return m_Number; }
 	void SetLineNumber(unsigned num) { m_Number = num; }
 
-	LPCSTR GetText() const { return m_pString; }
+	LPCTSTR GetText() const { return m_pString; }
 	unsigned GetLength() const { return m_Length; }
 
-	LPCSTR GetNormalizedText() const { return m_pNormalizedString; }
+	LPCTSTR GetNormalizedText() const { return m_pNormalizedString; }
 	unsigned GetNormalizedLength() const { return m_NormalizedStringLength; }
 
 	static int _cdecl HashCompareFunc(FileLine const * pLine1, FileLine const * pLine2);
@@ -163,9 +163,9 @@ private:
 	//FileLine * m_Link;
 	char * m_pAllocatedBuf;
 	const char * m_pWhitespaceMask;
-	const char * m_pString;
+	LPCTSTR m_pString;
 	// points to the string with extra spaces removed
-	const char * m_pNormalizedString;
+	LPCTSTR m_pNormalizedString;
 	// String, normalized string and whitespace mask share common buffer.
 	// you only need to delete m_pAllocatedBuf
 	static CSmallAllocator m_Allocator;
@@ -252,12 +252,15 @@ public:
 	static void DeinitHashCalculation();
 	BOOL CalculateHashes(BOOL volatile & bStopOperation);
 
-	bool m_C_Cpp;
-	bool m_IsBinary;
+	bool m_C_Cpp:1;
+	bool m_IsBinary:1;
+	bool m_IsUnicode:1;
+	bool m_IsUnicodeBigEndian:1;
+	bool m_bMd5Calculated:1;
 
 	// add line from memory. Assuming the file created dynamically by the program
 	void AddLine(LPCTSTR pLine);
-	const char * GetLineString(int LineNum) const;
+	LPCTSTR GetLineString(int LineNum) const;
 	const FileLine * GetLine(int LineNum) const { return m_Lines[LineNum]; }
 	int GetNumLines() const { return m_Lines.size(); }
 
@@ -304,8 +307,7 @@ private:
 	LONGLONG m_Length;
 	LONGLONG m_Crc64;   // use x64 + x4 + x3 + x + 1 polynomial
 	BYTE m_Md5[20];
-	bool m_bMd5Calculated;
-	LONG m_Crc32;
+
 	vector<FileLine *> m_Lines;
 	vector<FileLine *> m_NonBlankLines;
 	vector<FileLine *> m_HashSortedLines;   // non-blank only

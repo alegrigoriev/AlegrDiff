@@ -10,7 +10,7 @@
 
 #undef tolower
 #undef toupper
-static DWORD CalculateHash(const char * data, int len);
+static DWORD CalculateHash(void const * data, int len);
 
 CString PatternToMultiCString(LPCTSTR src)
 {
@@ -48,14 +48,14 @@ CString PatternToMultiCString(LPCTSTR src)
 				CString s = tmp.Mid(nBeginIndex, nEndIndex - nBeginIndex);
 				if ( ! Wildcard)
 				{
-					s.Insert(0, "*");
-					s += "*";
+					s.Insert(0, _T("*"));
+					s += _T("*");
 				}
 				int BufLen = dst.GetLength() + s.GetLength() + 1;
 				LPTSTR pBuf = dst.GetBuffer(BufLen);
 				if (NULL != pBuf)
 				{
-					memcpy(pBuf + dst.GetLength(), LPCTSTR(s), (s.GetLength() + 1) + sizeof pBuf[0]);
+					memcpy(pBuf + dst.GetLength(), LPCTSTR(s), (s.GetLength() + 1) * sizeof pBuf[0]);
 					dst.ReleaseBuffer(BufLen);
 				}
 			}
@@ -89,7 +89,7 @@ CString MiltiSzToCString(LPCTSTR pMsz)
 	LPTSTR pBuf = str.GetBuffer(len);
 	if (NULL != pBuf)
 	{
-		memcpy(pBuf, pMsz, len);
+		memcpy(pBuf, pMsz, len * sizeof (TCHAR));
 		str.ReleaseBuffer(len - 1);
 	}
 	return str;
@@ -135,9 +135,8 @@ bool MatchWildcard(LPCTSTR name, LPCTSTR pattern)
 			return false;
 			break;
 		default:
-			if (*name != * pattern
-				&& *name != toupper(*pattern)
-				&& *name != tolower(*pattern))
+			if (CSTR_EQUAL != CompareString(LOCALE_USER_DEFAULT,
+											NORM_IGNORECASE, pattern, 1, name, 1))
 			{
 				return false;
 			}
@@ -179,6 +178,8 @@ FileItem::FileItem(const WIN32_FIND_DATA * pWfd,
 	m_Subdir(Dir),
 	m_C_Cpp(false),
 	m_IsBinary(false),
+	m_IsUnicode(false),
+	m_IsUnicodeBigEndian(false),
 	m_bMd5Calculated(false),
 	m_pNext(NULL)
 {
@@ -191,6 +192,8 @@ FileItem::FileItem(LPCTSTR name)
 	m_Length(0),
 	m_C_Cpp(false),
 	m_IsBinary(false),
+	m_IsUnicode(false),
+	m_IsUnicodeBigEndian(false),
 	m_bMd5Calculated(false),
 	m_pNext(NULL)
 {
@@ -303,22 +306,71 @@ bool FileItem::Load()
 {
 	CThisApp * pApp = GetApp();
 	// check if it is C or CPP file
-	FILE * file = fopen(LPCTSTR(GetFullName()), "r");
+	FILE * file = _tfopen(LPCTSTR(GetFullName()), _T("r"));
 	if (NULL == file)
 	{
 		return false;
 	}
-	char line[2048];
+	char lineA[2048];
+	wchar_t lineW[2048];
 	char buf[512];
 	setvbuf(file, buf, _IOFBF, sizeof buf);
 #ifdef _DEBUG
 	DWORD BeginTime = timeGetTime();
 #endif
-	char TabExpandedLine[2048];
+	LPCTSTR line;
+#ifdef _UNICODE
+	line = lineW;
+#else
+	line = lineA;
+#endif
+	TCHAR TabExpandedLine[2048];
 
 	FileLine * pLineList = NULL;
-	for (unsigned LinNum =0; NULL != fgets(line, sizeof line - 1, file); LinNum++)
+	// peek two first bytes, to see if it is UNICODE file
+	wchar_t FirstChar = fgetwc(file);
+
+	rewind(file);
+	clearerr(file);
+
+	if ((FirstChar & 0xFFFF) == 0xFFFE)
 	{
+		m_IsUnicode = true;
+	}
+	else if ((FirstChar & 0xFFFF) == 0xFEFF)
+	{
+		m_IsUnicode = true;
+		m_IsUnicodeBigEndian = true;
+	}
+
+	for (unsigned LinNum =0; ; LinNum++)
+	{
+		if (m_IsUnicode)
+		{
+			if (m_IsUnicodeBigEndian)
+			{
+			}
+			else
+			{
+				if (NULL == fgetws(lineW, (sizeof lineW / sizeof lineW[0]) - 1, file))
+				{
+					break;
+				}
+			}
+#ifndef _UNICODE
+			wcstombs(lineA, lineW, sizeof lineA  - 1);
+#endif
+		}
+		else
+		{
+			if (NULL == fgets(lineA, sizeof lineA - 1, file))
+			{
+				break;
+			}
+#ifdef _UNICODE
+			mbstowcs(lineW, lineA, (sizeof lineW / sizeof lineW[0]) - 1);
+#endif
+		}
 		// expand tabs
 		for (int i = 0, pos = 0; line[i] != 0 && pos < sizeof TabExpandedLine - 1; pos++)
 		{
@@ -390,9 +442,9 @@ bool FileItem::Load()
 			GroupHash[j] = m_NonBlankLines[i + j]->GetHash();
 			NormGroupHash[j] = m_NonBlankLines[i + j]->GetNormalizedHash();
 		}
-		m_NonBlankLines[i]->SetGroupHash(CalculateHash((char *)GroupHash, j * sizeof GroupHash[0]));
+		m_NonBlankLines[i]->SetGroupHash(CalculateHash(GroupHash, j * sizeof GroupHash[0]));
 		m_NonBlankLines[i]->SetNormalizedGroupHash(
-													CalculateHash((char *)NormGroupHash, j * sizeof NormGroupHash[0]));
+													CalculateHash(NormGroupHash, j * sizeof NormGroupHash[0]));
 	}
 
 	m_HashSortedLines = m_NonBlankLines;
@@ -1169,10 +1221,11 @@ static DWORD CRC32_Table[256] =
 	0xbcb4666d, 0xb8757bda, 0xb5365d03, 0xb1f740b4
 };
 
-static DWORD CalculateHash(const char * data, int len)
+static DWORD CalculateHash(void const * pData, int len)
 {
 	// CRC32
 	DWORD	crc32_val = 0xFFFFFFFF;
+	const unsigned char * data = (const unsigned char *) pData;
 
 	// Calculate a CRC32 value
 	for (int i = 0 ; i < len; i++)
@@ -1275,17 +1328,17 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 				// check if we need to insert a whitespace
 				static int ReservedPairs[] =
 				{
-					// TODO: process L' and L"
 					'//', '/*', '*/', '++', '--', '!=', '##', '%=',
 					'^=', '&=', '&&', '-=', '+=', '==', '::', '<<',
 					'>>', '||', '|=', '<=', '>=', '/=', '\'\'', '""',
 					'L"', 'L\'',
 				};
 				// may be non-portable to big-endian
-				int pair = ((cPrevChar & 0xFF) << 8) | (c & 0xFF);
+				int pair = ((cPrevChar & TCHAR_MASK) << 16) | (c & TCHAR_MASK);
 				for (int i = 0; i < sizeof ReservedPairs / sizeof ReservedPairs[0]; i++)
 				{
-					if (pair == ReservedPairs[i])
+					int ReservedPair = (ReservedPairs[i] & 0xFF) | ((ReservedPairs[i] & 0xFF00) << 8);
+					if (pair == ReservedPair)
 					{
 						if(DstIdx + 1 < DstLen)
 						{
@@ -1777,7 +1830,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection *
 	return nDifferentChars;
 }
 
-FileLine::FileLine(const char * src, bool MakeNormalizedString, bool c_cpp_file)
+FileLine::FileLine(LPCTSTR src, bool MakeNormalizedString, bool c_cpp_file)
 	: //m_Flags(0),
 	m_pNext(NULL),
 	m_Number(-1),
@@ -1788,8 +1841,8 @@ FileLine::FileLine(const char * src, bool MakeNormalizedString, bool c_cpp_file)
 	m_NormalizedHashCode(0),
 	m_NormalizedGroupHashCode(0)
 {
-	m_Length = strlen(src);
-	char TmpBuf[2050];
+	m_Length = _tcslen(src);
+	TCHAR TmpBuf[2050];
 	char WhitespaceMask[2048 / 8];
 
 	m_NormalizedStringLength = RemoveExtraWhitespaces(TmpBuf, src, sizeof TmpBuf,
@@ -1798,20 +1851,22 @@ FileLine::FileLine(const char * src, bool MakeNormalizedString, bool c_cpp_file)
 
 	int WhitespaceMaskLength = (m_Length + 7) / 8;
 
-	m_pAllocatedBuf = ::new char[m_Length + WhitespaceMaskLength+ m_NormalizedStringLength + 2];
+	m_pAllocatedBuf = ::new char[sizeof(TCHAR) * (m_Length + m_NormalizedStringLength + 2) + WhitespaceMaskLength];
 	if (NULL != m_pAllocatedBuf)
 	{
-		m_pString = m_pAllocatedBuf;
-		memcpy(m_pAllocatedBuf, src, m_Length + 1);
-		m_HashCode = CalculateHash(m_pString, m_Length);
+		TCHAR * pTmp = (TCHAR*) m_pAllocatedBuf;
+		m_pString = pTmp;
+		memcpy(pTmp, src, sizeof(TCHAR) * (m_Length + 1));
+		m_HashCode = CalculateHash(m_pString, sizeof(TCHAR) * m_Length);
 
-		m_pNormalizedString = m_pAllocatedBuf + m_Length + 1;
-		memcpy(m_pAllocatedBuf + m_Length + 1, TmpBuf, m_NormalizedStringLength + 1);
-		m_NormalizedHashCode = CalculateHash(m_pNormalizedString, m_NormalizedStringLength);
+		pTmp += m_Length + 1;
+		m_pNormalizedString = pTmp;
+		memcpy(pTmp, TmpBuf, sizeof(TCHAR) * (m_NormalizedStringLength + 1));
+		m_NormalizedHashCode = CalculateHash(m_pNormalizedString, sizeof(TCHAR) * m_NormalizedStringLength);
 
-		m_pWhitespaceMask = m_pNormalizedString + m_NormalizedStringLength + 1;
-		memcpy(m_pAllocatedBuf + m_Length + m_NormalizedStringLength + 2,
-				WhitespaceMask, WhitespaceMaskLength);
+		pTmp += m_NormalizedStringLength + 1;
+		m_pWhitespaceMask = (char*)(pTmp);
+		memcpy(pTmp, WhitespaceMask, WhitespaceMaskLength);
 	}
 	else
 	{

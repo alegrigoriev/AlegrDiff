@@ -32,7 +32,7 @@ CSaveFileListDlg::CSaveFileListDlg(CWnd* pParent /*=NULL*/)
 	m_IncludeFilesSelect = -1;
 	//}}AFX_DATA_INIT
 
-	m_Profile.AddItem(_T("Settings\\SaveList"), _T("Filename"), m_sFilename, "");
+	m_Profile.AddItem(_T("Settings\\SaveList"), _T("Filename"), m_sFilename, _T(""));
 	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("ComparisonResult"), m_bIncludeComparisonResult, FALSE);
 	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("DifferentFiles"), m_bIncludeDifferentFiles, TRUE);
 	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("DifferentInBlanksFiles"), m_bIncludeDifferentInBlanksFiles, FALSE);
@@ -174,7 +174,7 @@ void CSaveFileListDlg::OnOK()
 		return;
 	}
 	// check if replacing the file
-	FILE * file = fopen(m_sFilename, "rt");
+	FILE * file = _tfopen(m_sFilename, _T("rt"));
 	if (NULL != file)
 	{
 		fclose(file);

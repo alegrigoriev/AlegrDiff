@@ -19,6 +19,7 @@ CDirectoryFingerpringCreateDlg::CDirectoryFingerpringCreateDlg(CWnd* pParent /*=
 	, m_bIncludeDirectoryStructure(FALSE)
 	, m_bSaveAsUnicode(FALSE)
 	, m_StopRunThread(FALSE)
+	, m_bFilenameChanged(TRUE)
 	, m_Thread(ThreadProc, this)
 	, m_TotalDataSize(0)
 	, m_ProcessedFiles(0)
@@ -199,7 +200,10 @@ unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
 
 		{
 			CSimpleCriticalSectionLock lock(m_cs);
+
 			m_CurrentFilename = pFile->GetFullName();
+			m_bFilenameChanged = TRUE;
+			m_CurrentFileDone = 0;
 			m_ProcessedFiles += 0x2000;
 		}
 
@@ -207,10 +211,11 @@ unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
 		{
 			::PostMessage(m_hWnd, WM_KICKIDLE, 0, 0);
 		}
-		if (pFile->CalculateHashes( & HashCalc, m_StopRunThread))
+		if (pFile->CalculateHashes( & HashCalc,
+									m_StopRunThread, m_CurrentFileDone, m_hWnd))
 		{
 			_ftprintf(m_pFile,
-					_T("\"%s%s\" %I64d ")
+					_T("\"%s%s\" %I64d %016I64X ")
 					_T("%02X%02X%02X%02X")
 					_T("%02X%02X%02X%02X")
 					_T("%02X%02X%02X%02X")
@@ -219,6 +224,7 @@ unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
 					pFile->GetSubdir(),
 					pFile->GetName(),
 					pFile->GetFileLength(),
+					pFile->GetLastWriteTime(),
 					pFile->GetDigest(0), pFile->GetDigest(1), pFile->GetDigest(2), pFile->GetDigest(3),
 					pFile->GetDigest(4), pFile->GetDigest(5), pFile->GetDigest(6), pFile->GetDigest(7),
 					pFile->GetDigest(8), pFile->GetDigest(9), pFile->GetDigest(10), pFile->GetDigest(11),
@@ -257,13 +263,18 @@ LRESULT CDirectoryFingerpringCreateDlg::OnKickIdle(WPARAM, LPARAM)
 
 	CSimpleCriticalSectionLock lock(m_cs);
 
-	if (m_Filename.m_hWnd != NULL)
+	if (m_Filename.m_hWnd != NULL && m_bFilenameChanged)
 	{
 		m_Filename.SetWindowText(m_CurrentFilename);
+		m_bFilenameChanged = FALSE;
 	}
 	if (m_Progress.m_hWnd != NULL && m_TotalDataSize != 0)
 	{
-		m_Progress.SetPos(int(100. * (m_ProcessedFiles + m_CurrentFileDone) / m_TotalDataSize));
+		int Percent = int(100. * (m_ProcessedFiles + m_CurrentFileDone) / m_TotalDataSize);
+		if (Percent != m_Progress.GetPos())
+		{
+			m_Progress.SetPos(Percent);
+		}
 	}
 	return 0;
 }

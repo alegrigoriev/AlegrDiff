@@ -34,6 +34,7 @@ public:
 
 	CSimpleCriticalSection m_cs;
 	CString m_CurrentFilename;
+	BOOL volatile m_bFilenameChanged;
 	LONGLONG m_TotalDataSize;
 	LONGLONG m_ProcessedFiles;
 	LONGLONG m_CurrentFileDone;

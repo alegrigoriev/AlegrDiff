@@ -1744,7 +1744,8 @@ void CAlegrDiffApp::OnFileCheckDirectoryFingerprint()
 
 	if (IDOK != dlg1.DoModal())
 	{
-		delete pDoc;
+		pDoc->OnCloseDocument();
 		return;
 	}
+	pDoc->UpdateAllViews(NULL);
 }

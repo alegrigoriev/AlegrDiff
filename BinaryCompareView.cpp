@@ -66,6 +66,10 @@ BEGIN_MESSAGE_MAP(CBinaryCompareView, CView)
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_EDIT_GOTONEXTDIFF, OnEditGotonextdiff)
 	ON_COMMAND(ID_EDIT_GOTOPREVDIFF, OnEditGotoprevdiff)
+	ON_COMMAND(ID_VIEW_LESSBYTESINLINE, OnViewLessbytesinline)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_LESSBYTESINLINE, OnUpdateViewLessbytesinline)
+	ON_COMMAND(ID_VIEW_MOREBYTESINLINE, OnViewMorebytesinline)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_MOREBYTESINLINE, OnUpdateViewMorebytesinline)
 END_MESSAGE_MAP()
 
 
@@ -143,14 +147,14 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 
 	for (int CurrentY = ur.top - ur.top % LineHeight(); CurrentY < ur.bottom; CurrentY += LineHeight())
 	{
-		LONGLONG CurrentAddr = m_ScreenFilePos + CurrentY / LineHeight() * m_BytesPerLine;
+		LONGLONG CurrentAddr = m_ScreenFilePos + CurrentY / LineHeight() * int(m_BytesPerLine);
 		if (CurrentAddr >= pFile->GetFileLength()
 			&& (NULL == pOtherFile || CurrentAddr >= pOtherFile->GetFileLength()))
 		{
 			break;
 		}
 		// TODO: support hor scroll
-		pDC->MoveTo(0, CurrentY);
+		pDC->MoveTo(- CharWidth() * m_FirstPosSeen, CurrentY);
 		TCHAR buf[256];
 		UCHAR FileBuf1[256];
 		unsigned Buf1Filled;
@@ -383,7 +387,7 @@ void CBinaryCompareView::CreateAndShowCaret()
 		return;
 	}
 	if (pDoc->m_CaretPos >= m_ScreenFilePos
-		&& pDoc->m_CaretPos <= m_ScreenFilePos + (LinesInView() + 1) * m_BytesPerLine)
+		&& pDoc->m_CaretPos <= m_ScreenFilePos + (LinesInView() + 1) * int(m_BytesPerLine))
 	{
 		int ByteOnTheLine = (ULONG(pDoc->m_CaretPos - m_ScreenFilePos) % m_BytesPerLine)
 							& -m_WordSize;
@@ -393,12 +397,12 @@ void CBinaryCompareView::CreateAndShowCaret()
 		if (m_bCaretOnChars)
 		{
 			p.x = (ByteOnTheLine + m_BytesPerLine * 2 + m_BytesPerLine / m_WordSize
-					+ m_AddressMarginWidth + 4) * CharWidth();
+					+ m_AddressMarginWidth + 4 - m_FirstPosSeen) * CharWidth();
 		}
 		else
 		{
 			p.x = (ByteOnTheLine * 2 + ByteOnTheLine / m_WordSize
-					+ m_AddressMarginWidth + 2) * CharWidth();
+					+ m_AddressMarginWidth + 2 - m_FirstPosSeen) * CharWidth();
 		}
 
 		p.y = ULONG(pDoc->m_CaretPos - m_ScreenFilePos) / m_BytesPerLine * LineHeight();
@@ -606,7 +610,7 @@ void CBinaryCompareView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollB
 
 	case SB_BOTTOM:
 		TRACE("OnVScroll SB_BOTTOM, nPos=%d\n", nPos);
-		VScrollToTheAddr(GetDocument()->GetFileSize() - nLinesInView * m_BytesPerLine);
+		VScrollToTheAddr(GetDocument()->GetFileSize() - nLinesInView * int(m_BytesPerLine));
 		break;
 
 	case SB_LINEUP:
@@ -631,7 +635,7 @@ void CBinaryCompareView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollB
 
 	case SB_THUMBTRACK:
 		TRACE("OnVScroll SB_THUMBTRACK, nPos=%d\n", nPos);
-		VScrollToTheAddr(nPos * m_ScrollDataScale * m_BytesPerLine);
+		VScrollToTheAddr(nPos * m_ScrollDataScale * LONGLONG(m_BytesPerLine));
 		break;
 	default:
 		break;
@@ -743,7 +747,7 @@ void CBinaryCompareView::HScrollToThePos(int nPos)
 	// < 0 - scroll down (to see lines to the begin of the file)
 void CBinaryCompareView::DoVScroll(int nLinesToScroll)
 {
-	VScrollToTheAddr(m_ScreenFilePos + nLinesToScroll * m_BytesPerLine);
+	VScrollToTheAddr(m_ScreenFilePos + nLinesToScroll * int(m_BytesPerLine));
 }
 
 void CBinaryCompareView::VScrollToTheAddr(LONGLONG Addr)
@@ -756,9 +760,9 @@ void CBinaryCompareView::VScrollToTheAddr(LONGLONG Addr)
 	int BytesPerScreen = nLinesInView * m_BytesPerLine;
 	LONGLONG FileSize = GetDocument()->GetFileSize();
 
-	if (Addr > FileSize - (BytesPerScreen - m_BytesPerLine))
+	if (Addr > FileSize - (BytesPerScreen - int(m_BytesPerLine)))
 	{
-		Addr = FileSize - (BytesPerScreen - m_BytesPerLine);
+		Addr = FileSize - (BytesPerScreen - int(m_BytesPerLine));
 	}
 
 	LONGLONG nOffset = Addr - m_ScreenFilePos;
@@ -770,7 +774,7 @@ void CBinaryCompareView::VScrollToTheAddr(LONGLONG Addr)
 		{
 			return;
 		}
-		m_ScreenFilePos += ndy * m_BytesPerLine;
+		m_ScreenFilePos += ndy * int(m_BytesPerLine);
 
 		ndy *= LineHeight();
 
@@ -784,7 +788,7 @@ void CBinaryCompareView::VScrollToTheAddr(LONGLONG Addr)
 	}
 	else
 	{
-		m_ScreenFilePos = Addr - Addr % m_BytesPerLine;
+		m_ScreenFilePos = Addr - Addr % int(m_BytesPerLine);
 		Invalidate();
 	}
 	UpdateVScrollBar();
@@ -825,11 +829,12 @@ void CBinaryCompareView::UpdateVScrollBar()
 	sci.fMask = SIF_ALL | SIF_DISABLENOSCROLL;
 
 	SetScrollInfo(SB_VERT, & sci);
+	UpdateVisibleRect();
 }
 
 int CBinaryCompareView::GetMaxChars() const
 {
-	return 18 + m_BytesPerLine * 2
+	return m_AddressMarginWidth + 4 + m_BytesPerLine * 3
 			+ m_BytesPerLine / m_WordSize;
 }
 
@@ -850,6 +855,7 @@ void CBinaryCompareView::UpdateHScrollBar()
 	sci.fMask = SIF_ALL | SIF_DISABLENOSCROLL;
 
 	SetScrollInfo(SB_HORZ, & sci);
+	UpdateVisibleRect();
 }
 
 void CBinaryCompareView::SetCaretPosition(LONGLONG Addr, int flags)
@@ -1082,15 +1088,15 @@ void CBinaryCompareView::InvalidateRange(LONGLONG begin, LONGLONG end)
 		{
 			EndByte = m_BytesPerLine;
 		}
-		r.left = (m_AddressMarginWidth + 2 + BeginByte * 2 + BeginByte / m_WordSize) * CharWidth();
-		r.right = (m_AddressMarginWidth + 2 + EndByte * 2 + EndByte / m_WordSize) * CharWidth() + m_FontMetric.tmOverhang;
+		r.left = (m_AddressMarginWidth + 2 - m_FirstPosSeen + BeginByte * 2 + BeginByte / m_WordSize) * CharWidth();
+		r.right = (m_AddressMarginWidth + 2 - m_FirstPosSeen + EndByte * 2 + EndByte / m_WordSize) * CharWidth() + m_FontMetric.tmOverhang;
 		InvalidateRect( & r);
 
 		// invalidate text chars
 		r.left = (BeginByte + m_BytesPerLine * 2 + m_BytesPerLine / m_WordSize
-					+ m_AddressMarginWidth + 4) * CharWidth();
+					+ m_AddressMarginWidth + 4 - m_FirstPosSeen) * CharWidth();
 		r.right = (EndByte + m_BytesPerLine * 2 + m_BytesPerLine / m_WordSize
-					+ m_AddressMarginWidth + 4) * CharWidth();
+					+ m_AddressMarginWidth + 4 - m_FirstPosSeen) * CharWidth();
 		InvalidateRect( & r);
 
 	}
@@ -1104,7 +1110,7 @@ void CBinaryCompareView::InvalidateRange(LONGLONG begin, LONGLONG end)
 			}
 			r.top = BeginLine * LineHeight();
 			r.bottom = r.top + LineHeight();
-			r.left = (m_AddressMarginWidth + 2 + BeginByte * 2 + BeginByte / m_WordSize) * CharWidth();
+			r.left = (m_AddressMarginWidth + 2 - m_FirstPosSeen + BeginByte * 2 + BeginByte / m_WordSize) * CharWidth();
 			r.right = (nCharsInView + 1) * CharWidth() + m_FontMetric.tmOverhang;
 			InvalidateRect( & r);
 		}
@@ -1116,15 +1122,15 @@ void CBinaryCompareView::InvalidateRange(LONGLONG begin, LONGLONG end)
 			}
 			r.top = EndLine * LineHeight();
 			r.bottom = r.top + LineHeight();
-			r.right = (m_AddressMarginWidth + 2 + EndByte * 2 + EndByte / m_WordSize) * CharWidth() + m_FontMetric.tmOverhang;
+			r.right = (m_AddressMarginWidth + 2 - m_FirstPosSeen + EndByte * 2 + EndByte / m_WordSize) * CharWidth() + m_FontMetric.tmOverhang;
 			r.left = 0;
 			InvalidateRect( & r);
 
 			// invalidate text chars
 			r.left = (m_BytesPerLine * 2 + m_BytesPerLine / m_WordSize
-						+ m_AddressMarginWidth + 4) * CharWidth();
+						+ m_AddressMarginWidth + 4 - m_FirstPosSeen) * CharWidth();
 			r.right = (EndByte + m_BytesPerLine * 2 + m_BytesPerLine / m_WordSize
-						+ m_AddressMarginWidth + 4) * CharWidth();
+						+ m_AddressMarginWidth + 4 - m_FirstPosSeen) * CharWidth();
 			InvalidateRect( & r);
 		}
 
@@ -1168,16 +1174,6 @@ void CBinaryCompareView::OnSize(UINT nType, int cx, int cy)
 {
 	TRACE("CBinaryCompareView::OnSize\n");
 	CView::OnSize(nType, cx, cy);
-
-	m_VisibleRect.top = 0;
-	m_VisibleRect.bottom = cy / LineHeight() - 1;
-	m_PreferredRect.bottom = m_VisibleRect.bottom / 4;
-	m_PreferredRect.top = m_VisibleRect.bottom - m_VisibleRect.bottom / 4;
-
-	m_VisibleRect.right =  cx / CharWidth();
-	m_VisibleRect.left = 0;
-	m_PreferredRect.left = m_VisibleRect.right / 3;
-	m_PreferredRect.right = m_VisibleRect.right - m_VisibleRect.right / 3;
 
 	UpdateVScrollBar();
 	UpdateHScrollBar();
@@ -1230,7 +1226,7 @@ void CBinaryCompareView::OnLButtonDown(UINT nFlags, CPoint point)
 	m_LButtonDown = true;
 
 	// if the address margin is clicked, the whole line is selected
-	point.x -= (m_AddressMarginWidth + 2) * CharWidth();
+	point.x -= (m_AddressMarginWidth + 2 - m_FirstPosSeen) * CharWidth();
 	LONGLONG Addr = point.y / LineHeight() * m_BytesPerLine + m_ScreenFilePos;
 
 	int flags = SetPositionMakeVisible;
@@ -1304,7 +1300,7 @@ void CBinaryCompareView::OnMouseMove(UINT nFlags, CPoint point)
 	CView::OnMouseMove(nFlags, point);
 	if (m_TrackingSelection)
 	{
-		point.x -= (m_AddressMarginWidth + 2) * CharWidth();
+		point.x -= (m_AddressMarginWidth + 2 - m_FirstPosSeen) * CharWidth();
 		LONGLONG Addr = point.y / LineHeight() * m_BytesPerLine + m_ScreenFilePos;
 
 		if (point.x < 0)
@@ -1711,4 +1707,60 @@ void CBinaryCompareView::OnEditGotoprevdiff()
 		SetCaretPosition(dlg.BeginAddr,
 						SetPositionCancelSelection | SetPositionMakeVisible);
 	}
+}
+
+int CBinaryCompareView::LinesInView() const
+{
+	CRect cr;
+	GetClientRect( & cr);
+	return cr.Height() / LineHeight();
+}
+
+int CBinaryCompareView::CharsInView() const
+{
+	CRect cr;
+	GetClientRect( & cr);
+	return cr.Width() / CharWidth();
+}
+
+void CBinaryCompareView::UpdateVisibleRect()
+{
+	GetClientRect( & m_VisibleRect);
+	m_VisibleRect.top = 0;
+	m_VisibleRect.bottom = m_VisibleRect.bottom / LineHeight() - 1;
+	m_PreferredRect.bottom = m_VisibleRect.bottom / 4;
+	m_PreferredRect.top = m_VisibleRect.bottom - m_VisibleRect.bottom / 4;
+
+	m_VisibleRect.right =  m_VisibleRect.right / CharWidth();
+	m_VisibleRect.left = 0;
+	m_PreferredRect.left = m_VisibleRect.right / 3;
+	m_PreferredRect.right = m_VisibleRect.right - m_VisibleRect.right / 3;
+}
+
+void CBinaryCompareView::OnViewLessbytesinline()
+{
+	if (m_BytesPerLine > 8)
+	{
+		m_BytesPerLine /= 2;
+		OnMetricsChange();
+	}
+}
+
+void CBinaryCompareView::OnUpdateViewLessbytesinline(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(m_BytesPerLine > 8);
+}
+
+void CBinaryCompareView::OnViewMorebytesinline()
+{
+	if (m_BytesPerLine < 64)
+	{
+		m_BytesPerLine *= 2;
+		OnMetricsChange();
+	}
+}
+
+void CBinaryCompareView::OnUpdateViewMorebytesinline(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(m_BytesPerLine < 64);
 }

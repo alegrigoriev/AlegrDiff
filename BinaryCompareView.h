@@ -36,8 +36,9 @@ public:
 
 	int CharWidth() const { return m_FontMetric.tmAveCharWidth; }
 	int LineHeight() const { return m_FontMetric.tmHeight + m_FontMetric.tmExternalLeading; }
-	int LinesInView() const { return m_VisibleRect.bottom - m_VisibleRect.top; }
-	int CharsInView() const { return m_VisibleRect.right - m_VisibleRect.left; }
+	int LinesInView() const;
+	int CharsInView() const;
+	void UpdateVisibleRect();
 
 	CPoint PositionToPoint(ULONGLONG pos);
 	void OnMetricsChange();
@@ -119,6 +120,10 @@ public:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnEditGotonextdiff();
 	afx_msg void OnEditGotoprevdiff();
+	afx_msg void OnViewLessbytesinline();
+	afx_msg void OnUpdateViewLessbytesinline(CCmdUI *pCmdUI);
+	afx_msg void OnViewMorebytesinline();
+	afx_msg void OnUpdateViewMorebytesinline(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp

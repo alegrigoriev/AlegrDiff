@@ -15,6 +15,8 @@ class CBinaryCompareDoc : public CAlegrDiffBaseDoc
 	DECLARE_DYNCREATE(CBinaryCompareDoc)
 
 public:
+	CBinaryCompareDoc();
+	virtual ~CBinaryCompareDoc();
 	enum {
 		CaretPositionChanged = 1,
 		InvalidateRange,
@@ -32,9 +34,8 @@ public:
 	//void SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags = SetPositionMakeCentered);
 	void SetCaretPosition(LONGLONG Addr, int flags);
 
-	CBinaryCompareDoc();
-	virtual ~CBinaryCompareDoc();
 	virtual void Serialize(CArchive& ar);   // overridden for document i/o
+	unsigned FindDataProc(class CDifferenceProgressDialog * pDlg);
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;

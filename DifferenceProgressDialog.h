@@ -1,11 +1,11 @@
 #pragma once
 #include "afxcmn.h"
 #include "afxwin.h"
-
+#include "ProgressDialog.h"
 
 // CDifferenceProgressDialog dialog
 
-class CDifferenceProgressDialog : public CDialog
+class CDifferenceProgressDialog : public CProgressDialog
 {
 	DECLARE_DYNAMIC(CDifferenceProgressDialog)
 
@@ -21,18 +21,11 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
-	CProgressCtrl m_Progress;
-	CStatic m_Percent;
-	class CBinaryCompareView * m_pView;
+	class CBinaryCompareDoc * m_pDoc;
 	LONGLONG BeginAddr;
 	LONGLONG EndAddr;
-	int m_PercentCompleted;
-	int m_PercentDisplayed;
-	BOOL m_StopSearch;
-	BOOL m_SearchCompleted;
+
 	virtual BOOL OnInitDialog();
-	LRESULT OnKickIdle(WPARAM, LPARAM);
 protected:
-	virtual void OnCancel();
 	virtual void OnOK();
 };

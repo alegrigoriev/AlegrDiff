@@ -81,8 +81,6 @@ public:
 #endif
 
 protected:
-	static UINT AFX_CDECL _FindDataProc(PVOID param);
-	UINT FindDataProc(class CDifferenceProgressDialog * pContext);
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnWindowCloseDiff();

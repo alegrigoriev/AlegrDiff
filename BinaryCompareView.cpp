@@ -1515,201 +1515,16 @@ void CBinaryCompareView::OnSetFocus(CWnd* pOldWnd)
 	CreateAndShowCaret();
 }
 
-UINT AFX_CDECL CBinaryCompareView::_FindDataProc(PVOID param)
-{
-	CDifferenceProgressDialog * pContext = static_cast<CDifferenceProgressDialog *>(param);
-	return pContext->m_pView->FindDataProc(pContext);
-}
-
-UINT CBinaryCompareView::FindDataProc(class CDifferenceProgressDialog * pContext)
-{
-	CBinaryCompareDoc * pDoc = GetDocument();
-
-	FilePair * pFilePair = pDoc->GetFilePair();
-	if (NULL == pFilePair
-		|| NULL == pFilePair->pFirstFile
-		|| NULL == pFilePair->pSecondFile)
-	{
-		return 0;
-	}
-	int const BufferSize = 0x10000;
-	UCHAR * File1Buffer = new UCHAR[BufferSize];
-	UCHAR * File2Buffer = new UCHAR[BufferSize];
-	long File1BufFilled = 0;
-	long File2BufFilled = 0;
-	long File1BufIndex = 0;
-	long File2BufIndex = 0;
-	BOOL FindingFirstDifference = FALSE;
-
-	LONGLONG Addr = pContext->BeginAddr;
-
-	if (Addr > pContext->EndAddr)
-	{
-		FindingFirstDifference = TRUE;
-		// search backward
-		while (! pContext->m_StopSearch
-				&& Addr > pContext->EndAddr)
-		{
-			if (File1BufIndex <= 0)
-			{
-				ULONG ToRead = BufferSize;
-				if (Addr - pContext->EndAddr < BufferSize)
-				{
-					ToRead = ULONG(Addr - pContext->EndAddr);
-				}
-
-				File1BufFilled = pFilePair->pFirstFile->GetFileData(Addr - ToRead,
-									File1Buffer, ToRead);
-				File1BufIndex = File1BufFilled;
-			}
-
-			if (File2BufIndex <= 0)
-			{
-				ULONG ToRead = BufferSize;
-				if (Addr - pContext->EndAddr < BufferSize)
-				{
-					ToRead = ULONG(Addr - pContext->EndAddr);
-				}
-
-				File2BufFilled = pFilePair->pSecondFile->GetFileData(Addr - ToRead,
-									File2Buffer, ToRead);
-				File2BufIndex = File2BufFilled;
-
-				int PercentCompleted = int((pContext->BeginAddr - Addr) * 100
-											/ (pContext->BeginAddr - pContext->EndAddr));
-
-				if (PercentCompleted != pContext->m_PercentCompleted
-					|| pContext->m_hWnd != NULL)
-				{
-					pContext->m_PercentCompleted = PercentCompleted;
-					::PostMessage(pContext->m_hWnd, WM_KICKIDLE, 0, 0);
-				}
-			}
-
-			if (0 == File1BufIndex
-				|| 0 == File2BufIndex)
-			{
-				break;
-			}
-
-			File1BufIndex--;
-			File2BufIndex--;
-
-			if (FindingFirstDifference)
-			{
-				if (File1Buffer[File1BufIndex] != File2Buffer[File2BufIndex])
-				{
-					FindingFirstDifference = FALSE;
-				}
-			}
-			else
-			{
-				if (File1Buffer[File1BufIndex] == File2Buffer[File2BufIndex])
-				{
-					break;
-				}
-			}
-			Addr--;
-		}
-		pContext->BeginAddr = Addr;
-	}
-	else
-	{
-		// search forward
-		while (! pContext->m_StopSearch
-				&& Addr < pContext->EndAddr)
-		{
-			if (File1BufIndex >= File1BufFilled)
-			{
-				ULONG ToRead = BufferSize;
-				if (pContext->EndAddr - Addr < BufferSize)
-				{
-					ToRead = ULONG(pContext->EndAddr - Addr);
-				}
-
-				File1BufFilled = pFilePair->pFirstFile->GetFileData(Addr,
-									File1Buffer, ToRead);
-				File1BufIndex = 0;
-			}
-
-			if (File2BufIndex >= File2BufFilled)
-			{
-				ULONG ToRead = BufferSize;
-				if (pContext->EndAddr - Addr < BufferSize)
-				{
-					ToRead = ULONG(pContext->EndAddr - Addr);
-				}
-
-				File2BufFilled = pFilePair->pSecondFile->GetFileData(Addr,
-									File2Buffer, ToRead);
-				File2BufIndex = 0;
-
-				int PercentCompleted = int((Addr - pContext->BeginAddr) * 100
-											/ (pContext->EndAddr - pContext->BeginAddr));
-				if (PercentCompleted != pContext->m_PercentCompleted
-					|| pContext->m_hWnd != NULL)
-				{
-					pContext->m_PercentCompleted = PercentCompleted;
-					::PostMessage(pContext->m_hWnd, WM_KICKIDLE, 0, 0);
-				}
-			}
-
-			if (File1BufIndex >= File1BufFilled
-				|| File2BufIndex >= File2BufFilled)
-			{
-				break;
-			}
-
-			if (FindingFirstDifference)
-			{
-				if (File1Buffer[File1BufIndex] != File2Buffer[File2BufIndex])
-				{
-					break;
-				}
-			}
-			else
-			{
-				if (File1Buffer[File1BufIndex] == File2Buffer[File2BufIndex])
-				{
-					FindingFirstDifference = TRUE;
-				}
-			}
-			File1BufIndex++;
-			File2BufIndex++;
-			Addr++;
-		}
-		pContext->BeginAddr = Addr;
-	}
-	delete[] File1Buffer;
-	delete[] File2Buffer;
-	pContext->m_SearchCompleted = TRUE;
-
-	if (NULL != pContext->m_hWnd)
-	{
-		::PostMessage(pContext->m_hWnd, WM_COMMAND, IDOK, 0);
-	}
-	return 0;
-}
-
 void CBinaryCompareView::OnEditGotonextdiff()
 {
 	CBinaryCompareDoc * pDoc = GetDocument();
 	CDifferenceProgressDialog dlg;
-	dlg.m_pView = this;
+	dlg.m_pDoc = pDoc;
 	dlg.BeginAddr = pDoc->m_CaretPos;
 	dlg.EndAddr = pDoc->GetFileSize();
 
-	CWinThread Thread(_FindDataProc, & dlg);
-	Thread.m_bAutoDelete = FALSE;
+	int result = dlg.DoModalDelay(200);
 
-	Thread.CreateThread();
-
-	int result = IDOK;
-	if (WAIT_TIMEOUT == WaitForSingleObject(Thread.m_hThread, 200))
-	{
-		result = dlg.DoModal();
-		WaitForSingleObject(Thread.m_hThread, INFINITE);
-	}
 	if (IDOK == result)
 	{
 		SetCaretPosition(dlg.BeginAddr,
@@ -1721,21 +1536,12 @@ void CBinaryCompareView::OnEditGotoprevdiff()
 {
 	CBinaryCompareDoc * pDoc = GetDocument();
 	CDifferenceProgressDialog dlg;
-	dlg.m_pView = this;
+	dlg.m_pDoc = pDoc;
 	dlg.BeginAddr = pDoc->m_CaretPos;
 	dlg.EndAddr = 0;
 
-	CWinThread Thread(_FindDataProc, & dlg);
-	Thread.m_bAutoDelete = FALSE;
+	int result = dlg.DoModalDelay(200);
 
-	Thread.CreateThread();
-
-	int result = IDOK;
-	if (WAIT_TIMEOUT == WaitForSingleObject(Thread.m_hThread, 200))
-	{
-		result = dlg.DoModal();
-		WaitForSingleObject(Thread.m_hThread, INFINITE);
-	}
 	if (IDOK == result)
 	{
 		SetCaretPosition(dlg.BeginAddr,

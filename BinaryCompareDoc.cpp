@@ -181,3 +181,161 @@ void CBinaryCompareDoc::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
 	pCmdUI->SetText(s);
 }
 
+unsigned CBinaryCompareDoc::FindDataProc(CDifferenceProgressDialog * pDlg)
+{
+	FilePair * pFilePair = GetFilePair();
+	if (NULL == pFilePair
+		|| NULL == pFilePair->pFirstFile
+		|| NULL == pFilePair->pSecondFile)
+	{
+		return IDCANCEL;
+	}
+	int const BufferSize = 0x10000;
+	UCHAR * File1Buffer = new UCHAR[BufferSize];
+	UCHAR * File2Buffer = new UCHAR[BufferSize];
+	long File1BufFilled = 0;
+	long File2BufFilled = 0;
+	long File1BufIndex = 0;
+	long File2BufIndex = 0;
+	BOOL FindingFirstDifference = FALSE;
+
+	LONGLONG Addr = pDlg->BeginAddr;
+
+	if (Addr > pDlg->EndAddr)
+	{
+		FindingFirstDifference = TRUE;
+		// search backward
+		while (! pDlg->m_StopRunThread
+				&& Addr > pDlg->EndAddr)
+		{
+			if (File1BufIndex <= 0)
+			{
+				ULONG ToRead = BufferSize;
+				if (Addr - pDlg->EndAddr < BufferSize)
+				{
+					ToRead = ULONG(Addr - pDlg->EndAddr);
+				}
+
+				File1BufFilled = pFilePair->pFirstFile->GetFileData(Addr - ToRead,
+									File1Buffer, ToRead);
+				File1BufIndex = File1BufFilled;
+			}
+
+			if (File2BufIndex <= 0)
+			{
+				ULONG ToRead = BufferSize;
+				if (Addr - pDlg->EndAddr < BufferSize)
+				{
+					ToRead = ULONG(Addr - pDlg->EndAddr);
+				}
+
+				File2BufFilled = pFilePair->pSecondFile->GetFileData(Addr - ToRead,
+									File2Buffer, ToRead);
+				File2BufIndex = File2BufFilled;
+
+				m_CurrentItemDone = pDlg->BeginAddr - Addr;
+
+				if (PercentCompleted != pDlg->m_PercentCompleted)
+				{
+					//
+				}
+			}
+
+			if (0 == File1BufIndex
+				|| 0 == File2BufIndex)
+			{
+				break;
+			}
+
+			File1BufIndex--;
+			File2BufIndex--;
+
+			if (FindingFirstDifference)
+			{
+				if (File1Buffer[File1BufIndex] != File2Buffer[File2BufIndex])
+				{
+					FindingFirstDifference = FALSE;
+				}
+			}
+			else
+			{
+				if (File1Buffer[File1BufIndex] == File2Buffer[File2BufIndex])
+				{
+					break;
+				}
+			}
+			Addr--;
+		}
+		pDlg->BeginAddr = Addr;
+	}
+	else
+	{
+		// search forward
+		while (! pDlg->m_StopRunThread
+				&& Addr < pDlg->EndAddr)
+		{
+			if (File1BufIndex >= File1BufFilled)
+			{
+				ULONG ToRead = BufferSize;
+				if (pDlg->EndAddr - Addr < BufferSize)
+				{
+					ToRead = ULONG(pDlg->EndAddr - Addr);
+				}
+
+				File1BufFilled = pFilePair->pFirstFile->GetFileData(Addr,
+									File1Buffer, ToRead);
+				File1BufIndex = 0;
+			}
+
+			if (File2BufIndex >= File2BufFilled)
+			{
+				ULONG ToRead = BufferSize;
+				if (pDlg->EndAddr - Addr < BufferSize)
+				{
+					ToRead = ULONG(pDlg->EndAddr - Addr);
+				}
+
+				File2BufFilled = pFilePair->pSecondFile->GetFileData(Addr,
+									File2Buffer, ToRead);
+				File2BufIndex = 0;
+
+				m_CurrentItemDone = Addr - pDlg->BeginAddr;
+				if (PercentCompleted != pDlg->m_PercentCompleted
+					|| pDlg->m_hWnd != NULL)
+				{
+					//
+				}
+			}
+
+			if (File1BufIndex >= File1BufFilled
+				|| File2BufIndex >= File2BufFilled)
+			{
+				break;
+			}
+
+			if (FindingFirstDifference)
+			{
+				if (File1Buffer[File1BufIndex] != File2Buffer[File2BufIndex])
+				{
+					break;
+				}
+			}
+			else
+			{
+				if (File1Buffer[File1BufIndex] == File2Buffer[File2BufIndex])
+				{
+					FindingFirstDifference = TRUE;
+				}
+			}
+			File1BufIndex++;
+			File2BufIndex++;
+			Addr++;
+		}
+		pDlg->BeginAddr = Addr;
+	}
+	delete[] File1Buffer;
+	delete[] File2Buffer;
+
+	return IDOK;
+}
+

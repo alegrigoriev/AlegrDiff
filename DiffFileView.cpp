@@ -22,12 +22,14 @@ CDiffFileView::CDiffFileView()
 	m_LButtonDown(false),
 	m_TrackingSelection(false),
 	m_DrawnSelBegin(0, 0),
+	m_VisibleRect(0, 0, 0, 0),
+	m_PreferredRect(0, 0, 0, 0),
 	m_DrawnSelEnd(0, 0)
 {
 	// init font size, to avoid zero divide
-	m_FontMetric.tmAveCharWidth = 0;
-	m_FontMetric.tmExternalLeading = 0;
-	m_FontMetric.tmHeight = 0;
+	m_FontMetric.tmAveCharWidth = 1;
+	m_FontMetric.tmExternalLeading = 1;
+	m_FontMetric.tmHeight = 1;
 }
 
 CDiffFileView::~CDiffFileView()
@@ -417,29 +419,15 @@ BOOL CDiffFileView::PreCreateWindow(CREATESTRUCT& cs)
 	return CView::PreCreateWindow(cs);
 }
 
-int CDiffFileView::LinesInView() const
-{
-	CRect cr;
-	GetClientRect( & cr);
-	return cr.Height() / LineHeight();
-}
-
-int CDiffFileView::CharsInView() const
-{
-	CRect cr;
-	GetClientRect( & cr);
-	return cr.Width() / CharWidth();
-}
-
 void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	// TODO: Add your message handler code here and/or call default
 	bool ShiftPressed = (0 != (0x8000 & GetKeyState(VK_SHIFT)));
 	bool CtrlPressed = (0 != (0x8000 & GetKeyState(VK_CONTROL)));
-	int bCancelSelection = 0;
+	int bCancelSelection = SetPositionMakeVisible;
 	if ( ! ShiftPressed)
 	{
-		bCancelSelection = SetPositionCancelSelection;
+		bCancelSelection |= SetPositionCancelSelection;
 	}
 	int nLinesInView = LinesInView();
 
@@ -473,6 +461,7 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		}
 		else
 		{
+			CaretToHome(bCancelSelection);
 		}
 		break;
 
@@ -484,6 +473,7 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		}
 		else
 		{
+			CaretToEnd(bCancelSelection);
 		}
 		break;
 
@@ -725,95 +715,12 @@ void CDiffFileView::UpdateHScrollBar()
 
 void CDiffFileView::MakePositionVisible(int line, int pos)
 {
-	CFilePairDoc * pDoc = GetDocument();
-	int MoveX = 0;
-	int MoveY = 0;
-	int nLinesInView = LinesInView();
-	int nCharsInView = CharsInView();
-	if (pDoc->m_CaretPos.line < m_FirstLineSeen)
-	{
-		MoveY = m_FirstLineSeen - pDoc->m_CaretPos.line;
-	}
-	else if (pDoc->m_CaretPos.line >= m_FirstLineSeen + nLinesInView)
-	{
-		MoveY = m_FirstLineSeen + nLinesInView - 1 - pDoc->m_CaretPos.line;
-	}
-
-	if (pDoc->m_CaretPos.pos < m_FirstPosSeen)
-	{
-		MoveX = m_FirstPosSeen - pDoc->m_CaretPos.pos;
-	}
-	else if (pDoc->m_CaretPos.pos >= m_FirstPosSeen + nCharsInView)
-	{
-		MoveX = m_FirstPosSeen + nCharsInView - pDoc->m_CaretPos.pos;
-	}
-
-	m_FirstLineSeen -= MoveY;
-	m_FirstPosSeen -= MoveX;
-	if (0 != MoveX)
-	{
-		ScrollWindowEx(MoveX * CharWidth(), 0, NULL, NULL, NULL, NULL,
-						SW_INVALIDATE | SW_ERASE);
-		UpdateHScrollBar();
-	}
-	if (0 != MoveY)
-	{
-		ScrollWindowEx(0, MoveY * LineHeight(), NULL, NULL, NULL, NULL,
-						SW_INVALIDATE | SW_ERASE);
-		UpdateVScrollBar();
-	}
-
-	if (0 != MoveX || 0 != MoveY)
-	{
-		CreateAndShowCaret();
-	}
+	BringPositionToBounds(TextPos(line, pos), m_VisibleRect, m_VisibleRect);
 }
 
 void CDiffFileView::MakePositionCentered(int line, int pos)
 {
-	// if position
-	CFilePairDoc * pDoc = GetDocument();
-	int MoveX = 0;
-	int MoveY = 0;
-	int nLinesInView = LinesInView();
-	int nCharsInView = CharsInView();
-	if (pDoc->m_CaretPos.line < m_FirstLineSeen)
-	{
-		MoveY = m_FirstLineSeen - pDoc->m_CaretPos.line;
-	}
-	else if (pDoc->m_CaretPos.line >= m_FirstLineSeen + nLinesInView)
-	{
-		MoveY = m_FirstLineSeen + nLinesInView - 1 - pDoc->m_CaretPos.line;
-	}
-
-	if (pDoc->m_CaretPos.pos < m_FirstPosSeen)
-	{
-		MoveX = m_FirstPosSeen - pDoc->m_CaretPos.pos;
-	}
-	else if (pDoc->m_CaretPos.pos >= m_FirstPosSeen + nCharsInView)
-	{
-		MoveX = m_FirstPosSeen + nCharsInView - pDoc->m_CaretPos.pos;
-	}
-
-	m_FirstLineSeen -= MoveY;
-	m_FirstPosSeen -= MoveX;
-	if (0 != MoveX)
-	{
-		ScrollWindowEx(MoveX * CharWidth(), 0, NULL, NULL, NULL, NULL,
-						SW_INVALIDATE | SW_ERASE);
-		UpdateHScrollBar();
-	}
-	if (0 != MoveY)
-	{
-		ScrollWindowEx(0, MoveY * LineHeight(), NULL, NULL, NULL, NULL,
-						SW_INVALIDATE | SW_ERASE);
-		UpdateVScrollBar();
-	}
-
-	if (0 != MoveX || 0 != MoveY)
-	{
-		CreateAndShowCaret();
-	}
+	BringPositionToBounds(TextPos(line, pos), m_VisibleRect, m_PreferredRect);
 }
 
 void CDiffFileView::InvalidateRange(TextPos begin, TextPos end)
@@ -901,11 +808,11 @@ void CDiffFileView::SetCaretPosition(int pos, int line, int flags)
 	pDoc->SetCaretPosition(pos, line, flags);
 	if (flags & SetPositionMakeVisible)
 	{
-		MakePositionVisible(pDoc->m_CaretPos.pos, pDoc->m_CaretPos.line);
+		MakeCaretVisible();
 	}
 	else if (flags & SetPositionMakeCentered)
 	{
-		MakePositionCentered(pDoc->m_CaretPos.pos, pDoc->m_CaretPos.line);
+		MakeCaretCentered();
 	}
 	CreateAndShowCaret();
 }
@@ -937,11 +844,6 @@ void CDiffFileView::OnSetFocus(CWnd* pOldWnd)
 	CView::OnSetFocus(pOldWnd);
 
 	CreateAndShowCaret();
-}
-
-void CDiffFileView::CancelSelection()
-{
-	// TODO
 }
 
 void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
@@ -1003,6 +905,15 @@ void CDiffFileView::OnSize(UINT nType, int cx, int cy)
 {
 	TRACE("CDiffFileView::OnSize\n");
 	CView::OnSize(nType, cx, cy);
+
+	m_VisibleRect.bottom = cy / LineHeight() - 1;
+	m_PreferredRect.bottom = m_VisibleRect.bottom / 4;
+	m_PreferredRect.top = m_VisibleRect.bottom - m_VisibleRect.bottom / 4;
+
+	m_VisibleRect.right =  cx / CharWidth();
+	m_PreferredRect.left = m_VisibleRect.right / 3;
+	m_PreferredRect.right = m_VisibleRect.right - m_VisibleRect.right / 3;
+
 	UpdateVScrollBar();
 	UpdateHScrollBar();
 
@@ -1042,7 +953,7 @@ void CDiffFileView::OnEditGotonextdiff()
 {
 	CFilePairDoc * pDoc = GetDocument();
 	pDoc->OnEditGotonextdiff();
-	MakePositionVisible(pDoc->m_CaretPos.pos, pDoc->m_CaretPos.line);
+	MakeCaretCentered();
 	CreateAndShowCaret();
 }
 
@@ -1050,7 +961,7 @@ void CDiffFileView::OnEditGotoprevdiff()
 {
 	CFilePairDoc * pDoc = GetDocument();
 	pDoc->OnEditGotoprevdiff();
-	MakePositionVisible(pDoc->m_CaretPos.pos, pDoc->m_CaretPos.line);
+	MakeCaretCentered();
 	CreateAndShowCaret();
 }
 
@@ -1113,12 +1024,11 @@ void CDiffFileView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	}
 }
 
-void CDiffFileView::BringCaretToBounds(CRect AllowedBounds, CRect BringToBounds)
+void CDiffFileView::BringPositionToBounds(TextPos textpos, const CRect & AllowedBounds, const CRect & BringToBounds)
 {
-	CFilePairDoc * pDoc = GetDocument();
 	// if caret position is inside bounds, it doesn't need to change
-	int CaretLine = pDoc->m_CaretPos.line - m_FirstLineSeen;
-	int CaretPos =  pDoc->m_CaretPos.pos - m_FirstPosSeen;
+	int CaretLine = textpos.line - m_FirstLineSeen;
+	int CaretPos =  textpos.pos - m_FirstPosSeen;
 	if (CaretLine < AllowedBounds.top)
 	{
 		// bring to BringToBounds.top
@@ -1136,4 +1046,18 @@ void CDiffFileView::BringCaretToBounds(CRect AllowedBounds, CRect BringToBounds)
 	{
 		DoHScroll(CaretPos - BringToBounds.right);
 	}
+}
+
+void CDiffFileView::CaretToHome(int flags)
+{
+	GetDocument()->CaretToHome(flags);
+	MakeCaretVisible();
+	CreateAndShowCaret();
+}
+
+void CDiffFileView::CaretToEnd(int flags)
+{
+	GetDocument()->CaretToEnd(flags);
+	MakeCaretVisible();
+	CreateAndShowCaret();
 }

@@ -47,8 +47,23 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_ErasedTextColor(0x000000FF),  // red
 	m_AddedTextColor(0x00FF0000),   // blue
 	m_bRecurseSubdirs(false),
+	m_NormalFontName("Courier New"),
 	m_MinIdenticalLines(5)
 {
+	m_NormalLogFont.lfCharSet = ANSI_CHARSET;
+	m_NormalLogFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+	m_NormalLogFont.lfEscapement = 0;
+	m_NormalLogFont.lfHeight = 20;
+	m_NormalLogFont.lfWidth = 0;
+	m_NormalLogFont.lfItalic = FALSE;
+	m_NormalLogFont.lfStrikeOut = FALSE;
+	m_NormalLogFont.lfUnderline = FALSE;
+	m_NormalLogFont.lfOrientation = 0;
+	m_NormalLogFont.lfOutPrecision = OUT_DEFAULT_PRECIS;
+	m_NormalLogFont.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
+	m_NormalLogFont.lfQuality = DEFAULT_QUALITY;
+	m_NormalLogFont.lfWeight = FW_NORMAL;
+	_tcsncpy(m_NormalLogFont.lfFaceName, LPCTSTR(m_NormalFontName), LF_FACESIZE);
 }
 
 CAlegrDiffApp::~CAlegrDiffApp()
@@ -388,6 +403,10 @@ void CAlegrDiffApp::OnFilePreferences()
 
 	dlg.m_nTabIndent = m_TabIndent;
 
+	dlg.m_NormalFontName = m_NormalFontName;
+	dlg.m_NormalLogFont = m_NormalLogFont;
+	dlg.m_NormalTextColor = m_NormalTextColor;
+
 	if (IDOK == dlg.DoModal())
 	{
 		m_bUseBinaryFilesFilter = (0 != dlg.m_bUseBinaryFilesFilter);
@@ -400,5 +419,9 @@ void CAlegrDiffApp::OnFilePreferences()
 		m_sIgnoreFilesFilter = dlg.m_sIgnoreFilesFilter;
 
 		m_TabIndent = dlg.m_nTabIndent;
+
+		m_NormalFontName = dlg.m_NormalFontName;
+		m_NormalLogFont = dlg.m_NormalLogFont;
+		m_NormalTextColor = dlg.m_NormalTextColor;
 	}
 }

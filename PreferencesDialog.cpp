@@ -52,6 +52,7 @@ BEGIN_MESSAGE_MAP(CPreferencesDialog, CDialog)
 	ON_BN_CLICKED(IDC_CHECK_BINARY_FILES, OnCheckBinaryFiles)
 	ON_BN_CLICKED(IDC_CHECK_C_CPP, OnCheckCCpp)
 	ON_BN_CLICKED(IDC_CHECK_IGNORE, OnCheckIgnore)
+	ON_BN_CLICKED(IDC_BUTTON_NORMAL_FONT, OnButtonNormalFont)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -111,4 +112,19 @@ BOOL CPreferencesDialog::OnInitDialog()
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CPreferencesDialog::OnButtonNormalFont()
+{
+	//CThisApp * pApp = GetApp();
+	CFontDialog dlg( & m_NormalLogFont,
+					CF_FIXEDPITCHONLY
+					| CF_INITTOLOGFONTSTRUCT
+					| CF_NOVECTORFONTS
+					| CF_SCREENFONTS
+					| CF_EFFECTS);
+	dlg.m_cf.rgbColors = m_NormalTextColor;
+	if (IDOK == dlg.DoModal())
+	{
+	}
 }

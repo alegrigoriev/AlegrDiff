@@ -131,6 +131,8 @@ void CResizableDialog::OnSize(UINT nType, int cx, int cy)
 						hWnd, dx, dy, cr.left, cr.top, hdwp);
 		}
 
+		hdwp = OnDeferredSize(hdwp, cx, cy, dx, dy);
+
 		if (NULL != hdwp)
 		{
 			::EndDeferWindowPos(hdwp);

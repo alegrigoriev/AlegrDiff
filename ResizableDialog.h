@@ -57,6 +57,11 @@ protected:
 	int m_pResizeItemsCount;
 
 	virtual void OnMetricsChange();
+	// cx, cy - new size, dx, dy - size delta
+	virtual HDWP OnDeferredSize(HDWP hdwp, int /*cx*/, int /*cy*/, int /*dx*/, int /*dy*/)
+	{
+		return hdwp;
+	}
 	// Generated message map functions
 	//{{AFX_MSG(CResizableDialog)
 	afx_msg void OnSize(UINT nType, int cx, int cy);

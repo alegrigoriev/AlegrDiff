@@ -145,6 +145,10 @@ public:
 	afx_msg void OnFileEditFirst();
 	afx_msg void OnUpdateFileEditSecond(CCmdUI* pCmdUI);
 	afx_msg void OnFileEditSecond();
+	afx_msg void OnEditAccept();
+	afx_msg void OnUpdateEditAccept(CCmdUI* pCmdUI);
+	afx_msg void OnEditDecline();
+	afx_msg void OnUpdateEditDecline(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 protected:
 	DECLARE_MESSAGE_MAP()

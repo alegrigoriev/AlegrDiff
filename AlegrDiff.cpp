@@ -47,11 +47,17 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_NormalTextColor(0),
 	m_ErasedTextColor(0x000000FF),  // red
 	m_AddedTextColor(0x00FF0000),   // blue
+	m_AcceptedTextBackgroundColor(0x0000C0C0),  // yellow
+	m_DiscardedTextBackgroundColor(0x00404040),  // dark gray
+	m_TextBackgroundColor(0xFFFFFF),
 	m_bRecurseSubdirs(false),
 	m_FontPointSize(100),
 	m_UsedFilenameFilter(0),
 	m_AutoReloadChangedFiles(false),
 	m_bCaseSensitive(true),
+	m_MinimalLineLength(2),
+	m_NumberOfIdenticalLines(5),
+	m_PercentsOfLookLikeDifference(30),
 	m_MinIdenticalLines(5)
 {
 	m_NormalLogFont.lfCharSet = ANSI_CHARSET;
@@ -291,6 +297,8 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("NormalTextColor"), m_NormalTextColor, 0, 0, 0xFFFFFF);
 	Profile.AddItem(_T("Settings"), _T("AddedTextColor"), m_AddedTextColor, 0x00FF0000, 0, 0xFFFFFF);
 	Profile.AddItem(_T("Settings"), _T("ErasedTextColor"), m_ErasedTextColor, 0x000000FF, 0, 0xFFFFFF);
+	Profile.AddItem(_T("Settings"), _T("AcceptedTextBackgroundColor"), m_AcceptedTextBackgroundColor, 0x0000C0C0, 0, 0xFFFFFF);
+	Profile.AddItem(_T("Settings"), _T("DiscardedTextBackgroundColor"), m_DiscardedTextBackgroundColor, 0x00404040, 0, 0xFFFFFF);
 
 	Profile.AddItem(_T("Settings"), _T("NormalFont"), m_NormalLogFont, m_NormalLogFont);
 	Profile.AddItem(_T("Settings"), _T("AddedFont"), m_AddedLogFont, m_AddedLogFont);
@@ -310,6 +318,10 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("AdvancedCompareDialog"), m_bAdvancedCompareDialog, false);
 	Profile.AddItem(_T("Settings"), _T("BinaryComparision"), m_BinaryComparision, false);
 	Profile.AddItem(_T("Settings"), _T("AutoReloadChangedFiles"), m_AutoReloadChangedFiles, false);
+
+	Profile.AddItem(_T("Settings"), _T("MinimalLineLength"), m_MinimalLineLength, 2, 1, 2048);
+	Profile.AddItem(_T("Settings"), _T("NumberOfIdenticalLines"), m_NumberOfIdenticalLines, 5, 1, 50);
+	Profile.AddItem(_T("Settings"), _T("PercentsOfLookLikeDifference"), m_PercentsOfLookLikeDifference, 30, 0, 99);
 
 	Profile.AddItem(_T("Settings"), _T("BinaryFiles"), m_sBinaryFilesFilter,
 					_T("*.exe;*.dll;*.sys;*.obj;*.pdb;*.zip"));
@@ -677,6 +689,10 @@ void CAlegrDiffApp::OnFilePreferences()
 	dlg.m_ViewPage.m_ErasedTextColor = m_ErasedTextColor;
 	dlg.m_ViewPage.m_FontPointSize = m_FontPointSize;
 
+	dlg.m_ComparisionPage.m_MinimalLineLength = m_MinimalLineLength;
+	dlg.m_ComparisionPage.m_NumberOfIdenticalLines = m_NumberOfIdenticalLines;
+	dlg.m_ComparisionPage.m_PercentsOfLookLikeDifference = m_PercentsOfLookLikeDifference;
+
 	if (IDOK == dlg.DoModal())
 	{
 		m_bUseBinaryFilesFilter = (0 != dlg.m_FilesPage.m_bUseBinaryFilesFilter);
@@ -691,6 +707,10 @@ void CAlegrDiffApp::OnFilePreferences()
 		m_AutoReloadChangedFiles = dlg.m_FilesPage.m_AutoReloadChangedFiles;
 
 		m_TabIndent = dlg.m_ViewPage.m_nTabIndent;
+		m_MinimalLineLength = dlg.m_ComparisionPage.m_MinimalLineLength;
+		m_NumberOfIdenticalLines = dlg.m_ComparisionPage.m_NumberOfIdenticalLines;
+		m_PercentsOfLookLikeDifference = dlg.m_ComparisionPage.m_PercentsOfLookLikeDifference;
+
 		if (dlg.m_ViewPage.m_bFontChanged)
 		{
 			m_NormalLogFont = dlg.m_ViewPage.m_NormalLogFont;

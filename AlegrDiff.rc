@@ -264,7 +264,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 0.62 beta",IDC_STATIC,35,14,128,8,
+    CTEXT           "AlegrDiff Version 0.68 beta",IDC_STATIC,35,14,128,8,
                     SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001\nalegr@earthlink.net",
                     IDC_STATIC,35,34,128,21
@@ -432,19 +432,21 @@ BEGIN
                     WS_TABSTOP,7,100,118,10
 END
 
-IDD_PROPPAGE_COMPARISION_PREFERENCES DIALOG DISCARDABLE  0, 0, 195, 127
+IDD_PROPPAGE_COMPARISION_PREFERENCES DIALOG DISCARDABLE  0, 0, 195, 92
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Comparision"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "Number of consecutive identical lines:",IDC_STATIC,7,15,
                     125,8
+    EDITTEXT        IDC_EDIT_NUMBER_OF_IDENTICAL_LINES,148,13,40,14,
+                    ES_AUTOHSCROLL
     LTEXT           "Minimal line length for search: ",IDC_STATIC,7,32,120,8
+    EDITTEXT        IDC_EDIT_MINIMAL_LINE_LENGTH,148,30,40,14,ES_AUTOHSCROLL
     LTEXT           "Percent of difference in ""looking like"" lines:",
                     IDC_STATIC,7,50,126,8
-    EDITTEXT        IDC_EDIT1,148,13,40,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT2,148,30,40,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT3,148,47,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PERCENT_OF_LOOKLIKE_DIFFERENCE,148,47,40,14,
+                    ES_AUTOHSCROLL
 END
 
 IDD_PROPPAGE_VIEW_PREFERENCES DIALOG DISCARDABLE  0, 0, 195, 127
@@ -477,8 +479,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,6,0,0
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 0,6,8,0
+ PRODUCTVERSION 0,6,8,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -496,14 +498,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "AleGr Software\0"
             VALUE "FileDescription", "AlegrDiff: file comparision and merging application\0"
-            VALUE "FileVersion", "0, 6, 0, 0\0"
+            VALUE "FileVersion", "0, 6, 8, 0\0"
             VALUE "InternalName", "AlegrDiff\0"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "AlegrDiff.EXE\0"
-            VALUE "PrivateBuild", "Beta 0.6\0"
+            VALUE "PrivateBuild", "Beta 0.68\0"
             VALUE "ProductName", "AlegrDiff Application\0"
-            VALUE "ProductVersion", "0, 6, 0, 0\0"
+            VALUE "ProductVersion", "0, 6, 8, 1\0"
             VALUE "SpecialBuild", "\0"
         END
     END
@@ -585,7 +587,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 188
         TOPMARGIN, 7
-        BOTTOMMARGIN, 120
+        BOTTOMMARGIN, 85
     END
 
     IDD_PROPPAGE_VIEW_PREFERENCES, DIALOG

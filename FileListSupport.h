@@ -67,7 +67,7 @@ public:
 	TextPos m_Begin;
 	TextPos m_End;
 	ULONG m_Flags;
-	enum { FlagAccept = 1, FlagDecline = 2, };
+	enum { FlagAccept = 1, FlagDecline = 2, FlagNoDifference = 4};
 
 	void AcceptChange() { m_Flags &= ~FlagDecline; m_Flags |= FlagAccept; }
 	void DeclineChange() { m_Flags &= ~FlagAccept; m_Flags |= FlagDecline; }
@@ -185,8 +185,9 @@ struct StringSection
 	USHORT Length;
 	enum
 	{
-		Identical, Inserted, Erased,
-	} Attr;
+		Identical = 0, Inserted = 1, Erased = 2, Accepted = 4, Declined = 8,
+	};
+	DWORD Attr;
 private:
 	static CSmallAllocator m_Allocator;
 };
@@ -234,7 +235,7 @@ public:
 	const FileLine * FindMatchingLine(const FileLine * pLine, int nStartLineNum, int nEndLineNum);
 	const FileLine * FindMatchingLineGroupLine(const FileLine * pLine, int nStartLineNum, int nEndLineNum);
 
-	enum { MaxLineGroupSize = 32 };
+	enum { MaxLineGroupSize = 50 };
 
 
 	FileCheckResult CheckForFileChanged();
@@ -308,6 +309,10 @@ public:
 
 	TextPos NextDifference(TextPos PosFrom);
 	TextPos PrevDifference(TextPos PosFrom);
+
+	int GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo);
+	void ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, int Set, int Reset,
+								int * pFirstSectionIdx, int * pNumSections);
 
 	enum eFileComparisionResult
 	{

@@ -1,5 +1,4 @@
 TODO:
-Add "Number of lines to match", "Min string length to match", "percents of look-like difference"
 Add Merge function
 Make Word Left, Word Right, Word selection.
 Make search dialog
@@ -28,6 +27,7 @@ File with differences: last lines not drawn
 Wrong status for inserted and removed parts of strings
 
 Done:
+Add "Number of lines to match", "Min string length to match", "percents of look-like difference"
 Check difference area of the file for identical lines
 Make Binary compare checkbox for file compare dialog
 Make MRU folders list for file compare dialog

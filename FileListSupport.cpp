@@ -1889,13 +1889,52 @@ int FilePair::DirNameCompare(FilePair * Pair1, FilePair * Pair2)
 	return FileItem::DirNameCompare(Item1, Item2);
 }
 
+int FilePair::ComparisionResultPriority()
+{
+	// the following order:
+	// ResultUnknown, FilesDifferent, VersionInfoDifferent, DifferentInSpaces, FilesIdentical,
+	// OnlyFirstFile, OnlySecondFile
+	switch (ComparisionResult)
+	{
+	default:
+	case ResultUnknown:
+		return 0;
+	case FilesDifferent:
+		return 1;
+	case VersionInfoDifferent:
+		return 2;
+	case DifferentInSpaces:
+		return 3;
+	case FilesIdentical:
+		return 4;
+	case OnlyFirstFile:
+		return 5;
+	case OnlySecondFile:
+		return 6;
+	}
+}
+
 int _cdecl FilePair::ComparisionSortFunc(const void * p1, const void * p2)
 {
-	return 0; (*(FilePair * const *) p2, *(FilePair * const *) p1);
+	FilePair * Pair1 = *(FilePair * const *) p1;
+	FilePair * Pair2 = *(FilePair * const *) p2;
+	int priority1 = Pair1->ComparisionResultPriority();
+	int priority2 = Pair2->ComparisionResultPriority();
+
+	if (priority1 > priority2)
+	{
+		return 1;
+	}
+	if (priority1 < priority2)
+	{
+		return -1;
+	}
+
+	return 0;
 }
 int _cdecl FilePair::ComparisionSortBackwardsFunc(const void * p1, const void * p2)
 {
-	return 0; (*(FilePair * const *) p2, *(FilePair * const *) p1);
+	return - ComparisionSortFunc(p1, p2);
 }
 
 bool FileLine::IsEqual(const FileLine * pOtherLine) const

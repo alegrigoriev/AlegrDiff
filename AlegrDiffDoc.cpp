@@ -88,6 +88,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2)
 			{
 				pPair->pFirstFile = NULL;
 				pPair->pSecondFile = Files2[idx2];
+				pPair->ComparisionResult = FilePair::OnlySecondFile;
 				idx2++;
 
 				if (0) TRACE("File \"%s\" exists only in dir \"%s\"\n",
@@ -99,6 +100,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2)
 			{
 				pPair->pSecondFile = NULL;
 				pPair->pFirstFile = Files1[idx1];
+				pPair->ComparisionResult = FilePair::OnlyFirstFile;
 				idx1++;
 
 				if (0) TRACE("File \"%s\" exists only in dir \"%s\"\n",

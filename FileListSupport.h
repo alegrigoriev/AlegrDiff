@@ -211,12 +211,14 @@ public:
 	{
 		ResultUnknown,
 		FilesIdentical,
-		VersionInfoDifferent,
 		DifferentInSpaces,
+		VersionInfoDifferent,
 		FilesDifferent,
 		OnlyFirstFile,
 		OnlySecondFile,
 	};
+
+	int ComparisionResultPriority();
 
 	eFileComparisionResult CompareFiles();
 	eFileComparisionResult CompareTextFiles();

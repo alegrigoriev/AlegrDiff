@@ -1,5 +1,4 @@
 TODO:
-Add full comparision result in list view and sorting
 Open list view only after directory names are entered
 Check file dates for change, when the app is activated
 Allow two-file comparision
@@ -20,6 +19,7 @@ Fixed:
 File with differences: last lines not drawn
 
 Done:
+Add full comparision result in list view and sorting
 Allow multiple views for file pair (reference count ??)
 OnWindowView must duplicate file view only
 Process Enter key in list view

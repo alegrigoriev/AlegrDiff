@@ -314,7 +314,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 		m_TotalLines = pPair->m_LinePairs.size();
 		_tcsncpy(m_ComparisonResult, pPair->GetComparisionResult(),
 				sizeof m_ComparisonResult / sizeof m_ComparisonResult[0]);
-		m_ComparisonResult[sizeof m_ComparisonResult / sizeof m_ComparisonResult[0]] = 0;
+		m_ComparisonResult[sizeof m_ComparisonResult / sizeof m_ComparisonResult[0] - 1] = 0;
 		((CFrameWnd*)AfxGetMainWnd())->PostMessage(WM_SETMESSAGESTRING, 0, (LPARAM)m_ComparisonResult);
 	}
 	UpdateAllViews(NULL, FileLoaded);

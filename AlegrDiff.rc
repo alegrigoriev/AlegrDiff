@@ -110,8 +110,8 @@ BEGIN
     BUTTON      ID_VIEW_SHOW_LINE_NUMBERS
     BUTTON      ID_VIEW_IGNORE_WHITESPACES
     SEPARATOR
-    BUTTON      ID_EDIT_ACCEPT
     BUTTON      ID_EDIT_DECLINE
+    BUTTON      ID_EDIT_ACCEPT
     BUTTON      ID_FILE_MERGE_SAVE
     SEPARATOR
     BUTTON      ID_FILE_PREFERENCES
@@ -229,7 +229,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Copy files from 1st dir...",  ID_FILE_COPY_FIRST_DIR
         MENUITEM "Copy files from 2nd dir...",  ID_FILE_COPY_SECOND_DIR
-        MENUITEM "Hide",                        ID_VIEW_HIDESELECTEDFILES
+        MENUITEM "Hide\tCtrl+H",                ID_VIEW_HIDESELECTEDFILES
     END
 END
 
@@ -297,7 +297,7 @@ BEGIN
             MENUITEM "&Descending Order",           ID_LISTVIEW_SORTBY_DESCENDINGORDER
 
         END
-        MENUITEM "&Hide Selected Files",        ID_VIEW_HIDESELECTEDFILES
+        MENUITEM "&Hide Selected Files\tCtrl+H", ID_VIEW_HIDESELECTEDFILES
         MENUITEM "&Unhide All Files",           ID_VIEW_SHOWALLFILES
         MENUITEM SEPARATOR
         MENUITEM "R&escan Files\tF5",           ID_VIEW_REFRESH
@@ -518,6 +518,7 @@ BEGIN
     VK_F8,          ID_VIEW_FILE_2_VERSION, VIRTKEY, SHIFT, NOINVERT
     "W",            ID_VIEW_IGNORE_WHITESPACES, VIRTKEY, CONTROL, NOINVERT
     VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
+    "H",            ID_VIEW_HIDESELECTEDFILES, VIRTKEY, CONTROL, NOINVERT
 END
 
 
@@ -757,8 +758,8 @@ CAPTION "Find"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT           "&Find what:",IDC_STATIC,7,10,45,8
-    COMBOBOX        IDC_COMBO_FIND,53,8,144,77,CBS_DROPDOWN | WS_VSCROLL | 
-                    WS_TABSTOP
+    COMBOBOX        IDC_COMBO_FIND,53,8,144,77,CBS_DROPDOWN | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Match &whole word only",IDC_CHECK_WHOLE_WORD,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,29,112,10
     CONTROL         "Match &case",IDC_CHECK_CASE,"Button",BS_AUTOCHECKBOX | 
@@ -768,7 +769,7 @@ BEGIN
                     WS_GROUP | WS_TABSTOP,13,65,42,10
     CONTROL         "&Down",IDC_RADIO_DOWN,"Button",BS_AUTORADIOBUTTON,13,77,
                     44,10
-    GROUPBOX        "Search in",IDC_STATIC,103,42,90,51
+    GROUPBOX        "Search in",IDC_STATIC,103,42,90,51,WS_GROUP
     CONTROL         "&Combined file",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON | 
                     WS_GROUP | WS_TABSTOP,112,77,74,10
     CONTROL         "File &1",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON,112,53,
@@ -1039,8 +1040,8 @@ VS_VERSION_INFO$(RETAIL_VERSION) VERSIONINFO
 #else
 VS_VERSION_INFO VERSIONINFO
 #endif
- FILEVERSION 1,0,23,0
- PRODUCTVERSION 1,0,23,0
+ FILEVERSION 1,0,24,0
+ PRODUCTVERSION 1,0,24,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -1057,13 +1058,13 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "AleGr Software"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application"
-            VALUE "FileVersion", "1, 0, 23, 0"
+            VALUE "FileVersion", "1, 0, 24, 0"
             VALUE "InternalName", "AlegrDiff"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001-2002"
             VALUE "OriginalFilename", "AlegrDiff.EXE"
-            VALUE "PrivateBuild", "Beta 1.23"
+            VALUE "PrivateBuild", "Beta 1.24"
             VALUE "ProductName", "AlegrDiff Application"
-            VALUE "ProductVersion", "1, 0, 23, 0"
+            VALUE "ProductVersion", "1, 0, 24, 0"
         END
     END
     BLOCK "VarFileInfo"

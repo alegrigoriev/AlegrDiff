@@ -63,14 +63,6 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		TRACE0("Failed to create toolbar\n");
 		return -1;      // fail to create
 	}
-#if 0
-	if (!m_wndDlgBar.Create(this, IDR_MAINFRAME,
-							CBRS_ALIGN_TOP, AFX_IDW_DIALOGBAR))
-	{
-		TRACE0("Failed to create dialogbar\n");
-		return -1;		// fail to create
-	}
-#endif
 
 	if ( ! m_wndReBar.Create(this) ||
 		! m_wndReBar.AddBar(&m_wndToolBar)

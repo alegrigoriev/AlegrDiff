@@ -445,8 +445,7 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		{
 			if (pFindPair == m_PairArray[item])
 			{
-				pListCtrl->DeleteItem(item);
-				AddListViewItem(pFindPair, item);
+				SetListViewItem(pFindPair, item, false);
 			}
 		}
 		return;
@@ -626,7 +625,7 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	for (unsigned item = 0; item < m_PairArray.size(); item++)
 	{
 		FilePair * pPair = m_PairArray[item];
-		AddListViewItem(pPair, item);
+		SetListViewItem(pPair, item, true);
 	}
 	pListCtrl->SetItemState(0, LVIS_FOCUSED, LVIS_FOCUSED);
 	UnlockWindowUpdate();
@@ -931,7 +930,7 @@ BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 	return TRUE;
 }
 
-void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
+void CAlegrDiffView::SetListViewItem(FilePair *pPair, int item, bool bInsert)
 {
 	CListCtrl * pListCtrl = &GetListCtrl();
 	CAlegrDiffDoc * pDoc = GetDocument();
@@ -957,7 +956,15 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 		lvi.state = LVIS_SELECTED;
 		lvi.stateMask = LVIS_SELECTED;
 	}
-	pListCtrl->InsertItem(& lvi);
+
+	if (bInsert)
+	{
+		pListCtrl->InsertItem(& lvi);
+	}
+	else
+	{
+		pListCtrl->SetItem(& lvi);
+	}
 
 	if (m_ColumnWidthArray[ColumnSubdir] >= 0)
 	{
@@ -1449,60 +1456,6 @@ void CAlegrDiffView::OnViewResetcolumns()
 	UpdateAppColumns();
 	OnUpdate(NULL, OnUpdateRebuildListView, NULL);
 }
-#if 0
-void CAlegrDiffView::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
-{
-	LPNMLVGETINFOTIP pGetInfoTip = reinterpret_cast<LPNMLVGETINFOTIP>(pNMHDR);
-	// TODO: Add your control notification handler code here
-	// we only provide tooltips for file length columns
-	if (pGetInfoTip->iSubItem < 0
-		|| pGetInfoTip->iSubItem >= MaxColumns
-		|| pGetInfoTip->iItem < 0
-		|| pGetInfoTip->iItem >= m_PairArray.size())
-	{
-		return;
-	}
-
-	eColumns nColumn = m_ViewItemToColumnType[pGetInfoTip->iSubItem];
-	FilePair * pPair = m_PairArray[pGetInfoTip->iItem];
-	if (NULL == pPair)
-	{
-		return;
-	}
-
-	CString str;
-	switch (nColumn)
-	{
-	case ColumnLength1:
-		if (NULL == pPair->pFirstFile)
-		{
-			return;
-		}
-		str = UlonglongToStr(pPair->pFirstFile->GetFileLength());
-		break;
-	case ColumnLength2:
-		if (NULL == pPair->pSecondFile)
-		{
-			return;
-		}
-		str = UlonglongToStr(pPair->pSecondFile->GetFileLength());
-		break;
-	default:
-		return;
-	}
-
-	if (pGetInfoTip->dwFlags)
-	{
-		_tcsncpy(pGetInfoTip->pszText, str, pGetInfoTip->cchTextMax - 1);
-	}
-	else
-	{
-		_tcsncat(pGetInfoTip->pszText, str, pGetInfoTip->cchTextMax - 1);
-	}
-
-	*pResult = 0;
-}
-#endif
 
 void CAlegrDiffView::OnFileProperties()
 {

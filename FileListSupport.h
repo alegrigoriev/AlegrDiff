@@ -239,7 +239,7 @@ public:
 	int LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces);
 	// recalculates offset in the line with or without whitespaces shown to offset in the raw line
 	int DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces);
-	LPCTSTR GetText(LPTSTR buf, size_t nBufChars, int * pStrLen, BOOL IgnoreWhitespaces);
+	LPCTSTR GetText(LPTSTR buf, size_t nBufChars, int * pStrLen, BOOL IgnoreWhitespaces, int SelectFile);
 };
 
 enum FileCheckResult { FileDeleted, FileUnchanged, FileTimeChanged, };
@@ -337,8 +337,6 @@ private:
 
 	vector<FileLine *> m_Lines;
 	vector<FileLine *> m_NonBlankLines;
-	vector<FileLine *> m_HashSortedLines;   // non-blank only
-	vector<FileLine *> m_HashSortedLineGroups;   // non-blank only
 	vector<FileLine *> m_NormalizedHashSortedLines;   // non-blank only
 	vector<FileLine *> m_NormalizedHashSortedLineGroups;   // non-blank only
 	//vector<TextToken> m_Tokens;

@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "AlegrDiff.h"
 #include "FindDialog.h"
+#include <afxpriv.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -18,6 +19,7 @@ static char THIS_FILE[] = __FILE__;
 CMyFindDialog::CMyFindDialog(CWnd* pParent /*=NULL*/)
 	: CDialog(CMyFindDialog::IDD, pParent)
 	, m_SearchScope(0)
+	, m_bNeedUpdateControls(TRUE)
 {
 	//{{AFX_DATA_INIT(CMyFindDialog)
 	m_bCaseSensitive = FALSE;
@@ -37,6 +39,8 @@ void CMyFindDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_CASE, m_bCaseSensitive);
 	DDX_Radio(pDX, IDC_RADIO_UP, m_FindDown);
 	//}}AFX_DATA_MAP
+	m_FindCombo.SetExtendedUI(TRUE);
+
 	if (-1 != m_SearchScope)
 	{
 		DDX_Radio(pDX, IDC_RADIO3, m_SearchScope);
@@ -81,6 +85,13 @@ BEGIN_MESSAGE_MAP(CMyFindDialog, CDialog)
 	ON_BN_CLICKED(IDC_RADIO2, OnBnClickedRadio2)
 	ON_BN_CLICKED(IDC_RADIO3, OnBnClickedRadio3)
 	ON_BN_CLICKED(IDC_CHECK_WHOLE_WORD, OnBnClickedCheckWholeWord)
+	ON_CBN_SELCHANGE(IDC_COMBO_FIND, OnEditchangeComboFind)
+	ON_CBN_SELENDOK(IDC_COMBO_FIND, OnEditchangeComboFind)
+	ON_CBN_SELENDCANCEL(IDC_COMBO_FIND, OnEditchangeComboFind)
+	ON_CBN_CLOSEUP(IDC_COMBO_FIND, OnEditchangeComboFind)
+	ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
+	ON_UPDATE_COMMAND_UI(IDC_CHECK_WHOLE_WORD, OnUpdateCheckWholeWord)
+	ON_UPDATE_COMMAND_UI(IDOK, OnUpdateOk)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -88,39 +99,49 @@ END_MESSAGE_MAP()
 
 void CMyFindDialog::OnEditchangeComboFind()
 {
-	if (m_FindCombo.m_hWnd != NULL)
-	{
-		CWnd * pWnd = GetDlgItem(IDOK);
-		if (pWnd)
-		{
-			pWnd->EnableWindow(0 != m_FindCombo.GetWindowTextLength());
-		}
-	}
+	m_bNeedUpdateControls = TRUE;
 }
 
+void CMyFindDialog::OnUpdateCheckWholeWord(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(0 != m_SearchScope);
+	CheckDlgButton(IDC_CHECK_WHOLE_WORD, m_bWholeWord && 0 != m_SearchScope);
+}
+
+void CMyFindDialog::OnUpdateOk(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(0 != m_FindCombo.GetWindowTextLength());
+}
 
 void CMyFindDialog::OnBnClickedRadio1()
 {
 	m_SearchScope = 1;
-	EnableDlgItem(IDC_CHECK_WHOLE_WORD, TRUE);
-	CheckDlgButton(IDC_CHECK_WHOLE_WORD, m_bWholeWord);
+	m_bNeedUpdateControls = TRUE;
 }
 
 void CMyFindDialog::OnBnClickedRadio2()
 {
 	m_SearchScope = 2;
-	EnableDlgItem(IDC_CHECK_WHOLE_WORD, TRUE);
-	CheckDlgButton(IDC_CHECK_WHOLE_WORD, m_bWholeWord);
+	m_bNeedUpdateControls = TRUE;
 }
 
 void CMyFindDialog::OnBnClickedRadio3()
 {
 	m_SearchScope = 0;
-	EnableDlgItem(IDC_CHECK_WHOLE_WORD, FALSE);
-	CheckDlgButton(IDC_CHECK_WHOLE_WORD, FALSE);
+	m_bNeedUpdateControls = TRUE;
 }
 
 void CMyFindDialog::OnBnClickedCheckWholeWord()
 {
 	m_bWholeWord = IsDlgButtonChecked(IDC_CHECK_WHOLE_WORD);
+}
+
+LRESULT CMyFindDialog::OnKickIdle(WPARAM, LPARAM)
+{
+	if (m_bNeedUpdateControls)
+	{
+		UpdateDialogControls(this, FALSE);
+	}
+	m_bNeedUpdateControls = FALSE;
+	return 0;
 }

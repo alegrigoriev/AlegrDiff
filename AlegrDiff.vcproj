@@ -304,6 +304,9 @@
 				RelativePath="BinaryCompareView.cpp">
 			</File>
 			<File
+				RelativePath="CHeckFingerprintDlg.cpp">
+			</File>
+			<File
 				RelativePath=".\ChildFrm.cpp">
 			</File>
 			<File
@@ -314,6 +317,9 @@
 			</File>
 			<File
 				RelativePath="DirectoryFingerpringCreateDlg.cpp">
+			</File>
+			<File
+				RelativePath="DirectoryFingerprintCheckDlg.cpp">
 			</File>
 			<File
 				RelativePath="DirectoryFingerprintDlg.cpp">
@@ -407,6 +413,9 @@
 				RelativePath="BinaryCompareView.h">
 			</File>
 			<File
+				RelativePath="CHeckFingerprintDlg.h">
+			</File>
+			<File
 				RelativePath=".\ChildFrm.h">
 			</File>
 			<File
@@ -417,6 +426,9 @@
 			</File>
 			<File
 				RelativePath="DirectoryFingerpringCreateDlg.h">
+			</File>
+			<File
+				RelativePath="DirectoryFingerprintCheckDlg.h">
 			</File>
 			<File
 				RelativePath="DirectoryFingerprintDlg.h">

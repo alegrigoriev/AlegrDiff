@@ -48,6 +48,7 @@ BEGIN_MESSAGE_MAP(CAlegrDiffApp, CWinApp)
 	// Standard print setup command
 	ON_COMMAND(ID_FILE_PRINT_SETUP, CWinApp::OnFilePrintSetup)
 	ON_COMMAND(ID_FILE_CREATEDIRECTORYFINGERPRINT, OnFileCreatedirectoryfingerprint)
+	ON_COMMAND(ID_FILE_CHECK_DIRECTORY_FINGERPRINT, OnFileCheckDirectoryFingerprint)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1686,3 +1687,8 @@ void CAlegrDiffApp::OnFileCreatedirectoryfingerprint()
 	dlg1.DoModal();
 }
 
+
+void CAlegrDiffApp::OnFileCheckDirectoryFingerprint()
+{
+	// TODO: Add your command handler code here
+}

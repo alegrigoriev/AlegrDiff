@@ -43,6 +43,7 @@ public:
 public:
 	bool BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 							bool bRecurseSubdirs, bool BinaryComparison);
+	bool BuildFilePairList(FileList & FileList1, FileList & FileList2);
 	void FreeFilePairList();
 
 

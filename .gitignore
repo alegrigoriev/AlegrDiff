@@ -1,0 +1,11 @@
+*.suo
+*.aps
+*.chm
+HTMLDefines.h
+.vs/
+.vscode/
+Debug/
+Release/
+x64/
+*.obj
+*.user

@@ -16,34 +16,45 @@ class FileLine
 {
 public:
 
-	FileLine(const char * src, size_t length, int OrdNum);
+	FileLine(const char * src, bool MakeNormalizedString);
+	~FileLine();
 
-	void * operator new (size_t structLen, size_t addLen)
-	{
-		return new char[structLen + addLen];
-	}
-	void operator delete(void * ptr, size_t)
-	{
-		::delete ptr;
-	}
 public:
 	DWORD GetHash() const { return m_HashCode; }
-	bool IsEqual(const FileLine & OtherLine) const;
+	DWORD GetNormalizedHash() const { return m_NormalizedHashCode; }
+	bool IsEqual(const FileLine * pOtherLine) const;
+	bool IsNormalizedEqual(const FileLine * pOtherLine) const;
+	bool LooksLike(const FileLine * pOtherLine, int PercentsDifferent) const;
+	bool IsBlank() const { return 0 != (m_Flags & BlankString); }
 	bool GetNextToken(TextToken & token);
 	void SetLink(FileLine * pLine) { m_Link = pLine; }
 	FileLine * GetLink() const { return m_Link; }
+	int GetLineNumber() const { return m_Number; }
+	void SetLineNumber(int num) { m_Number = num; }
+
+	static int _cdecl HashCompareFunc(const void * p1, const void * p2);
+	static int _cdecl HashAndLineNumberCompareFunc(const void * p1, const void * p2);
+	static int _cdecl NormalizedHashAndLineNumberCompareFunc(const void * p1, const void * p2);
 
 private:
-	mutable DWORD m_HashCode;
-	mutable DWORD m_Flags;
+	DWORD m_HashCode;
+	DWORD m_NormalizedHashCode;
+	DWORD m_Flags;
 	enum { HashValid = 1,
+		BlankString = 2,
 	};
-	int m_Number; // ordinal number
+	int m_Number; // line ordinal number in the file
+	// length of the source string
 	int m_Length;
+	int m_NormalizedStringLength;
 	int m_FirstTokenIndex;
 	FileLine * m_Link;
-	// allocated with the buffer, must be the last member
-	char m_Data[1];
+	char * m_pAllocatedBuf;
+	const char * m_pString;
+	// points to the string with extra spaces removed
+	const char * m_pNormalizedString;
+	// String and normalized string share common buffer.
+	// you only need to delete m_pAllocatedBuf
 };
 
 struct FileSection
@@ -71,6 +82,8 @@ public:
 	LPCTSTR GetSubdir() const { return m_Subdir; }
 	LPCTSTR GetBasedir() const { return m_BaseDir; }
 	FILETIME GetLastWriteTime() const { return m_LastWriteTime; }
+	int FindMatchingLineIndex(const FileLine * pLine, int nStartLineIndex);
+	//int FindMatchingLineGroupIndex(const FileLine * pLine, int nStartLineIndex);
 	FileItem * m_pNext;
 	static int _cdecl NameSortFunc(const void * p1, const void * p2);
 	static int _cdecl DirNameSortFunc(const void * p1, const void * p2);
@@ -88,6 +101,8 @@ private:
 	CString m_BaseDir;
 	FILETIME m_LastWriteTime;
 	CArray<FileLine *, FileLine *> m_Lines;
+	CArray<FileLine *, FileLine *> m_HashSortedLines;
+	CArray<FileLine *, FileLine *> m_NormalizedHashSortedLines;
 	CArray<TextToken, TextToken> m_Tokens;
 };
 

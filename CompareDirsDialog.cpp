@@ -39,6 +39,8 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 			CString s;
 			s.Format("dir%d", i);
 			pApp->Profile.AddItem(_T("History"), s, m_sHistory[i]);
+			m_sHistory[i].TrimLeft();
+			m_sHistory[i].TrimRight();
 		}
 		m_sFirstDir = m_sHistory[0];
 		m_sSecondDir = m_sHistory[1];

@@ -32,6 +32,8 @@ END_MESSAGE_MAP()
 // CAlegrDiffApp construction
 
 CAlegrDiffApp::CAlegrDiffApp()
+	: m_MaxSearchDistance(256),
+	m_MinIdenticalLines(3)
 {
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
@@ -95,6 +97,159 @@ BOOL CAlegrDiffApp::InitInstance()
 	return TRUE;
 }
 
+CString FilePair::GetComparisionResult()
+{
+	if (NULL == pFirstFile)
+	{
+		if (NULL == pSecondFile)
+		{
+			return CString();
+		}
+		CString s;
+		s.Format("File exists only in \"%s%s\"",
+				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
+		return s;
+	}
+	if (NULL == pSecondFile)
+	{
+		CString s;
+		s.Format("File exists only in \"%s%s\"",
+				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
+		return s;
+	}
+	return CString();
+}
+
+DWORD FilePair::CompareFiles(bool bCompareAll)
+{
+	if (NULL == pFirstFile
+		|| NULL == pSecondFile)
+	{
+		return 0;
+	}
+	// TODO: different function for binary comparision
+	if (! pFirstFile->Load()
+		|| ! pSecondFile->Load())
+	{
+		pFirstFile->Unload();
+		return 0;
+	}
+	// different comparision for different modes
+	return CompareTextFiles(bCompareAll);
+	return 1;
+}
+
+DWORD FilePair::CompareTextFiles(bool bCompareAll)
+{
+	// find similar lines
+	CThisApp * pApp = GetApp();
+	int nLine1 = 0;
+	int nLine2 = 0;
+	int NumLines1 = pFirstFile->GetNumLines();
+	int NumLines2 = pSecondFile->GetNumLines();
+	// build list of equal sections
+	while (nLine1 < NumLines1
+			&& nLine2 < NumLines2)
+	{
+		// find the beginning of the section
+		// find a few identical lines
+		while (nLine1 < NumLines1
+				&& nLine2 < NumLines2)
+		{
+			for (int dist = 0; dist < pApp->m_MaxSearchDistance; dist++)
+			{
+				const FileLine * Line1 = pFirstFile->GetLine(nLine1+dist);
+				if ( ! Line1->IsBlank())
+				{
+					// check the lines in file2 in range Line2 to Line2+dist
+					for (int i = 0; i < dist && i + nLine2 < NumLines2; i++)
+					{
+						const FileLine * Line2 = pSecondFile->GetLine(nLine2 + i);
+						if (Line1->IsEqual(Line2))
+						{
+							int n1 = nLine1 + 1;
+							int n2 = nLine2 + i + 1;
+							int NumEqual = 1;
+							// check if a few non-blank lines more are the same
+							while(n1 < NumLines1 && n2 < NumLines2
+								&& NumEqual < pApp->m_MinIdenticalLines
+								&& n1 - nLine1 < pApp->m_MaxSearchDistance)
+							{
+								const FileLine * L1 = pFirstFile->GetLine(n1);
+								if (L1->IsBlank())
+								{
+									n1++;
+									continue;
+								}
+								const FileLine * L2 = pSecondFile->GetLine(n2);
+								if (L2->IsBlank())
+								{
+									n2++;
+									continue;
+								}
+								if ( ! L1->IsEqual(L2))
+								{
+									break;
+								}
+								n1++;
+								n2++;
+								NumEqual++;
+							}
+							if (NumEqual >= pApp->m_MinIdenticalLines)
+							{
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+		int Line1Begin = nLine1;
+		int Line2Begin = nLine2;
+
+		while (nLine1 < NumLines1
+				&& nLine2 < NumLines2)
+		{
+			const FileLine * Line1 = pFirstFile->GetLine(nLine1);
+			const FileLine * Line2 = pSecondFile->GetLine(nLine2);
+			if (Line1->IsEqual(Line2))
+			{
+				nLine1++;
+				nLine2++;
+			}
+			else
+			{
+				// the lines are different
+				if (! bCompareAll)
+				{
+					// if we don't need to compare the while file (just scanning)
+					// return now
+					return 1;
+				}
+				// check if the lines are similar enough
+				// the lines can be considered similar if < 1/4 of the characters is different,
+				// or the only difference is in whitespaces
+				if (Line1->LooksLike(Line2, 25))
+				{
+					nLine1++;
+					nLine2++;
+				}
+				else
+				{
+					break;
+				}
+			}
+		}
+		FileSection * pSection = new FileSection;
+		pSection->File1LineBegin = Line1Begin;
+
+		pSection->File2LineBegin = Line2Begin;
+		pSection->File1LineEnd = nLine1 - 1;
+		pSection->File2LineEnd = nLine2 - 1;
+
+	}
+	return 1;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // CAboutDlg dialog used for App About

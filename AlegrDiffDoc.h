@@ -71,6 +71,8 @@ protected:
 
 // Attributes
 public:
+	TextPos m_CaretPos;
+	TextPos m_SelectionAnchor;
 
 // Operations
 public:
@@ -79,7 +81,11 @@ public:
 	int GetTotalLines() const { return m_TotalLines; }
 	bool UseLinePairArray() const { return m_UseLinePairArray; }
 	bool BaseOnFirstFile() const { return m_BaseOnFirstFile; }
-// Overrides
+	void SetCaretPosition(int pos, int line, int flags);
+	enum { CaretPositionChanged = 0x100, FileLoaded = 0x200};
+	void OnEditGotonextdiff();
+	void OnEditGotoprevdiff();
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CFilePairDoc)
 public:
@@ -103,7 +109,8 @@ public:
 	// Generated message map functions
 protected:
 	//{{AFX_MSG(CFilePairDoc)
-	// NOTE - the ClassWizard will add and remove member functions here.
+	afx_msg void OnUpdateEditGotonextdiff(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateEditGotoprevdiff(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -120,6 +120,9 @@ BOOL CAlegrDiffApp::InitInstance()
 												RUNTIME_CLASS(CChildFrame), // custom MDI child frame
 												RUNTIME_CLASS(CDiffFileView));
 	AddDocTemplate(m_pFileDiffTemplate);
+	m_pFileDiffTemplate->m_hMenuShared =
+		::LoadMenu(AfxFindResourceHandle(MAKEINTRESOURCE(IDR_ALEGRDTYPE),
+										RT_MENU), MAKEINTRESOURCE(IDR_ALEGRDTYPE));
 
 	// create main MDI Frame window
 	CMainFrame* pMainFrame = new CMainFrame;
@@ -280,12 +283,21 @@ void CAlegrDiffApp::OnFileComparefiles()
 	// check if there is already a CFilePairDoc
 	CString Name1;
 	CString Name2;
+
+	CString title1;
+	title1.LoadString(IDS_OPEN_FIRST_TITLE);
+
+	CString title2;
+	title2.LoadString(IDS_OPEN_SECOND_TITLE);
+
 	CString Filter;
 	Filter.LoadString(IDS_FILENAME_FILTER);
+
 	CFileDialog dlg1(TRUE, NULL, NULL,
 					OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING,
 					Filter);
 	dlg1.m_ofn.lpstrInitialDir = m_FileDir1;
+	dlg1.m_ofn.lpstrTitle = title1;
 
 	if (IDOK != dlg1.DoModal())
 	{
@@ -299,6 +311,8 @@ void CAlegrDiffApp::OnFileComparefiles()
 					Filter);
 
 	dlg2.m_ofn.lpstrInitialDir = m_FileDir2;
+	dlg2.m_ofn.lpstrTitle = title2;
+
 	if (m_FileDir2.IsEmpty())
 	{
 	}

@@ -25,6 +25,8 @@ public:
 	CString	m_FilenameFilter;
 	BOOL	m_BinaryComparision;
 	//}}AFX_DATA
+	CSpinButtonCtrl	m_Spin;
+
 	CString	m_sFirstDir;
 	CString	m_sSecondDir;
 	CString m_sHistory[10];

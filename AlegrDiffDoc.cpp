@@ -226,7 +226,8 @@ CFilePairDoc::CFilePairDoc()
 	: m_TotalLines(0),
 	m_UseLinePairArray(false),
 	m_pFilePair(NULL),
-	m_BaseOnFirstFile(true)
+	m_BaseOnFirstFile(true),
+	m_CaretPos(0, 0)
 {
 }
 
@@ -306,11 +307,62 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 		}
 	}
 	UpdateAllViews(NULL);
+	SetCaretPosition(0, 0, SetPositionCancelSelection);
+}
+
+void CFilePairDoc::SetCaretPosition(int pos, int line, int flags)
+{
+	if (line > GetTotalLines())
+	{
+		line = GetTotalLines();
+	}
+	if (line < 0)
+	{
+		line = 0;
+	}
+	m_CaretPos.line = line;
+
+	if (pos < 0)
+	{
+		pos = 0;
+	}
+	if (pos > 2048)
+	{
+		pos = 2048;
+	}
+	m_CaretPos.pos = pos;
+
+	if (0 != (flags & SetPositionCancelSelection))
+	{
+		m_SelectionAnchor = m_CaretPos;
+	}
+	UpdateAllViews(NULL, FileLoaded, NULL);
+}
+
+void CFilePairDoc::OnEditGotonextdiff()
+{
+	TextPos NewPos = m_pFilePair->NextDifference(m_CaretPos);
+	if (NewPos == TextPos(-1, -1))
+	{
+		return;
+	}
+	SetCaretPosition(NewPos.pos, NewPos.line, SetPositionCancelSelection);
+}
+
+void CFilePairDoc::OnEditGotoprevdiff()
+{
+	TextPos NewPos = m_pFilePair->PrevDifference(m_CaretPos);
+	if (NewPos == TextPos(-1, -1))
+	{
+		return;
+	}
+	SetCaretPosition(NewPos.pos, NewPos.line, SetPositionCancelSelection);
 }
 
 BEGIN_MESSAGE_MAP(CFilePairDoc, CDocument)
 	//{{AFX_MSG_MAP(CFilePairDoc)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
+	ON_UPDATE_COMMAND_UI(ID_EDIT_GOTONEXTDIFF, OnUpdateEditGotonextdiff)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_GOTOPREVDIFF, OnUpdateEditGotoprevdiff)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -346,3 +398,13 @@ void CFilePairDoc::Serialize(CArchive& ar)
 
 /////////////////////////////////////////////////////////////////////////////
 // CFilePairDoc commands
+
+void CFilePairDoc::OnUpdateEditGotonextdiff(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(m_pFilePair->NextDifference(m_CaretPos) != TextPos(-1, -1));
+}
+
+void CFilePairDoc::OnUpdateEditGotoprevdiff(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(m_pFilePair->PrevDifference(m_CaretPos) != TextPos(-1, -1));
+}

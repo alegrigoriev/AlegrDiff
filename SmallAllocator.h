@@ -1,6 +1,7 @@
 #pragma once
 #include "SimpleCriticalSection.h"
 // this class allocates small items of fixed size
+#pragma warning(disable:4355)
 class CSmallAllocator
 {
 public:
@@ -43,4 +44,6 @@ private:
 	size_t m_BlockSize;
 	size_t m_ItemsInBlock;
 };
+
+#pragma warning(default:4355)
 

@@ -19,6 +19,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CPreferencesDialog)
 	enum { IDD = IDD_DIALOG_PREFERENCES };
+	CSpinButtonCtrl	m_Spin;
 	BOOL	m_bUseBinaryFilesFilter;
 	BOOL	m_bUseCppFilter;
 	BOOL	m_bUseIgnoreFilter;

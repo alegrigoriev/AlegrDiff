@@ -11,6 +11,12 @@
 /////////////////////////////////////////////////////////////////////////////
 // CDiffFileView view
 
+enum {
+	SetPositionMakeVisible = 1,
+	SetPositionMakeCentered = 2,
+	SetPositionCancelSelection = 4,
+};
+
 class CDiffFileView : public CView
 {
 protected:
@@ -32,14 +38,20 @@ public:
 protected:
 	virtual void OnDraw(CDC* pDC);      // overridden to draw this view
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+	virtual void OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint);
 	//}}AFX_VIRTUAL
 
 // Implementation
 public:
 	int m_FirstLineSeen;
 	int m_FirstPosSeen;
-	int m_CaretLine;
-	int m_CaretPos;
+
+	TextPos m_DrawnSelBegin;
+	TextPos m_DrawnSelEnd;
+
+	bool m_LButtonDown;
+	bool m_TrackingSelection;
+
 	CFont m_NormalFont;
 	CFont m_UnderlineFont;
 	CFont m_StrikeoutFont;
@@ -50,11 +62,17 @@ public:
 	int LinesInView() const;
 	int CharsInView() const;
 	void MakePositionVisible(int line, int pos);
-	void MoveCaretBy(int dx, int dy, bool bCancelSelection = true)
+	void MakePositionCentered(int line, int pos);
+	void BringCaretToBounds(CRect AllowedBounds, CRect BringToBounds);
+
+	void InvalidateRange(TextPos begin, TextPos end);
+
+	void MoveCaretBy(int dx, int dy, int flags = SetPositionCancelSelection)
 	{
-		SetCaretPosition(m_CaretPos + dx, m_CaretLine + dy, bCancelSelection);
+		SetCaretPosition(GetDocument()->m_CaretPos.pos + dx,
+						GetDocument()->m_CaretPos.line + dy, flags);
 	}
-	void SetCaretPosition(int pos, int line, bool bCancelSelection = true);
+	void SetCaretPosition(int pos, int line, int flags = SetPositionCancelSelection);
 	void CreateAndShowCaret();
 	void UpdateVScrollBar();
 	void DoVScroll(int nLinesToScroll); // > 0 - scroll up (to see lines toward end),
@@ -69,7 +87,7 @@ public:
 protected:
 	void DrawStringSections(CDC* pDC, CPoint point,
 							const StringSection * pSection,
-							int nSkipChars, int nVisibleChars, int nTabIndent);
+							int nSkipChars, int nVisibleChars, int nTabIndent, int SelBegin, int SelEnd);
 
 	virtual ~CDiffFileView();
 #ifdef _DEBUG
@@ -92,6 +110,10 @@ protected:
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
+	afx_msg void OnKillFocus(CWnd* pNewWnd);
+	afx_msg void OnCaptureChanged(CWnd *pWnd);
+	afx_msg void OnEditGotonextdiff();
+	afx_msg void OnEditGotoprevdiff();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -1,15 +1,17 @@
 TODO:
+Make "Move to next diff", Move to prev diff functions
+Expand tabs during file loading
+Make "Home", "End" functions
+Make "Copy to clipboard"
+Make Go To Line
+Add context menu to list view
+Add context menu to file view
 Make background thread for comparision
 Add progress to File list view and file diff view
 Check file dates for change, when the app is activated
 Add Line Numbers at the left margin
 Add "Refresh" function
-Expand tabs during file loading
-Make "Move to next diff", Move to prev diff functions
-Make "Home", "End" functions
 Add font selection
-Add context menu to list view
-Add context menu to file view
 Open directories or files from the command line
 Make binary comparision
 Make progress dialog for binary comparision
@@ -20,6 +22,7 @@ Fixed:
 File with differences: last lines not drawn
 
 Done:
+Draw selection in the file view
 Use standard background for drawing text
 Add Options dialog
 File pattern support in the dialog.

@@ -2665,7 +2665,7 @@ FileLine::FileLine(LPCTSTR src, int Length, bool /*MakeNormalizedString*/, bool 
 	TCHAR TmpBuf[4096];
 	char WhitespaceMask[4096 / 8];
 
-	unsigned Flags = REMOVE_VERSION_INFO;
+	unsigned Flags = 0; REMOVE_VERSION_INFO;
 	if (c_cpp_file)
 	{
 		Flags |= C_CPP_FILE;

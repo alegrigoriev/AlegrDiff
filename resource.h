@@ -42,7 +42,6 @@
 #define IDD_DIALOG_DIR_FINGERPRINT_CHECK 153
 #define ID_WORDSIZE_1BYTE               153
 #define ID_WORDSIZE_2BYTES              154
-#define IDD_DIALOG_FINGERPRINT_CREATE_PROGRESS1 154
 #define IDD_DIALOG_DIFFERENCE_PROGRESS  154
 #define ID_WORDSIZE_4BYTES              155
 #define ID_WORDSIZE_8BYTES              156
@@ -227,7 +226,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        160
-#define _APS_NEXT_COMMAND_VALUE         32820
+#define _APS_NEXT_COMMAND_VALUE         32827
 #define _APS_NEXT_CONTROL_VALUE         1078
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

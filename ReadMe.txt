@@ -4,7 +4,6 @@ Show data chars for binary file
 Horizontal scroll in binary view scroll data bytes only
 Set line size for binary view
 Switch from text view to binary view
-Single file pair binary comparison
 Add toolbar buttons for Create Fingerprint, Check Fingerprint.
 Support comparison of BIG lists
 Save columns width and order
@@ -34,11 +33,11 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-"Hasbani" text files make it crash (in text mode comparison).
 During binary comparison, alternate "Calculating fingerprint" and "Comparing" messages shown
 screen move in two directions may corrupt the image (??)
 
 Fixed:
+text files with long lines make it crash (in text mode comparison).
 GetFileData breaks sometimes (when movind data down in the buffer)
 Cursor up out of screen
 Click on the selection margin was broken.
@@ -49,6 +48,7 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+Single file pair binary comparison
 If one file is longer, show its data rather than '??'
 Goto next/prev difference in binary view
 Open Binary file difference

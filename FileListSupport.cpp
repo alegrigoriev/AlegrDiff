@@ -351,8 +351,8 @@ bool FileItem::Load()
 	{
 		return false;
 	}
-	char lineA[2048];
-	wchar_t lineW[2048];
+	char lineA[4096];
+	wchar_t lineW[4096];
 	char buf[512];
 	setvbuf(file, buf, _IOFBF, sizeof buf);
 #ifdef _DEBUG
@@ -364,7 +364,7 @@ bool FileItem::Load()
 #else
 	line = lineA;
 #endif
-	TCHAR TabExpandedLine[2048];
+	TCHAR TabExpandedLine[4096];
 
 	FileLine * pLineList = NULL;
 	// peek two first bytes, to see if it is UNICODE file
@@ -417,7 +417,7 @@ bool FileItem::Load()
 #endif
 		}
 		// expand tabs
-		for (int i = 0, pos = 0; line[i] != 0 && pos < sizeof TabExpandedLine - 1; pos++)
+		for (int i = 0, pos = 0; line[i] != 0 && pos < (sizeof TabExpandedLine / sizeof TabExpandedLine[0]) - 1; pos++)
 		{
 			if (line[i] == '\t')
 			{
@@ -1468,7 +1468,7 @@ static DWORD CalculateHash(void const * pData, int len)
 }
 // remove the unnecessary whitespaces from the line (based on C, C++ syntax)
 // return string length
-static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
+static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstCount,
 								char * pWhitespaceMask, int WhitespaceMaskSize,
 								bool c_cpp_file)
 {
@@ -1508,7 +1508,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 		LeaveOneExtraSpace = true;
 	}
 
-	while (Src[SrcIdx] && DstIdx + 1 < DstLen)
+	while (Src[SrcIdx] && DstIdx + 1 < DstCount)
 	{
 		// it's OK to remove extra spaces between non-alpha bytes,
 		// unless these are the following pairs:
@@ -1520,7 +1520,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 		bool c_IsAlpha = (_istalnum(TCHAR_MASK & c)  || '_' == c);
 		if ((RemovedWhitespaces && LeaveOneExtraSpace) || (PrevCharAlpha && c_IsAlpha))
 		{
-			if(DstIdx + 1 >= DstLen)
+			if(DstIdx + 1 >= DstCount)
 			{
 				break;
 			}
@@ -1538,7 +1538,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 			// move all alpha chars till non-alpha
 			do
 			{
-				if(DstIdx + 1 >= DstLen)
+				if(DstIdx + 1 >= DstCount)
 				{
 					break;
 				}
@@ -1571,7 +1571,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 					int ReservedPair = (ReservedPairs[i] & 0xFF) | ((ReservedPairs[i] & 0xFF00) << 8);
 					if (pair == ReservedPair)
 					{
-						if(DstIdx + 1 < DstLen)
+						if(DstIdx + 1 < DstCount)
 						{
 							pDst[DstIdx] = ' ';
 							DstIdx++;
@@ -1594,7 +1594,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 				cPrevChar = c;
 				do
 				{
-					if(DstIdx + 1 >= DstLen)
+					if(DstIdx + 1 >= DstCount)
 					{
 						break;
 					}
@@ -1606,7 +1606,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 					{
 						// if the next char is double quote,
 						// skip both
-						if(DstIdx + 1 >= DstLen)
+						if(DstIdx + 1 >= DstCount)
 						{
 							break;
 						}
@@ -1623,7 +1623,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 					else if ('\\' ==c)
 					{
 						// skip the next char
-						if(DstIdx + 1 >= DstLen)
+						if(DstIdx + 1 >= DstCount)
 						{
 							break;
 						}
@@ -1640,7 +1640,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 				cPrevChar = c;
 				do
 				{
-					if(DstIdx + 1 >= DstLen)
+					if(DstIdx + 1 >= DstCount)
 					{
 						break;
 					}
@@ -1652,7 +1652,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 					{
 						// if the next char is double quote,
 						// skip both
-						if(DstIdx + 1 >= DstLen)
+						if(DstIdx + 1 >= DstCount)
 						{
 							break;
 						}
@@ -1669,7 +1669,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 					else if ('\\' ==c)
 					{
 						// skip the next char
-						if(DstIdx + 1 >= DstLen)
+						if(DstIdx + 1 >= DstCount)
 						{
 							break;
 						}
@@ -1683,7 +1683,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 			else do
 			{
 				// move all non-alphanumeric
-				if(DstIdx + 1 >= DstLen)
+				if(DstIdx + 1 >= DstCount)
 				{
 					break;
 				}
@@ -2073,10 +2073,10 @@ FileLine::FileLine(LPCTSTR src, bool MakeNormalizedString, bool c_cpp_file)
 	m_NormalizedGroupHashCode(0)
 {
 	m_Length = _tcslen(src);
-	TCHAR TmpBuf[2050];
-	char WhitespaceMask[2048 / 8];
+	TCHAR TmpBuf[4096];
+	char WhitespaceMask[4096 / 8];
 
-	m_NormalizedStringLength = RemoveExtraWhitespaces(TmpBuf, src, sizeof TmpBuf,
+	m_NormalizedStringLength = RemoveExtraWhitespaces(TmpBuf, src, sizeof TmpBuf / sizeof TmpBuf[0],
 													WhitespaceMask, sizeof WhitespaceMask,
 													c_cpp_file);
 

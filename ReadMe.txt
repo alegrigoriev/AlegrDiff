@@ -1,6 +1,5 @@
 TODO:
 
-Show data chars for binary file
 Horizontal scroll in binary view scroll data bytes only
 Set line size for binary view
 Switch from text view to binary view
@@ -33,10 +32,12 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+Wrong byte order in text representation, when words are shown
 During binary comparison, alternate "Calculating fingerprint" and "Comparing" messages shown
 screen move in two directions may corrupt the image (??)
 
 Fixed:
+Crash when openng single binary file
 text files with long lines make it crash (in text mode comparison).
 GetFileData breaks sometimes (when movind data down in the buffer)
 Cursor up out of screen
@@ -48,6 +49,11 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+Mouse click in binary data chars.
+Selection in binary data chars
+Cursor in binary data chars
+Click and mouse move beyond the area
+Show data chars for binary file
 Single file pair binary comparison
 If one file is longer, show its data rather than '??'
 Goto next/prev difference in binary view

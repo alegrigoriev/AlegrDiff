@@ -387,8 +387,8 @@ CDocument * CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 		}
 	}
 
-	if (pPair->pFirstFile->m_IsBinary
-		|| pPair->pSecondFile->m_IsBinary)
+	if ((NULL != pPair->pFirstFile && pPair->pFirstFile->m_IsBinary)
+		|| (NULL != pPair->pSecondFile && pPair->pSecondFile->m_IsBinary))
 	{
 		CBinaryCompareDoc * pDoc = dynamic_cast<CBinaryCompareDoc *>
 									(m_pBinaryDiffTemplate->OpenDocumentFile(NULL));

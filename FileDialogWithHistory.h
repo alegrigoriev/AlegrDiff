@@ -22,7 +22,7 @@ public:
 						LPCTSTR lpszFilter = NULL,
 						CWnd* pParentWnd = NULL)
 		: CFileDialog(bOpenFileDialog, lpszDefExt,
-					lpszFileName, dwFlags, lpszFilter, pParentWnd,
+					lpszFileName, dwFlags | OFN_EXPLORER, lpszFilter, pParentWnd,
 					OpenfilenameSize()),
 		m_pResizeItems(NULL),
 		m_ResizeItemsCount(0)

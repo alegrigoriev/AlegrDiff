@@ -28,9 +28,9 @@ END_MESSAGE_MAP()
 static UINT indicators[] =
 {
 	ID_SEPARATOR,           // status line indicator
-	ID_INDICATOR_CAPS,
-	ID_INDICATOR_NUM,
-	ID_INDICATOR_SCRL,
+	//ID_INDICATOR_CAPS,
+	//ID_INDICATOR_NUM,
+	//ID_INDICATOR_SCRL,
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -57,16 +57,19 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		TRACE0("Failed to create toolbar\n");
 		return -1;      // fail to create
 	}
+#if 0
 	if (!m_wndDlgBar.Create(this, IDR_MAINFRAME,
 							CBRS_ALIGN_TOP, AFX_IDW_DIALOGBAR))
 	{
 		TRACE0("Failed to create dialogbar\n");
 		return -1;		// fail to create
 	}
+#endif
 
-	if (!m_wndReBar.Create(this) ||
-		!m_wndReBar.AddBar(&m_wndToolBar) ||
-		!m_wndReBar.AddBar(&m_wndDlgBar))
+	if ( ! m_wndReBar.Create(this) ||
+		! m_wndReBar.AddBar(&m_wndToolBar)
+		//|| !m_wndReBar.AddBar(&m_wndDlgBar)
+		)
 	{
 		TRACE0("Failed to create rebar\n");
 		return -1;      // fail to create

@@ -34,6 +34,7 @@ protected:
 	virtual BOOL OnPreparePrinting(CPrintInfo* pInfo);
 	virtual void OnBeginPrinting(CDC* pDC, CPrintInfo* pInfo);
 	virtual void OnEndPrinting(CDC* pDC, CPrintInfo* pInfo);
+	virtual void OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint);
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -52,6 +53,7 @@ protected:
 protected:
 	//{{AFX_MSG(CAlegrDiffView)
 	afx_msg void OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

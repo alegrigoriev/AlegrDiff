@@ -9,7 +9,7 @@ void MiltiSzToCString(CString & str, LPCTSTR pMsz)
 	// find string length
 	int l;
 	// limit the string length to 64K
-	for (l = 0; ('\0' != pMsz[0] || '\0' != pMsz[1]) && l < 65536; l++)
+	for (l = 0; ('\0' != pMsz[l] || '\0' != pMsz[l + 1]) && l < 65536; l++)
 	{
 	}
 	l += 2;
@@ -160,12 +160,12 @@ int FileItem::FileItemDirNameCompare(FileItem * Item1, FileItem * Item2)
 	if (0 == Item1->m_Subdir.GetLength()
 		&& 0 != Item2->m_Subdir.GetLength())
 	{
-		return 1;
+		return -1;
 	}
 	if (0 == Item2->m_Subdir.GetLength()
 		&& 0 != Item1->m_Subdir.GetLength())
 	{
-		return -1;
+		return 1;
 	}
 	int result = Item1->m_Subdir.CompareNoCase(Item2->m_Subdir);
 	if (0 != result)
@@ -348,7 +348,7 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 	{
 		SubDirectory += _T("\\");
 	}
-	CString name = m_BaseDir + SubDirectory + "*.*";
+	CString name = m_BaseDir + SubDirectory + "*";
 	HANDLE hFind = FindFirstFile(name, & wfd);
 	if (INVALID_HANDLE_VALUE == hFind
 		|| NULL == hFind)
@@ -359,7 +359,7 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 	{
 		if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
-			TRACE("Found the subdirectory %s\n", wfd.cFileName);
+			if (0) TRACE("Found the subdirectory %s\n", wfd.cFileName);
 			if (bRecurseSubdirs
 				&& 0 != _tcscmp(wfd.cFileName, _T("."))
 				&& 0 != _tcscmp(wfd.cFileName, _T(".."))
@@ -383,7 +383,7 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 			}
 			if (0) TRACE("New file item: Name=\"%s\", base dir=%s, subdir=%s\n",
 						wfd.cFileName, m_BaseDir, SubDirectory);
-			FileItem * pFile = new FileItem(wfd.cFileName, m_BaseDir, SubDirectory);
+			FileItem * pFile = new FileItem( & wfd, m_BaseDir, SubDirectory);
 			if (NULL == pFile)
 			{
 				continue;
@@ -407,6 +407,7 @@ void FileList::FreeFileList()
 		m_pList = tmp->m_pNext;
 		delete tmp;
 	}
+	m_NumFiles = 0;
 }
 
 // CRC32 Lookup Table generated from Charles Michael
@@ -501,6 +502,29 @@ FileLine::FileLine(const char * src, size_t length, int OrdNum)
 	memcpy(m_Data, src, length);
 	m_Data[length] = 0;
 	m_HashCode = CalculateHash(m_Data, length);
+}
+
+CString FilePair::GetComparisionResult()
+{
+	if (NULL == pFirstFile)
+	{
+		if (NULL == pSecondFile)
+		{
+			return CString();
+		}
+		CString s;
+		s.Format("File exists only in \"%s%s\"",
+				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
+		return s;
+	}
+	if (NULL == pSecondFile)
+	{
+		CString s;
+		s.Format("File exists only in \"%s%s\"",
+				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
+		return s;
+	}
+	return CString();
 }
 
 #undef new

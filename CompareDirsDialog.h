@@ -25,7 +25,7 @@ public:
 	//}}AFX_DATA
 	CString	m_sFirstDir;
 	CString	m_sSecondDir;
-
+	CString m_sHistory[10];
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -41,6 +41,7 @@ protected:
 	//{{AFX_MSG(CCompareDirsDialog)
 	afx_msg void OnButtonBrowseFirstDir();
 	afx_msg void OnButtonBrowseSecondDir();
+	virtual void OnCancel();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

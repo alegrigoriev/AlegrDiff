@@ -345,7 +345,7 @@ void CAlegrDiffView::SetSortColumn(eColumns nColumn, eSetSortColumnOrder Order)
 	{
 		UpdateAppColumns();
 
-		OnUpdate(NULL, 0, NULL);
+		OnUpdate(NULL, OnUpdateRebuildListView, NULL);
 	}
 }
 
@@ -450,6 +450,11 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		}
 		return;
 	}
+	else if (OnUpdateRebuildListView != lHint
+			&& 0 != lHint)
+	{
+		return;
+	}
 
 	// TODO: keep focus on the same item
 	// fill the list control
@@ -511,11 +516,22 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
 	titles[ColumnName].LoadString(IDS_STRING_COLUMN_FILENAME);
 	titles[ColumnSubdir].LoadString(IDS_STRING_COLUMN_SUBDIRECTORY);
-	titles[ColumnDate1].LoadString(IDS_STRING_COLUMN_1ST_MODIFIED);
-	titles[ColumnDate2].LoadString(IDS_STRING_COLUMN_2ND_MODIFIED);
 	titles[ColumnComparisionResult].LoadString(IDS_STRING_COLUMN_COMPARISON_RESULT);
-	titles[ColumnLength1].LoadString(IDS_STRING_COLUMN_1ST_LENGTH);
-	titles[ColumnLength2].LoadString(IDS_STRING_COLUMN_2ND_LENGTH);
+
+	if (pDoc->m_bCheckingFingerprint)
+	{
+		titles[ColumnDate1].LoadString(IDS_STRING_COLUMN_ORIGINAL_MODIFIED);
+		titles[ColumnDate2].LoadString(IDS_STRING_COLUMN_CURRENT_MODIFIED);
+		titles[ColumnLength1].LoadString(IDS_STRING_COLUMN_ORIGINAL_LENGTH);
+		titles[ColumnLength2].LoadString(IDS_STRING_COLUMN_CURRENT_LENGTH);
+	}
+	else
+	{
+		titles[ColumnDate1].LoadString(IDS_STRING_COLUMN_1ST_MODIFIED);
+		titles[ColumnDate2].LoadString(IDS_STRING_COLUMN_2ND_MODIFIED);
+		titles[ColumnLength1].LoadString(IDS_STRING_COLUMN_1ST_LENGTH);
+		titles[ColumnLength2].LoadString(IDS_STRING_COLUMN_2ND_LENGTH);
+	}
 
 	ASSERT(MaxColumns == countof(m_ColumnTypeToViewItem));
 	ASSERT(MaxColumns == countof(m_ViewItemToColumnType));
@@ -1200,7 +1216,7 @@ void CAlegrDiffView::OnListviewFilelength()
 {
 	m_ColumnWidthArray[ColumnLength1] = ~m_ColumnWidthArray[ColumnLength1];
 	m_ColumnWidthArray[ColumnLength2] = ~m_ColumnWidthArray[ColumnLength2];
-	OnUpdate(NULL, 0, NULL);
+	OnUpdate(NULL, OnUpdateRebuildListView, NULL);
 }
 
 void CAlegrDiffView::OnUpdateListviewFilelength(CCmdUI *pCmdUI)
@@ -1212,7 +1228,7 @@ void CAlegrDiffView::OnListviewModificationtime()
 {
 	m_ColumnWidthArray[ColumnDate1] = ~m_ColumnWidthArray[ColumnDate1];
 	m_ColumnWidthArray[ColumnDate2] = ~m_ColumnWidthArray[ColumnDate2];
-	OnUpdate(NULL, 0, NULL);
+	OnUpdate(NULL, OnUpdateRebuildListView, NULL);
 }
 
 void CAlegrDiffView::OnUpdateListviewModificationtime(CCmdUI *pCmdUI)
@@ -1432,7 +1448,7 @@ void CAlegrDiffView::OnViewResetcolumns()
 {
 	ResetColumnsArray();
 	UpdateAppColumns();
-	OnUpdate(NULL, 0, NULL);
+	OnUpdate(NULL, OnUpdateRebuildListView, NULL);
 }
 #if 0
 void CAlegrDiffView::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
@@ -1488,6 +1504,7 @@ void CAlegrDiffView::OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 #endif
+
 void CAlegrDiffView::OnFileProperties()
 {
 	UINT item = GetListCtrl().GetNextItem(-1, LVNI_SELECTED);

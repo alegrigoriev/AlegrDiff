@@ -48,6 +48,7 @@ CAlegrDiffDoc::CAlegrDiffDoc()
 	m_bRecurseSubdirs(false),
 	m_hThread(NULL),
 	m_hEvent(CreateEvent(NULL, FALSE, FALSE, NULL)),
+	m_bCheckingFingerprint(false),
 	m_bStopThread(TRUE)
 {
 	m_NextPairToRefresh = m_PairList.Head();
@@ -103,7 +104,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 	FileList FileList1;
 	FileList FileList2;
 
-	UpdateAllViews(NULL);
+	UpdateAllViews(NULL, OnUpdateRebuildListView);
 	// make full names from the directories
 	LPTSTR pFilePart;
 	TCHAR buf[MAX_PATH];
@@ -144,7 +145,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 
 	if (BuildFilePairList(FileList1, FileList2))
 	{
-		UpdateAllViews(NULL);
+		UpdateAllViews(NULL, OnUpdateRebuildListView);
 	}
 	((CFrameWnd*)AfxGetMainWnd())->SetMessageText(AFX_IDS_IDLEMESSAGE);
 	return true;

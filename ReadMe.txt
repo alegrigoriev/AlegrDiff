@@ -1,6 +1,6 @@
 TODO:
 
-When checking the fingerprint, use "Original" and "Current" instead of "1st and 2nd
+replace edit box with a combobox in FolderDialog
 make word by word comparison in MatchStrings
 Find full word only
 Version stamp keywords: $Archive: $Revision: $Date:
@@ -11,7 +11,6 @@ Show Left-only, right-only, merged line (single line only)
 Copy binary dump as text
 Switch from text view to binary view
 Add folder picture under the fingerprint picture
-replace edit box with a combobox in FolderDialog
 Add history to SaveListOf Files
 
 Import font settings from Visual C/VisualStudio
@@ -38,6 +37,7 @@ screen move in two directions may corrupt the image (??)
 Directory dialog allows to select network host. It won't return anything then.
 
 Fixed:
+When checking fingerprint, always showed "files identical"
 Windows ME: old style file open dialog
 Default sort for names: reversed
 status string on open files: garbled
@@ -66,6 +66,7 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+When checking the fingerprint, use "Original" and "Current" instead of "1st and 2nd
 Close file view if the file is updated in the list view
 Update comparison result in the list view on load and reload
 Remove final dialog in fingerprint creation

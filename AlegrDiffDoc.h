@@ -10,6 +10,10 @@
 #endif // _MSC_VER > 1000
 #include "FileListSupport.h"
 
+enum {
+	OnUpdateRebuildListView = 1,
+};
+
 class CAlegrDiffBaseDoc : public CDocument
 {
 protected:
@@ -47,6 +51,7 @@ public:
 	KListEntry<FilePair> m_PairList;
 	int m_nFilePairs;
 	bool m_bRecurseSubdirs;
+	bool m_bCheckingFingerprint;
 
 	void RunComparisionThread();
 

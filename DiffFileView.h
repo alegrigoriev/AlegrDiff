@@ -6,7 +6,7 @@
 #endif // _MSC_VER > 1000
 // DiffFileView.h : header file
 //
-
+#include "FileListSupport.h"
 /////////////////////////////////////////////////////////////////////////////
 // CDiffFileView view
 
@@ -25,12 +25,53 @@ public:
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CDiffFileView)
+public:
+	virtual void OnInitialUpdate();
 protected:
 	virtual void OnDraw(CDC* pDC);      // overridden to draw this view
+	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	//}}AFX_VIRTUAL
 
 // Implementation
+public:
+	FilePair * m_pFilePair;
+	bool m_BaseOnFirstFile;
+	int m_FirstLineSeen;
+	int m_FirstPosSeen;
+	int m_CaretLine;
+	int m_CaretPos;
+	int m_TotalLines;
+	CFont m_NormalFont;
+	CFont m_UnderlineFont;
+	CFont m_StrikeoutFont;
+	TEXTMETRIC m_FontMetric;
+
+	int CharWidth() const { return m_FontMetric.tmAveCharWidth; }
+	int LineHeight() const { return m_FontMetric.tmHeight + m_FontMetric.tmExternalLeading; }
+	int LinesInView() const;
+	int CharsInView() const;
+	void MakePositionVisible(int line, int pos);
+	void MoveCaretBy(int dx, int dy, bool bCancelSelection = true)
+	{
+		SetCaretPosition(m_CaretPos + dx, m_CaretLine + dy, bCancelSelection);
+	}
+	void SetCaretPosition(int pos, int line, bool bCancelSelection = true);
+	void CreateAndShowCaret();
+	void UpdateVScrollBar();
+	void DoVScroll(int nLinesToScroll); // > 0 - scroll up (to see lines toward end),
+	// < 0 - scroll down (to see lines to the begin of the file)
+	void VScrollToTheLine(int nLine);
+
+	void DoHScroll(int nCharsToScroll); // > 0 - scroll left (to see chars toward end),
+	// < 0 - scroll right (to see chars to the begin of the line)
+	void HScrollToThePos(int nPos);
+	void UpdateHScrollBar();
+	void CancelSelection();
 protected:
+	void DrawStringSections(CDC* pDC, CPoint point,
+							StringSection const Sections[], int NumOfSections,
+							int nSkipChars, int nVisibleChars, int nTabIndent);
+
 	virtual ~CDiffFileView();
 #ifdef _DEBUG
 	virtual void AssertValid() const;
@@ -40,7 +81,17 @@ protected:
 	// Generated message map functions
 protected:
 	//{{AFX_MSG(CDiffFileView)
-	// NOTE - the ClassWizard will add and remove member functions here.
+	afx_msg void OnWindowCloseDiff();
+	afx_msg void OnDestroy();
+	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

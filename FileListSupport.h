@@ -3,6 +3,7 @@
 #define AFX_FILELISTSUPPORT_H__E1805E7E_66CF_4BE2_A1A1_7C1E818B9987__INCLUDED_
 #pragma once
 #include <afxtempl.h>
+#include "SmallAllocator.h"
 
 struct TextToken
 {
@@ -19,6 +20,16 @@ public:
 	FileLine(const char * src, bool MakeNormalizedString);
 	~FileLine();
 
+#if 1
+	static void * operator new(size_t size)
+	{
+		return m_Allocator.Allocate(size);
+	}
+	static void operator delete(void * ptr)
+	{
+		m_Allocator.Free(ptr);
+	}
+#endif
 public:
 	DWORD GetHash() const { return m_HashCode; }
 	DWORD GetNormalizedHash() const { return m_NormalizedHashCode; }
@@ -35,12 +46,18 @@ public:
 	bool IsBlank() const { return 0 != (m_Flags & BlankString); }
 
 	bool GetNextToken(TextToken & token);
+
 	void SetLink(FileLine * pLine) { m_Link = pLine; }
 	FileLine * GetLink() const { return m_Link; }
+
 	int GetLineNumber() const { return m_Number; }
 	void SetLineNumber(int num) { m_Number = num; }
+
 	LPCSTR GetText() const { return m_pString; }
+	int GetLength() const { return m_Length; }
+
 	LPCSTR GetNormalizedText() const { return m_pNormalizedString; }
+	int GetNormalizedLength() const { return m_NormalizedStringLength; }
 
 	static int _cdecl HashCompareFunc(const void * p1, const void * p2);
 	static int _cdecl HashAndLineNumberCompareFunc(const void * p1, const void * p2);
@@ -70,10 +87,51 @@ private:
 	const char * m_pNormalizedString;
 	// String and normalized string share common buffer.
 	// you only need to delete m_pAllocatedBuf
+	static CSmallAllocator m_Allocator;
+};
+
+struct StringSection
+{
+	static void * operator new(size_t size)
+	{
+		return m_Allocator.Allocate(size);
+	}
+	static void operator delete(void * ptr)
+	{
+		m_Allocator.Free(ptr);
+	}
+	StringSection * pNext;
+	LPCTSTR pBegin;
+	USHORT Length;
+	enum
+	{
+		Identical, Inserted, Erased,
+	} Attr;
+private:
+	static CSmallAllocator m_Allocator;
+};
+
+struct LinePair
+{
+	static void * operator new(size_t size)
+	{
+		return m_Allocator.Allocate(size);
+	}
+	static void operator delete(void * ptr)
+	{
+		m_Allocator.Free(ptr);
+	}
+
+	FileLine * pFirstLine;
+	FileLine * pSecondLine;
+	StringSection * pFirstSection;
+private:
+	static CSmallAllocator m_Allocator;
 };
 
 struct FileSection
 {
+	FileSection * pNext;
 	int File1LineBegin;
 	int File1LineEnd;
 
@@ -124,11 +182,15 @@ private:
 	CArray<FileLine *, FileLine *> m_NormalizedHashSortedLines;   // non-blank only
 	CArray<FileLine *, FileLine *> m_NormalizedHashSortedLineGroups;   // non-blank only
 	CArray<TextToken, TextToken> m_Tokens;
-	friend struct FilePair;
+	friend class FilePair;
 };
 
-struct FilePair
+class FilePair
 {
+public:
+	FilePair();
+	~FilePair();
+
 	FilePair * pNext;
 	FileItem * pFirstFile;
 	FileItem * pSecondFile;
@@ -147,11 +209,14 @@ struct FilePair
 	static int NameCompare(FilePair * Pair1, FilePair * Pair2);
 	static int DirNameCompare(FilePair * Pair1, FilePair * Pair2);
 
-	DWORD CompareFiles(bool bCompareAll = false);
+	bool LoadFiles();
+	void UnloadFiles();
+	DWORD CompareFiles(bool bCompareAll = false, bool bUnload = true);
 	DWORD CompareTextFiles(bool bCompareAll);
 	DWORD CompareTextFilesNoExtraSpaces(bool bCompareAll);
 
 	DWORD ComparisionResult;
+	CArray<LinePair *, LinePair *> m_LinePairs;
 };
 
 class FileList

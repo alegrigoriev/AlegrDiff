@@ -23,10 +23,13 @@ class CAlegrDiffApp : public CWinApp
 {
 public:
 	CAlegrDiffApp();
+	~CAlegrDiffApp();
 
 	CApplicationProfile Profile;
 	int m_MaxSearchDistance;
 	int m_MinIdenticalLines;
+	int m_MinIdenticalChars;
+	int m_TabIndent;
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CAlegrDiffApp)
@@ -34,6 +37,7 @@ public:
 	virtual BOOL InitInstance();
 	//}}AFX_VIRTUAL
 // Implementation
+	CMultiDocTemplate * m_pFileDiffTemplate;
 
 	//{{AFX_MSG(CAlegrDiffApp)
 	afx_msg void OnAppAbout();

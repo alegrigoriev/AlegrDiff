@@ -8,6 +8,7 @@
 #include "ChildFrm.h"
 #include "AlegrDiffDoc.h"
 #include "AlegrDiffView.h"
+#include "DiffFileView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -33,10 +34,16 @@ END_MESSAGE_MAP()
 
 CAlegrDiffApp::CAlegrDiffApp()
 	: m_MaxSearchDistance(256),
-	m_MinIdenticalLines(3)
+	m_pFileDiffTemplate(NULL),
+	m_TabIndent(4),
+	m_MinIdenticalChars(3),
+	m_MinIdenticalLines(5)
 {
-	// TODO: add construction code here,
-	// Place all significant initialization in InitInstance
+}
+
+CAlegrDiffApp::~CAlegrDiffApp()
+{
+	delete m_pFileDiffTemplate;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -75,6 +82,12 @@ BOOL CAlegrDiffApp::InitInstance()
 										RUNTIME_CLASS(CChildFrame), // custom MDI child frame
 										RUNTIME_CLASS(CAlegrDiffView));
 	AddDocTemplate(pDocTemplate);
+
+	m_pFileDiffTemplate = new CMultiDocTemplate(
+												IDR_FILEDIFFTYPE,
+												RUNTIME_CLASS(CAlegrDiffDoc),
+												RUNTIME_CLASS(CChildFrame), // custom MDI child frame
+												RUNTIME_CLASS(CDiffFileView));
 
 	// create main MDI Frame window
 	CMainFrame* pMainFrame = new CMainFrame;

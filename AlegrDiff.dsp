@@ -153,20 +153,11 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\AcceptDeclineDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\AlegrDiff.cpp
-
-!IF  "$(CFG)" == "AlegrDiff - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "AlegrDiff - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "AlegrDiff - Win32 DEMO Release"
-
-# SUBTRACT CPP /FA<none>
-
-!ELSEIF  "$(CFG)" == "AlegrDiff - Win32 DEMO Debug"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -250,6 +241,10 @@ SOURCE=.\StdAfx.cpp
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=.\AcceptDeclineDlg.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\AlegrDiff.h

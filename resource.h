@@ -96,6 +96,7 @@
 #define IDC_BUTTON_BROWSE               1065
 #define IDC_RADIO_SELECTED_GROUPS       1066
 #define IDC_CHECK_CANCEL_SELECTION_ON_MERGE 1067
+#define IDC_STATIC_QEUSTION             1068
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -170,7 +171,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        146
 #define _APS_NEXT_COMMAND_VALUE         32820
-#define _APS_NEXT_CONTROL_VALUE         1068
+#define _APS_NEXT_CONTROL_VALUE         1069
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -28,16 +28,37 @@ void CAcceptDeclineDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CAcceptDeclineDlg)
-	// NOTE: the ClassWizard will add DDX and DDV calls here
+	DDX_Control(pDX, IDC_STATIC_QEUSTION, m_Question);
 	//}}AFX_DATA_MAP
 }
 
 
 BEGIN_MESSAGE_MAP(CAcceptDeclineDlg, CDialog)
 	//{{AFX_MSG_MAP(CAcceptDeclineDlg)
-		// NOTE: the ClassWizard will add message map macros here
+	ON_BN_CLICKED(IDNO, OnNo)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CAcceptDeclineDlg message handlers
+
+BOOL CAcceptDeclineDlg::OnInitDialog()
+{
+	CDialog::OnInitDialog();
+	CString s;
+	m_Question.GetWindowText(s);
+
+	CString s1;
+	s1.Format(s, LPCTSTR(m_File1), LPCTSTR(m_File2));
+
+	m_Question.SetWindowText(s1);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+
+void CAcceptDeclineDlg::OnNo()
+{
+	EndDialog(IDNO);
+}

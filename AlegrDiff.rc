@@ -385,7 +385,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 1.01",IDC_STATIC_VERSION,35,14,128,8,
+    CTEXT           "AlegrDiff Version 1.03",IDC_STATIC_VERSION,35,14,128,8,
                     SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001",IDC_STATIC,35,
                     29,128,8
@@ -572,16 +572,16 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,34,164,10
 END
 
-IDD_DIALOG_ACCEPT_OR_DECLINE_ALL DIALOG DISCARDABLE  0, 0, 179, 82
+IDD_DIALOG_ACCEPT_OR_DECLINE_ALL DIALOG DISCARDABLE  0, 0, 215, 149
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Accept Or Decline Differences"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "File &2",IDOK,64,61,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,121,61,50,14
-    LTEXT           "Some of the differences are not marked as\n""Use File 1"" or ""Use File 2"".\nWhich file would you like to use as a base for the new file?",
-                    IDC_STATIC,15,16,148,35
-    PUSHBUTTON      "File &1",IDNO,7,61,50,14
+    DEFPUSHBUTTON   "File &2",IDOK,64,128,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,121,128,50,14
+    LTEXT           "Some of the differences are not marked as\n""Use File 1"" or ""Use File 2"".\nWhich file would you like to use as a base for the new file?\nFile 1: %s\nFile 2: %s",
+                    IDC_STATIC_QEUSTION,15,16,193,93
+    PUSHBUTTON      "File &1",IDNO,7,128,50,14
 END
 
 IDD_DIALOG_SAVE_MERGED_TEMPLATE DIALOG DISCARDABLE  0, 0, 281, 30
@@ -702,7 +702,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 1.01 DEMO",IDC_STATIC_VERSION,35,14,
+    CTEXT           "AlegrDiff Version 1.03 DEMO",IDC_STATIC_VERSION,35,14,
                     128,8,SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001",IDC_STATIC,35,
                     29,128,8
@@ -725,51 +725,8 @@ VS_VERSION_INFO$(RETAIL_VERSION) VERSIONINFO
 #else
 VS_VERSION_INFO VERSIONINFO
 #endif
- FILEVERSION 1,0,1,0
- PRODUCTVERSION 1,0,1,0
- FILEFLAGSMASK 0x3fL
-#ifdef _DEBUG
- FILEFLAGS 0x21L
-#else
- FILEFLAGS 0x20L
-#endif
- FILEOS 0x4L
- FILETYPE 0x1L
- FILESUBTYPE 0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904b0"
-        BEGIN
-            VALUE "Comments", "DEMO Version\0"
-            VALUE "CompanyName", "AleGr Software\0"
-            VALUE "FileDescription", "AlegrDiff: file comparison and merging application\0"
-            VALUE "FileVersion", "1, 0, 1, 0\0"
-            VALUE "InternalName", "AlegrDiff\0"
-            VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001\0"
-            VALUE "LegalTrademarks", "\0"
-            VALUE "OriginalFilename", "AlegrDiff.EXE\0"
-            VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "AlegrDiff Application\0"
-            VALUE "ProductVersion", "1, 0, 1, 0\0"
-            VALUE "SpecialBuild", "DEMO Version\0"
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1200
-    END
-END
-#endif
-
-#if defined(APSTUDIO_INVOKED) || defined(DEMO_VERSION)
-#if defined(APSTUDIO_INVOKED)
-VS_VERSION_INFO$(DEMO_VERSION) VERSIONINFO
-#else
-VS_VERSION_INFO VERSIONINFO
-#endif
- FILEVERSION 1,0,1,0
- PRODUCTVERSION 1,0,1,0
+ FILEVERSION 1,0,3,0
+ PRODUCTVERSION 1,0,3,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -787,15 +744,58 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "AleGr Software\0"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application\0"
-            VALUE "FileVersion", "1, 0, 1, 0\0"
+            VALUE "FileVersion", "1, 0, 3, 0\0"
             VALUE "InternalName", "AlegrDiff\0"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "AlegrDiff.EXE\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "AlegrDiff Application\0"
-            VALUE "ProductVersion", "1, 0, 1, 0\0"
+            VALUE "ProductVersion", "1, 0, 3, 0\0"
             VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+#endif
+
+#if defined(APSTUDIO_INVOKED) || defined(DEMO_VERSION)
+#if defined(APSTUDIO_INVOKED)
+VS_VERSION_INFO$(DEMO_VERSION) VERSIONINFO
+#else
+VS_VERSION_INFO VERSIONINFO
+#endif
+ FILEVERSION 1,0,3,0
+ PRODUCTVERSION 1,0,3,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x21L
+#else
+ FILEFLAGS 0x20L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "DEMO Version\0"
+            VALUE "CompanyName", "AleGr Software\0"
+            VALUE "FileDescription", "AlegrDiff: file comparison and merging application\0"
+            VALUE "FileVersion", "1, 0, 3, 0\0"
+            VALUE "InternalName", "AlegrDiff\0"
+            VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "AlegrDiff.EXE\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "AlegrDiff Application\0"
+            VALUE "ProductVersion", "1, 0, 3, 0\0"
+            VALUE "SpecialBuild", "DEMO Version\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -883,9 +883,9 @@ BEGIN
     IDD_DIALOG_ACCEPT_OR_DECLINE_ALL, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 172
+        RIGHTMARGIN, 208
         TOPMARGIN, 7
-        BOTTOMMARGIN, 75
+        BOTTOMMARGIN, 142
     END
 
     IDD_DIALOG_SAVE_MERGED_TEMPLATE, DIALOG

@@ -19,9 +19,10 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CAcceptDeclineDlg)
 	enum { IDD = IDD_DIALOG_ACCEPT_OR_DECLINE_ALL };
-	// NOTE: the ClassWizard will add data members here
+	CStatic	m_Question;
 	//}}AFX_DATA
-
+	CString m_File1;
+	CString m_File2;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -35,7 +36,8 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CAcceptDeclineDlg)
-	// NOTE: the ClassWizard will add member functions here
+	virtual BOOL OnInitDialog();
+	afx_msg void OnNo();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -25,7 +25,6 @@ public:
 	int		m_FindDown;
 	//}}AFX_DATA
 	CString	m_sFindCombo;
-	CString m_sHistory[15];
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -40,7 +39,6 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CMyFindDialog)
 	afx_msg void OnEditchangeComboFind();
-	virtual void OnCancel();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -391,7 +391,8 @@ BOOL CApplicationProfile::RemoveSection(LPCTSTR szSection)
 	CApplicationProfileItem * pPrev = NULL;
 	while(pTmp != NULL)
 	{
-		if (0 == pTmp->Section.CompareNoCase(szSection))
+		if (NULL == szSection
+			|| 0 == pTmp->Section.CompareNoCase(szSection))
 		{
 			if (pPrev)
 			{
@@ -434,7 +435,8 @@ BOOL CApplicationProfile::FlushSection(LPCTSTR szSection)
 	CApplicationProfileItem * pTmp = pItems;
 	while(pTmp != NULL)
 	{
-		if (0 == pTmp->Section.CompareNoCase(szSection))
+		if (NULL == szSection
+			|| 0 == pTmp->Section.CompareNoCase(szSection))
 		{
 			pTmp->WriteData();
 		}

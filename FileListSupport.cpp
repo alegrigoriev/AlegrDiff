@@ -3302,7 +3302,7 @@ BOOL FilePair::EnumStringDiffSections(TextPos & PosFrom, TextPos & PosTo,
 			if (NULL != pSection
 				&& (pSection->Attr & (pSection->Inserted | pSection->Erased)))
 			{
-				PosTo.pos += pSection->Length;
+				end.pos += pSection->Length;
 
 				Func(pSection, pParam);
 			}

@@ -7,6 +7,7 @@
 #include "AlegrDiffDoc.h"
 #include "CompareDirsDialog.h"
 #include "DiffFileView.h"
+#include "FindDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -958,83 +959,121 @@ bool CFilePairDoc::GetWordOnPos(TextPos OnPos, TextPos &Start, TextPos &End)
 
 bool CFilePairDoc::OnEditFind()
 {
-	// TODO: Add your command handler code here
-	return false;
+	return OnFind(true, false, true);
 }
 
 bool CFilePairDoc::OnEditFindNext()
 {
-	CThisApp * pApp = GetApp();
-	return FindTextString(pApp->m_FindString, false, pApp->m_bCaseSensitive);
+	return OnFind(false, false, false);
 }
 
 bool CFilePairDoc::OnEditFindPrev()
 {
-	CThisApp * pApp = GetApp();
-	return FindTextString(pApp->m_FindString, true, pApp->m_bCaseSensitive);
+	return OnFind(false, true, false);
 }
 
 bool CFilePairDoc::OnEditFindWordNext()
 {
-	return FindWordOrSelection(false);
+	return OnFind(true, false, false);
 }
 
 bool CFilePairDoc::OnEditFindWordPrev()
 {
-	return FindWordOrSelection(true);
+	return OnFind(true, true, false);
 }
 
-bool CFilePairDoc::FindWordOrSelection(bool bBackwards)
+bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvokeDialog)
 {
 	CThisApp * pApp = GetApp();
 	int nBeginOffset;
-	int nLength;
-	if (m_CaretPos == m_SelectionAnchor
-		|| m_CaretPos.line != m_SelectionAnchor.line)
+	int nLength = 0;
+	if (PickWordOrSelection)
 	{
-		TextPos Begin, End;
-		if ( ! GetWordOnPos(m_CaretPos, Begin, End))
+		pApp->m_FindString.Empty();
+
+		if (m_CaretPos == m_SelectionAnchor
+			|| m_CaretPos.line != m_SelectionAnchor.line)
 		{
-			return false;
-		}
-		nBeginOffset = Begin.pos;
-		nLength = End.pos - Begin.pos;
-	}
-	else
-	{
-		if (m_CaretPos.pos < m_SelectionAnchor.pos)
-		{
-			nBeginOffset = m_CaretPos.pos;
-			nLength = m_SelectionAnchor.pos - m_CaretPos.pos;
+			TextPos Begin, End;
+			if (GetWordOnPos(m_CaretPos, Begin, End))
+			{
+				nBeginOffset = Begin.pos;
+				nLength = End.pos - Begin.pos;
+			}
 		}
 		else
 		{
-			nBeginOffset = m_SelectionAnchor.pos;
-			nLength = m_CaretPos.pos - m_SelectionAnchor.pos;
+			if (m_CaretPos.pos < m_SelectionAnchor.pos)
+			{
+				nBeginOffset = m_CaretPos.pos;
+				nLength = m_SelectionAnchor.pos - m_CaretPos.pos;
+			}
+			else
+			{
+				nBeginOffset = m_SelectionAnchor.pos;
+				nLength = m_CaretPos.pos - m_SelectionAnchor.pos;
+			}
+		}
+		if (nLength)
+		{
+			TCHAR line[2048];
+			int StrLen;
+			LPCTSTR pStr = GetLineText(m_CaretPos.line, line, sizeof line / sizeof line[0], & StrLen);
+			if (NULL != pStr
+				&& nBeginOffset < StrLen)
+			{
+				if (nBeginOffset + nLength > StrLen)
+				{
+					nLength = StrLen - nBeginOffset;
+				}
+				LPTSTR StrBuf = pApp->m_FindString.GetBuffer(nLength);
+				if (NULL != StrBuf)
+				{
+					_tcsncpy(StrBuf, pStr + nBeginOffset, nLength);
+					pApp->m_FindString.ReleaseBuffer(nLength);
+				}
+			}
 		}
 	}
-	TCHAR line[2048];
-	int StrLen;
-	LPCTSTR pStr = GetLineText(m_CaretPos.line, line, sizeof line / sizeof line[0], & StrLen);
-	if (NULL == pStr)
+
+	if (bInvokeDialog || pApp->m_FindString.IsEmpty())
 	{
-		return false;
+		CMyFindDialog dlg;
+		dlg.m_sFindCombo = pApp->m_FindString;
+		dlg.m_bCaseSensitive = pApp->m_bCaseSensitive;
+		dlg.m_FindDown =  ! pApp->m_bFindBackward;
+
+		if (IDOK != dlg.DoModal())
+		{
+			return FALSE;
+		}
+		pApp->m_FindString = dlg.m_sFindCombo;
+		pApp->m_bCaseSensitive = dlg.m_bCaseSensitive;
+		pApp->m_bFindBackward = ! dlg.m_FindDown;
+		bBackwards = pApp->m_bFindBackward;
 	}
-	if (nBeginOffset >= StrLen)
+	// update MRU
+	// remove those that match the currently selected dirs
+	int j, i;
+	for (i = 0, j = 0; i < sizeof pApp->m_sFindHistory / sizeof pApp->m_sFindHistory[0]; i++)
 	{
-		return false;
+		if (0 == pApp->m_FindString.Compare(pApp->m_sFindHistory[i]))
+		{
+			continue;
+		}
+		if (i != j)
+		{
+			pApp->m_sFindHistory[j] = pApp->m_sFindHistory[i];
+		}
+		j++;
 	}
-	if (nBeginOffset + nLength > StrLen)
+	// remove last dir from the list
+	for (i = (sizeof pApp->m_sFindHistory / sizeof pApp->m_sFindHistory[0]) - 1; i >= 1; i--)
 	{
-		nLength = StrLen - nBeginOffset;
+		pApp->m_sFindHistory[i] = pApp->m_sFindHistory[i - 1];
 	}
-	LPTSTR StrBuf = pApp->m_FindString.GetBuffer(nLength);
-	if (NULL == StrBuf)
-	{
-		return false;
-	}
-	_tcsncpy(StrBuf, pStr + nBeginOffset, nLength);
-	pApp->m_FindString.ReleaseBuffer(nLength);
+	pApp->m_sFindHistory[0] = pApp->m_FindString;
+
 	return FindTextString(pApp->m_FindString, bBackwards, pApp->m_bCaseSensitive);
 }
 
@@ -1175,20 +1214,28 @@ void CFilePairDoc::CaretRightToWord(int SelectionFlags)
 			}
 		}
 	}
-	else if (_istalnum(c) || '_' == c)
-	{
-		while (_istalnum(pLine[CaretPos])
-				|| '_' == pLine[CaretPos])
-		{
-			CaretPos++;
-		}
-	}
 	else
 	{
-		while (' ' != pLine[CaretPos]
-				&& 0 != pLine[CaretPos]
-				&& ! _istalnum(pLine[CaretPos])
-				&& '_' != pLine[CaretPos])
+		if (_istalnum(c) || '_' == c)
+		{
+			while (_istalnum(pLine[CaretPos])
+					|| '_' == pLine[CaretPos])
+			{
+				CaretPos++;
+			}
+		}
+		else
+		{
+			while (' ' != pLine[CaretPos]
+					&& 0 != pLine[CaretPos]
+					&& ! _istalnum(pLine[CaretPos])
+					&& '_' != pLine[CaretPos])
+			{
+				CaretPos++;
+			}
+		}
+		// skip all spaces
+		while (' ' == pLine[CaretPos])
 		{
 			CaretPos++;
 		}

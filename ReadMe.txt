@@ -1,9 +1,8 @@
 TODO:
 
-Save all strings to history lists
-Make binary comparision
 For binary comparison: show file size
 UNICODE file support
+Choose format to save a merged file
 Compare directory structure
 Support comparison of BIG lists
 Add Copy 1st file text, copy 2nd file text
@@ -38,6 +37,8 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+Save all strings to history lists
+Make binary comparision
 Add save file list
 Add "Hide" to list view context menu
 

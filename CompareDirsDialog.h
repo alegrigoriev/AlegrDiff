@@ -25,6 +25,7 @@ public:
 	CComboBox   m_cFilenameFilter;
 	BOOL	m_BinaryComparision;
 	//}}AFX_DATA
+	BOOL    m_bUseMd5;
 	CSpinButtonCtrl	m_Spin;
 
 	CString	m_FilenameFilter;

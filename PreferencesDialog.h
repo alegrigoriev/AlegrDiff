@@ -49,6 +49,11 @@ public:
 	CComboBox m_cbCppFilter;
 	CComboBox m_cbBinaryFilter;
 	CComboBox m_cbIgnoreFilter;
+	CString m_sBinaryFilterHistory[5];
+	CString m_sCppFilterHistory[5];
+	CString m_sIgnoreFilterHistory[10];
+
+	CApplicationProfile m_Profile;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -70,6 +75,7 @@ public:
 	UINT	m_NumberOfIdenticalLines;
 	UINT	m_PercentsOfLookLikeDifference;
 	UINT	m_MinMatchingChars;
+	BOOL    m_bUseMd5;
 	//}}AFX_DATA
 
 

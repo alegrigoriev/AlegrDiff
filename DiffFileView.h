@@ -45,6 +45,10 @@ protected:
 public:
 	int m_FirstLineSeen;
 	int m_FirstPosSeen;
+	// visible rectangle (0-relative)
+	CRect m_VisibleRect;
+	// rectangle for BringCaretToBounds.
+	CRect m_PreferredRect;
 
 	TextPos m_DrawnSelBegin;
 	TextPos m_DrawnSelEnd;
@@ -59,11 +63,21 @@ public:
 
 	int CharWidth() const { return m_FontMetric.tmAveCharWidth; }
 	int LineHeight() const { return m_FontMetric.tmHeight + m_FontMetric.tmExternalLeading; }
-	int LinesInView() const;
-	int CharsInView() const;
+	int LinesInView() const { return m_VisibleRect.bottom - m_VisibleRect.top; }
+	int CharsInView() const { return m_VisibleRect.right - m_VisibleRect.left; }
 	void MakePositionVisible(int line, int pos);
+	void MakeCaretVisible()
+	{
+		CFilePairDoc * pDoc = GetDocument();
+		MakePositionVisible(pDoc->m_CaretPos.line, pDoc->m_CaretPos.pos);
+	}
 	void MakePositionCentered(int line, int pos);
-	void BringCaretToBounds(CRect AllowedBounds, CRect BringToBounds);
+	void MakeCaretCentered()
+	{
+		CFilePairDoc * pDoc = GetDocument();
+		MakePositionCentered(pDoc->m_CaretPos.line, pDoc->m_CaretPos.pos);
+	}
+	void BringPositionToBounds(TextPos textpos, const CRect & AllowedBounds, const CRect & BringToBounds);
 
 	void InvalidateRange(TextPos begin, TextPos end);
 
@@ -83,7 +97,9 @@ public:
 	// < 0 - scroll right (to see chars to the begin of the line)
 	void HScrollToThePos(int nPos);
 	void UpdateHScrollBar();
-	void CancelSelection();
+	void CaretToHome(int flags);
+	void CaretToEnd(int flags);
+
 protected:
 	void DrawStringSections(CDC* pDC, CPoint point,
 							const StringSection * pSection,

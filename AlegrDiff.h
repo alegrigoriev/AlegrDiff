@@ -53,6 +53,9 @@ public:
 	CString m_sCppFilesFilter;
 	CString m_sIgnoreFilesFilter;
 
+	LOGFONT m_NormalLogFont;
+	CString m_NormalFontName;
+
 	void OpenFilePairView(FilePair * pPair);
 	// Overrides
 	// ClassWizard generated virtual function overrides

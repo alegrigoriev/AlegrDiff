@@ -29,6 +29,7 @@
 #define IDC_BUTTON_ADVANCED             1013
 #define IDC_CHECK_BINARY                1014
 #define IDC_SPIN1                       1015
+#define IDC_BUTTON_NORMAL_FONT          1016
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -38,6 +39,7 @@
 #define ID_EDIT_GOTONEXTDIFF            32783
 #define ID_EDIT_GOTOPREVDIFF            32784
 #define ID_EDIT_GOTOLINE                32785
+#define ID_VIEW_REFRESH                 32787
 
 // Next default values for new objects
 //
@@ -45,8 +47,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        133
-#define _APS_NEXT_COMMAND_VALUE         32787
-#define _APS_NEXT_CONTROL_VALUE         1016
+#define _APS_NEXT_COMMAND_VALUE         32788
+#define _APS_NEXT_CONTROL_VALUE         1017
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -85,6 +85,9 @@ public:
 	enum { CaretPositionChanged = 0x100, FileLoaded = 0x200};
 	void OnEditGotonextdiff();
 	void OnEditGotoprevdiff();
+	void CaretToHome(int flags);
+	void CaretToEnd(int flags);
+	ULONG CopyTextToMemory(PUCHAR pBuf, ULONG BufLen, TextPos pFrom, TextPos pTo);
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CFilePairDoc)
@@ -111,6 +114,8 @@ protected:
 	//{{AFX_MSG(CFilePairDoc)
 	afx_msg void OnUpdateEditGotonextdiff(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditGotoprevdiff(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateEditCopy(CCmdUI* pCmdUI);
+	afx_msg void OnEditCopy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -29,6 +29,9 @@ public:
 	UINT	m_nTabIndent;
 	//}}AFX_DATA
 
+	LOGFONT m_NormalLogFont;
+	CString m_NormalFontName;
+	DWORD m_NormalTextColor;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -46,6 +49,7 @@ protected:
 	afx_msg void OnCheckCCpp();
 	afx_msg void OnCheckIgnore();
 	virtual BOOL OnInitDialog();
+	afx_msg void OnButtonNormalFont();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -322,9 +322,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("UsedFilenameFilter"), m_UsedFilenameFilter, 0, 0, 8);
 
 	Profile.AddItem(_T("Settings"), _T("FileListSort"), m_FileListSort,
-					CAlegrDiffView::ColumnSubdir,
-					~CAlegrDiffView::ColumnComparisionResult,
-					CAlegrDiffView::ColumnComparisionResult);
+					CAlegrDiffView::ColumnSubdir, 0, ~0);
 
 	Profile.AddItem(_T("Settings"), _T("RecurseSubdirs"), m_bRecurseSubdirs, false);
 	Profile.AddItem(_T("Settings"), _T("InitialDir1"), m_FileDir1, _T(""));

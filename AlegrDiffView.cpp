@@ -7,6 +7,8 @@
 #include "AlegrDiffDoc.h"
 #include "AlegrDiffView.h"
 #include "DiffFileView.h"
+#include <functional>
+#include <algorithm>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -52,13 +54,18 @@ CAlegrDiffView::CAlegrDiffView()
 	CThisApp * pApp = GetApp();
 	if (pApp->m_FileListSort >= 0)
 	{
-		m_bAscendingOrder = true;
-		m_SortColumn = eColumns(pApp->m_FileListSort);
+		m_SortColumn = eColumns(0xFF & pApp->m_FileListSort);
+		m_PrevSortColumn = eColumns((0xFF0000 & pApp->m_FileListSort) >> 16);
+		m_bAscendingOrder = ! (0xFF00 & pApp->m_FileListSort);
+		m_bPrevAscendingOrder = ! (0xFF000000 & pApp->m_FileListSort);
 	}
 	else
 	{
+		// old format, remove support from release!
 		m_bAscendingOrder = false;
 		m_SortColumn = eColumns(~pApp->m_FileListSort);
+		m_PrevSortColumn = ColumnName;
+		m_bPrevAscendingOrder = true;
 	}
 }
 
@@ -156,18 +163,24 @@ void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 	else
 	{
+		m_bPrevAscendingOrder = m_bAscendingOrder;
+		m_PrevSortColumn = m_SortColumn;
+
 		m_SortColumn = eColumns(pNMListView->iSubItem);
 		m_bAscendingOrder = true;
 	}
 	CThisApp * pApp = GetApp();
-	if (m_bAscendingOrder)
+
+	pApp->m_FileListSort = m_SortColumn | (m_PrevSortColumn << 16);
+	if ( ! m_bAscendingOrder)
 	{
-		pApp->m_FileListSort = m_SortColumn;
+		pApp->m_FileListSort |= 0x100;
 	}
-	else
+	if ( ! m_bPrevAscendingOrder)
 	{
-		pApp->m_FileListSort = ~m_SortColumn;
+		pApp->m_FileListSort |= 0x1000000;
 	}
+
 	OnUpdate(NULL, 0, NULL);
 	*pResult = 0;
 }
@@ -190,6 +203,24 @@ CString FileTimeToStr(FILETIME FileTime, LCID locale = LOCALE_USER_DEFAULT)
 	result += str;
 	return result;
 }
+
+		// TEMPLATE STRUCT binary_function
+template<class _A1, class _A2, class _A3, class _R>
+struct ternary_function {
+	typedef _A1 first_argument_type;
+	typedef _A2 second_argument_type;
+	typedef _A3 third_argument_type;
+	typedef _R result_type;
+};
+
+template <typename F>
+struct TernaryFunc : public ternary_function
+{
+	TernaryFunc(F __f): f(__f) {}
+	F f;
+	bool operator()(first_argument_type A1, second_argument_type A2, third_argument_type A3)
+	{ return f(A1, A2, A3); }
+};
 
 template <class _Operation>
 class binder3rd
@@ -274,9 +305,8 @@ void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, FilePa
 			break;
 		}
 	}
-	int nSort =
-		sort(PairArray.begin(), PairArray.end(), bind3rd(
-														qsort(PairArray.GetData(), i, sizeof (FilePair *), SortFunc);
+	const int nSort[4] = { m_SortColumn, m_bAscendingOrder, m_PrevSortColumn, m_bPrevAscendingOrder};
+	sort(PairArray.begin(), PairArray.end(), bind3rd(FilePair::Compare, nSort));
 }
 
 void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)

@@ -1946,6 +1946,8 @@ FilePair::FilePair()
 	m_RefCount(1),
 	m_LoadedCount(0),
 	m_bComparisionResultChanged(false),
+	m_bHideFromListView(false),
+	m_bSelected(false),
 	m_ComparisionResult(ResultUnknown)
 {
 }

@@ -131,6 +131,8 @@
 #define ID_MERGE_INCLUDE                32815
 #define ID_MERGE_EXCLUDE                32816
 #define ID_FILE_SAVE_LIST               32817
+#define ID_VIEW_HIDESELECTEDFILES       32818
+#define ID_VIEW_SHOWALLFILES            32819
 #define IDS_DIRECTORY_ACCESS_DENIED     32848
 #define IDS_DIRECTORY_NOT_FOUND         32849
 #define IDS_PREFERENCES                 32850
@@ -165,7 +167,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        146
-#define _APS_NEXT_COMMAND_VALUE         32818
+#define _APS_NEXT_COMMAND_VALUE         32820
 #define _APS_NEXT_CONTROL_VALUE         1067
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

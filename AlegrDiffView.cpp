@@ -42,6 +42,10 @@ BEGIN_MESSAGE_MAP(CAlegrDiffView, CListView)
 	ON_COMMAND(ID_FILE_COPY_SECOND_DIR, OnFileCopySecondDir)
 	ON_COMMAND(ID_FILE_SAVE_LIST, OnFileSaveList)
 	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE_LIST, OnUpdateFileSaveList)
+	ON_COMMAND(ID_VIEW_HIDESELECTEDFILES, OnViewHideselectedfiles)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_HIDESELECTEDFILES, OnUpdateViewHideselectedfiles)
+	ON_COMMAND(ID_VIEW_SHOWALLFILES, OnViewShowallfiles)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOWALLFILES, OnUpdateViewShowallfiles)
 	//}}AFX_MSG_MAP
 	// Standard printing commands
 	ON_UPDATE_COMMAND_UI(ID_LISTVIEW_OPEN1, OnUpdateListviewOpen)
@@ -250,12 +254,15 @@ typedef TernaryFunc<bool, const FilePair *, FilePair::CompareParam > FilePairSor
 
 void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, FilePair * pPairs, int nCount)
 {
-	PairArray.resize(nCount);
+	PairArray.clear();
+	PairArray.reserve(nCount);
 	for (int i = 0; i < nCount && pPairs != NULL; i++, pPairs = pPairs->pNext)
 	{
-		PairArray[i] = pPairs;
+		if ( ! pPairs->m_bHideFromListView)
+		{
+			PairArray.push_back(pPairs);
+		}
 	}
-	PairArray.resize(i);
 
 	FilePair::CompareParam comp;
 	comp.PrimaryBackward = ! m_bAscendingOrder;
@@ -327,6 +334,21 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		return;
 	}
 	// fill the list control
+	for (int i = 0; i < m_PairArray.size(); i++)
+	{
+		m_PairArray[i]->m_bSelected = false;
+	}
+	// get all currently selected items
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	while(-1 != nItem)
+	{
+		if (nItem < m_PairArray.size())
+		{
+			m_PairArray[nItem]->m_bSelected = true;
+		}
+		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
+	}
+
 	LockWindowUpdate();
 	pListCtrl->DeleteAllItems();
 	CAlegrDiffDoc * pDoc = GetDocument();
@@ -349,7 +371,7 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		FilePair * pPair = m_PairArray[item];
 		AddListViewItem(pPair, item);
 	}
-	pListCtrl->SetItemState(0, LVIS_FOCUSED, 0xFF);
+	pListCtrl->SetItemState(0, LVIS_FOCUSED, LVIS_FOCUSED);
 	UnlockWindowUpdate();
 }
 
@@ -596,11 +618,18 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 		pFileItem = pPair->pSecondFile;
 	}
 	LVITEM lvi;
-	lvi.mask = LVIF_TEXT | LVIF_PARAM;
+	lvi.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
 	lvi.iItem = item;
 	lvi.iSubItem = 0;
+	lvi.state = 0;
+	lvi.stateMask = 0;
 	lvi.pszText = (LPTSTR)pFileItem->GetName();
 	lvi.lParam = LPARAM(pFileItem);
+	if (pPair->m_bSelected)
+	{
+		lvi.state = LVIS_SELECTED;
+		lvi.stateMask = LVIS_SELECTED;
+	}
 	pListCtrl->InsertItem(& lvi);
 
 	if (pDoc->m_bRecurseSubdirs)
@@ -786,4 +815,57 @@ void CAlegrDiffView::OnFileSaveList()
 void CAlegrDiffView::OnUpdateFileSaveList(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(m_PairArray.size() != 0);
+}
+
+void CAlegrDiffView::OnViewHideselectedfiles()
+{
+	CListCtrl * pListCtrl = &GetListCtrl();
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	if (-1 == nItem)
+	{
+		return;
+	}
+	while(-1 != nItem)
+	{
+		if (nItem < m_PairArray.size())
+		{
+			m_PairArray[nItem]->m_bHideFromListView = true;
+		}
+		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
+	}
+	GetDocument()->UpdateAllViews(NULL);
+}
+
+void CAlegrDiffView::OnUpdateViewHideselectedfiles(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(GetListCtrl().GetNextItem(-1, LVNI_SELECTED) != -1);
+}
+
+void CAlegrDiffView::OnViewShowallfiles()
+{
+	CAlegrDiffDoc * pDoc = GetDocument();
+	FilePair * pPair;
+	for (pPair = pDoc->m_pPairList; pPair != NULL; pPair = pPair->pNext)
+	{
+		pPair->m_bHideFromListView = false;
+		pPair->m_bSelected = true;
+	}
+	pDoc->UpdateAllViews(NULL);
+	for (pPair = pDoc->m_pPairList; pPair != NULL; pPair = pPair->pNext)
+	{
+		pPair->m_bSelected = false;
+	}
+}
+
+void CAlegrDiffView::OnUpdateViewShowallfiles(CCmdUI* pCmdUI)
+{
+	for (FilePair * pPair = GetDocument()->m_pPairList; pPair != NULL; pPair = pPair->pNext)
+	{
+		if (pPair->m_bHideFromListView)
+		{
+			pCmdUI->Enable(TRUE);
+			return;
+		}
+	}
+	pCmdUI->Enable(FALSE);
 }

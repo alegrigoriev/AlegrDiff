@@ -1,5 +1,5 @@
 TODO:
-Save File list
+
 Refresh list view
 make word by word comparison in MatchStrings
 show version of file1, file2 of the line
@@ -8,6 +8,7 @@ Import font settings from Visual C/VisualStudio
 Cancel selection on Accept/Decline commands (to see the result immediately). ???
 Maybe different color for selected accepted/declined
 add option to keep the caret on one line during F3 and F7
+If main window is minimized, save its state before minimization
 V1.5:
 Make binary comparision
 Compare EXE version info for DLL, EXE, SYS
@@ -30,6 +31,8 @@ When there are much different areas, they may be randomly interlaced.
    Solution: if there is little common, just ignore it.
 
 Done:
+Hide selected files function (and UnHide Files)
+Save File list
 drop directories to folder compare dialog
 Select the current folder in Recent Dirs in open dialog
 When merging two files, get the default name from the base file

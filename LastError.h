@@ -5,7 +5,7 @@ class CLastError
 public:
 
 	CLastError(void)
-		: LastError(-1)
+		: LastError(~0)
 	{
 	}
 	DWORD Get()
@@ -23,7 +23,7 @@ public:
 	// restore last error
 	~CLastError(void)
 	{
-		if (-1 != LastError)
+		if (~0 != LastError)
 		{
 			::SetLastError(LastError);
 		}

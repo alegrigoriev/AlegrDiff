@@ -274,7 +274,7 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				OptimizeForWindows98="1"/>
+				OptimizeForWindows98="2"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
@@ -421,7 +421,7 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				OptimizeForWindows98="1"/>
+				OptimizeForWindows98="2"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
@@ -630,6 +630,9 @@
 				RelativePath="CHeckFingerprintDlg.h">
 			</File>
 			<File
+				RelativePath=".\ChildFrameEx.h">
+			</File>
+			<File
 				RelativePath=".\ChildFrm.h">
 			</File>
 			<File
@@ -679,6 +682,9 @@
 			</File>
 			<File
 				RelativePath=".\LastError.h">
+			</File>
+			<File
+				RelativePath=".\MainFrameEx.h">
 			</File>
 			<File
 				RelativePath=".\MainFrm.h">

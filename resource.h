@@ -20,6 +20,7 @@
 #define IDR_ALEGRDTYPE_LIST             136
 #define IDD_DIALOG_OPEN_TEMPLATE        137
 #define IDR_ALEGRDTYPE_V2               137
+#define IDR_ALEGRDTYPE1                 137
 #define IDD_PROPPAGE_COMPARISION_PREFERENCES 138
 #define IDR_ALEGRDTYPE_BIN              138
 #define IDD_PROPPAGE_VIEW_PREFERENCES   139

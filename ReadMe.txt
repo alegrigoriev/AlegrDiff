@@ -1,6 +1,11 @@
 TODO:
 
 Show data chars for binary file
+Horizontal scroll in binary view scroll data bytes only
+Set line size for binary view
+Switch from text view to binary view
+Single file pair binary comparison
+Add toolbar buttons for Create Fingerprint, Check Fingerprint.
 Open Binary file difference
 Support comparison of BIG lists
 Save columns width and order
@@ -29,10 +34,12 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+"Hasbani" text files make it crash (in text mode comparison).
 During binary comparison, alternate "Calculating fingerprint" and "Comparing" messages shown
 screen move in two directions may corrupt the image (??)
 
 Fixed:
+Click on the selection margin was broken.
 TRACE statements with %s format converted to _T string
 Wrong BuildFilePairList arguments
 "*." filter doesn't work
@@ -40,6 +47,8 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+Address granularity is word size. Selection granularity too.
+Add an icon for binary files' MDI child
 Make "Show 1st, show 2nd for binary files
 Enable/Disable OK in CheckDirFingerprint dialog
 Enable/Disable OK in CreateDirFingerprint dialog

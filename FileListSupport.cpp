@@ -834,21 +834,26 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 				ToMove -= NewFilled - m_FileReadBufSize;
 				NewFilled = m_FileReadBufSize;
 			}
-			memmove(m_pFileReadBuf + MoveBy,
-					m_pFileReadBuf, ToMove);
-			m_FileReadFilled = NewFilled;
-
-			SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
-			if ( ! ReadFile(m_hFile, m_pFileReadBuf, MoveBy, & BytesRead, NULL))
+			if (0!= MoveBy)
 			{
-				m_FileReadFilled = 0;
-				return 0;
+				memmove(m_pFileReadBuf + MoveBy,
+						m_pFileReadBuf, ToMove);
+				m_FileReadFilled = NewFilled;
+
+				SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
+				TRACE("Reading %d bytes at %X\n", MoveBy, NeedBeginLow);
+				if ( ! ReadFile(m_hFile, m_pFileReadBuf, MoveBy, & BytesRead, NULL))
+				{
+					m_FileReadFilled = 0;
+					return 0;
+				}
 			}
 			m_FileReadPos = NeedBegin;
 		}
 		else
 		{
 			SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
+			TRACE("Reading %d bytes at %X\n", m_FileReadBufSize, NeedBeginLow);
 			if ( ! ReadFile(m_hFile, m_pFileReadBuf, m_FileReadBufSize, & BytesRead, NULL))
 			{
 				m_FileReadFilled = 0;
@@ -890,6 +895,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 
 			SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
 
+			TRACE("Reading %d bytes at %X\n", m_FileReadBufSize - m_FileReadFilled, NeedBeginLow);
 			if ( ! ReadFile(m_hFile, m_pFileReadBuf, m_FileReadBufSize - m_FileReadFilled, & BytesRead, NULL))
 			{
 				m_FileReadFilled = 0;
@@ -901,6 +907,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 	else
 	{
 		SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
+		TRACE("Reading %d bytes at %X\n", m_FileReadBufSize, NeedBeginLow);
 		if ( ! ReadFile(m_hFile, m_pFileReadBuf, m_FileReadBufSize, & BytesRead, NULL))
 		{
 			m_FileReadFilled = 0;

@@ -60,6 +60,7 @@ BEGIN_MESSAGE_MAP(CBinaryCompareView, CView)
 	ON_UPDATE_COMMAND_UI(ID_BINDIFF_SHOWFIRSTFILE, OnUpdateBindiffShowfirstfile)
 	ON_COMMAND(ID_BINDIFF_SHOW2NDFILE, OnBindiffShow2ndfile)
 	ON_UPDATE_COMMAND_UI(ID_BINDIFF_SHOW2NDFILE, OnUpdateBindiffShow2ndfile)
+	ON_WM_SETFOCUS()
 END_MESSAGE_MAP()
 
 
@@ -123,6 +124,18 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 	}
 
 	// draw inside update rectangle
+	LONGLONG SelBegin, SelEnd;
+	if (pDoc->m_CaretPos <= pDoc->m_SelectionAnchor)
+	{
+		SelBegin = pDoc->m_CaretPos & - m_WordSize;
+		SelEnd = pDoc->m_SelectionAnchor & - m_WordSize;
+	}
+	else
+	{
+		SelBegin = pDoc->m_SelectionAnchor & - m_WordSize;
+		SelEnd = pDoc->m_CaretPos & - m_WordSize;
+	}
+
 	for (int CurrentY = ur.top - ur.top % LineHeight(); CurrentY < ur.bottom; CurrentY += LineHeight())
 	{
 		LONGLONG CurrentAddr = m_ScreenFilePos + CurrentY / LineHeight() * m_BytesPerLine;
@@ -199,6 +212,16 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 					buf[3] = 0;
 					chars = 3;
 				}
+
+				DWORD BackgroundColor = pApp->m_TextBackgroundColor;
+				if (CurrentAddr + offset < SelEnd
+					&& CurrentAddr + offset >= SelBegin)
+				{
+					color = pApp->m_SelectedTextColor;
+					BackgroundColor = 0x000000;
+				}
+
+				pDC->SetBkColor(BackgroundColor);
 				pDC->SetTextColor(color);
 				pDC->TextOut(0, 0, buf, chars);
 			}
@@ -327,7 +350,7 @@ void CBinaryCompareView::CreateAndShowCaret()
 		&& pDoc->m_CaretPos <= m_ScreenFilePos + (LinesInView() + 1) * m_BytesPerLine)
 	{
 		int ByteOnTheLine = (ULONG(pDoc->m_CaretPos - m_ScreenFilePos) % m_BytesPerLine)
-							^ (m_WordSize - 1);
+							& -m_WordSize;
 
 		CPoint p((ByteOnTheLine * 2 + ByteOnTheLine / m_WordSize
 					+ m_AddressMarginWidth + 2) * CharWidth(),
@@ -433,12 +456,12 @@ void CBinaryCompareView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 	case VK_LEFT:
 		TRACE("VK_LEFT\n");
-		MoveCaretBy(-1, 0, SelectionFlags);
+		MoveCaretBy(- m_WordSize, 0, SelectionFlags);
 		break;
 
 	case VK_RIGHT:
 		TRACE("VK_RIGHT\n");
-		MoveCaretBy(1, 0, SelectionFlags);
+		MoveCaretBy(m_WordSize, 0, SelectionFlags);
 		break;
 
 	case VK_HOME:
@@ -501,7 +524,7 @@ void CBinaryCompareView::MoveCaretBy(int dx, int dy, int flags)
 			dx = 0;
 		}
 	}
-	NewPos = ((NewPos ^ (m_WordSize - 1)) + dx) ^ (m_WordSize - 1);
+	NewPos = (NewPos + dx) & -m_WordSize;
 	SetCaretPosition(NewPos + (NewLine + dy) * m_BytesPerLine, flags);
 }
 
@@ -980,16 +1003,16 @@ void CBinaryCompareView::InvalidateRange(LONGLONG begin, LONGLONG end)
 	}
 
 	int BeginLine = int(begin) / m_BytesPerLine;
-	int BeginByte = int(begin) % m_BytesPerLine;
+	int BeginByte = (int(begin) % m_BytesPerLine) & -m_WordSize;
 
 	int EndLine = int(end) / m_BytesPerLine;
-	int EndByte = int(end) % m_BytesPerLine;
+	int EndByte = ((int(end) % m_BytesPerLine) + m_WordSize - 1) & -m_WordSize;
 
 	if (BeginLine == EndLine)
 	{
 		r.top = BeginLine * LineHeight();
 		r.bottom = r.top + LineHeight();
-		if (EndByte <= 0 || BeginByte > nCharsInView)
+		if (EndByte <= 0 || BeginByte > m_BytesPerLine)
 		{
 			return;
 		}
@@ -997,17 +1020,17 @@ void CBinaryCompareView::InvalidateRange(LONGLONG begin, LONGLONG end)
 		{
 			BeginByte = 0;
 		}
-		if (EndByte > nCharsInView)
+		if (EndByte > m_BytesPerLine)
 		{
-			EndByte = nCharsInView;
+			EndByte = m_BytesPerLine;
 		}
-		r.left = BeginByte * CharWidth();
-		r.right = EndByte * CharWidth() + m_FontMetric.tmOverhang;
+		r.left = (m_AddressMarginWidth + 2 + BeginByte * 2 + BeginByte / m_WordSize) * CharWidth();
+		r.right = (m_AddressMarginWidth + 2 + EndByte * 2 + EndByte / m_WordSize) * CharWidth() + m_FontMetric.tmOverhang;
 		InvalidateRect( & r);
 	}
 	else
 	{
-		if (BeginLine >= 0 && BeginByte <= nCharsInView)
+		if (BeginLine >= 0 && BeginByte <= m_BytesPerLine)
 		{
 			if (BeginByte < 0)
 			{
@@ -1015,19 +1038,19 @@ void CBinaryCompareView::InvalidateRange(LONGLONG begin, LONGLONG end)
 			}
 			r.top = BeginLine * LineHeight();
 			r.bottom = r.top + LineHeight();
-			r.left = BeginByte * CharWidth();
-			r.right = (nCharsInView + 1) * CharWidth() + m_FontMetric.tmOverhang;
+			r.left = (m_AddressMarginWidth + 2 + BeginByte * 2 + BeginByte / m_WordSize) * CharWidth();
+			r.right = (m_AddressMarginWidth + 2 + nCharsInView + 1) * CharWidth() + m_FontMetric.tmOverhang;
 			InvalidateRect( & r);
 		}
 		if (EndLine <= nLinesInView + 2 && EndByte > 0)
 		{
-			if (EndByte > nCharsInView + 1)
+			if (EndByte > m_BytesPerLine + 1)
 			{
-				EndByte = nCharsInView + 1;
+				EndByte = m_BytesPerLine + 1;
 			}
 			r.top = EndLine * LineHeight();
 			r.bottom = r.top + LineHeight();
-			r.right = EndByte * CharWidth() + m_FontMetric.tmOverhang;
+			r.right = (m_AddressMarginWidth + 2 + EndByte * 2 + EndByte / m_WordSize) * CharWidth() + m_FontMetric.tmOverhang;
 			r.left = 0;
 			InvalidateRect( & r);
 		}
@@ -1131,35 +1154,28 @@ void CBinaryCompareView::OnLButtonDown(UINT nFlags, CPoint point)
 	TRACE("CDiffFileView::OnLButtonDown\n");
 	CView::OnLButtonDown(nFlags, point);
 	m_LButtonDown = true;
-	int flags = SetPositionMakeVisible;
 
-	// if the left margin is clicked, the whole line is selected
+	// if the address margin is clicked, the whole line is selected
 	point.x -= (m_AddressMarginWidth + 2) * CharWidth();
 	LONGLONG Addr = point.y / LineHeight() * m_BytesPerLine + m_ScreenFilePos;
 
+	int flags = SetPositionMakeVisible;
 	if (point.x < 0)
 	{
 		if (0 == (nFlags & MK_SHIFT))
 		{
-			SetCaretPosition(Addr);
+			SetCaretPosition(Addr, SetPositionCancelSelection);
 		}
-		else
+		if (GetDocument()->m_SelectionAnchor <= Addr)
 		{
-			if (GetDocument()->m_SelectionAnchor <= Addr)
-			{
-				SetCaretPosition(Addr + m_BytesPerLine, SetPositionMakeVisible);
-			}
-			else
-			{
-				SetCaretPosition(Addr, SetPositionMakeVisible);
-			}
+			Addr += m_BytesPerLine;
 		}
 	}
 	else
 	{
 		point.x = (point.x + CharWidth() / 2) / CharWidth();
 		point.x -= point.x / (m_WordSize * 2 + 1);
-		Addr += (point.x / 2) ^ (m_WordSize - 1);
+		Addr += (point.x / 2) & -m_WordSize;
 		if (0 == (nFlags & MK_SHIFT))
 		{
 			flags |= SetPositionCancelSelection;
@@ -1168,8 +1184,8 @@ void CBinaryCompareView::OnLButtonDown(UINT nFlags, CPoint point)
 		{
 			flags |= SetWordSelectionMode;
 		}
-		SetCaretPosition(Addr, flags);
 	}
+	SetCaretPosition(Addr, flags);
 }
 
 void CBinaryCompareView::OnLButtonUp(UINT nFlags, CPoint point)
@@ -1190,30 +1206,27 @@ void CBinaryCompareView::OnMouseMove(UINT nFlags, CPoint point)
 		m_TrackingSelection = true;
 		SetCapture();
 	}
-#if 0
+	CView::OnMouseMove(nFlags, point);
 	if (m_TrackingSelection)
 	{
-		point.x -= m_LineNumberMarginWidth;
-		int nLine = point.y / LineHeight() + m_FirstLineSeen;
+		point.x -= (m_AddressMarginWidth + 2) * CharWidth();
+		LONGLONG Addr = point.y / LineHeight() * m_BytesPerLine + m_ScreenFilePos;
 
 		if (point.x < 0)
 		{
-			if (GetDocument()->m_SelectionAnchor.line <= nLine)
+			if (GetDocument()->m_SelectionAnchor <= Addr)
 			{
-				SetCaretPosition(0, nLine + 1, SetPositionMakeVisible);
-			}
-			else
-			{
-				SetCaretPosition(0, nLine, SetPositionMakeVisible);
+				Addr += m_BytesPerLine;
 			}
 		}
 		else
 		{
-			SetCaretPosition(m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth(), nLine, SetPositionMakeVisible);
+			point.x = (point.x + CharWidth() / 2) / CharWidth();
+			point.x -= point.x / (m_WordSize * 2 + 1);
+			Addr += (point.x / 2) & -m_WordSize;
 		}
+		SetCaretPosition(Addr, SetPositionMakeVisible);
 	}
-#endif
-	CView::OnMouseMove(nFlags, point);
 }
 
 void CBinaryCompareView::OnWordsize1byte()
@@ -1346,4 +1359,11 @@ void CBinaryCompareView::OnUpdateBindiffShow2ndfile(CCmdUI *pCmdUI)
 		pCmdUI->Enable(FALSE);
 		pCmdUI->SetRadio(NULL != pPair->pSecondFile);
 	}
+}
+
+void CBinaryCompareView::OnSetFocus(CWnd* pOldWnd)
+{
+	CView::OnSetFocus(pOldWnd);
+
+	CreateAndShowCaret();
 }

@@ -48,4 +48,7 @@ protected:
 	FilePair * m_pFilePair;
 
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnEditGotonextdiff();
+	afx_msg void OnEditGotoprevdiff();
 };

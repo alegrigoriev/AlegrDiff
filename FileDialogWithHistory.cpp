@@ -162,109 +162,108 @@ void CFileDialogWithHistory::OnComboSelendOK()
 	TRACE("CFileDialogWithHistory::OnComboSelendOK()\n");
 	CString str;
 	CComboBox * pCb = static_cast<CComboBox *>(GetDlgItem(IDC_COMBO_RECENT));
-	if (NULL != pCb)
+	if (NULL == pCb)
 	{
-		int sel = pCb->GetCurSel();
-		if (-1 == sel
-			|| sel >= pCb->GetCount())
-		{
-			return;
-		}
-		pCb->GetLBText(sel, str);
-		TRACE(_T("CFileDialogWithHistory::OnComboSelendOK: %s selected\n"), str);
-		if (str.IsEmpty())
-		{
-			return;
-		}
-		// check if the selected text is a folder
-		// make sure we can find a file in the folder
-		CString dir(str);
-		TCHAR c = dir[dir.GetLength() - 1];
-		if (c != ':'
-			&& c != '\\'
-			&& c != '/')
-		{
-			dir += '\\';
-		}
-		dir += '*';
-
-		WIN32_FIND_DATA wfd;
-		HANDLE hFind = FindFirstFile(dir, & wfd);
-		if (INVALID_HANDLE_VALUE == hFind)
-		{
-			DWORD error = GetLastError();
-			TRACE("FindFirstFile failed, last error = %d\n", error);
-			CString s;
-			if (ERROR_ACCESS_DENIED == error)
-			{
-				s.Format(IDS_DIRECTORY_ACCESS_DENIED, LPCTSTR(str));
-			}
-			else if (1 || ERROR_DIRECTORY == error
-					|| ERROR_PATH_NOT_FOUND == error
-					|| ERROR_INVALID_NAME == error
-					|| ERROR_BAD_NETPATH)
-			{
-				s.Format(IDS_DIRECTORY_NOT_FOUND, LPCTSTR(str));
-			}
-			AfxMessageBox(s);
-			// delete the string from combobox
-			// delete also from the application list
-			m_RecentFolders.DeleteString(str);
-
-			pCb->DeleteString(sel);
-			pCb->SetCurSel(-1); // no selection
-			return;
-		}
-		else
-		{
-			TRACE("FindFirstFile success\n");
-			FindClose(hFind);
-			CWnd * pParent = GetParent();
-			CWnd * pTmp = pParent->GetDlgItem(edt1);
-			CString name;
-			if (NULL == pTmp)
-			{
-				// new style dialog
-				pTmp = pParent->GetDlgItem(cmb13);
-			}
-			if (NULL != pTmp
-				&& ! m_bOpenFileDialog)
-			{
-				pTmp->GetWindowText(name);
-			}
-#ifdef _UNICODE
-			OSVERSIONINFO vi;
-			ZeroMemory(&vi, sizeof(OSVERSIONINFO));
-			vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-			::GetVersionEx(&vi);
-
-			if (vi.dwPlatformId != VER_PLATFORM_WIN32_NT)
-			{
-				if (NULL != pTmp)
-				{
-					pTmp->SetWindowText(str);
-
-					pParent->SendMessage(WM_COMMAND, IDOK, 0);
-
-					pTmp->SetWindowText(name);
-				}
-			}
-			else
-#endif
-			{
-				pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(str)));
-				pParent->SendMessage(WM_COMMAND, IDOK, 0);
-
-				pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(name)));
-			}
-			if (NULL != pTmp)
-			{
-				pTmp->SetFocus();
-			}
-		}
-
-
+		return;
 	}
+	int sel = pCb->GetCurSel();
+	if (-1 == sel
+		|| sel >= pCb->GetCount())
+	{
+		return;
+	}
+
+	pCb->GetLBText(sel, str);
+	TRACE(_T("CFileDialogWithHistory::OnComboSelendOK: %s selected\n"), str);
+	if (str.IsEmpty())
+	{
+		return;
+	}
+	// check if the selected text is a folder
+	// make sure we can find a file in the folder
+	CString dir(str);
+	TCHAR c = dir[dir.GetLength() - 1];
+	if (c != ':'
+		&& c != '\\'
+		&& c != '/')
+	{
+		dir += '\\';
+	}
+	dir += '*';
+
+	WIN32_FIND_DATA wfd;
+	HANDLE hFind = FindFirstFile(dir, & wfd);
+	if (INVALID_HANDLE_VALUE == hFind)
+	{
+		DWORD error = GetLastError();
+		TRACE("FindFirstFile failed, last error = %d\n", error);
+		CString s;
+		if (ERROR_ACCESS_DENIED == error)
+		{
+			s.Format(IDS_DIRECTORY_ACCESS_DENIED, LPCTSTR(str));
+		}
+		else if (1 || ERROR_DIRECTORY == error
+				|| ERROR_PATH_NOT_FOUND == error
+				|| ERROR_INVALID_NAME == error
+				|| ERROR_BAD_NETPATH)
+		{
+			s.Format(IDS_DIRECTORY_NOT_FOUND, LPCTSTR(str));
+		}
+		AfxMessageBox(s);
+		// delete the string from combobox
+		// delete also from the application list
+		m_RecentFolders.DeleteString(str);
+
+		pCb->DeleteString(sel);
+		pCb->SetCurSel(-1); // no selection
+		return;
+	}
+
+	TRACE("FindFirstFile success\n");
+	FindClose(hFind);
+	CWnd * pParent = GetParent();
+	CWnd * pTmp = pParent->GetDlgItem(edt1);
+	CString name;
+	if (NULL == pTmp)
+	{
+		// new style dialog
+		pTmp = pParent->GetDlgItem(cmb13);
+	}
+	if (NULL != pTmp
+		&& ! m_bOpenFileDialog)
+	{
+		pTmp->GetWindowText(name);
+	}
+#ifdef _UNICODE
+	OSVERSIONINFO vi;
+	ZeroMemory(&vi, sizeof(OSVERSIONINFO));
+	vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	::GetVersionEx(&vi);
+
+	if (vi.dwPlatformId != VER_PLATFORM_WIN32_NT)
+	{
+		if (NULL != pTmp)
+		{
+			pTmp->SetWindowText(str);
+
+			pParent->SendMessage(WM_COMMAND, IDOK, 0);
+
+			pTmp->SetWindowText(name);
+		}
+	}
+	else
+#endif
+	{
+		pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(str)));
+		pParent->SendMessage(WM_COMMAND, IDOK, 0);
+
+		pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(name)));
+	}
+	if (NULL != pTmp)
+	{
+		pTmp->SetFocus();
+	}
+
 }
 
 #ifdef _UNICODE

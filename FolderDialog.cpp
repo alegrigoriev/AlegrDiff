@@ -3,6 +3,8 @@
 
 #include "stdafx.h"
 #include "FolderDialog.h"
+#include "ApplicationProfile.h"
+#include "resource.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -17,9 +19,10 @@ IMPLEMENT_DYNAMIC(CFolderDialog, CDialog)
 
 CFolderDialog::CFolderDialog(LPCTSTR lpszTitle, LPCTSTR lpszStartingDirectory,
 							bool EnableCreateFolder,
-							DWORD dwFlags, CWnd* pParentWnd)
+							DWORD dwFlags, CWnd* pParentWnd, class CStringHistory * pHistory)
 	: CCommonDialog(pParentWnd),
 	szStartupDir(lpszStartingDirectory),
+	m_pStringHistory(pHistory),
 	m_bEnableCreateDir(EnableCreateFolder)
 {
 	memzero(m_bi);
@@ -43,7 +46,7 @@ CFolderDialog::CFolderDialog(LPCTSTR lpszTitle, LPCTSTR lpszStartingDirectory,
 
 BEGIN_MESSAGE_MAP(CFolderDialog, CCommonDialog)
 	//{{AFX_MSG_MAP(CFolderDialog)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
+	ON_CBN_SELENDOK(0x3744, OnComboSelendOK)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -119,6 +122,42 @@ int CFolderDialog::DoModal()
 	return (lpResult != 0) ? IDOK : IDCANCEL;
 }
 
+void CFolderDialog::LoadHistoryCb()
+{
+	if (NULL == m_pStringHistory)
+	{
+		return;
+	}
+	// find the edit box
+	CRect r;
+	CWnd * pEdit = GetDlgItem(0x3744);
+	if (NULL == pEdit
+		|| 0 == (WS_VISIBLE & pEdit->GetStyle()))
+	{
+		return;
+	}
+	pEdit->GetWindowRect( & r);
+	ScreenToClient( & r);
+
+	CFont * pFont = pEdit->GetFont();
+
+	pEdit->DestroyWindow();
+
+	if (m_HistoryCombo.Create(WS_CHILD
+							| WS_VISIBLE
+							| WS_VSCROLL
+							| WS_TABSTOP
+							| CBS_AUTOHSCROLL
+							| CBS_DROPDOWN,
+							r, this, 0x3744))
+	{
+		//m_HistoryCombo.Detach();
+		m_HistoryCombo.SetFont(pFont);
+		m_pStringHistory->LoadCombo( & m_HistoryCombo);
+		m_HistoryCombo.SetExtendedUI();
+	}
+}
+
 int CALLBACK CFolderDialog::BrowseCallbackProc(HWND hwnd,
 												UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
@@ -129,16 +168,18 @@ int CALLBACK CFolderDialog::BrowseCallbackProc(HWND hwnd,
 		TRACE("CFolderDialog::BrowseCallbackProc BFFM_INITIALIZED hwnd=%X\n", hwnd);
 		if(pDlg->m_hWnd == NULL)
 		{
-			pDlg->Attach(hwnd);
+			pDlg->SubclassWindow(hwnd);
 		}
 		ASSERT(pDlg->m_hWnd == hwnd);
+
+		pDlg->LoadHistoryCb();
 		return pDlg->OnInitDone();
 		break;
 	case BFFM_SELCHANGED:
 		TRACE("CFolderDialog::BrowseCallbackProc BFFM_SELCHANGED hwnd=%X\n", hwnd);
 		if(pDlg->m_hWnd == NULL)
 		{
-			pDlg->Attach(hwnd);
+			pDlg->SubclassWindow(hwnd);
 		}
 		ASSERT(pDlg->m_hWnd == hwnd);
 		return pDlg->OnFolderChange((LPITEMIDLIST) lParam);
@@ -242,3 +283,78 @@ void CFolderDialog::Dump(CDumpContext& dc) const
 }
 #endif
 
+#if 0
+LRESULT CFolderDialog::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	if (WM_COMMAND == message && 0x3744 == LOWORD(wParam))
+	{
+		TRACE("WM_COMMAND %X\n", HIWORD(wParam));
+	}
+	return CCommonDialog::WindowProc(message, wParam, lParam);
+}
+#endif
+
+void CFolderDialog::OnComboSelendOK()
+{
+	TRACE("CFolderDialog::OnComboSelendOK()\n");
+	CString str;
+	int sel = m_HistoryCombo.GetCurSel();
+	if (-1 == sel
+		|| sel >= m_HistoryCombo.GetCount())
+	{
+		return;
+	}
+
+	m_HistoryCombo.GetLBText(sel, str);
+	TRACE(_T("CFolderDialog::OnComboSelendOK: %s selected\n"), str);
+	if (str.IsEmpty())
+	{
+		return;
+	}
+	// check if the selected text is a folder
+	// make sure we can find a file in the folder
+	CString dir(str);
+	TCHAR c = dir[dir.GetLength() - 1];
+	if (c != ':'
+		&& c != '\\'
+		&& c != '/')
+	{
+		dir += '\\';
+	}
+	dir += '*';
+
+	WIN32_FIND_DATA wfd;
+	HANDLE hFind = FindFirstFile(dir, & wfd);
+
+	if (INVALID_HANDLE_VALUE == hFind)
+	{
+		DWORD error = GetLastError();
+		TRACE("FindFirstFile failed, last error = %d\n", error);
+		CString s;
+		if (ERROR_ACCESS_DENIED == error)
+		{
+			s.Format(IDS_DIRECTORY_ACCESS_DENIED, LPCTSTR(str));
+		}
+		else if (1 || ERROR_DIRECTORY == error
+				|| ERROR_PATH_NOT_FOUND == error
+				|| ERROR_INVALID_NAME == error
+				|| ERROR_BAD_NETPATH)
+		{
+			s.Format(IDS_DIRECTORY_NOT_FOUND, LPCTSTR(str));
+		}
+		AfxMessageBox(s);
+		// delete the string from combobox
+		// delete also from the application list
+		m_pStringHistory->DeleteString(str);
+
+		m_HistoryCombo.DeleteString(sel);
+		m_HistoryCombo.SetCurSel(-1); // no selection
+		return;
+	}
+
+	TRACE("FindFirstFile success\n");
+	FindClose(hFind);
+
+	SendMessage(BFFM_SETSELECTION, TRUE,
+				(LPARAM)(LPCTSTR)str);
+}

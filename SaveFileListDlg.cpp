@@ -25,7 +25,6 @@ CSaveFileListDlg::CSaveFileListDlg(CWnd* pParent /*=NULL*/)
 	m_bIncludeDifferentInBlanksFiles = FALSE;
 	m_bIncludeFolder1OnlyFiles = FALSE;
 	m_bIncludeFolder2OnlyFiles = FALSE;
-	m_bIncludeFullPath = FALSE;
 	m_bIncludeIdenticalFiles = FALSE;
 	m_bIncludeSubdirectoryName = FALSE;
 	m_bIncludeTimestamp = FALSE;
@@ -39,7 +38,6 @@ CSaveFileListDlg::CSaveFileListDlg(CWnd* pParent /*=NULL*/)
 	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("DifferentInBlanksFiles"), m_bIncludeDifferentInBlanksFiles, FALSE);
 	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("Folder1OnlyFiles"), m_bIncludeFolder1OnlyFiles, FALSE);
 	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("Folder2OnlyFiles"), m_bIncludeFolder2OnlyFiles, FALSE);
-	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("FullPath"), m_bIncludeFullPath, FALSE);
 	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("IdenticalFiles"), m_bIncludeIdenticalFiles, FALSE);
 	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("SubdirectoryName"), m_bIncludeSubdirectoryName, TRUE);
 	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("Timestamp"), m_bIncludeTimestamp, FALSE);
@@ -58,7 +56,6 @@ void CSaveFileListDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_DIFFERENT_IN_BLANKS, m_bIncludeDifferentInBlanksFiles);
 	DDX_Check(pDX, IDC_CHECK_FOLDER1_ONLY, m_bIncludeFolder1OnlyFiles);
 	DDX_Check(pDX, IDC_CHECK_FOLDER2_ONLY, m_bIncludeFolder2OnlyFiles);
-	DDX_Check(pDX, IDC_CHECK_FULL_PATH, m_bIncludeFullPath);
 	DDX_Check(pDX, IDC_CHECK_IDENTICAL, m_bIncludeIdenticalFiles);
 	DDX_Check(pDX, IDC_CHECK_SUBDIRECTORY, m_bIncludeSubdirectoryName);
 	DDX_Check(pDX, IDC_CHECK_TIMESTAMP, m_bIncludeTimestamp);
@@ -79,7 +76,6 @@ BEGIN_MESSAGE_MAP(CSaveFileListDlg, CDialog)
 	ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(IDOK, OnUpdateOk)
-	ON_UPDATE_COMMAND_UI(IDC_CHECK_SUBDIRECTORY, OnUpdateCheckSubdirectory)
 	ON_UPDATE_COMMAND_UI(IDC_CHECK_IDENTICAL, OnUpdateCheckIncludeGroup)
 	ON_UPDATE_COMMAND_UI(IDC_CHECK_DIFFERENT, OnUpdateCheckIncludeGroup)
 	ON_UPDATE_COMMAND_UI(IDC_CHECK_DIFFERENT_IN_BLANKS, OnUpdateCheckIncludeGroup)
@@ -95,10 +91,6 @@ void CSaveFileListDlg::OnUpdateOk(CCmdUI * pCmdUI)
 	pCmdUI->Enable(m_eFilename.GetWindowTextLength() != 0);
 }
 
-void CSaveFileListDlg::OnUpdateCheckSubdirectory(CCmdUI * pCmdUI)
-{
-	pCmdUI->Enable(0 == IsDlgButtonChecked(IDC_CHECK_FULL_PATH));
-}
 void CSaveFileListDlg::OnUpdateCheckIncludeGroup(CCmdUI * pCmdUI)
 {
 	pCmdUI->Enable(1 == IsDlgButtonChecked(IDC_RADIO_SELECTED_GROUPS));
@@ -114,7 +106,7 @@ void CSaveFileListDlg::OnButtonBrowse()
 
 	CFileDialog dlg(FALSE, _T(".txt"), NULL,
 					OFN_HIDEREADONLY
-					| OFN_OVERWRITEPROMPT
+					| OFN_NOTESTFILECREATE
 					| OFN_EXPLORER
 					| OFN_ENABLESIZING,
 					Filter);
@@ -170,4 +162,28 @@ BOOL CSaveFileListDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	m_bNeedUpdateControls = true;
 	return CDialog::OnCommand(wParam, lParam);
+}
+
+void CSaveFileListDlg::OnOK()
+{
+
+	if (!UpdateData(TRUE))
+	{
+		TRACE0("UpdateData failed during dialog termination.\n");
+		// the UpdateData routine will set focus to correct item
+		return;
+	}
+	// check if replacing the file
+	FILE * file = fopen(m_sFilename, "rt");
+	if (NULL != file)
+	{
+		fclose(file);
+		CString s;
+		s.Format(IDS_REPLACEYESNO, LPCTSTR(m_sFilename));
+		if (IDYES != AfxMessageBox(s , MB_YESNO | MB_DEFBUTTON2))
+		{
+			return;
+		}
+	}
+	EndDialog(IDOK);
 }

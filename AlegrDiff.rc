@@ -326,7 +326,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 0.99.01 beta",IDC_STATIC_VERSION,35,
+    CTEXT           "AlegrDiff Version 0.99.02 beta",IDC_STATIC_VERSION,35,
                     14,128,8,SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001",IDC_STATIC,35,
                     29,128,8
@@ -598,15 +598,13 @@ BEGIN
     LTEXT           "&File name:",IDC_STATIC,7,7,58,9
     EDITTEXT        IDC_EDIT_FILENAME,7,21,189,14,ES_AUTOHSCROLL
     PUSHBUTTON      "...",IDC_BUTTON_BROWSE,203,21,18,14
-    GROUPBOX        "Attributes to save: ",IDC_STATIC,7,40,101,64
-    CONTROL         "Full &path",IDC_CHECK_FULL_PATH,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,51,93,10
+    GROUPBOX        "&Attributes to include: ",IDC_STATIC,7,40,101,49
     CONTROL         "S&ubdirectory name",IDC_CHECK_SUBDIRECTORY,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,63,93,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,50,93,10
     CONTROL         "Files &modification time",IDC_CHECK_TIMESTAMP,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,75,93,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,62,93,10
     CONTROL         "&Comparison result",IDC_CHECK_COMPARISON_RESULT,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,87,93,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,74,93,10
     GROUPBOX        "Include to list: ",IDC_STATIC,120,40,101,114
     CONTROL         "&All files",IDC_RADIO_INCLUDE_FILES,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,126,51,88,10
@@ -637,8 +635,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,9,9,0
- PRODUCTVERSION 0,9,9,0
+ FILEVERSION 0,99,2,0
+ PRODUCTVERSION 0,99,2,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -656,14 +654,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "AleGr Software\0"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application\0"
-            VALUE "FileVersion", "0, 9, 9, 0\0"
+            VALUE "FileVersion", "0, 99, 2, 0\0"
             VALUE "InternalName", "AlegrDiff\0"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "AlegrDiff.EXE\0"
-            VALUE "PrivateBuild", "Beta 0.99\0"
+            VALUE "PrivateBuild", "Beta 0.99.02\0"
             VALUE "ProductName", "AlegrDiff Application\0"
-            VALUE "ProductVersion", "0, 9, 9, 0\0"
+            VALUE "ProductVersion", "0, 99, 2, 0\0"
             VALUE "SpecialBuild", "\0"
         END
     END
@@ -948,6 +946,7 @@ BEGIN
     ID_FILE_PREFERENCES     "Change program preferences\nPreferences"
     ID_EDIT_ACCEPT          "Merge File 2 text\nFile 2 text"
     ID_EDIT_DECLINE         "Merge File 1 text\nFile 1 text"
+    IDS_REPLACEYESNO        "%s\nThis file already exists.\nReplace existing file?"
     ID_EDIT_GOTONEXTDIFF    "Go to the next difference\nNext difference"
 END
 
@@ -955,6 +954,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     ID_EDIT_GOTOPREVDIFF    "Go to previous difference\nPrevious difference"
     ID_EDIT_GOTOLINE        "Go to the line number\nGo to line"
+    IDS_DIFF_FILE_BANNER    "Comparing directories:\n%s\n%s\n\n"
     ID_VIEW_REFRESH         "Reload the current file(s)\nRefresh"
     ID_VIEW_SHOW_LINE_NUMBERS 
                             "Show line numbers at the left margin\nShow line numbers"

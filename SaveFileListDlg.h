@@ -25,7 +25,6 @@ public:
 	BOOL	m_bIncludeDifferentInBlanksFiles;
 	BOOL	m_bIncludeFolder1OnlyFiles;
 	BOOL	m_bIncludeFolder2OnlyFiles;
-	BOOL	m_bIncludeFullPath;
 	BOOL	m_bIncludeIdenticalFiles;
 	BOOL	m_bIncludeSubdirectoryName;
 	BOOL	m_bIncludeTimestamp;
@@ -39,7 +38,6 @@ public:
 	// ClassWizard generated virtual function overrides
 	LRESULT OnKickIdle(WPARAM, LPARAM);
 	void OnUpdateOk(CCmdUI * pCmdUI);
-	void OnUpdateCheckSubdirectory(CCmdUI * pCmdUI);
 	void OnUpdateCheckIncludeGroup(CCmdUI * pCmdUI);
 	//{{AFX_VIRTUAL(CSaveFileListDlg)
 protected:
@@ -54,6 +52,7 @@ protected:
 	//{{AFX_MSG(CSaveFileListDlg)
 	afx_msg void OnButtonBrowse();
 	virtual BOOL OnInitDialog();
+	virtual void OnOK();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

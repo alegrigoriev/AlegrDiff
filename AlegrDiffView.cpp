@@ -634,6 +634,8 @@ void CAlegrDiffView::AddListViewItem(FilePair *pPair, int item)
 void CAlegrDiffView::OnFileSaveList()
 {
 	CSaveFileListDlg dlg;
+	CListCtrl * pListCtrl = &GetListCtrl();
+	CAlegrDiffDoc * pDoc = GetDocument();
 	if (IDOK != dlg.DoModal())
 	{
 		return;
@@ -646,17 +648,137 @@ void CAlegrDiffView::OnFileSaveList()
 		AfxMessageBox(s);
 		return;
 	}
-	for (vector<FilePair *>::iterator ii = m_PairArray.begin(); ii < m_PairArray.end(); ii++)
-	{
-		FilePair * pFilePair = *ii;
-		if (1 == dlg.m_IncludeFilesSelect)  // selected files
-		{
+	CString s1;
+	s1.LoadString(IDS_DIFF_FILE_BANNER);
+	fprintf(file, s1, LPCTSTR(pDoc->m_sFirstDir), LPCTSTR(pDoc->m_sSecondDir));
 
-		}
-		else if (2 == dlg.m_IncludeFilesSelect) // include groups
+	int MaxNameLength = 0;
+	int MaxDateTimeLength = 0;
+	for (int pass = 0; pass < 2; pass++)
+	{
+		for (int item = 0; item < m_PairArray.size(); item++)
 		{
+			FilePair * pFilePair = m_PairArray[item];
+			if (1 == dlg.m_IncludeFilesSelect)  // selected files
+			{
+				if ( ! pListCtrl->GetItemState(item, LVIS_SELECTED))
+				{
+					continue;
+				}
+			}
+			else if (2 == dlg.m_IncludeFilesSelect) // include groups
+			{
+				switch (pFilePair->m_ComparisionResult)
+				{
+				case pFilePair->FilesIdentical:
+					if ( ! dlg.m_bIncludeIdenticalFiles)
+					{
+						continue;
+					}
+					break;
+				case pFilePair->DifferentInSpaces:
+					if ( ! dlg.m_bIncludeDifferentInBlanksFiles)
+					{
+						continue;
+					}
+					break;
+				case pFilePair->VersionInfoDifferent:
+					// TODO, but now just different
+				case pFilePair->FilesDifferent:
+					if ( ! dlg.m_bIncludeDifferentFiles)
+					{
+						continue;
+					}
+					break;
+				case pFilePair->OnlyFirstFile:
+					if ( ! dlg.m_bIncludeFolder1OnlyFiles)
+					{
+						continue;
+					}
+					break;
+				case pFilePair->OnlySecondFile:
+					if ( ! dlg.m_bIncludeFolder2OnlyFiles)
+					{
+						continue;
+					}
+					break;
+				}
+			}
+			// else: all files
+			FileItem * pItem = pFilePair->pFirstFile;
+			if (NULL == pItem)
+			{
+				pItem = pFilePair->pSecondFile;
+				if (NULL == pItem)
+				{
+					continue;
+				}
+			}
+
+			if (pass != 0)
+			{
+				CString time1, time2, line;
+				if (dlg.m_bIncludeSubdirectoryName)
+				{
+					line += pItem->GetSubdir();
+				}
+				line += pItem->GetName();
+				line += CString(' ', MaxNameLength + 4 - line.GetLength());
+
+				if (dlg.m_bIncludeTimestamp)
+				{
+					if (NULL != pFilePair->pFirstFile)
+					{
+						time1 = FileTimeToStr(pFilePair->pFirstFile->GetLastWriteTime());
+					}
+					time1 += CString(' ', MaxDateTimeLength + 4 - time1.GetLength());
+
+					if (NULL != pFilePair->pSecondFile)
+					{
+						time2 = FileTimeToStr(pFilePair->pSecondFile->GetLastWriteTime());
+					}
+					time2 += CString(' ', MaxDateTimeLength + 4 - time2.GetLength());
+
+					line += time1;
+					line += time2;
+				}
+				if (dlg.m_bIncludeComparisonResult)
+				{
+					line += pFilePair->GetComparisionResult();
+				}
+				line.TrimRight();
+				line += '\n';
+				fputs(line, file);
+			}
+			else
+			{
+				int NameLength = pItem->GetNameLength();
+				if (dlg.m_bIncludeSubdirectoryName)
+				{
+					NameLength += pItem->GetSubdirLength();
+				}
+				if (NameLength > MaxNameLength)
+				{
+					MaxNameLength = NameLength;
+				}
+				if (NULL != pFilePair->pFirstFile)
+				{
+					int DateLength = FileTimeToStr(pFilePair->pFirstFile->GetLastWriteTime()).GetLength();
+					if (DateLength > MaxDateTimeLength)
+					{
+						MaxDateTimeLength = DateLength;
+					}
+				}
+				if (NULL != pFilePair->pSecondFile)
+				{
+					int DateLength = FileTimeToStr(pFilePair->pSecondFile->GetLastWriteTime()).GetLength();
+					if (DateLength > MaxDateTimeLength)
+					{
+						MaxDateTimeLength = DateLength;
+					}
+				}
+			}
 		}
-		// else: all files
 	}
 	fclose(file);
 }

@@ -88,7 +88,6 @@
 #define IDC_CHECK_DIFFERENT_IN_BLANKS   1057
 #define IDC_CHECK_FOLDER1_ONLY          1058
 #define IDC_CHECK_FOLDER2_ONLY          1059
-#define IDC_CHECK_FULL_PATH             1060
 #define IDC_CHECK_SUBDIRECTORY          1061
 #define IDC_CHECK_TIMESTAMP             1062
 #define IDC_CHECK_COMPARISON_RESULT     1063
@@ -101,9 +100,11 @@
 #define ID_EDIT_ACCEPT                  32778
 #define ID_EDIT_DECLINE                 32779
 #define ID_FILE_CANCEL                  32780
+#define IDS_REPLACEYESNO                32780
 #define ID_EDIT_GOTONEXTDIFF            32783
 #define ID_EDIT_GOTOPREVDIFF            32784
 #define ID_EDIT_GOTOLINE                32785
+#define IDS_DIFF_FILE_BANNER            32786
 #define ID_VIEW_REFRESH                 32787
 #define ID_VIEW_SHOW_LINE_NUMBERS       32789
 #define ID_FILE_EDIT_FIRST              32794

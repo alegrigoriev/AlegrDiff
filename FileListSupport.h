@@ -67,10 +67,10 @@ public:
 	TextPos m_Begin;
 	TextPos m_End;
 	ULONG m_Flags;
-	enum { FlagAccept = 1,
-		FlagDecline = 2,
-		FlagNoDifference = 4,
-		FlagUndefined = 8,
+	enum { FlagAccept = 4,
+		FlagDecline = 8,
+		FlagNoDifference = 0x20,
+		FlagUndefined = 0x10,
 		FlagWhitespace = 0x100,
 	};
 

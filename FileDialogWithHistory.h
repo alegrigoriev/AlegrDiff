@@ -24,6 +24,7 @@ public:
 		: CFileDialog(bOpenFileDialog, lpszDefExt,
 					lpszFileName, dwFlags | OFN_EXPLORER, lpszFilter, pParentWnd,
 					OpenfilenameSize()),
+
 		m_pResizeItems(NULL),
 		m_ResizeItemsCount(0)
 	{
@@ -50,6 +51,15 @@ protected:
 
 	ResizableDlgItem const * m_pResizeItems;
 	int m_ResizeItemsCount;
+
+	static UINT_PTR CALLBACK ResizableFileDialogHook(
+													HWND hdlg,      // handle to child dialog box
+													UINT uiMsg,     // message identifier
+													WPARAM wParam,  // message parameter
+													LPARAM lParam   // message parameter
+													);
+
+	virtual INT_PTR DoModal();
 	//{{AFX_MSG(CResizableFileDialog)
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	//}}AFX_MSG

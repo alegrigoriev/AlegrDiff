@@ -7,6 +7,7 @@
 #include "GoToLineDialog.h"
 #include "ChildFrm.h"
 #include "FindDialog.h"
+#include "GdiObjectSave.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -299,7 +300,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 		return;
 	}
 
-	CFont * pOldFont = pDC->SelectObject( & pApp->m_NormalFont);
+	CGdiObjectSaveT<CFont> SaveFont(pDC, pDC->SelectObject( & pApp->m_NormalFont));
 
 	//TEXTMETRIC tm;
 	//pDC->GetTextMetrics( & tm);
@@ -330,11 +331,14 @@ void CDiffFileView::OnDraw(CDC* pDC)
 
 	CString s;
 
+	CPen BlackPen(PS_SOLID, 1, COLORREF(0));
+
 	for (int nPane = 0, nPaneBegin = 0;
 		nPane < m_NumberOfPanes; nPane++, nPaneBegin += nPaneWidth)
 	{
 		int PosX = nPaneBegin;
 		int nCharsInView = CharsInView();
+
 		if (nPane == m_NumberOfPanes - 1)
 		{
 			nCharsInView += 2;
@@ -342,17 +346,24 @@ void CDiffFileView::OnDraw(CDC* pDC)
 		else
 		{
 			// draw separator line
+			CGdiObjectSaveT<CPen> SavePen(pDC, pDC->SelectObject( & BlackPen));
 			pDC->MoveTo(PosX + nPaneWidth - 1, ur.top);
 			pDC->LineTo(PosX + nPaneWidth - 1, ur.bottom);
 		}
 
 		if (m_ShowLineNumbers)
 		{
-			CGdiObject * pOldPen = pDC->SelectStockObject(BLACK_PEN);
+			CGdiObjectSaveT<CPen> SavePen(pDC, pDC->SelectObject( & BlackPen));
 
 			PosX += m_LineNumberMarginWidth;
+
+			CPoint p(PosX - 1, 0);
+			ClientToScreen( & p);
+			TRACE("Line X = %d\n", p.x);
+
 			pDC->MoveTo(PosX - 1, ur.top);
 			pDC->LineTo(PosX - 1, ur.bottom);
+
 			if (NULL != pFilePair->pFirstFile
 				&& NULL != pFilePair->pSecondFile
 				&& 1 == m_NumberOfPanes)
@@ -360,7 +371,6 @@ void CDiffFileView::OnDraw(CDC* pDC)
 				pDC->MoveTo(m_LineNumberMarginWidth / 2 - 1, ur.top);
 				pDC->LineTo(m_LineNumberMarginWidth / 2 - 1, ur.bottom);
 			}
-			pDC->SelectObject(pOldPen);
 		}
 
 		int nLineHeight = LineHeight();
@@ -508,7 +518,6 @@ void CDiffFileView::OnDraw(CDC* pDC)
 								nSelBegin, nSelEnd, nPaneToDraw);
 		}
 	}
-	pDC->SelectObject(pOldFont);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1342,15 +1351,7 @@ void CDiffFileView::OnSize(UINT nType, int cx, int cy)
 	TRACE("CDiffFileView::OnSize\n");
 	CView::OnSize(nType, cx, cy);
 
-	m_VisibleRect.top = 0;
-	m_VisibleRect.bottom = cy / LineHeight() - 1;
-	m_PreferredRect.bottom = m_VisibleRect.bottom / 4;
-	m_PreferredRect.top = m_VisibleRect.bottom - m_VisibleRect.bottom / 4;
-
-	m_VisibleRect.right =  (cx - m_LineNumberMarginWidth) / CharWidth();
-	m_VisibleRect.left = 0;
-	m_PreferredRect.left = m_VisibleRect.right / 3;
-	m_PreferredRect.right = m_VisibleRect.right - m_VisibleRect.right / 3;
+	UpdateVisibleRectangleBounds();
 
 	UpdateVScrollBar();
 	UpdateHScrollBar();
@@ -1386,9 +1387,6 @@ void CDiffFileView::OnMetricsChange()
 	wdc.GetTextMetrics( & m_FontMetric);
 	wdc.SelectObject(pOldFont);
 
-	CRect cr;
-	GetClientRect( & cr);
-
 	m_LineNumberMarginWidth = 0;
 	CFilePairDoc * pDoc = GetDocument();
 	FilePair * pFilePair = pDoc->GetFilePair();
@@ -1412,6 +1410,19 @@ void CDiffFileView::OnMetricsChange()
 		}
 	}
 
+	UpdateVisibleRectangleBounds();
+
+	Invalidate(TRUE);
+	UpdateVScrollBar();
+	UpdateHScrollBar();
+	CreateAndShowCaret();
+}
+
+void CDiffFileView::UpdateVisibleRectangleBounds()
+{
+	CRect cr;
+	GetClientRect( & cr);
+
 	m_VisibleRect.bottom = cr.Height() / LineHeight() - 1;
 	m_PreferredRect.bottom = m_VisibleRect.bottom / 4;
 	m_PreferredRect.top = m_PreferredRect.bottom; //m_VisibleRect.bottom - m_VisibleRect.bottom / 4;
@@ -1427,11 +1438,6 @@ void CDiffFileView::OnMetricsChange()
 
 	m_PreferredRect.left = m_VisibleRect.right / 3;
 	m_PreferredRect.right = m_VisibleRect.right - m_VisibleRect.right / 3;
-
-	Invalidate(TRUE);
-	UpdateVScrollBar();
-	UpdateHScrollBar();
-	CreateAndShowCaret();
 }
 
 BOOL CDiffFileView::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)

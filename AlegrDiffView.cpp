@@ -928,7 +928,7 @@ BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 		return FALSE;
 	}
 
-	CopyFilesToFolder(FilesArray.begin().base(), FilesArray.size(), true);
+	CopyFilesToFolder(& FilesArray.front(), FilesArray.size(), true);
 	return TRUE;
 }
 

@@ -1,5 +1,8 @@
 TODO:
 
+Customizable number of MRU items
+Make more robust argorithm of version info detection (if it is version line, don't include version data to a normalized CRC).
+
 2-pane mode for binary files
 Allow doublequotes in the search pattern
 Assign an index to the files during original sort (for faster sorting)
@@ -29,6 +32,7 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+Doesn't refresh if one file changed on list view refresh
 If the text comparison got aborted because of read error, this is not shown
 History gets lost under Win9x
 "Length" column On/Off not saved (in Win9x???)
@@ -43,6 +47,8 @@ Estimated time left is not shown while calculating a fingerpring of a big file  
 "C:\\" shown in the list view title (???)
 
 Fixed:
+Text gets wrong colors (video driver problem)
+Text clipping in split mode: line is not clipped
 Zero byte in text file is causing text not shown
 If the comparison is very quick, the progress dialog may get stuck
 If the comparison got aborted because of read error, this is not shown

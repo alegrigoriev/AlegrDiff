@@ -268,9 +268,10 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    LTEXT           "AlegrDiff Version 1.0",IDC_STATIC,40,10,119,8,
+    LTEXT           "AlegrDiff Version 0.1 beta",IDC_STATIC,40,10,119,8,
                     SS_NOPREFIX
-    LTEXT           "Copyright (C) 2001",IDC_STATIC,40,25,119,8
+    LTEXT           "Copyright (C) Alexandre Grigoriev, 2001",IDC_STATIC,40,
+                    25,127,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
 END
 

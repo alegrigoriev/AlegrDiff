@@ -35,6 +35,7 @@ protected:
 // Implementation
 public:
 	FilePair * m_pFilePair;
+	bool m_UseLinePairArray;
 	bool m_BaseOnFirstFile;
 	int m_FirstLineSeen;
 	int m_FirstPosSeen;
@@ -69,7 +70,7 @@ public:
 	void CancelSelection();
 protected:
 	void DrawStringSections(CDC* pDC, CPoint point,
-							StringSection const Sections[], int NumOfSections,
+							const StringSection * pSection,
 							int nSkipChars, int nVisibleChars, int nTabIndent);
 
 	virtual ~CDiffFileView();

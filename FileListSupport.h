@@ -20,7 +20,6 @@ public:
 	FileLine(const char * src, bool MakeNormalizedString);
 	~FileLine();
 
-#if 1
 	static void * operator new(size_t size)
 	{
 		return m_Allocator.Allocate(size);
@@ -29,7 +28,7 @@ public:
 	{
 		m_Allocator.Free(ptr);
 	}
-#endif
+
 public:
 	DWORD GetHash() const { return m_HashCode; }
 	DWORD GetNormalizedHash() const { return m_NormalizedHashCode; }
@@ -122,8 +121,8 @@ struct LinePair
 		m_Allocator.Free(ptr);
 	}
 
-	FileLine * pFirstLine;
-	FileLine * pSecondLine;
+	const FileLine * pFirstLine;
+	const FileLine * pSecondLine;
 	StringSection * pFirstSection;
 private:
 	static CSmallAllocator m_Allocator;

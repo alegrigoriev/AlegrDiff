@@ -37,6 +37,9 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_pFileDiffTemplate(NULL),
 	m_TabIndent(4),
 	m_MinIdenticalChars(3),
+	m_NormalTextColor(0),
+	m_ErasedTextColor(0x000000FF),  // red
+	m_AddedTextColor(0x00FF0000),   // blue
 	m_MinIdenticalLines(5)
 {
 }

@@ -23,8 +23,13 @@ CDiffFileView::CDiffFileView()
 	m_CaretLine(0),
 	m_CaretPos(0),
 	m_TotalLines(0),
+	m_UseLinePairArray(false),
 	m_BaseOnFirstFile(true)
 {
+	// init font size, to avoid zero divide
+	m_FontMetric.tmAveCharWidth = 1;
+	m_FontMetric.tmExternalLeading = 1;
+	m_FontMetric.tmHeight = 1;
 }
 
 CDiffFileView::~CDiffFileView()
@@ -52,16 +57,18 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CDiffFileView drawing
 void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
-										StringSection const Sections[], int NumOfSections,
+										const StringSection * pSection,
 										int nSkipChars, int nVisibleChars, int nTabIndent)
 {
 	TCHAR buf[2048];
+	CThisApp * pApp = GetApp();
+
 	pDC->MoveTo(point);
 	int ExpandedLinePos = 0;    // poisition with expanded tabs
-	for (int i = 0, nDrawnChars = 0; i < NumOfSections && nVisibleChars > nDrawnChars; i++)
+	for (int nDrawnChars = 0; pSection != NULL && nDrawnChars < nVisibleChars; pSection = pSection->pNext)
 	{
-		LPCTSTR pText = Sections[i].pBegin;
-		int Length = Sections[i].Length;
+		LPCTSTR pText = pSection->pBegin;
+		int Length = pSection->Length;
 		for (int j = 0, k = 0; j < sizeof buf / sizeof buf[0] && k < Length; j++, ExpandedLinePos++)
 		{
 			if (pText[k] == '\t')
@@ -77,7 +84,6 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 				buf[j] = pText[k];
 			}
 			k++;
-			Length--;
 		}
 		Length = j;
 		pText = buf;
@@ -97,18 +103,24 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 		}
 		// choose font
 		CFont * pFont;
-		if (Sections[i].Attr == Sections[i].Inserted)
+		DWORD Color;
+		if (pSection->Attr == pSection->Inserted)
 		{
+			Color = pApp->m_AddedTextColor;
 			pFont = & m_UnderlineFont;
 		}
-		else if (Sections[i].Attr == Sections[i].Erased)
+		else if (pSection->Attr == pSection->Erased)
 		{
+			Color = pApp->m_ErasedTextColor;
 			pFont = & m_StrikeoutFont;
 		}
 		else
 		{
+			Color = pApp->m_NormalTextColor;
 			pFont = & m_NormalFont;
 		}
+
+		pDC->SetTextColor(Color);
 		pDC->SelectObject(pFont);
 		// text is drawn from the current position
 		pDC->TextOut(0, 0, pText, Length);
@@ -158,18 +170,45 @@ void CDiffFileView::OnDraw(CDC* pDC)
 
 	//pDC->SetTextAlign
 	int nLineHeight = LineHeight();
-	int nTabWidth = GetApp()->m_TabIndent * CharWidth();
-	for (int nLine = m_FirstLineSeen,
-		PosY = cr.top;
-		nLine < pFile->GetNumLines() && PosY < cr.bottom;
-		nLine++, PosY += nLineHeight)
+
+	if (m_UseLinePairArray)
 	{
-		const FileLine * pLine = pFile->GetLine(nLine);
-		if (pLine->GetLength() > m_FirstPosSeen)
+		int nTabIndent = GetApp()->m_TabIndent;
+		int nCharsInView = CharsInView() + 1;
+
+		pDC->SetTextAlign(pDC->GetTextAlign() | TA_UPDATECP);
+
+		for (int nLine = m_FirstLineSeen,
+			PosY = cr.top;
+			nLine < pFile->GetNumLines() && PosY < cr.bottom;
+			nLine++, PosY += nLineHeight)
 		{
-			pDC->TabbedTextOut(0, PosY,
-								LPCTSTR(pLine->GetText()) + m_FirstPosSeen,
-								pLine->GetLength() - m_FirstPosSeen, 1, & nTabWidth, 0);
+			if (nLine < m_pFilePair->m_LinePairs.GetSize())
+			{
+				const LinePair * pPair = m_pFilePair->m_LinePairs[nLine];
+				if (NULL != pPair)
+				{
+					DrawStringSections(pDC, CPoint(0, PosY),
+										pPair->pFirstSection, m_FirstPosSeen, nCharsInView, nTabIndent);
+				}
+			}
+		}
+	}
+	else
+	{
+		int nTabWidth = GetApp()->m_TabIndent * CharWidth();
+		for (int nLine = m_FirstLineSeen,
+			PosY = cr.top;
+			nLine < pFile->GetNumLines() && PosY < cr.bottom;
+			nLine++, PosY += nLineHeight)
+		{
+			const FileLine * pLine = pFile->GetLine(nLine);
+			if (pLine->GetLength() > m_FirstPosSeen)
+			{
+				pDC->TabbedTextOut(0, PosY,
+									LPCTSTR(pLine->GetText()) + m_FirstPosSeen,
+									pLine->GetLength() - m_FirstPosSeen, 1, & nTabWidth, 0);
+			}
 		}
 	}
 
@@ -226,14 +265,23 @@ void CDiffFileView::OnInitialUpdate()
 		wdc.SelectObject(pOldFont);
 	}
 	// build the line pair array
-	FileItem * pFile = m_pFilePair->pFirstFile;
-	if (NULL == pFile
-		|| (! m_BaseOnFirstFile && NULL != m_pFilePair->pSecondFile))
+	if (m_pFilePair->m_LinePairs.GetSize() != 0)
 	{
-		pFile = m_pFilePair->pSecondFile;
+		m_UseLinePairArray = true;
+		m_TotalLines = m_pFilePair->m_LinePairs.GetSize();
 	}
+	else
+	{
+		m_UseLinePairArray = false;
+		FileItem * pFile = m_pFilePair->pFirstFile;
+		if (NULL == pFile
+			|| (! m_BaseOnFirstFile && NULL != m_pFilePair->pSecondFile))
+		{
+			pFile = m_pFilePair->pSecondFile;
+		}
 
-	m_TotalLines = pFile->GetNumLines();
+		m_TotalLines = pFile->GetNumLines();
+	}
 	CView::OnInitialUpdate();
 	UpdateVScrollBar();
 	UpdateHScrollBar();

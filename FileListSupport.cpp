@@ -229,14 +229,8 @@ void FileItem::AddLine(LPCTSTR pLine)
 	}
 }
 
-int _cdecl FileLine::HashCompareFunc(const void * p1, const void * p2)
+int _cdecl FileLine::HashCompareFunc(FileLine const * pLine1, FileLine const * pLine2)
 {
-	FileLine const * pLine1 = *(FileLine **) p1;
-	FileLine const * pLine2 = *(FileLine **) p2;
-	if (pLine1->GetHash() > pLine2->GetHash())
-	{
-		return -1;
-	}
 	if (pLine1->GetHash() < pLine2->GetHash())
 	{
 		return 1;
@@ -244,98 +238,62 @@ int _cdecl FileLine::HashCompareFunc(const void * p1, const void * p2)
 	return 0;
 }
 
-int _cdecl FileLine::HashAndLineNumberCompareFunc(const void * p1, const void * p2)
+int _cdecl FileLine::HashAndLineNumberCompareFunc(FileLine const * pLine1, FileLine const * pLine2)
 {
-	FileLine const * pLine1 = *(FileLine **) p1;
-	FileLine const * pLine2 = *(FileLine **) p2;
-	if (pLine1->GetHash() > pLine2->GetHash())
-	{
-		return 1;
-	}
-	if (pLine1->GetHash() < pLine2->GetHash())
-	{
-		return -1;
-	}
 	// if hash is the same, compare line numbers
-	if (pLine1->GetLineNumber() > pLine2->GetLineNumber())
+	if (pLine1->GetHash() < pLine2->GetHash())
 	{
 		return 1;
 	}
-	if (pLine1->GetLineNumber() < pLine2->GetLineNumber())
+	if (pLine1->GetHash() == pLine2->GetHash()
+		&& pLine1->GetLineNumber() < pLine2->GetLineNumber())
 	{
-		return -1;
+		return 1;
 	}
 	return 0;
 }
 
-int _cdecl FileLine::NormalizedHashAndLineNumberCompareFunc(const void * p1, const void * p2)
+int _cdecl FileLine::NormalizedHashAndLineNumberCompareFunc(FileLine const * pLine1, FileLine const * pLine2)
 {
-	FileLine const * pLine1 = *(FileLine **) p1;
-	FileLine const * pLine2 = *(FileLine **) p2;
-	if (pLine1->GetNormalizedHash() > pLine2->GetNormalizedHash())
-	{
-		return 1;
-	}
 	if (pLine1->GetNormalizedHash() < pLine2->GetNormalizedHash())
 	{
-		return -1;
-	}
-	// if hash is the same, compare line numbers
-	if (pLine1->GetLineNumber() > pLine2->GetLineNumber())
-	{
 		return 1;
 	}
-	if (pLine1->GetLineNumber() < pLine2->GetLineNumber())
+	// if hash is the same, compare line numbers
+	if (pLine1->GetNormalizedHash() == pLine2->GetNormalizedHash()
+		&& pLine1->GetLineNumber() < pLine2->GetLineNumber())
 	{
-		return -1;
+		return 1;
 	}
 	return 0;
 }
 
-int _cdecl FileLine::GroupHashAndLineNumberCompareFunc(const void * p1, const void * p2)
+int _cdecl FileLine::GroupHashAndLineNumberCompareFunc(FileLine const * pLine1, FileLine const * pLine2)
 {
-	FileLine const * pLine1 = *(FileLine **) p1;
-	FileLine const * pLine2 = *(FileLine **) p2;
-	if (pLine1->GetGroupHash() > pLine2->GetGroupHash())
-	{
-		return 1;
-	}
 	if (pLine1->GetGroupHash() < pLine2->GetGroupHash())
 	{
-		return -1;
-	}
-	// if hash is the same, compare line numbers
-	if (pLine1->GetLineNumber() > pLine2->GetLineNumber())
-	{
 		return 1;
 	}
-	if (pLine1->GetLineNumber() < pLine2->GetLineNumber())
+	// if hash is the same, compare line numbers
+	if (pLine1->GetGroupHash() == pLine2->GetGroupHash()
+		&& pLine1->GetLineNumber() < pLine2->GetLineNumber())
 	{
-		return -1;
+		return 1;
 	}
 	return 0;
 }
 
-int _cdecl FileLine::NormalizedGroupHashAndLineNumberCompareFunc(const void * p1, const void * p2)
+int _cdecl FileLine::NormalizedGroupHashAndLineNumberCompareFunc(FileLine const * pLine1, FileLine const * pLine2)
 {
-	FileLine const * pLine1 = *(FileLine **) p1;
-	FileLine const * pLine2 = *(FileLine **) p2;
-	if (pLine1->GetNormalizedGroupHash() > pLine2->GetNormalizedGroupHash())
-	{
-		return 1;
-	}
 	if (pLine1->GetNormalizedGroupHash() < pLine2->GetNormalizedGroupHash())
 	{
-		return -1;
-	}
-	// if hash is the same, compare line numbers
-	if (pLine1->GetLineNumber() > pLine2->GetLineNumber())
-	{
 		return 1;
 	}
-	if (pLine1->GetLineNumber() < pLine2->GetLineNumber())
+	// if hash is the same, compare line numbers
+	if (pLine1->GetNormalizedGroupHash() == pLine2->GetNormalizedGroupHash()
+		&& pLine1->GetLineNumber() < pLine2->GetLineNumber())
 	{
-		return -1;
+		return 1;
 	}
 	return 0;
 }
@@ -851,17 +809,17 @@ struct LineHashComparison
 {
 	LineHashComparison(unsigned n) : LineNum(n) {}
 	unsigned LineNum;
-	bool operator ()(FileLine const * pKeyLine, FileLine const * pLine2)
+	bool operator ()(FileLine const * pLine2, FileLine const * pKeyLine)
 	{
-		if (pKeyLine->GetNormalizedHash() < pLine2->GetNormalizedHash())
+		if (pKeyLine->GetNormalizedHash() > pLine2->GetNormalizedHash())
 		{
 			return 1;
 		}
-		if (pKeyLine->GetNormalizedHash() > pLine2->GetNormalizedHash())
+		if (pKeyLine->GetNormalizedHash() < pLine2->GetNormalizedHash())
 		{
 			return 0;
 		}
-		return LineNum < pLine2->GetLineNumber();
+		return LineNum > pLine2->GetLineNumber();
 	}
 };
 
@@ -869,17 +827,17 @@ struct LineGroupHashComparison
 {
 	LineGroupHashComparison(unsigned n) : LineNum(n) {}
 	unsigned LineNum;
-	bool operator ()(FileLine const * pKeyLine, FileLine const * pLine2)
+	bool operator ()(FileLine const * pLine2, FileLine const * pKeyLine)
 	{
-		if (pKeyLine->GetNormalizedGroupHash() < pLine2->GetNormalizedGroupHash())
+		if (pKeyLine->GetNormalizedGroupHash() > pLine2->GetNormalizedGroupHash())
 		{
 			return 1;
 		}
-		if (pKeyLine->GetNormalizedGroupHash() > pLine2->GetNormalizedGroupHash())
+		if (pKeyLine->GetNormalizedGroupHash() < pLine2->GetNormalizedGroupHash())
 		{
 			return 0;
 		}
-		return LineNum < pLine2->GetLineNumber();
+		return LineNum > pLine2->GetLineNumber();
 	}
 };
 

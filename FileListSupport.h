@@ -142,12 +142,12 @@ public:
 	LPCSTR GetNormalizedText() const { return m_pNormalizedString; }
 	unsigned GetNormalizedLength() const { return m_NormalizedStringLength; }
 
-	static int _cdecl HashCompareFunc(const void * p1, const void * p2);
-	static int _cdecl HashAndLineNumberCompareFunc(const void * p1, const void * p2);
-	static int _cdecl NormalizedHashAndLineNumberCompareFunc(const void * p1, const void * p2);
+	static int _cdecl HashCompareFunc(FileLine const * pLine1, FileLine const * pLine2);
+	static int _cdecl HashAndLineNumberCompareFunc(FileLine const * pLine1, FileLine const * pLine2);
+	static int _cdecl NormalizedHashAndLineNumberCompareFunc(FileLine const * pLine1, FileLine const * pLine2);
 
-	static int _cdecl GroupHashAndLineNumberCompareFunc(const void * p1, const void * p2);
-	static int _cdecl NormalizedGroupHashAndLineNumberCompareFunc(const void * p1, const void * p2);
+	static int _cdecl GroupHashAndLineNumberCompareFunc(FileLine const * pLine1, FileLine const * pLine2);
+	static int _cdecl NormalizedGroupHashAndLineNumberCompareFunc(FileLine const * pLine1, FileLine const * pLine2);
 
 private:
 	DWORD m_HashCode;

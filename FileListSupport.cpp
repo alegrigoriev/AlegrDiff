@@ -2655,7 +2655,9 @@ FilePair::FilePair()
 	m_bChanged(false),
 	m_bHideFromListView(false),
 	m_bSelected(false),
+	m_bFocused(false),
 	m_bDeleted(false),
+
 	m_FilenameSortOrder(0),
 	m_DirectorySortOrder(0),
 

@@ -543,6 +543,7 @@ public:
 	bool m_bHideFromListView;
 	bool m_bSelected;
 	bool m_bDeleted;
+	bool m_bFocused;
 
 	// used to speed up file list sort
 	ULONG m_FilenameSortOrder;

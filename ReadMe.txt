@@ -1,7 +1,12 @@
 TODO:
 
+No file size in the saved list. 
+No difference in file size in bytes reported in comparson result.
+No option for file size format (in kilobytes or in bytes).
+
 Customizable number of MRU items
 Make more robust argorithm of version info detection (if it is version line, don't include version data to a normalized CRC).
+Detect Log: (as comment sequence)
 
 2-pane mode for binary files
 Allow doublequotes in the search pattern
@@ -17,6 +22,7 @@ File\Preferences dialog must remember selected tab for current session.
 
 Maybe different color for selected accepted/declined
 add option to keep the caret on one line during F3 and F7
+Add "Window\Close All" menu.
 
 V1.5:
 Need a hot-key to select current changed block
@@ -32,19 +38,19 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-Doesn't refresh if one file changed on list view refresh
 If the text comparison got aborted because of read error, this is not shown
-Focus after hiding files
+It shows the dialog with parameters instead of running the comparison for the folders specified in a command line. Please fix immediately!
 Blank line immediately following difference block is considered separate 
    for "Next Difference" command
 Blank lines prevent from proper line matching inside difference blocks
 Directory share name cannot be selected if no '\' appended
 Directory dialog allows to select network host. It won't return anything then.
-screen move in two directions may corrupt the image (??)
 Estimated time left is not shown while calculating a fingerpring of a big file  (???)
-"C:\\" shown in the list view title (???)
 
 Fixed:
+Doesn't refresh if one file changed on list view refresh
+Fix tested:
+Focus after hiding files
 "Length" and Modification Time column On/Off not saved
 History gets lost under Win9x
 Text gets wrong colors (video driver problem)
@@ -95,6 +101,10 @@ Wrong BuildFilePairList arguments
 "*." filter doesn't work
 insufficient space allocated for copying files
 "First file as base" button didn't work
+
+Retracted:
+screen move in two directions may corrupt the image (??)
+"C:\\" shown in the list view title (???)
 
 Done:
 

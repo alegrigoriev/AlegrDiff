@@ -624,12 +624,33 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
 	pListCtrl->SetItemCount(m_PairArray.size());
 
+	int nSel = -1;
 	for (unsigned item = 0; item < m_PairArray.size(); item++)
 	{
 		FilePair * pPair = m_PairArray[item];
+		if (pPair->m_bFocused)
+		{
+			if (-1 == nSel)
+			{
+				nSel = item;
+			}
+			else
+			{
+				pPair->m_bFocused = false;
+			}
+		}
 		SetListViewItem(pPair, item, true);
 	}
-	pListCtrl->SetItemState(0, LVIS_FOCUSED, LVIS_FOCUSED);
+	if ( 0 != m_PairArray.size())
+	{
+		if (-1 == nSel)
+		{
+			nSel = 0;
+			m_PairArray[0]->m_bFocused = true;
+		}
+		pListCtrl->SetItemState(nSel, LVIS_FOCUSED, LVIS_FOCUSED);
+		pListCtrl->EnsureVisible(nSel, false);
+	}
 	UnlockWindowUpdate();
 }
 
@@ -1017,6 +1038,7 @@ void CAlegrDiffView::OnFileSaveList()
 	{
 		return;
 	}
+
 	FILE * file = _tfopen(dlg.m_sFilename, _T("wt"));
 	if (NULL == file)
 	{
@@ -1025,6 +1047,7 @@ void CAlegrDiffView::OnFileSaveList()
 		AfxMessageBox(s);
 		return;
 	}
+
 	CString s1;
 	s1.LoadString(IDS_DIFF_FILE_BANNER);
 	_ftprintf(file, s1, LPCTSTR(pDoc->m_sFirstDir), LPCTSTR(pDoc->m_sSecondDir));
@@ -1169,15 +1192,27 @@ void CAlegrDiffView::OnViewHideselectedfiles()
 {
 	CListCtrl * pListCtrl = &GetListCtrl();
 	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+
 	if (-1 == nItem)
 	{
 		return;
 	}
+
 	while(-1 != nItem)
 	{
 		if (nItem < m_PairArray.size())
 		{
-			m_PairArray[nItem]->m_bHideFromListView = true;
+			FilePair * pPair = m_PairArray[nItem];
+			pPair->m_bHideFromListView = true;
+			if (pPair->m_bFocused)
+			{
+				// move focus on a next item
+				pPair->m_bFocused = false;
+				if (nItem + 1 < m_PairArray.size())
+				{
+					m_PairArray[nItem + 1]->m_bFocused = true;
+				}
+			}
 		}
 		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
 	}
@@ -1492,6 +1527,14 @@ void CAlegrDiffView::OnLvnItemchanged(NMHDR *pNMHDR, LRESULT *pResult)
 		if (pNMLV->uOldState & LVIS_SELECTED)
 		{
 			m_PairArray[pNMLV->iItem]->m_bSelected = false;
+		}
+		if (pNMLV->uNewState & LVIS_FOCUSED)
+		{
+			m_PairArray[pNMLV->iItem]->m_bFocused = true;
+		}
+		if (pNMLV->uOldState & LVIS_FOCUSED)
+		{
+			m_PairArray[pNMLV->iItem]->m_bFocused = false;
 		}
 	}
 	*pResult = 0;

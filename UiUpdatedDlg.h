@@ -16,6 +16,13 @@ public:
 	{
 	}
 
+	// to use with property page
+	CUiUpdatedDlgT(UINT nIDTemplate, UINT nIDCaption, DWORD dwSize = sizeof(PROPSHEETPAGE))
+		: BaseClass(nIDTemplate, nIDCaption, dwSize)
+		, m_bNeedUpdateControls(TRUE)
+	{
+	}
+
 	// Dialog Data
 
 protected:

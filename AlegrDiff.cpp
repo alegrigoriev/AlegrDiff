@@ -995,7 +995,7 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 void CAlegrDiffApp::OpenPairOfPathnames(LPTSTR Arg1, LPTSTR Arg2)
 {
 	// check if the string contains '*' or '?'
-	TRACE("CAlegrDiffApp::OpenPairOfPathnames: name1=%s, name2=%s\n", Arg1, Arg2);
+	TRACE(_T("CAlegrDiffApp::OpenPairOfPathnames: name1=%s, name2=%s\n"), Arg1, Arg2);
 	LPTSTR pArg1 = Arg1;
 	CString filter;
 	// find end of line
@@ -1400,7 +1400,7 @@ void COpenDiffDialog::OnComboSelendOK()
 			return;
 		}
 		pCb->GetLBText(sel, str);
-		TRACE("COpenDiffDialog::OnComboSelendOK: %s selected\n", str);
+		TRACE(_T("COpenDiffDialog::OnComboSelendOK: %s selected\n"), LPCTSTR(str));
 		if (str.IsEmpty())
 		{
 			return;
@@ -1471,7 +1471,7 @@ BOOL COpenDiffDialog::OnFileNameOK()
 	CString sCurrDir;
 	GetParent()->SendMessage(CDM_GETFOLDERPATH, MAX_PATH, LPARAM(sCurrDir.GetBuffer(MAX_PATH)));
 	sCurrDir.ReleaseBuffer();
-	TRACE("COpenDiffDialog::OnFileNameOK Folder Path=%s\n", sCurrDir);
+	TRACE(_T("COpenDiffDialog::OnFileNameOK Folder Path=%s\n"), LPCTSTR(sCurrDir));
 
 	AddStringToHistory(sCurrDir, pApp->m_RecentFolders,
 						sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0], false);

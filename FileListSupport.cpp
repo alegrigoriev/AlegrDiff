@@ -220,7 +220,7 @@ FileItem::FileItem(LPCTSTR name)
 
 void FileItem::Unload()
 {
-	TRACE("FileItem %s Unloaded\n", LPCTSTR(GetFullName()));
+	TRACE(_T("FileItem %s Unloaded\n"), LPCTSTR(GetFullName()));
 	for (unsigned i = 0; i < m_Lines.size(); i++)
 	{
 		delete m_Lines[i];
@@ -424,7 +424,7 @@ bool FileItem::Load()
 	}
 	fclose(file);
 #ifdef _DEBUG
-	TRACE("File %s loaded in %d ms\n", LPCTSTR(GetFullName()), timeGetTime() - BeginTime);
+	TRACE(_T("File %s loaded in %d ms\n"), LPCTSTR(GetFullName()), timeGetTime() - BeginTime);
 	BeginTime = timeGetTime();
 #endif
 	m_Lines.resize(LinNum);
@@ -870,7 +870,7 @@ void FileList::GetSortedList(CArray<FileItem *, FileItem *> & ItemArray, DWORD S
 #ifdef _DEBUG
 	for (i = 0; i < m_NumFiles && NULL != pItems[i]; i++)
 	{
-		if (0) TRACE("Sorted file item: subdir=%s, Name=\"%s\"\n",
+		if (0) TRACE(_T("Sorted file item: subdir=%s, Name=\"%s\"\n"),
 					pItems[i]->GetSubdir(), pItems[i]->GetName());
 	}
 #endif
@@ -1090,7 +1090,7 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 							LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
 							LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask)
 {
-	TRACE("LoadSubFolder: scanning %s\n", LPCTSTR(Subdir));
+	TRACE(_T("LoadSubFolder: scanning %s\n"), LPCTSTR(Subdir));
 	CThisApp * pApp = GetApp();
 
 	WIN32_FIND_DATA wfd;
@@ -1100,7 +1100,7 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 	{
 		SubDirectory += _T("\\");
 	}
-	CString name = m_BaseDir + SubDirectory + "*";
+	CString name = m_BaseDir + SubDirectory + _T("*");
 	HANDLE hFind = FindFirstFile(name, & wfd);
 	if (INVALID_HANDLE_VALUE == hFind
 		|| NULL == hFind)
@@ -1112,7 +1112,7 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 		FileItem * pFile = NULL;
 		if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
-			if (0) TRACE("Found the subdirectory %s\n", wfd.cFileName);
+			if (0) TRACE(_T("Found the subdirectory %s\n"), wfd.cFileName);
 			if ( ! bRecurseSubdirs
 				|| 0 == _tcscmp(wfd.cFileName, _T("."))
 				|| 0 == _tcscmp(wfd.cFileName, _T(".."))
@@ -1135,14 +1135,14 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 		else
 		{
 			// filter the file and add it to the list, if it matches the pattern.
-			if (0) TRACE("File %s found\n", wfd.cFileName);
+			if (0) TRACE(_T("File %s found\n"), wfd.cFileName);
 			if (! MultiPatternMatches(wfd.cFileName, sInclusionMask)
 				|| MultiPatternMatches(wfd.cFileName, sExclusionMask))
 			{
 				TRACE("File name does not match\n");
 				continue;
 			}
-			if (0) TRACE("New file item: Name=\"%s\", base dir=%s, subdir=%s\n",
+			if (0) TRACE(_T("New file item: Name=\"%s\", base dir=%s, subdir=%s\n"),
 						wfd.cFileName, m_BaseDir, SubDirectory);
 
 			pFile = new FileItem( & wfd, m_BaseDir, SubDirectory);

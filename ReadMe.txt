@@ -25,9 +25,11 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+During binary comparison, alternate "Calculating fingerprint" and "Comparing" messages shown
 screen move in two directions may corrupt the image (??)
 
 Fixed:
+Wrong BuildFilePairList arguments
 "*." filter doesn't work
 insufficient space allocated for copying files
 "First file as base" button didn't work

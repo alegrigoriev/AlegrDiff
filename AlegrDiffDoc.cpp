@@ -182,9 +182,9 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			}
 			idx2++;
 
-			if (0) TRACE("File \"%s\" exists only in dir \"%s\"\n",
-						pPair->pSecondFile->GetName(),
-						FileList2.m_BaseDir + pPair->pSecondFile->GetSubdir());
+			if (0) TRACE(_T("File \"%s\" exists only in dir \"%s\"\n"),
+						LPCTSTR(pPair->pSecondFile->GetName()),
+						LPCTSTR(FileList2.m_BaseDir + pPair->pSecondFile->GetSubdir()));
 		}
 		else if (comparison > 0)
 		{
@@ -200,9 +200,9 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			}
 			idx1++;
 
-			if (0) TRACE("File \"%s\" exists only in dir \"%s\"\n",
-						pPair->pFirstFile->GetName(),
-						FileList1.m_BaseDir + pPair->pFirstFile->GetSubdir());
+			if (0) TRACE(_T("File \"%s\" exists only in dir \"%s\"\n"),
+						LPCTSTR(pPair->pFirstFile->GetName()),
+						LPCTSTR(FileList1.m_BaseDir + pPair->pFirstFile->GetSubdir()));
 		}
 		else
 		{
@@ -219,10 +219,10 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 				pPair->m_ComparisionResult = pPair->ResultUnknown;
 			}
 
-			if (0) TRACE("File \"%s\" exists in both \"%s\" and \"%s\"\n",
-						pPair->pFirstFile->GetName(),
-						FileList1.m_BaseDir + pPair->pFirstFile->GetSubdir(),
-						FileList2.m_BaseDir + pPair->pSecondFile->GetSubdir());
+			if (0) TRACE(_T("File \"%s\" exists in both \"%s\" and \"%s\"\n"),
+						LPCTSTR(pPair->pFirstFile->GetName()),
+						LPCTSTR(FileList1.m_BaseDir + pPair->pFirstFile->GetSubdir()),
+						LPCTSTR(FileList2.m_BaseDir + pPair->pSecondFile->GetSubdir()));
 		}
 	}
 	// all files are referenced in FilePair list

@@ -110,6 +110,9 @@
 #define ID_FILE_COPY_FIRST_DIR_FILE     32811
 #define ID_FILE_COPY_SECOND_DIR_FILE    32812
 #define ID_FILE_PROPERTIES              32813
+#define ID_LISTVIEW_OPEN1               32814
+#define ID_MERGE_INCLUDE                32815
+#define ID_MERGE_EXCLUDE                32816
 #define IDS_DIRECTORY_ACCESS_DENIED     32848
 #define IDS_DIRECTORY_NOT_FOUND         32849
 #define IDS_PREFERENCES                 32850
@@ -143,7 +146,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        144
-#define _APS_NEXT_COMMAND_VALUE         32814
+#define _APS_NEXT_COMMAND_VALUE         32817
 #define _APS_NEXT_CONTROL_VALUE         1054
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

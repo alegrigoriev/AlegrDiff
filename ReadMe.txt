@@ -1,4 +1,6 @@
 TODO:
+Concatenate the file diff sections of the same type (whole line)
+
 show version of file1, file2 of the line
 Show Left-only, right-only, merged line (single line only)
 Import font settings from Visual C/VisualStudio
@@ -22,37 +24,9 @@ When there are much different areas, they may be randomly interlaced.
 screen move in two directions may corrupt the image (??)
 
 Fixed:
-Ctrl-mouse selection doesn't retain proper anchor position
-line-number separator was drawn with spaces
-Comparison Preferences dialog labels are too short
-Word on the end of the line can't be found
-memory is not freed in time (files not unloaded) after the file was refreshed and closed
-doesn't show removed lines at the end
-inserts lots of empty lines on merge
-merge doesn't work
+make View Differences in the main menu non-bold
 
 Done:
-on F7, make the whole diff visible
-remember last maximized state of main and child frame
-Make Go To Line to first or second file line number
-Show line number from first and second file
-Drag and drop support in the compare files dialog
-Put comparision result to the status string after the file is open
-Make file comparison dialog, similar to dir comparison
-Close About dialog on MailTo button
-mailto: button in About dialog
-make dir names and full file names available either in properties sheet or in whatever
-Show file properties
-show progress while comparing the files in the thread
-make different secondary sort after comparison result sort
-Make background thread for comparision
-update main frame during long comparision. Process Esc key. Pump commands.
-
-check if whitespace difference is attached to more spaces. Try to rearrange
-    segments to avoid misreading. Glue the whitespace to more space.
-Support Ctrl+Up, Ctrl+Down
-Caret movements now go from the selection boundaries
-save Show Toolbar, Show Status Bar options
-Make search dialog
-Add Ctrl+F6 interception for window switch
-Add progress to File list view and file diff view
+Empty lines shown as one-space lines
+when comparing the files during open, update comparison result
+Put dropped files to history

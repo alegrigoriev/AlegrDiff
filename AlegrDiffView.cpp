@@ -41,6 +41,8 @@ BEGIN_MESSAGE_MAP(CAlegrDiffView, CListView)
 	ON_COMMAND(ID_FILE_COPY_SECOND_DIR, OnFileCopySecondDir)
 	//}}AFX_MSG_MAP
 	// Standard printing commands
+	ON_UPDATE_COMMAND_UI(ID_LISTVIEW_OPEN1, OnUpdateListviewOpen)
+	ON_COMMAND(ID_LISTVIEW_OPEN1, OnListviewOpen)
 	ON_COMMAND(ID_FILE_PRINT, CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, CView::OnFilePrintPreview)
@@ -484,6 +486,10 @@ void CAlegrDiffView::OnUpdateListviewOpen(CCmdUI* pCmdUI)
 {
 	CListCtrl * pListCtrl = & GetListCtrl();
 	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	if (-1 == nItem)
+	{
+		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
+	}
 	if (-1 != nItem)
 	{
 		if (NULL != pCmdUI->m_pMenu)

@@ -770,8 +770,7 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 	}
 
 	// run the dialog only if one of the directoriees is not specified
-	if ( ! (dlg.m_sFirstDir.IsEmpty() || dlg.m_sSecondDir.IsEmpty())
-		|| IDOK == dlg.DoModal())
+	if (IDOK == dlg.DoModal())
 	{
 		m_sFilenameFilter = dlg.m_FilenameFilter;
 		m_bRecurseSubdirs = (1 == dlg.m_bIncludeSubdirs);
@@ -880,6 +879,11 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 		return;
 	}
 	FindClose(hFind);
+
+	AddStringToHistory(FileDir2 + Name2, m_RecentFiles,
+						sizeof m_RecentFiles / sizeof m_RecentFiles[0], false);
+	AddStringToHistory(FileDir1 + Name1, m_RecentFiles,
+						sizeof m_RecentFiles / sizeof m_RecentFiles[0], false);
 
 	CFilePairDoc * pDoc = (CFilePairDoc *)m_pFileDiffTemplate->OpenDocumentFile(NULL);
 	if (NULL != pDoc)

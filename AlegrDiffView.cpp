@@ -26,6 +26,10 @@ BEGIN_MESSAGE_MAP(CAlegrDiffView, CListView)
 	ON_NOTIFY_REFLECT(LVN_COLUMNCLICK, OnColumnclick)
 	ON_NOTIFY_REFLECT(NM_DBLCLK, OnDblclk)
 	ON_NOTIFY_REFLECT(NM_RETURN, OnReturn)
+	ON_COMMAND(ID_FILE_EDIT_FIRST, OnFileEditFirst)
+	ON_UPDATE_COMMAND_UI(ID_FILE_EDIT_FIRST, OnUpdateFileEditFirst)
+	ON_COMMAND(ID_FILE_EDIT_SECOND, OnFileEditSecond)
+	ON_UPDATE_COMMAND_UI(ID_FILE_EDIT_SECOND, OnUpdateFileEditSecond)
 	//}}AFX_MSG_MAP
 	// Standard printing commands
 	ON_COMMAND(ID_FILE_PRINT, CView::OnFilePrint)
@@ -327,3 +331,75 @@ void CAlegrDiffView::OnReturn(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
+
+void CAlegrDiffView::OnFileEditFirst()
+{
+	CListCtrl * pListCtrl = & GetListCtrl();
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	if (-1 == nItem)
+	{
+		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
+	}
+	if (-1 != nItem
+		&& nItem < m_PairArray.GetSize()
+		&& NULL != m_PairArray[nItem])
+	{
+		OpenFileForEditing(m_PairArray[nItem]->pFirstFile);
+	}
+}
+
+void CAlegrDiffView::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
+{
+	CListCtrl * pListCtrl = & GetListCtrl();
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	if (-1 == nItem)
+	{
+		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
+	}
+	if (-1 != nItem
+		&& nItem < m_PairArray.GetSize()
+		&& NULL != m_PairArray[nItem])
+	{
+		ModifyOpenFileMenu(pCmdUI, m_PairArray[nItem]->pFirstFile, _T("&1 Open "));
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+	}
+}
+
+void CAlegrDiffView::OnFileEditSecond()
+{
+	CListCtrl * pListCtrl = & GetListCtrl();
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	if (-1 == nItem)
+	{
+		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
+	}
+	if (-1 != nItem
+		&& nItem < m_PairArray.GetSize()
+		&& NULL != m_PairArray[nItem])
+	{
+		OpenFileForEditing(m_PairArray[nItem]->pSecondFile);
+	}
+}
+
+void CAlegrDiffView::OnUpdateFileEditSecond(CCmdUI* pCmdUI)
+{
+	CListCtrl * pListCtrl = & GetListCtrl();
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	if (-1 == nItem)
+	{
+		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
+	}
+	if (-1 != nItem
+		&& nItem < m_PairArray.GetSize()
+		&& NULL != m_PairArray[nItem])
+	{
+		ModifyOpenFileMenu(pCmdUI, m_PairArray[nItem]->pSecondFile, _T("&2 Open "));
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+	}
+}

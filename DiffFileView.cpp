@@ -580,7 +580,7 @@ void CDiffFileView::HScrollToThePos(int nPos)
 	{
 		int ndx = (nPos - m_FirstPosSeen) * CharWidth();
 		ScrollWindowEx( -ndx, 0, & cr, & cr, NULL, NULL,
-						SW_INVALIDATE);
+						SW_INVALIDATE | SW_ERASE);
 	}
 	m_FirstPosSeen = nPos;
 

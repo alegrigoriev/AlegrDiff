@@ -59,6 +59,10 @@ protected:
 	afx_msg void OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnDblclk(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnReturn(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnFileEditFirst();
+	afx_msg void OnUpdateFileEditFirst(CCmdUI* pCmdUI);
+	afx_msg void OnFileEditSecond();
+	afx_msg void OnUpdateFileEditSecond(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -10,7 +10,7 @@
 // CCheckFingerprintDlg dialog
 
 CCheckFingerprintDlg::CCheckFingerprintDlg(CWnd* pParent /*=NULL*/)
-	: CResizableDialog(CCheckFingerprintDlg::IDD, pParent)
+	: BaseClass(CCheckFingerprintDlg::IDD, pParent)
 	, m_FingerprintFilenameHistory( & m_Profile, _T("History"), _T("FingerprintFile%d"), 15)
 {
 	static const ResizableDlgItem items[] =
@@ -24,41 +24,39 @@ CCheckFingerprintDlg::CCheckFingerprintDlg(CWnd* pParent /*=NULL*/)
 	};
 	m_pResizeItems = items;
 	m_pResizeItemsCount = countof (items);
+	m_Profile.AddItem(_T("Settings"), _T("CheckFpDlgWidth"), m_DlgWidth, 0, 0, 2048);
 }
 
 CCheckFingerprintDlg::~CCheckFingerprintDlg()
 {
+	m_Profile.FlushItem(_T("Settings"), _T("CheckFpDlgWidth"));
 }
 
 void CCheckFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CResizableDialog::DoDataExchange(pDX);
+	BaseClass::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_COMBO_FIRST_DIR, m_cbDirectory);
 	DDX_CBString(pDX, IDC_COMBO_FIRST_DIR, m_sDirectory);
 	DDX_Control(pDX, IDC_COMBO_SAVE_FILENAME, m_cbFilename);
 	DDX_CBString(pDX, IDC_COMBO_SAVE_FILENAME, m_sFilename);
 
-	static int PrevWidth = 0;
-
 	if (pDX->m_bSaveAndValidate)
 	{
+		m_sDirectory.MakeFullPath();
+		m_sDirectory.Canonicalize();
+		m_sDirectory.AddBackslash();
+
 		CThisApp * pApp = GetApp();
 
 		pApp->m_RecentFolders.AddString(m_sDirectory);
 		m_FingerprintFilenameHistory.AddString(m_sFilename);
 
 		m_Profile.FlushAll();
-
-		PrevWidth = m_DlgWidth;
-	}
-	else
-	{
-		m_DlgWidth = PrevWidth;
 	}
 }
 
 
-BEGIN_MESSAGE_MAP(CCheckFingerprintDlg, CResizableDialog)
+BEGIN_MESSAGE_MAP(CCheckFingerprintDlg, BaseClass)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_FIRST_DIR, OnBnClickedButtonBrowseFirstDir)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_SAVE_FILENAME, OnBnClickedButtonBrowseOpenFilename)
 	ON_CBN_EDITCHANGE(IDC_COMBO_FIRST_DIR, OnCbnEditchangeComboFirstDir)
@@ -120,7 +118,7 @@ BOOL CCheckFingerprintDlg::OnInitDialog()
 	m_sFilename = m_FingerprintFilenameHistory[0];
 	m_sDirectory = pApp->m_RecentFolders[0];
 
-	CResizableDialog::OnInitDialog();
+	BaseClass::OnInitDialog();
 
 	m_cbDirectory.LimitText(MAX_PATH);
 	m_cbFilename.LimitText(MAX_PATH);
@@ -164,7 +162,7 @@ void CCheckFingerprintDlg::OnUpdateOk(CCmdUI * pCmdUI)
 
 void CCheckFingerprintDlg::OnMetricsChange()
 {
-	CResizableDialog::OnMetricsChange();
+	BaseClass::OnMetricsChange();
 	m_mmxi.ptMaxTrackSize.y = m_mmxi.ptMinTrackSize.y;
 	m_mmxi.ptMaxSize.y = m_mmxi.ptMinTrackSize.y;
 }

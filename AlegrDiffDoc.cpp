@@ -563,7 +563,7 @@ void CFilePairDoc::SetSelection(TextPosDisplay CaretPos, TextPosDisplay AnchorPo
 
 void CFilePairDoc::SetCaretPosition(int pos, int line, int flags)
 {
-	SetCaretPosition(TextPosDisplay(line, short(pos), m_CaretPos.scope), flags);
+	SetCaretPosition(TextPosDisplay(line, pos, m_CaretPos.scope), flags);
 }
 
 void CFilePairDoc::SetCaretPosition(TextPosLine pos, int FileScope, int flags)
@@ -1370,8 +1370,8 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 					if (0 == _tcsncmp(pStr + nSearchPos, pStrToFind, nPatternLen))
 					{
 						// found
-						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, (short)SearchScope),
-									TextPosDisplay(nSearchLine, nSearchPos, (short)SearchScope));
+						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, SearchScope),
+									TextPosDisplay(nSearchLine, nSearchPos, SearchScope));
 						return true;
 					}
 				}
@@ -1380,8 +1380,8 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 					if (0 ==_tcsnicmp(pStr + nSearchPos, pStrToFind, nPatternLen))
 					{
 						// found
-						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, (short)SearchScope),
-									TextPosDisplay(nSearchLine, nSearchPos, (short)SearchScope));
+						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, SearchScope),
+									TextPosDisplay(nSearchLine, nSearchPos, SearchScope));
 						return true;
 					}
 				}
@@ -1422,7 +1422,7 @@ bool CFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, Tex
 	End.line = OnPos.line;
 
 	int nPos = 0;
-	short CaretPos = OnPos.pos;
+	int CaretPos = OnPos.pos;
 
 	ListHead<StringSection> StrSections;
 	StringSection Section;
@@ -1547,8 +1547,8 @@ bool CFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, Tex
 					return false;
 				}
 				// get one char under the cursor
-				Start.pos = short(CaretPos);
-				End.pos = short(CaretPos + 1);
+				Start.pos = CaretPos;
+				End.pos = CaretPos + 1;
 			}
 #ifdef _DEBUG
 			StrSections.RemoveHead();
@@ -2219,7 +2219,7 @@ TextPosDisplay CFilePairDoc::LinePosToDisplayPos(TextPosLine position, int FileS
 {
 	if (NULL == m_pFilePair)
 	{
-		return TextPosDisplay(position.line, (short)position.pos, (short)FileScope);
+		return TextPosDisplay(position.line, position.pos, FileScope);
 	}
 	return m_pFilePair->LinePosToDisplayPos(position, m_bIgnoreWhitespaces, FileScope);
 }

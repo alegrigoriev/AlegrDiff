@@ -25,7 +25,10 @@ public:
 	unsigned m_BytesPerLine;
 	int m_WordSize;   // 1, 2, 4, 8
 	int m_FirstPosSeen;
+
 	long m_ScrollDataScale;
+	SCROLLINFO m_VScrollInfo;
+
 	int m_AddressMarginWidth;
 	int m_MaxAddressChars;
 	BOOL m_LButtonDown;
@@ -47,7 +50,14 @@ public:
 	int CharsInView() const;
 	void UpdateVisibleRect();
 
-	CPoint PositionToPoint(ULONGLONG pos);
+
+	struct LONGLONGPoint
+	{
+		int x;
+		LONGLONG y;
+	};
+
+	LONGLONGPoint PositionToPoint(ULONGLONG pos);
 	void OnMetricsChange();
 
 	void MoveCaretBy(int dx, int dy, int flags = SetPositionCancelSelection);
@@ -55,7 +65,7 @@ public:
 	void CreateAndShowCaret();
 	void UpdateVScrollBar();
 
-	void DoVScroll(int nLinesToScroll); // > 0 - scroll up (to see lines toward end),
+	void DoVScroll(LONGLONG nLinesToScroll); // > 0 - scroll up (to see lines toward end),
 	// < 0 - scroll down (to see lines to the begin of the file)
 	void VScrollToTheAddr(LONGLONG Addr);
 

@@ -96,6 +96,8 @@ inline CThisApp * GetApp()
 	return (CThisApp *) AfxGetApp();
 }
 
+void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, LPCTSTR Prefix);
+void OpenFileForEditing(class FileItem * pFile);
 /////////////////////////////////////////////////////////////////////////////
 
 //{{AFX_INSERT_LOCATION}}

@@ -676,23 +676,9 @@ void CFilePairDoc::OnViewRefresh()
 
 void CFilePairDoc::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
 {
-	if (m_pFilePair != NULL && m_pFilePair->pFirstFile != NULL)
+	if (m_pFilePair != NULL)
 	{
-		CString s(_T("&1 Open "));
-		CString name(m_pFilePair->pFirstFile->GetFullName());
-		// duplicate all '&' in name
-		for (int i = 0; i < name.GetLength(); i++)
-		{
-			if (name[i] == '&')
-			{
-				name.Insert(i, '&');
-				i++;
-			}
-		}
-
-		s += name;
-		pCmdUI->SetText(s);
-		pCmdUI->Enable(TRUE);
+		ModifyOpenFileMenu(pCmdUI, m_pFilePair->pFirstFile, _T("&1 Open "));
 	}
 	else
 	{
@@ -702,39 +688,17 @@ void CFilePairDoc::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
 
 void CFilePairDoc::OnFileEditFirst()
 {
-	if (m_pFilePair != NULL && m_pFilePair->pFirstFile != NULL)
+	if (m_pFilePair != NULL)
 	{
-		CString name = m_pFilePair->pFirstFile->GetFullName();
-		SHELLEXECUTEINFO shex;
-		memset( & shex, 0, sizeof shex);
-		shex.cbSize = sizeof shex;
-		shex.hwnd = AfxGetMainWnd()->m_hWnd;
-		//shex.lpVerb = _T("Open");
-		shex.lpFile = name;
-		shex.nShow = SW_SHOWDEFAULT;
-		ShellExecuteEx( & shex);
+		OpenFileForEditing(m_pFilePair->pFirstFile);
 	}
 }
 
 void CFilePairDoc::OnUpdateFileEditSecond(CCmdUI* pCmdUI)
 {
-	if (m_pFilePair != NULL && m_pFilePair->pSecondFile != NULL)
+	if (m_pFilePair != NULL)
 	{
-		CString s(_T("&2 Open "));
-		CString name(m_pFilePair->pSecondFile->GetFullName());
-		// duplicate all '&' in name
-		for (int i = 0; i < name.GetLength(); i++)
-		{
-			if (name[i] == '&')
-			{
-				name.Insert(i, '&');
-				i++;
-			}
-		}
-
-		s += name;
-		pCmdUI->SetText(s);
-		pCmdUI->Enable(TRUE);
+		ModifyOpenFileMenu(pCmdUI, m_pFilePair->pSecondFile, _T("&2 Open "));
 	}
 	else
 	{
@@ -744,17 +708,9 @@ void CFilePairDoc::OnUpdateFileEditSecond(CCmdUI* pCmdUI)
 
 void CFilePairDoc::OnFileEditSecond()
 {
-	if (m_pFilePair != NULL && m_pFilePair->pSecondFile != NULL)
+	if (m_pFilePair != NULL)
 	{
-		CString name = m_pFilePair->pSecondFile->GetFullName();
-		SHELLEXECUTEINFO shex;
-		memset( & shex, 0, sizeof shex);
-		shex.cbSize = sizeof shex;
-		shex.hwnd = AfxGetMainWnd()->m_hWnd;
-		//shex.lpVerb = _T("Open");
-		shex.lpFile = name;
-		shex.nShow = SW_SHOWDEFAULT;
-		ShellExecuteEx( & shex);
+		OpenFileForEditing(m_pFilePair->pSecondFile);
 	}
 }
 

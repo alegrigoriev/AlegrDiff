@@ -2180,7 +2180,7 @@ int _cdecl FilePair::ComparisionSortFunc(const void * p1, const void * p2)
 		return -1;
 	}
 
-	return 0;
+	return NameCompare(Pair1, Pair2);
 }
 int _cdecl FilePair::ComparisionSortBackwardsFunc(const void * p1, const void * p2)
 {
@@ -2938,12 +2938,12 @@ LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen)
 		// make a string of string sections
 		int StrLen = 0;
 		for (StringSection * pSection = pFirstSection
-			; pSection != NULL && StrLen < nBufChars - 1; pSection = pSection->pNext)
+			; pSection != NULL && StrLen + 1u < nBufChars; pSection = pSection->pNext)
 		{
 			int len = pSection->Length;
-			if (StrLen + len > nBufChars - 1)
+			if (StrLen + len + 1u > nBufChars)
 			{
-				len = nBufChars - 1 - StrLen;
+				len = nBufChars - StrLen - 1;
 			}
 			_tcsncpy(buf + StrLen, pSection->pBegin, len);
 			StrLen += len;

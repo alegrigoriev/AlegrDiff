@@ -512,3 +512,44 @@ void CAlegrDiffApp::UpdateAllDiffViews()
 		}
 	}
 }
+
+void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, LPCTSTR Prefix)
+{
+	if (NULL == pFile)
+	{
+		pCmdUI->Enable(FALSE);
+		return;
+	}
+	CString name(pFile->GetFullName());
+	// duplicate all '&' in name
+	for (int i = 0; i < name.GetLength(); i++)
+	{
+		if (name[i] == '&')
+		{
+			name.Insert(i, '&');
+			i++;
+		}
+	}
+
+	CString s;
+	s = Prefix + name;
+	pCmdUI->SetText(s);
+	pCmdUI->Enable(TRUE);
+}
+
+void OpenFileForEditing(class FileItem * pFile)
+{
+	if (NULL == pFile)
+	{
+		return;
+	}
+	CString name = pFile->GetFullName();
+	SHELLEXECUTEINFO shex;
+	memset( & shex, 0, sizeof shex);
+	shex.cbSize = sizeof shex;
+	shex.hwnd = AfxGetMainWnd()->m_hWnd;
+	//shex.lpVerb = _T("Open");
+	shex.lpFile = name;
+	shex.nShow = SW_SHOWDEFAULT;
+	ShellExecuteEx( & shex);
+}

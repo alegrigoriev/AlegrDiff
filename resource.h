@@ -13,6 +13,7 @@
 #define IDS_OPEN_FIRST_TITLE            133
 #define IDC_CURSOR_LEFT_ARROW           133
 #define IDS_OPEN_SECOND_TITLE           134
+#define IDR_MENU_LISTVIEW_CONTEXT       134
 #define IDC_CURSOR_BEAM                 150
 #define IDC_COMBO_FIRST_DIR             1000
 #define IDC_COMBO_SECOND_DIR            1001
@@ -61,7 +62,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        134
+#define _APS_NEXT_RESOURCE_VALUE        135
 #define _APS_NEXT_COMMAND_VALUE         32800
 #define _APS_NEXT_CONTROL_VALUE         1023
 #define _APS_NEXT_SYMED_VALUE           101

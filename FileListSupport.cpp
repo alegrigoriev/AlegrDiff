@@ -809,7 +809,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 	LONGLONG NeedEndBuffer = (NeedEnd + 0xFFF) & ~0xFFFi64;
 
 	DWORD NeedBeginLow = DWORD(NeedBegin);
-	LONG NeedBeginHigh = DWORD(NeedBegin >> 32);
+	LONG NeedBeginHigh = LONG(NeedBegin >> 32);
 
 	if (DWORD(NeedEnd - NeedBegin) > m_FileReadBufSize)
 	{
@@ -819,7 +819,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 	}
 
 	DWORD BytesRead;
-	if (NeedBegin <= m_FileReadPos)
+	if (NeedBegin < m_FileReadPos)
 	{
 		// need data before the buffer begin, but some of the data is in the buffer
 		if (NeedEnd > m_FileReadPos && NeedEnd <= m_FileReadPos + m_FileReadFilled)
@@ -834,11 +834,10 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 				ToMove -= NewFilled - m_FileReadBufSize;
 				NewFilled = m_FileReadBufSize;
 			}
-			if (0!= MoveBy)
+			if (0 != MoveBy)
 			{
 				memmove(m_pFileReadBuf + MoveBy,
 						m_pFileReadBuf, ToMove);
-				m_FileReadFilled = NewFilled;
 
 				SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
 				TRACE("Reading %d bytes at %X\n", MoveBy, NeedBeginLow);
@@ -847,6 +846,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 					m_FileReadFilled = 0;
 					return 0;
 				}
+				m_FileReadFilled = NewFilled;
 			}
 			m_FileReadPos = NeedBegin;
 		}
@@ -881,7 +881,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 
 					m_FileReadFilled = NewFilled;
 					m_FileReadPos += MoveBy;
-					NeedBegin += NewFilled;
+					NeedBegin = m_FileReadPos + NewFilled;
 
 					NeedBeginLow = DWORD(NeedBegin);
 					NeedBeginHigh = DWORD(NeedBegin >> 32);

@@ -1073,11 +1073,11 @@ void CBinaryCompareView::InvalidateRange(LONGLONG begin, LONGLONG end)
 	}
 }
 
-CPoint CBinaryCompareView::PositionToPoint(LONGLONG pos)
+CPoint CBinaryCompareView::PositionToPoint(ULONGLONG pos)
 {
 	pos -= m_ScreenFilePos;
 	CPoint p;
-	LONGLONG line = pos / m_BytesPerLine;
+	LONGLONG line = pos / unsigned(m_BytesPerLine);
 	if (line > SHRT_MAX)
 	{
 		p.y = SHRT_MAX;

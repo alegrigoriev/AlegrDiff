@@ -204,6 +204,9 @@ BOOL CCompareDirsDialog::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	// set the filters to combobox
+	m_FirstDirCombo.LimitText(MAX_PATH);
+	m_SecondDirCombo.LimitText(MAX_PATH);
+
 	pApp->m_RecentFolders.LoadCombo( & m_FirstDirCombo);
 	pApp->m_RecentFolders.LoadCombo( & m_SecondDirCombo);
 	pApp->m_FileFilters.LoadCombo( & m_cFilenameFilter);

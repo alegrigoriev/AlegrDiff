@@ -102,7 +102,7 @@ public:
 
 protected:
 	void DrawStringSections(CDC* pDC, CPoint point,
-							const StringSection * pSection,
+							KListEntry<StringSection> const * pSection,
 							int nSkipChars, int nVisibleChars, int nTabIndent, int SelBegin, int SelEnd);
 
 	virtual ~CDiffFileView();

@@ -5,6 +5,7 @@
 #define _CREATEPROCESS_MANIFEST_RESOURCE_ID 1
 #define IDD_ABOUTBOX                    100
 #define IDD_PROPPAGE_FILE_PREFERENCES   102
+#define IDD_PROGRESSDIALOG              103
 #define IDR_MAINFRAME                   128
 #define IDR_ALEGRDTYPE                  129
 #define IDD_DIALOG_COMPARE_DIRS         130
@@ -260,6 +261,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        178
 #define _APS_NEXT_COMMAND_VALUE         32827
 #define _APS_NEXT_CONTROL_VALUE         1078
-#define _APS_NEXT_SYMED_VALUE           101
+#define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

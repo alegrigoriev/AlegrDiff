@@ -105,6 +105,9 @@ BOOL CFilesCompareDialog::OnInitDialog()
 	CDialog::OnInitDialog();
 	CThisApp * pApp = GetApp();
 	// set comboboxes
+	m_FirstCombo.LimitText(MAX_PATH);
+	m_SecondCombo.LimitText(MAX_PATH);
+
 	pApp->m_RecentFiles.LoadCombo( & m_FirstCombo);
 	pApp->m_RecentFiles.LoadCombo( & m_SecondCombo);
 

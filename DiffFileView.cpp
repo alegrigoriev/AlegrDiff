@@ -87,7 +87,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CDiffFileView drawing
 void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
-										const StringSection * pSection,
+										KListEntry<StringSection> const * SectionEntry,
 										int nSkipChars, int nVisibleChars, int nTabIndent, int SelBegin, int SelEnd)
 {
 	TCHAR buf[2048];
@@ -115,7 +115,9 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 
 	pDC->MoveTo(point);
 	int ExpandedLinePos = 0;    // position with expanded tabs
-	for (int nDrawnChars = 0; pSection != NULL && nDrawnChars < nVisibleChars; pSection = pSection->pNext)
+	StringSection * pSection = SectionEntry->First();
+
+	for (int nDrawnChars = 0; SectionEntry->NotEnd(pSection) && nDrawnChars < nVisibleChars; pSection = pSection->Next())
 	{
 		if ((pSection->Attr & pSection->Whitespace)
 			&& (pSection->Attr & pSection->Erased)
@@ -378,20 +380,18 @@ void CDiffFileView::OnDraw(CDC* pDC)
 			}
 		}
 
-		const LinePair * pPair = NULL;
-		StringSection Section;
-		Section.Attr = Section.Identical;
-		Section.pNext = NULL;
-		StringSection * pSection = NULL;
+
+		KListEntry<StringSection> EmptyList;
+		KListEntry<StringSection> const * pSectionEntry = & EmptyList;
 		if (nLine >= (int)pFilePair->m_LinePairs.size())
 		{
 			break;
 		}
-		pPair = pFilePair->m_LinePairs[nLine];
+		const LinePair * pPair = pFilePair->m_LinePairs[nLine];
 		ASSERT(NULL != pPair);
 		if (NULL != pPair)
 		{
-			pSection = pPair->pFirstSection;
+			pSectionEntry = & pPair->StrSections;
 			// draw line number
 			if (m_ShowLineNumbers)
 			{
@@ -434,13 +434,9 @@ void CDiffFileView::OnDraw(CDC* pDC)
 
 			}
 		}
-		else
-		{
-			Section.pBegin = NULL;
-			Section.Length = 0;
-		}
+
 		DrawStringSections(pDC, CPoint(PosX, PosY),
-							pSection, m_FirstPosSeen, nCharsInView, nTabIndent,
+							pSectionEntry, m_FirstPosSeen, nCharsInView, nTabIndent,
 							nSelBegin, nSelEnd);
 	}
 

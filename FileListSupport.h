@@ -173,7 +173,7 @@ private:
 	static CSmallAllocator m_Allocator;
 };
 
-struct StringSection
+struct StringSection : public KListEntry<StringSection>
 {
 	static void * operator new(size_t size)
 	{
@@ -183,7 +183,7 @@ struct StringSection
 	{
 		m_Allocator.Free(ptr);
 	}
-	StringSection * pNext;
+
 	const class FileDiffSection * pDiffSection;
 	LPCTSTR pBegin;
 	USHORT Length;
@@ -229,7 +229,7 @@ struct LinePair
 
 	const FileLine * pFirstLine;
 	const FileLine * pSecondLine;
-	StringSection * pFirstSection;
+	KListEntry<StringSection> StrSections;
 private:
 	static CSmallAllocator m_Allocator;
 public:
@@ -510,5 +510,5 @@ bool MatchWildcard(LPCTSTR name, LPCTSTR pattern);
 bool MultiPatternMatches(LPCTSTR name, LPCTSTR sPattern);
 CString MiltiSzToCString(LPCTSTR pMsz);
 CString PatternToMultiCString(LPCTSTR src);
-int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, StringSection ** ppSections, int nMinMatchingChars);
+int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, KListEntry<StringSection> * ppSections, int nMinMatchingChars);
 #endif

@@ -109,6 +109,9 @@ BOOL CCheckFingerprintDlg::OnInitDialog()
 
 	CDialog::OnInitDialog();
 
+	m_cbDirectory.LimitText(MAX_PATH);
+	m_cbFilename.LimitText(MAX_PATH);
+
 	pApp->m_RecentFolders.LoadCombo( & m_cbDirectory);
 	m_FingerprintFilenameHistory.LoadCombo( & m_cbFilename);
 

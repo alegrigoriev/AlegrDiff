@@ -989,6 +989,15 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,30,101,10
 END
 
+IDD_PROGRESSDIALOG DIALOG  0, 0, 186, 95
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,7,50,16
+    PUSHBUTTON      "Cancel",IDCANCEL,129,26,50,16
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1252,6 +1261,14 @@ BEGIN
         RIGHTMARGIN, 297
         TOPMARGIN, 7
         BOTTOMMARGIN, 43
+    END
+
+    IDD_PROGRESSDIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
     END
 END
 #endif    // APSTUDIO_INVOKED

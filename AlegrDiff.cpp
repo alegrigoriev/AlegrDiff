@@ -74,9 +74,6 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_PreferencesFlags = 0;
 	// then init subfields:
 	m_bRecurseSubdirs = false;
-	m_bUseBinaryFilesFilter = false;
-	m_bUseCppFilter = true;
-	m_bUseIgnoreFilter = true;
 	m_bAdvancedCompareDialog = false;
 	m_BinaryComparision = false;
 	m_AutoReloadChangedFiles = false;
@@ -182,8 +179,8 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("OpenChildMaximized"), m_bOpenChildMaximized, true);
 	Profile.AddItem(_T("Settings"), _T("OpenMaximized"), m_bOpenMaximized, true);
 #else
-	Profile.AddItem(_T("Settings"), _T("m_PreferencesFlags"), m_PreferencesFlags, m_PreferencesFlags, 0, 0xFFFFFFFF);
-	Profile.AddItem(_T("Settings"), _T("m_StatusFlags"), m_StatusFlags, m_StatusFlags, 0, 0xFFFFFFFF);
+	Profile.AddItem(_T("Settings"), _T("PreferencesFlags"), m_PreferencesFlags, m_PreferencesFlags, 0, 0xFFFFFFFF);
+	Profile.AddItem(_T("Settings"), _T("StatusFlags"), m_StatusFlags, m_StatusFlags, 0, 0xFFFFFFFF);
 #endif
 
 
@@ -201,40 +198,14 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("IgnoreFiles"), m_sIgnoreFilesFilter,
 					_T("*.ncb"));
 
-	for (int i = 0; i < sizeof m_sFindHistory / sizeof m_sFindHistory[0]; i++)
-	{
-		CString s;
-		s.Format(_T("find%d"), i);
-		Profile.AddItem(_T("History"), s, m_sFindHistory[i]);
-	}
-
-	for (i = 0; i < sizeof m_RecentFolders / sizeof m_RecentFolders[0]; i++)
-	{
-		CString s;
-		s.Format(_T("dir%d"), i);
-		Profile.AddItem(_T("History"), s, m_RecentFolders[i]);
-		m_RecentFolders[i].TrimLeft();
-		m_RecentFolders[i].TrimRight();
-	}
-
-	for (i = 0; i < sizeof m_RecentFiles / sizeof m_RecentFiles[0]; i++)
-	{
-		CString s;
-		s.Format(_T("file%d"), i);
-		Profile.AddItem(_T("History"), s, m_RecentFiles[i]);
-		m_RecentFiles[i].TrimLeft();
-		m_RecentFiles[i].TrimRight();
-	}
-
-	// read last filters from the registry
-	for (i = 0; i < sizeof m_sFilters / sizeof m_sFilters[0]; i++)
-	{
-		CString s;
-		s.Format(_T("filter%d"), i);
-		Profile.AddItem(_T("History"), s, m_sFilters[i]);
-		m_sFilters[i].TrimLeft();
-		m_sFilters[i].TrimRight();
-	}
+	LoadHistory(Profile, _T("History"), _T("find%d"), m_sFindHistory,
+				sizeof m_sFindHistory / sizeof m_sFindHistory[0], false);
+	LoadHistory(Profile, _T("History"), _T("dir%d"), m_RecentFolders,
+				sizeof m_RecentFolders / sizeof m_RecentFolders[0], true);
+	LoadHistory(Profile, _T("History"), _T("file%d"), m_RecentFiles,
+				sizeof m_RecentFiles / sizeof m_RecentFiles[0], true);
+	LoadHistory(Profile, _T("History"), _T("filter%d"), m_sFilters,
+				sizeof m_sFilters / sizeof m_sFilters[0], true);
 
 	m_TextBackgroundColor = GetSysColor(COLOR_WINDOW);
 	m_SelectedTextColor = 0xFFFFFF;
@@ -426,13 +397,10 @@ void CAlegrDiffApp::OnFileComparefiles()
 void CAlegrDiffApp::OnFilePreferences()
 {
 	CPreferencesPropertySheet dlg;
-	dlg.m_FilesPage.m_bUseBinaryFilesFilter = m_bUseBinaryFilesFilter;
 	dlg.m_FilesPage.m_sBinaryFilesFilter = m_sBinaryFilesFilter;
 
-	dlg.m_FilesPage.m_bUseCppFilter = m_bUseCppFilter;
 	dlg.m_FilesPage.m_sCppFilesFilter = m_sCppFilesFilter;
 
-	dlg.m_FilesPage.m_bUseIgnoreFilter = m_bUseIgnoreFilter;
 	dlg.m_FilesPage.m_sIgnoreFilesFilter = m_sIgnoreFilesFilter;
 	dlg.m_FilesPage.m_AutoReloadChangedFiles = m_AutoReloadChangedFiles;
 
@@ -457,13 +425,10 @@ void CAlegrDiffApp::OnFilePreferences()
 
 	if (IDOK == dlg.DoModal())
 	{
-		m_bUseBinaryFilesFilter = (0 != dlg.m_FilesPage.m_bUseBinaryFilesFilter);
 		m_sBinaryFilesFilter = dlg.m_FilesPage.m_sBinaryFilesFilter;
 
-		m_bUseCppFilter = (0 != dlg.m_FilesPage.m_bUseCppFilter);
 		m_sCppFilesFilter = dlg.m_FilesPage.m_sCppFilesFilter;
 
-		m_bUseIgnoreFilter = (0 != dlg.m_FilesPage.m_bUseIgnoreFilter);
 		m_sIgnoreFilesFilter = dlg.m_FilesPage.m_sIgnoreFilesFilter;
 
 		m_AutoReloadChangedFiles = (0 != dlg.m_FilesPage.m_AutoReloadChangedFiles);
@@ -705,13 +670,13 @@ void CAlegrDiffApp::OpenSingleFile(LPCTSTR pName)
 
 	bool bCppFile = false;
 	bool bBinaryFile = false;
-	if (m_bUseBinaryFilesFilter)
+	if ( ! m_sBinaryFilesFilter.IsEmpty())
 	{
 		bBinaryFile = MultiPatternMatches(wfd1.cFileName,
 										PatternToMultiCString(m_sBinaryFilesFilter));
 	}
 	if ( ! bBinaryFile
-		&& m_bUseCppFilter)
+		&& ! m_sCppFilesFilter.IsEmpty())
 	{
 		bCppFile = MultiPatternMatches(wfd1.cFileName,
 										PatternToMultiCString(m_sCppFilesFilter));
@@ -814,13 +779,10 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 {
 	CCompareDirsDialog dlg;
 	dlg.m_bIncludeSubdirs = m_bRecurseSubdirs;
-	dlg.m_bUseBinaryFilesFilter = m_bUseBinaryFilesFilter;
 	dlg.m_sBinaryFilesFilter = m_sBinaryFilesFilter;
 
-	dlg.m_bUseCppFilter = m_bUseCppFilter;
 	dlg.m_sCppFilesFilter = m_sCppFilesFilter;
 
-	dlg.m_bUseIgnoreFilter = m_bUseIgnoreFilter;
 	dlg.m_sIgnoreFilesFilter = m_sIgnoreFilesFilter;
 
 	dlg.m_nTabIndent = m_TabIndent;
@@ -850,13 +812,10 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 		m_sFilenameFilter = dlg.m_FilenameFilter;
 		m_bRecurseSubdirs = (1 == dlg.m_bIncludeSubdirs);
 
-		m_bUseBinaryFilesFilter = (0 != dlg.m_bUseBinaryFilesFilter);
 		m_sBinaryFilesFilter = dlg.m_sBinaryFilesFilter;
 
-		m_bUseCppFilter = (0 != dlg.m_bUseCppFilter);
 		m_sCppFilesFilter = dlg.m_sCppFilesFilter;
 
-		m_bUseIgnoreFilter = (0 != dlg.m_bUseIgnoreFilter);
 		m_sIgnoreFilesFilter = dlg.m_sIgnoreFilesFilter;
 
 		m_TabIndent = dlg.m_nTabIndent;
@@ -961,12 +920,13 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 	*pFileName2 = 0;
 	FilePair * pPair = new FilePair;
 
-	bool bFilesBinary = false;
+	bool bFilesBinary = m_BinaryComparision;
 
 	CString sCFilesPattern(PatternToMultiCString(m_sCppFilesFilter));
 	CString sBinFilesPattern(PatternToMultiCString(m_sBinaryFilesFilter));
 
-	if (m_bUseBinaryFilesFilter)
+	if ( ! bFilesBinary
+		&& ! m_sBinaryFilesFilter.IsEmpty())
 	{
 		bFilesBinary = MultiPatternMatches(wfd1.cFileName, sBinFilesPattern)
 						|| MultiPatternMatches(wfd2.cFileName, sBinFilesPattern);
@@ -979,7 +939,7 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 	pPair->pSecondFile->m_IsBinary = bFilesBinary;
 
 	if ( ! bFilesBinary
-		&& m_bUseCppFilter)
+		&& ! m_sCppFilesFilter.IsEmpty())
 	{
 		pPair->pFirstFile->m_C_Cpp =
 			MultiPatternMatches(wfd1.cFileName, sCFilesPattern);
@@ -1269,6 +1229,31 @@ void AddStringToHistory(const CString & str, CString history[], int NumItems, bo
 		history[i] = history[i - 1];
 	}
 	history[0] = str;
+}
+
+void LoadHistory(CApplicationProfile & Profile, LPCTSTR szKey, LPCTSTR Format, CString history[], int NumItems, bool Trim)
+{
+	for (int i = 0; i < NumItems; i++)
+	{
+		CString s;
+		s.Format(Format, i);
+		Profile.AddItem(szKey, s, history[i]);
+		if (Trim)
+		{
+			history[i].Trim();
+		}
+	}
+}
+
+void LoadHistoryCombo(CComboBox & Combo, CString history[], int NumItems)
+{
+	for (int i = 0; i < NumItems; i++)
+	{
+		if (! history[i].IsEmpty())
+		{
+			Combo.AddString(history[i]);
+		}
+	}
 }
 
 void CAlegrDiffApp::OnHelpUsing()

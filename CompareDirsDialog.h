@@ -33,13 +33,19 @@ public:
 	bool m_bAdvanced;
 
 	// Advanced items:
-	BOOL	m_bUseBinaryFilesFilter;
-	BOOL	m_bUseCppFilter;
-	BOOL	m_bUseIgnoreFilter;
+	CComboBox m_cbBinaryFilesFilter;
+	CComboBox m_cbCppFilesFilter;
+	CComboBox m_cbIgnoreFilesFilter;
 	CString	m_sBinaryFilesFilter;
 	CString	m_sCppFilesFilter;
 	CString	m_sIgnoreFilesFilter;
 	UINT	m_nTabIndent;
+
+	CString m_sBinaryFilterHistory[5];
+	CString m_sCppFilterHistory[5];
+	CString m_sIgnoreFilterHistory[10];
+
+	CApplicationProfile m_Profile;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -59,9 +65,6 @@ protected:
 	afx_msg void OnButtonBrowseSecondDir();
 	afx_msg void OnButtonAdvanced();
 	afx_msg void OnCheckBinary();
-	afx_msg void OnCheckBinaryFiles();
-	afx_msg void OnCheckCCpp();
-	afx_msg void OnCheckIgnore();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnDropFiles(HDROP hDropInfo);
 	//}}AFX_MSG

@@ -48,9 +48,6 @@ public:
 		struct
 		{
 			bool m_bRecurseSubdirs:1;
-			bool m_bUseBinaryFilesFilter:1;
-			bool m_bUseCppFilter:1;
-			bool m_bUseIgnoreFilter:1;
 			bool m_bAdvancedCompareDialog:1;
 			bool m_BinaryComparision:1;
 			bool m_AutoReloadChangedFiles:1;
@@ -168,7 +165,11 @@ void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, UINT FormatID, U
 void OpenFileForEditing(class FileItem * pFile);
 void CopyFilesToFolder(FileItem ** ppFiles, int nCount, bool bAddSubdirToTarget);
 CString FileTimeToStr(FILETIME FileTime, LCID locale = LOCALE_USER_DEFAULT);
+
 void AddStringToHistory(const CString & str, CString history[], int NumItems, bool CaseSensitive = false);
+void LoadHistory(CApplicationProfile & Profile, LPCTSTR szKey, LPCTSTR Format, CString history[], int NumItems, bool Trim);
+void LoadHistoryCombo(CComboBox & Combo, CString history[], int NumItems);
+
 CString CreateCustomFilter(LPCTSTR Extension);
 int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder);
 /////////////////////////////////////////////////////////////////////////////

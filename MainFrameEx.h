@@ -2,7 +2,7 @@
 #include "MessageMapT.h"
 // if you use MainFrameHandlePaletteChange,
 // #include "GdiObjectSave.h" before this file
-
+#define TRACE_MAINFRAME_EX 0
 // MainFrameExT template
 enum MainFrameFeatures
 {
@@ -113,7 +113,7 @@ protected:
 				if (VK_CONTROL == pMsg->wParam
 					&& 0 == (0x40000000 & pMsg->lParam))
 				{
-					TRACE("Ctrl key was just pressed\n");
+					if (TRACE_MAINFRAME_EX) TRACE("Ctrl key was just pressed\n");
 					m_nRotateChildIndex = 0;
 				}
 				else
@@ -185,8 +185,8 @@ protected:
 								}
 							}
 
-							if (0) TRACE("m_nRotateChildIndex=%d, prev active=%X, pFrameToActivate=%X, pPlaceWnd=%X\n",
-										m_nRotateChildIndex, pActive, pFrameToActivate, pPlaceWnd);
+							if (TRACE_MAINFRAME_EX) TRACE("m_nRotateChildIndex=%d, prev active=%X, pFrameToActivate=%X, pPlaceWnd=%X\n",
+														m_nRotateChildIndex, pActive, pFrameToActivate, pPlaceWnd);
 
 							// first activate new frame
 							((CMDIChildWnd *) pFrameToActivate)->MDIActivate();

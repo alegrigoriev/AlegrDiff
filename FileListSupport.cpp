@@ -2098,6 +2098,8 @@ int FilePair::ComparisionResultPriority() const
 		return 6;
 	case FilesIdentical:
 		return 7;
+	case DirectoryInFingerprintFileOnly:
+	case FileInFingerprintFileOnly:
 	case OnlyFirstDirectory:
 	case OnlyFirstFile:
 		return 8;
@@ -2190,7 +2192,9 @@ CString FilePair::GetComparisionResult() const
 	static CString sDifferentInSpaces(MAKEINTRESOURCE(IDS_DIFFERENT_IN_SPACES));
 	static CString sFilesDifferent(MAKEINTRESOURCE(IDS_FILES_DIFFERENT));
 	static CString sOnlyOneExists(MAKEINTRESOURCE(IDS_STRING_ONLY_ONE_EXISTS));
+	static CString sOnlyFingerprintExists(MAKEINTRESOURCE(IDS_STRING_ONLY_FINGERPRINT_EXISTS));
 	static CString sOnlyOneSubdirExists(MAKEINTRESOURCE(IDS_STRING_ONE_SUBDIR_EXISTS));
+	static CString sOnlyFingerprintSubdirExists(MAKEINTRESOURCE(IDS_STRING_ONLY_FINGERPRINT_SUBDIR_EXISTS));
 	static CString sOneFileLonger(MAKEINTRESOURCE(IDS_STRING_FILE_IS_LONGER));
 	static CString sReadingFile(MAKEINTRESOURCE(IDS_STRING_READING_FILE));
 	static CString sErrorReadingFile(MAKEINTRESOURCE(IDS_STRING_ERROR_READING_FILE));
@@ -2217,6 +2221,9 @@ CString FilePair::GetComparisionResult() const
 	case FilesDifferent:
 		return sFilesDifferent;
 		break;
+	case FileInFingerprintFileOnly:
+		return sOnlyFingerprintExists;
+		break;
 	case OnlyFirstFile:
 		s.Format(sOnlyOneExists,
 				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
@@ -2228,6 +2235,9 @@ CString FilePair::GetComparisionResult() const
 	case OnlyFirstDirectory:
 		s.Format(sOnlyOneSubdirExists,
 				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
+		break;
+	case DirectoryInFingerprintFileOnly:
+		return sOnlyFingerprintSubdirExists;
 		break;
 	case OnlySecondDirectory:
 		s.Format(sOnlyOneSubdirExists,

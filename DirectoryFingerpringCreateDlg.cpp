@@ -85,7 +85,7 @@ BOOL CDirectoryFingerpringCreateDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	TRACE("CDirectoryFingerpringCreateDlg::CWaveSoapFrontDoc()\n");
+	TRACE("CDirectoryFingerpringCreateDlg::OnInitDialog()\n");
 
 	m_Progress.SetRange(0, 100);
 

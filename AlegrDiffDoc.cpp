@@ -45,18 +45,6 @@ CAlegrDiffDoc::CAlegrDiffDoc()
 	m_NextPairToCompare(NULL),
 	m_pPairList(NULL)
 {
-	CThisApp * pApp = GetApp();
-	m_sInclusionPattern = PatternToMultiCString(pApp->m_sFilenameFilter);
-	if (m_sInclusionPattern.IsEmpty())
-	{
-		m_sInclusionPattern = "*";
-	}
-
-	m_sExclusionPattern = PatternToMultiCString(pApp->m_sIgnoreFilesFilter);
-
-	m_sCFilesPattern = PatternToMultiCString(pApp->m_sCppFilesFilter);
-
-	m_sBinaryFilesPattern = PatternToMultiCString(pApp->m_sBinaryFilesFilter);
 }
 
 CAlegrDiffDoc::~CAlegrDiffDoc()
@@ -84,6 +72,25 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 									bool bRecurseSubdirs, bool BinaryComparison)
 {
 	// look through all files in the directory and subdirs
+	CThisApp * pApp = GetApp();
+	m_sInclusionPattern = PatternToMultiCString(pApp->m_sFilenameFilter);
+	if (m_sInclusionPattern.IsEmpty())
+	{
+		m_sInclusionPattern = "*";
+	}
+
+	m_sExclusionPattern = PatternToMultiCString(pApp->m_sIgnoreFilesFilter);
+
+	m_sCFilesPattern = PatternToMultiCString(pApp->m_sCppFilesFilter);
+
+	if (BinaryComparison)
+	{
+		m_sBinaryFilesPattern = PatternToMultiCString(_T("*"));
+	}
+	else
+	{
+		m_sBinaryFilesPattern = PatternToMultiCString(pApp->m_sBinaryFilesFilter);
+	}
 
 	m_bRecurseSubdirs = bRecurseSubdirs;
 	FileList FileList1;
@@ -127,7 +134,11 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 		AfxMessageBox(s);
 		return false;
 	}
+	return BuildFilePairList(FileList1, FileList1);
+}
 
+bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2)
+{
 
 	CArray<FileItem *, FileItem *> Files1;
 	CArray<FileItem *, FileItem *> Files2;
@@ -205,12 +216,6 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 			}
 			else
 			{
-				if (BinaryComparison)
-				{
-					pPair->pFirstFile->m_IsBinary = true;
-					pPair->pSecondFile->m_IsBinary = true;
-				}
-
 				pPair->m_ComparisionResult = pPair->ResultUnknown;
 			}
 

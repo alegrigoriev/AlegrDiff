@@ -1379,7 +1379,7 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 							LPCTSTR sIgnoreDirs)
 {
 	TRACE(_T("LoadSubFolder: scanning %s\n"), LPCTSTR(Subdir));
-	CThisApp * pApp = GetApp();
+//    CThisApp * pApp = GetApp();
 
 	WIN32_FIND_DATA wfd;
 	CString SubDirectory(Subdir);
@@ -1871,7 +1871,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 		if (NULL != pSection)
 		{
 			pSection->pBegin = pStr1->GetText();
-			pSection->Length = pStr1->GetLength();
+			pSection->Length = (USHORT)pStr1->GetLength();
 			pSection->Attr = StringSection::Erased | StringSection::Undefined;
 
 			// check if it is whitespace difference
@@ -1894,7 +1894,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 		if (NULL != pSection)
 		{
 			pSection->pBegin = pStr2->GetText();
-			pSection->Length = pStr2->GetLength();
+			pSection->Length = (USHORT)pStr2->GetLength();
 			pSection->Attr = StringSection::Inserted | StringSection::Undefined;
 
 			// check if it is whitespace difference
@@ -2039,8 +2039,8 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 			}
 		}
 
-		int nDiffChars1 = 0;
-		int nDiffChars2 = 0;
+//        int nDiffChars1 = 0;
+//        int nDiffChars2 = 0;
 
 		if (idx1 != 0
 			|| idx2 != 0)
@@ -2451,7 +2451,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 						if (NULL != pNewSection)
 						{
 							pNewSection->Attr = StringSection::Identical;
-							pNewSection->Length = idx;
+							pNewSection->Length = (USHORT)idx;
 							pNewSection->pBegin = str1;
 							ppSections->InsertTail(pNewSection);
 						}
@@ -2484,7 +2484,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 							pNewSection->Attr = StringSection::File1Only
 												| StringSection::Undefined
 												| StringSection::Whitespace;
-							pNewSection->Length = idx1;
+							pNewSection->Length = (USHORT)idx1;
 							pNewSection->pBegin = str1;
 							ppSections->InsertTail(pNewSection);
 						}
@@ -2503,7 +2503,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 							pNewSection->Attr = StringSection::File2Only
 												| StringSection::Undefined
 												| StringSection::Whitespace;
-							pNewSection->Length = idx2;
+							pNewSection->Length = (USHORT)idx2;
 							pNewSection->pBegin = str2;
 							ppSections->InsertTail(pNewSection);
 						}
@@ -2527,7 +2527,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 					{
 						pNewSection->Attr = StringSection::File1Only
 											| StringSection::Undefined;
-						pNewSection->Length = pDiffSection->Len1ws;
+						pNewSection->Length = (USHORT)pDiffSection->Len1ws;
 						pNewSection->pBegin = pDiffSection->Str1ws;
 
 						if (pDiffSection->Str1ws > str1VersionBegin
@@ -2549,7 +2549,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 					{
 						pNewSection->Attr = StringSection::File2Only
 											| StringSection::Undefined;
-						pNewSection->Length = pDiffSection->Len2ws;
+						pNewSection->Length = (USHORT)pDiffSection->Len2ws;
 						pNewSection->pBegin = pDiffSection->Str2ws;
 						if (pDiffSection->Str2ws > str2VersionBegin
 							&& pDiffSection->Str2ws + pDiffSection->Len2ws <= str2VersionEnd)
@@ -2578,10 +2578,10 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 	return nDifferentChars;
 }
 
-FileLine::FileLine(LPCTSTR src, bool MakeNormalizedString, bool c_cpp_file)
+FileLine::FileLine(LPCTSTR src, bool /*MakeNormalizedString*/, bool c_cpp_file)
 	: //m_Flags(0),
 	m_pNext(NULL),
-	m_Number(-1),
+	m_Number((unsigned)-1),
 //m_Link(NULL),
 //m_FirstTokenIndex(-1),
 	m_HashCode(0),
@@ -3329,7 +3329,7 @@ FilePair::eFileComparisionResult FilePair::CompareFiles(class CProgressDialog * 
 
 					pSection->Attr = pSection->Identical;
 					pSection->pBegin = pPair->pFirstLine->GetText();
-					pSection->Length = pPair->pFirstLine->GetLength();
+					pSection->Length = (USHORT)pPair->pFirstLine->GetLength();
 
 					pPair->StrSections.InsertTail(pSection);
 					pSection->pDiffSection = NULL;
@@ -3351,16 +3351,16 @@ FilePair::eFileComparisionResult FilePair::CompareFiles(class CProgressDialog * 
 	return result;
 }
 
-FilePair::eFileComparisionResult FilePair::PreCompareTextFiles(class CProgressDialog * pProgressDialog)
+FilePair::eFileComparisionResult FilePair::PreCompareTextFiles(class CProgressDialog * /*pProgressDialog*/)
 {
 	int nLine1 = 0;
 	int nLine2 = 0;
 
 	int NumLines1 = pFirstFile->GetNumLines();
-	int NumNonBlankLines1 = pFirstFile->m_NormalizedHashSortedLines.size();
+//    int NumNonBlankLines1 = pFirstFile->m_NormalizedHashSortedLines.size();
 
 	int NumLines2 = pSecondFile->GetNumLines();
-	int NumNonBlankLines2 = pSecondFile->m_NormalizedHashSortedLines.size();
+//    int NumNonBlankLines2 = pSecondFile->m_NormalizedHashSortedLines.size();
 
 	bool SpacesDifferent = false;
 	bool OnlyVersionInfoDifferent = false;
@@ -3651,9 +3651,9 @@ FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLin
 	}
 	return pFirstSection;
 }
-FilePair::eFileComparisionResult FilePair::CompareBinaryFiles(class CProgressDialog * pProgressDialog)
+FilePair::eFileComparisionResult FilePair::CompareBinaryFiles(class CProgressDialog * /*pProgressDialog*/)
 {
-	CThisApp * pApp = GetApp();
+//    CThisApp * pApp = GetApp();
 	return ResultUnknown;
 }
 
@@ -3676,9 +3676,6 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 	}
 	if (pApp->m_bUseMd5)
 	{
-		LONGLONG FileDone = 0;
-		HWND hWnd = GetApp()->m_pMainWnd->m_hWnd;
-
 		if ( ! pFirstFile->m_bMd5Calculated)
 		{
 			m_ComparisonResult = CalculatingFirstFingerprint;
@@ -3746,7 +3743,7 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 	return m_ComparisonResult = ResultUnknown;
 }
 
-FilePair::eFileComparisionResult FilePair::CompareTextFiles(CProgressDialog * pProgressDialog)
+FilePair::eFileComparisionResult FilePair::CompareTextFiles(CProgressDialog * /*pProgressDialog*/)
 {
 	// find similar lines
 	CThisApp * pApp = GetApp();
@@ -4001,7 +3998,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles(CProgressDialog * pP
 
 				pSection->Attr = StringSection::Erased | StringSection::Undefined;
 				pSection->pBegin = pPair->pFirstLine->GetText();
-				pSection->Length = pPair->pFirstLine->GetLength();
+				pSection->Length = (USHORT)pPair->pFirstLine->GetLength();
 				pSection->pDiffSection = pDiffSection;
 				if (pPair->pFirstLine->IsBlank())
 				{
@@ -4051,7 +4048,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles(CProgressDialog * pP
 				pPair->StrSections.InsertTail(pSection);
 				pSection->Attr = StringSection::Inserted | StringSection::Undefined;
 				pSection->pBegin = pPair->pSecondLine->GetText();
-				pSection->Length = pPair->pSecondLine->GetLength();
+				pSection->Length = (USHORT)pPair->pSecondLine->GetLength();
 				pSection->pDiffSection = pDiffSection;
 				if (pPair->pSecondLine->IsBlank())
 				{
@@ -4349,10 +4346,11 @@ TextPosDisplay FilePair::LinePosToDisplayPos(TextPosLine position, BOOL IgnoreWh
 {
 	if (unsigned(position.line) >= m_LinePairs.size())
 	{
-		return TextPosDisplay(position.line, position.pos, FileScope);
+		return TextPosDisplay(position.line, (short)position.pos, (short)FileScope);
 	}
 	return TextPosDisplay(position.line,
-						m_LinePairs[position.line]->LinePosToDisplayPos(position.pos, IgnoreWhitespaces, FileScope), FileScope);
+						(short)(m_LinePairs[position.line]->LinePosToDisplayPos(position.pos, IgnoreWhitespaces, FileScope)),
+						(short)FileScope);
 }
 
 struct ModifyFlagsStruct

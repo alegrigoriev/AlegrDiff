@@ -27,6 +27,18 @@ template<class Parameters = DefaultFrameExParameters>
 class CMainFrameExT : public Parameters::BaseClass
 {
 	typedef typename Parameters::BaseClass BaseClass;
+	enum { Feature = Parameters::Feature };
+
+public:
+	BOOL ShowWindow(int CmdShow)
+	{
+		if (SW_SHOWDEFAULT == CmdShow
+			&& m_bOpenMaximized)
+		{
+			CmdShow = SW_SHOWMAXIMIZED;
+		}
+		return BaseClass::ShowWindow(CmdShow);
+	}
 protected:
 	CMainFrameExT()
 		: m_nRotateChildIndex(0)

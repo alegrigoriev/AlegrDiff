@@ -404,7 +404,7 @@ UINT_PTR CALLBACK CResizableFileDialog::ResizableFileDialogHook(
 INT_PTR CResizableFileDialog::DoModal()
 {
 	// proxy for MSLU fix under Windows ME
-#ifdef _UNICODE
+#if 0 && defined _UNICODE
 	OSVERSIONINFO vi;
 	vi.dwOSVersionInfoSize = sizeof vi;
 	GetVersionEx( & vi);

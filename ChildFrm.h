@@ -9,9 +9,11 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include "ChildFrameEx.h"
 
-class CChildFrame : public CMDIChildWnd
+class CChildFrame : public CChildFrameEx
 {
+	typedef CChildFrameEx BaseClass;
 	DECLARE_DYNCREATE(CChildFrame)
 public:
 	CChildFrame();
@@ -41,7 +43,6 @@ public:
 protected:
 	//{{AFX_MSG(CChildFrame)
 	afx_msg void OnUpdateWindowNew(CCmdUI* pCmdUI);
-	afx_msg void OnDestroy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

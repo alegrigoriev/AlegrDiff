@@ -162,7 +162,7 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 			continue;
 		}
 
-		SetNextItem(pFile->GetFullName(), pFile->GetFileLength(), FILE_OPEN_OVERHEAD);
+		SetNextItem(pFile->GetFullName(), pFile->GetFileLength(), FILE_OPEN_OVERHEAD, true);
 
 		if (pFile->CalculateHashes( & HashCalc, this))
 		{

@@ -137,7 +137,8 @@ public:
 	void SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags = SetPositionMakeCentered);
 	void CaretToHome(int flags);
 	void CaretToEnd(int flags);
-	ULONG CopyTextToMemory(LPTSTR pBuf, ULONG BufLen, TextPos pFrom, TextPos pTo);
+	ULONG CopyTextToMemory(LPTSTR pBuf, ULONG BufLen,
+							TextPos pFrom, TextPos pTo, int FileSelect);
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CFilePairDoc)
@@ -183,13 +184,13 @@ public:
 	bool OnEditFindPrev();
 	bool OnEditFindWordNext();
 	bool OnEditFindWordPrev();
+	void OnEditCopy(int FileSelect);
 	afx_msg void OnUpdateCaretPosIndicator(CCmdUI* pCmdUI);
 	// Generated message map functions
 	//{{AFX_MSG(CFilePairDoc)
 	afx_msg void OnUpdateEditGotonextdiff(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditGotoprevdiff(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditCopy(CCmdUI* pCmdUI);
-	afx_msg void OnEditCopy();
 	afx_msg void OnFileSave();
 	afx_msg void OnViewRefresh();
 	afx_msg void OnUpdateFileEditFirst(CCmdUI* pCmdUI);

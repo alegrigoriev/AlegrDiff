@@ -66,6 +66,7 @@ BEGIN_MESSAGE_MAP(CDiffFileView, CView)
 	ON_WM_CAPTURECHANGED()
 	ON_COMMAND(ID_EDIT_GOTONEXTDIFF, OnEditGotonextdiff)
 	ON_COMMAND(ID_EDIT_GOTOPREVDIFF, OnEditGotoprevdiff)
+	ON_COMMAND(ID_EDIT_COPY, OnEditCopy)
 	ON_COMMAND(ID_VIEW_SHOW_LINE_NUMBERS, OnViewShowLineNumbers)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_LINE_NUMBERS, OnUpdateViewShowLineNumbers)
 	ON_COMMAND(ID_EDIT_FIND, OnEditFind)
@@ -333,7 +334,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 		int nCharsInView = CharsInView();
 		if (nPane == m_NumberOfPanes - 1)
 		{
-			nCharsInView++;
+			nCharsInView += 2;
 		}
 		else
 		{
@@ -683,6 +684,38 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		DoVScroll(nLinesInView - 1);
 		MoveCaretBy(0, nLinesInView - 1, SelectionFlags | MoveCaretPositionAlways);
 		break;
+
+	case VK_TAB:
+		// switch selection between panes
+		if (2 == m_NumberOfPanes)
+		{
+			TextPos begin, end;
+			if (pDoc->m_CaretPos < pDoc->m_SelectionAnchor)
+			{
+				begin = pDoc->m_CaretPos;
+				end = pDoc->m_SelectionAnchor;
+			}
+			else
+			{
+				begin = pDoc->m_SelectionAnchor;
+				end = pDoc->m_CaretPos;
+			}
+
+			InvalidateRange(begin, end);
+
+			if (0 == m_PaneWithFocus)
+			{
+				m_PaneWithFocus = 1;
+			}
+			else
+			{
+				m_PaneWithFocus = 0;
+			}
+
+			InvalidateRange(begin, end);
+			CreateAndShowCaret();
+		}
+		break;
 	}
 	CView::OnKeyDown(nChar, nRepCnt, nFlags);
 }
@@ -740,12 +773,7 @@ void CDiffFileView::HScrollToThePos(int nPos)
 	GetClientRect( & cr);
 	CRect cr1 = cr;
 
-	int nPaneWidth = cr.Width()
-					- m_LineNumberMarginWidth * m_NumberOfPanes
-					- (m_NumberOfPanes - 1);
-
-	nPaneWidth = nPaneWidth / CharWidth() / m_NumberOfPanes * CharWidth()
-				+ m_LineNumberMarginWidth + 1;
+	int nPaneWidth = GetPaneWidth();
 
 	cr.left = m_LineNumberMarginWidth;
 	cr.right = nPaneWidth - 1;
@@ -2011,4 +2039,15 @@ int CDiffFileView::GetPaneWidth()
 		return 0;
 	}
 	return nPaneWidth;
+}
+
+void CDiffFileView::OnEditCopy()
+{
+	int FileSelect = 0;
+	if (m_NumberOfPanes > 1)
+	{
+		FileSelect = m_PaneWithFocus + 1;
+	}
+
+	GetDocument()->OnEditCopy(FileSelect);
 }

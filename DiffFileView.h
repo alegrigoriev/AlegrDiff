@@ -152,6 +152,7 @@ protected:
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnEditSelectAll();
 	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnEditCopy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 public:

@@ -493,7 +493,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 	if (NULL != pPair)
 	{
 		pPair->Reference();
-		if (NULL != pPair->pFirstFile)
+		if (NULL != pPair->pFirstFile && ! pPair->pFirstFile->m_bIsPhantomFile)
 		{
 			CString title(pPair->pFirstFile->GetFullName());
 			if (NULL != pPair->pSecondFile)
@@ -702,7 +702,6 @@ BEGIN_MESSAGE_MAP(CFilePairDoc, CAlegrDiffBaseDoc)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_GOTONEXTDIFF, OnUpdateEditGotonextdiff)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_GOTOPREVDIFF, OnUpdateEditGotoprevdiff)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, OnUpdateEditCopy)
-	ON_COMMAND(ID_EDIT_COPY, OnEditCopy)
 	ON_COMMAND(ID_FILE_SAVE, OnFileSave)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_UPDATE_COMMAND_UI(ID_FILE_EDIT_FIRST, OnUpdateFileEditFirst)
@@ -764,8 +763,11 @@ void CFilePairDoc::OnUpdateEditCopy(CCmdUI* pCmdUI)
 	pCmdUI->Enable(m_CaretPos != m_SelectionAnchor && ! m_CopyDisabled);
 }
 
-ULONG CFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen, TextPos pFrom, TextPos pTo)
+ULONG CFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen,
+									TextPos pFrom, TextPos pTo,
+									int FileSelect)
 {
+	// FileSelect 1 - file 1, 2 - file 2, 0 = both files
 	ULONG TotalChars = 0;
 	CThisApp * pApp = GetApp();
 	TextPos begin, end;
@@ -806,6 +808,12 @@ ULONG CFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen, TextPos pFrom, T
 		int pos = 0;
 		LinePair * pPair = m_pFilePair->m_LinePairs[line];
 
+		if ((1 == FileSelect && NULL == pPair->pFirstLine)
+			|| (2 == FileSelect && NULL == pPair->pSecondLine))
+		{
+			continue;
+		}
+
 		for (StringSection * pSection = pPair->StrSections.First();
 			pPair->StrSections.NotEnd(pSection); pSection = pSection->Next())
 		{
@@ -815,6 +823,17 @@ ULONG CFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen, TextPos pFrom, T
 			{
 				continue;   // don't show the section
 			}
+			if ((pSection->Attr & pSection->Erased)
+				&& 2 == FileSelect)
+			{
+				continue;
+			}
+			if ((pSection->Attr & pSection->Inserted)
+				&& 1 == FileSelect)
+			{
+				continue;
+			}
+
 			for (int i = 0; i < pSection->Length; pos++, i++)
 			{
 				if (pos >= end.pos && line == end.line)
@@ -864,7 +883,7 @@ ULONG CFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen, TextPos pFrom, T
 	return TotalChars;
 }
 
-void CFilePairDoc::OnEditCopy()
+void CFilePairDoc::OnEditCopy(int FileSelect)
 {
 	if(m_CopyDisabled)
 	{
@@ -872,7 +891,7 @@ void CFilePairDoc::OnEditCopy()
 	}
 	// todo: perform UNICODE or ANSI copy?
 	// calculate length of the selection
-	ULONG Len = CopyTextToMemory(NULL, 0, m_SelectionAnchor, m_CaretPos);
+	ULONG Len = CopyTextToMemory(NULL, 0, m_SelectionAnchor, m_CaretPos, FileSelect);
 	if (0 == Len)
 	{
 		return;
@@ -889,7 +908,7 @@ void CFilePairDoc::OnEditCopy()
 		&& AfxGetMainWnd()->OpenClipboard())
 	{
 		EmptyClipboard();
-		CopyTextToMemory(pMem, Len, m_SelectionAnchor, m_CaretPos);
+		CopyTextToMemory(pMem, Len, m_SelectionAnchor, m_CaretPos, FileSelect);
 #ifndef _UNICODE
 		GlobalUnlock(hMem);
 		SetClipboardData(CF_TEXT, hMem);
@@ -2372,7 +2391,12 @@ void CFilePairDoc::OnViewAsBinary()
 	pPair->Reference();
 	OnCloseDocument();
 
-	pPair->m_ComparisonResult = pPair->ResultUnknown;
+	if (NULL == pPair->pFirstFile
+		|| ! pPair->pFirstFile->m_bIsPhantomFile)
+	{
+		pPair->m_ComparisonResult = pPair->ResultUnknown;
+	}
+
 	pPair->UnloadFiles(true);
 
 	if (NULL != pPair->pFirstFile)

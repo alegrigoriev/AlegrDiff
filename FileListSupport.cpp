@@ -3111,11 +3111,11 @@ bool FilePair::LoadFiles()
 	bool result = true;
 	if (NULL != pFirstFile)
 	{
-		result = (pFirstFile->Load() && result);
+		result = pFirstFile->m_bIsPhantomFile || (pFirstFile->Load() && result);
 	}
 	if (NULL != pSecondFile)
 	{
-		result = (pSecondFile->Load() && result);
+		result = pSecondFile->Load() && result;
 	}
 	if ( ! result)
 	{
@@ -3225,8 +3225,8 @@ FilePair::eFileComparisionResult FilePair::CompareFiles(class CProgressDialog * 
 		return ResultUnknown;
 	}
 	eFileComparisionResult result = ResultUnknown;
-	if (NULL != pFirstFile
-		&& NULL != pSecondFile)
+	if (NULL != pFirstFile && ! pFirstFile->m_bIsPhantomFile
+		&& NULL != pSecondFile && ! pFirstFile->m_bIsPhantomFile)
 	{
 		result = CompareTextFiles(pProgressDialog);
 	}
@@ -3235,11 +3235,20 @@ FilePair::eFileComparisionResult FilePair::CompareFiles(class CProgressDialog * 
 		// just build the line array
 		FileItem * pFile = pFirstFile;
 		result = OnlyFirstFile;
-		if (NULL == pFile)
+		if (NULL == pFile || pFile->m_bIsPhantomFile)
 		{
-			result = OnlySecondFile;
 			pFile = pSecondFile;
+			if (pFirstFile->m_bIsPhantomFile)
+			{
+				// keep previous result
+				result = m_ComparisonResult;
+			}
+			else
+			{
+				result = OnlySecondFile;
+			}
 		}
+
 		if (NULL != pFile)
 		{
 			m_LinePairs.resize(pFile->GetNumLines());
@@ -3615,13 +3624,22 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 											pFirstFile->GetFileLength(), FILE_OPEN_OVERHEAD);
 			}
 
-			pFirstFile->CalculateHashes(pMd5Calc, pProgressDialog);
+			if (! pFirstFile->CalculateHashes(pMd5Calc, pProgressDialog)
+				&& (NULL == pProgressDialog || ! pProgressDialog->m_StopRunThread))
+			{
+				if (NULL != pProgressDialog)
+				{
+					pProgressDialog->AddDoneItem(pFirstFile->GetFileLength());
+				}
+				return m_ComparisonResult = FilePair::ErrorReadingFirstFile;
+			}
 
 			if (NULL != pProgressDialog)
 			{
 				pProgressDialog->AddDoneItem(pFirstFile->GetFileLength());
 			}
 		}
+
 		if ( ! pSecondFile->m_bMd5Calculated)
 		{
 			m_ComparisonResult = CalculatingSecondFingerprint;
@@ -3632,7 +3650,15 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 											pSecondFile->GetFileLength(), FILE_OPEN_OVERHEAD);
 			}
 
-			pSecondFile->CalculateHashes(pMd5Calc, pProgressDialog);
+			if (! pSecondFile->CalculateHashes(pMd5Calc, pProgressDialog)
+				&& (NULL == pProgressDialog || ! pProgressDialog->m_StopRunThread))
+			{
+				if (NULL != pProgressDialog)
+				{
+					pProgressDialog->AddDoneItem(pSecondFile->GetFileLength());
+				}
+				return m_ComparisonResult = FilePair::ErrorReadingSecondFile;
+			}
 
 			if (NULL != pProgressDialog)
 			{

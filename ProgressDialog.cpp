@@ -163,7 +163,11 @@ BOOL CProgressDialog::OnInitDialog()
 	// if the thread is already completed, or not even started, close the dialog
 	if (WAIT_TIMEOUT != WaitForSingleObject(m_Thread.m_hThread, 0))
 	{
-		SignalDialogEnd(IDYES);
+		if (-1 == m_DialogResult)
+		{
+			m_DialogResult = IDYES;
+		}
+		SignalDialogEnd(m_DialogResult);
 	}
 
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -191,6 +195,14 @@ LRESULT CProgressDialog::OnKickIdle(WPARAM, LPARAM)
 
 	if (m_ItemName.m_hWnd != NULL && m_bItemNameChanged)
 	{
+		if (m_bEllipsePath)
+		{
+			m_ItemName.ModifyStyle(0, SS_PATHELLIPSIS);
+		}
+		else
+		{
+			m_ItemName.ModifyStyle(SS_PATHELLIPSIS, 0);
+		}
 		m_ItemName.SetWindowText(m_CurrentItemName);
 		m_bItemNameChanged = FALSE;
 	}
@@ -289,13 +301,14 @@ void CProgressDialog::AddDoneItem(LONGLONG size)
 	m_ProcessedItems += size;
 }
 
-void CProgressDialog::SetNextItem(LPCTSTR Name, LONGLONG size, DWORD ItemOverhead)
+void CProgressDialog::SetNextItem(LPCTSTR Name, LONGLONG size, DWORD ItemOverhead, bool EllipsePath)
 {
 	{
 		CSimpleCriticalSectionLock lock(m_cs);
 
 		m_CurrentItemName = Name;
 		m_bItemNameChanged = TRUE;
+		m_bEllipsePath = EllipsePath;
 		m_CurrentItemDone = 0;
 		m_CurrentItemSize = size;
 		m_ProcessedItems += ItemOverhead;
@@ -319,6 +332,14 @@ void CProgressDialog::OnYes()
 	if (NULL != m_TimeLeft.m_hWnd)
 	{
 		m_TimeLeft.ShowWindow(SW_HIDE);
+	}
+	if (NULL != m_ProgressPercent.m_hWnd)
+	{
+		m_ProgressPercent.ShowWindow(SW_HIDE);
+	}
+	if (NULL != m_ItemProgressPercent.m_hWnd)
+	{
+		m_ItemProgressPercent.ShowWindow(SW_HIDE);
 	}
 
 	CWnd * pCancel = GetDlgItem(IDCANCEL);

@@ -324,7 +324,7 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 		{
 			if (pPair->pFirstFile->GetFileLength() == pPair->pSecondFile->GetFileLength())
 			{
-				SetNextItem(pPair->pSecondFile->GetFullName(), pPair->pSecondFile->GetFileLength(), FILE_OPEN_OVERHEAD);
+				SetNextItem(pPair->pSecondFile->GetFullName(), pPair->pSecondFile->GetFileLength(), FILE_OPEN_OVERHEAD, true);
 
 				if (pPair->pSecondFile->CalculateHashes( & HashCalc, this))
 				{

@@ -11,54 +11,29 @@
 
 // CDirectoryFingerprintCheckDlg dialog
 
-IMPLEMENT_DYNAMIC(CDirectoryFingerprintCheckDlg, CDialog)
+IMPLEMENT_DYNAMIC(CDirectoryFingerprintCheckDlg, CProgressDialog)
 CDirectoryFingerprintCheckDlg::CDirectoryFingerprintCheckDlg(
 															CAlegrDiffDoc * pDoc, CWnd* pParent /*=NULL*/)
-	: CDialog(CDirectoryFingerprintCheckDlg::IDD, pParent)
+	: CProgressDialog(CDirectoryFingerprintCheckDlg::IDD, pParent)
 	, m_pDocument(pDoc)
 	, m_pFile(NULL)
 	, m_bIncludeSubdirectories(FALSE)
 	, m_bIncludeDirectoryStructure(FALSE)
 	, m_bSaveAsUnicode(FALSE)
-	, m_StopRunThread(FALSE)
-	, m_bFilenameChanged(TRUE)
-	, m_Thread(ThreadProc, this)
-	, m_TotalDataSize(0)
-	, m_ProcessedFiles(0)
-	, m_CurrentFileDone(0)
 {
-	m_Thread.m_bAutoDelete = FALSE;
-	m_hThreadEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 }
 
 CDirectoryFingerprintCheckDlg::~CDirectoryFingerprintCheckDlg()
 {
-	if (m_Thread.m_hThread)
-	{
-		m_StopRunThread = TRUE;
-		if (WAIT_TIMEOUT == WaitForSingleObject(m_Thread.m_hThread, 5000))
-		{
-			TerminateThread(m_Thread.m_hThread, -1);
-		}
-	}
-
-	if (m_hThreadEvent)
-	{
-		CloseHandle(m_hThreadEvent);
-	}
 }
 
 void CDirectoryFingerprintCheckDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_STATIC_FILENAME, m_Filename);
-	DDX_Control(pDX, IDC_STATIC_PERCENT, m_ProgressPercent);
-	DDX_Control(pDX, IDC_PROGRESS1, m_Progress);
+	CProgressDialog::DoDataExchange(pDX);
 }
 
 
-BEGIN_MESSAGE_MAP(CDirectoryFingerprintCheckDlg, CDialog)
-	ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
+BEGIN_MESSAGE_MAP(CDirectoryFingerprintCheckDlg, CProgressDialog)
 END_MESSAGE_MAP()
 
 
@@ -89,56 +64,22 @@ INT_PTR CDirectoryFingerprintCheckDlg::DoModal()
 		_setmode(_fileno(m_pFile), _O_TEXT);
 	}
 
-	INT_PTR result = CDialog::DoModal();
-	if (m_Thread.m_hThread)
-	{
-		m_StopRunThread = TRUE;
-		if (WAIT_TIMEOUT == WaitForSingleObject(m_Thread.m_hThread, 5000))
-		{
-			TerminateThread(m_Thread.m_hThread, -1);
-		}
-	}
+	INT_PTR result = CProgressDialog::DoModal();
 
 	return result;
 }
 
 BOOL CDirectoryFingerprintCheckDlg::OnInitDialog()
 {
-	CDialog::OnInitDialog();
+	CProgressDialog::OnInitDialog();
 
 	TRACE("CDirectoryFingerprintCheckDlg::OnInitDialog()\n");
-
-	m_Progress.SetRange(0, 100);
-
-	m_StopRunThread = FALSE;
-	m_Thread.CreateThread(0, 0x10000);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }
 
-LRESULT CDirectoryFingerprintCheckDlg::OnKickIdle(WPARAM, LPARAM)
-{
-
-	CSimpleCriticalSectionLock lock(m_cs);
-
-	if (m_Filename.m_hWnd != NULL && m_bFilenameChanged)
-	{
-		m_Filename.SetWindowText(m_CurrentFilename);
-		m_bFilenameChanged = FALSE;
-	}
-	if (m_Progress.m_hWnd != NULL && m_TotalDataSize != 0)
-	{
-		int PercentComplete = int(100. * (m_ProcessedFiles + m_CurrentFileDone) / m_TotalDataSize);
-		if (PercentComplete != m_Progress.GetPos())
-		{
-			m_Progress.SetPos(PercentComplete);
-		}
-	}
-	return 0;
-}
-
-unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
+unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 {
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 	// load the directory
@@ -312,6 +253,8 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 	fclose(m_pFile);
 	m_pFile = NULL;
 
+	m_pDocument->m_bRecurseSubdirs = (m_bIncludeSubdirectories != 0);
+
 	if (! FileList2.LoadFolder(buf, m_bIncludeSubdirectories != 0,
 								InclusionPattern, ExclusionPattern, PatternToMultiCString(_T("")),
 								PatternToMultiCString(_T("*"))))
@@ -328,8 +271,7 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 		return 0;
 	}
 
-	m_pDocument->m_bRecurseSubdirs = (m_bIncludeSubdirectories != 0);
-	m_pDocument->BuildFilePairList(FileList1, FileList2);
+	m_pDocument->BuildFilePairList(FileList1, FileList2, this);
 
 	m_TotalDataSize = 0;
 
@@ -344,7 +286,7 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 			&& NULL != pPair->pSecondFile
 			&& ! pPair->pFirstFile->IsFolder()
 			&& ! pPair->pSecondFile->IsFolder()
-			&& pPair->pFirstFile->GetFileLength() == pPair->pFirstFile->GetFileLength()
+			&& pPair->pFirstFile->GetFileLength() == pPair->pSecondFile->GetFileLength()
 			)
 		{
 			m_TotalDataSize += 0x2000 + pPair->pFirstFile->GetFileLength();
@@ -362,19 +304,11 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 			&& ! pPair->pFirstFile->IsFolder()
 			&& ! pPair->pSecondFile->IsFolder())
 		{
-			if (pPair->pFirstFile->GetFileLength() == pPair->pFirstFile->GetFileLength())
+			if (pPair->pFirstFile->GetFileLength() == pPair->pSecondFile->GetFileLength())
 			{
-				{
-					CSimpleCriticalSectionLock lock(m_cs);
+				SetNextItem(pPair->pSecondFile->GetFullName(), pPair->pSecondFile->GetFileLength(), 0x2000);
 
-					m_CurrentFilename = pPair->pSecondFile->GetFullName();
-					m_bFilenameChanged = TRUE;
-					m_CurrentFileDone = 0;
-				}
-
-				::PostMessage(m_hWnd, WM_KICKIDLE, 0, 0);
-				if (pPair->pSecondFile->CalculateHashes( & HashCalc,
-														m_StopRunThread, m_CurrentFileDone, m_hWnd))
+				if (pPair->pSecondFile->CalculateHashes( & HashCalc, this))
 				{
 					if (0 == memcmp(pPair->pFirstFile->GetDigest(),
 									pPair->pSecondFile->GetDigest(), 16))
@@ -387,9 +321,9 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 					}
 				}
 
-				m_ProcessedFiles += 0x2000 + pPair->pFirstFile->GetFileLength();
+				AddDoneItem(pPair->pSecondFile->GetFileLength());
 			}
-			else if (pPair->pFirstFile->GetFileLength() < pPair->pFirstFile->GetFileLength())
+			else if (pPair->pFirstFile->GetFileLength() < pPair->pSecondFile->GetFileLength())
 			{
 				pPair->m_ComparisionResult = FilePair::SecondFileLonger;
 			}

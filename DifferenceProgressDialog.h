@@ -22,10 +22,9 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	class CBinaryCompareDoc * m_pDoc;
+	virtual unsigned ThreadProc();
 	LONGLONG BeginAddr;
 	LONGLONG EndAddr;
 
 	virtual BOOL OnInitDialog();
-protected:
-	virtual void OnOK();
 };

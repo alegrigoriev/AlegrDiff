@@ -4,7 +4,7 @@
 #include "stdafx.h"
 #include "AlegrDiff.h"
 #include "BinaryCompareDoc.h"
-
+#include "DifferenceProgressDialog.h"
 // CBinaryCompareDoc
 
 IMPLEMENT_DYNCREATE(CBinaryCompareDoc, CAlegrDiffBaseDoc)
@@ -204,6 +204,10 @@ unsigned CBinaryCompareDoc::FindDataProc(CDifferenceProgressDialog * pDlg)
 	if (Addr > pDlg->EndAddr)
 	{
 		FindingFirstDifference = TRUE;
+
+		pDlg->SetTotalDataSize(Addr - pDlg->EndAddr);
+		pDlg->SetNextItem(_T(""), Addr - pDlg->EndAddr, 0);
+
 		// search backward
 		while (! pDlg->m_StopRunThread
 				&& Addr > pDlg->EndAddr)
@@ -233,12 +237,7 @@ unsigned CBinaryCompareDoc::FindDataProc(CDifferenceProgressDialog * pDlg)
 									File2Buffer, ToRead);
 				File2BufIndex = File2BufFilled;
 
-				m_CurrentItemDone = pDlg->BeginAddr - Addr;
-
-				if (PercentCompleted != pDlg->m_PercentCompleted)
-				{
-					//
-				}
+				pDlg->SetCurrentItemDone(pDlg->BeginAddr - Addr);
 			}
 
 			if (0 == File1BufIndex
@@ -271,6 +270,9 @@ unsigned CBinaryCompareDoc::FindDataProc(CDifferenceProgressDialog * pDlg)
 	else
 	{
 		// search forward
+		pDlg->SetTotalDataSize(pDlg->EndAddr - Addr);
+		pDlg->SetNextItem(_T(""), pDlg->EndAddr - Addr, 0);
+
 		while (! pDlg->m_StopRunThread
 				&& Addr < pDlg->EndAddr)
 		{
@@ -299,12 +301,7 @@ unsigned CBinaryCompareDoc::FindDataProc(CDifferenceProgressDialog * pDlg)
 									File2Buffer, ToRead);
 				File2BufIndex = 0;
 
-				m_CurrentItemDone = Addr - pDlg->BeginAddr;
-				if (PercentCompleted != pDlg->m_PercentCompleted
-					|| pDlg->m_hWnd != NULL)
-				{
-					//
-				}
+				pDlg->SetCurrentItemDone(Addr - pDlg->BeginAddr);
 			}
 
 			if (File1BufIndex >= File1BufFilled

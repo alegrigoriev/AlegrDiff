@@ -30,7 +30,6 @@ void CDirectoryFingerpringCreateDlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CDirectoryFingerpringCreateDlg, CProgressDialog)
-	ON_COMMAND(IDYES, OnYes)
 END_MESSAGE_MAP()
 
 
@@ -54,17 +53,6 @@ INT_PTR CDirectoryFingerpringCreateDlg::DoModal()
 	}
 
 	return CProgressDialog::DoModal();
-
-}
-
-BOOL CDirectoryFingerpringCreateDlg::OnInitDialog()
-{
-	CProgressDialog::OnInitDialog();
-
-	TRACE("CDirectoryFingerpringCreateDlg::OnInitDialog()\n");
-
-	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX Property Pages should return FALSE
 }
 
 unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
@@ -94,34 +82,38 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 		InclusionPattern = PatternToMultiCString(_T("*"));
 	}
 
+	CString s;
+	s.Format(IDS_STRING_LOADING_DIRECTORY, FullDirectoryName);
+	SetNextItem(s, 0, 0);
+
 	if (! FileList1.LoadFolder(FullDirectoryName, m_bIncludeSubdirectories != 0,
 								InclusionPattern, ExclusionPattern, PatternToMultiCString(_T("")),
 								PatternToMultiCString(_T(""))))
 	{
-		DWORD error = GetLastError();
-		CString s;
+		//DWORD error = GetLastError();
 		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, FullDirectoryName);
-		AfxMessageBox(s);
-		if (NULL != m_hWnd)
-		{
-			::PostMessage(m_hWnd, WM_COMMAND, IDCANCEL, NULL);
-		}
+
+		SetNextItem(s, 0, 0);
+
+		SignalDialogEnd(IDABORT);
 		return 0;
 	}
 
 	vector<FileItem *> Files1;
 
 	FileList1.GetSortedList(Files1, FileList::SortDirFirst);
-	m_TotalDataSize = 0;
+
+	ULONGLONG TotalDataSize = 0;
 	for (i = 0; i < Files1.size(); i++)
 	{
 		FileItem * pFile = Files1[i];
 		if ( ! pFile->IsFolder())
 		{
 			// a file open is taken as equivalent of 8K
-			m_TotalDataSize += pFile->GetFileLength() + 0x2000;
+			TotalDataSize += pFile->GetFileLength() + 0x2000;
 		}
 	}
+	SetTotalDataSize(TotalDataSize);
 
 	CMd5HashCalculator HashCalc;
 	// save inclusion pattern, exclusion pattern,
@@ -168,19 +160,9 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 			continue;
 		}
 
-		{
-			CSimpleCriticalSectionLock lock(m_cs);
+		SetNextItem(pFile->GetFullName(), pFile->GetFileLength(), 0x2000);
 
-			m_CurrentItemName = pFile->GetFullName();
-			m_bItemNameChanged = TRUE;
-			m_CurrentItemDone = 0;
-			m_ProcessedItems += 0x2000;
-		}
-
-		KickDialogUpdate();
-
-		if (pFile->CalculateHashes( & HashCalc,
-									m_StopRunThread, m_CurrentItemDone, m_hWnd))
+		if (pFile->CalculateHashes( & HashCalc, this))
 		{
 			_ftprintf(m_pFile,
 					_T("\"%s%s\" %I64d %016I64X ")
@@ -203,28 +185,17 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 		{
 		}
 
-		m_ProcessedItems += pFile->GetFileLength();
+		AddDoneItem(pFile->GetFileLength());
 	}
 
 	fclose(m_pFile);
 
 	m_pFile = NULL;
-	if (NULL != m_hWnd)
-	{
-		::PostMessage(m_hWnd, WM_COMMAND, IDYES, NULL);
-	}
-	return 0;
-}
 
-
-void CDirectoryFingerpringCreateDlg::OnYes()
-{
-	m_bItemNameChanged = false;
-
-	CString s;
 	s.Format(IDS_STRING_FINGERPRINT_CREATED, LPCTSTR(m_sDirectory), LPCTSTR(m_FingerprintFilename));
-	m_ItemName.SetWindowText(s);
+	SetNextItem(s, 0, 0);
 
-	SetDlgItemText(IDCANCEL, _T("OK"));
+	SignalDialogEnd(IDYES);
+	return 0;
 }
 

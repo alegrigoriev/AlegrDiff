@@ -932,13 +932,8 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 		}
 		pDoc->SetTitle(_T(""));
 
-		if (pDoc->BuildFilePairList(dlg.m_sFirstDir, dlg.m_sSecondDir,
-									m_bRecurseSubdirs, m_BinaryComparision))
-		{
-			pDoc->RunComparisionThread();
-			pDoc->UpdateAllViews(NULL);
-		}
-		else
+		if ( ! pDoc->RunDirectoriesComparison(dlg.m_sFirstDir, dlg.m_sSecondDir,
+											m_bRecurseSubdirs, m_BinaryComparision))
 		{
 			pDoc->OnCloseDocument();
 		}

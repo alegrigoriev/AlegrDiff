@@ -377,6 +377,9 @@
 				RelativePath=".\CompareDirsDialog.cpp">
 			</File>
 			<File
+				RelativePath="ComparisonProgressDlg.cpp">
+			</File>
+			<File
 				RelativePath=".\DiffFileView.cpp">
 			</File>
 			<File
@@ -499,6 +502,9 @@
 			</File>
 			<File
 				RelativePath=".\CompareDirsDialog.h">
+			</File>
+			<File
+				RelativePath="ComparisonProgressDlg.h">
 			</File>
 			<File
 				RelativePath=".\DiffFileView.h">

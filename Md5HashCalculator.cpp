@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Md5HashCalculator.h"
 #include <afxpriv.h>
+#include "ProgressDialog.h"
 
 CMd5HashCalculator::CMd5HashCalculator()
 {
@@ -18,9 +19,7 @@ CMd5HashCalculator::~CMd5HashCalculator()
 }
 
 BOOL CMd5HashCalculator::CalculateFileMd5Hash(LPCTSTR Filename,
-											BYTE MD5Hash[16], BOOL volatile & bStopOperation,
-											LONGLONG volatile & BytesComplete,
-											HWND volatile const & hNotifyWnd)
+											BYTE MD5Hash[16], class CProgressDialog * pProgressDialog)
 {
 	if (NULL == m_HashBuf
 		|| NULL == m_hProv)
@@ -32,6 +31,8 @@ BOOL CMd5HashCalculator::CalculateFileMd5Hash(LPCTSTR Filename,
 
 	HANDLE hFile = NULL;
 	BOOL res = TRUE;
+	LONGLONG BytesComplete = 0;
+
 	hFile = CreateFile(Filename, GENERIC_READ, FILE_SHARE_READ, NULL,
 						OPEN_EXISTING, FILE_FLAG_NO_BUFFERING, NULL);
 	if (NULL == hFile || INVALID_HANDLE_VALUE == hFile)
@@ -42,7 +43,8 @@ BOOL CMd5HashCalculator::CalculateFileMd5Hash(LPCTSTR Filename,
 	if (S_OK == hash.Initialize(* this))
 	{
 		DWORD LastTime = GetTickCount();
-		while ( ! bStopOperation )
+		while (NULL == pProgressDialog
+				|| ! pProgressDialog->m_StopRunThread)
 		{
 			DWORD BytesRead;
 			if ( ! ReadFile(hFile, m_HashBuf, BufferSize, & BytesRead, NULL))
@@ -58,10 +60,10 @@ BOOL CMd5HashCalculator::CalculateFileMd5Hash(LPCTSTR Filename,
 			hash.AddData(m_HashBuf, BytesRead, 0);
 			BytesComplete += BytesRead;
 
-			if (NULL != hNotifyWnd
+			if (NULL != pProgressDialog
 				&& GetTickCount() - LastTime >= 500)
 			{
-				::PostMessage(hNotifyWnd, WM_KICKIDLE, 0, 0);
+				pProgressDialog->SetCurrentItemDone(BytesComplete);
 				LastTime = GetTickCount();
 			}
 		}
@@ -70,7 +72,8 @@ BOOL CMd5HashCalculator::CalculateFileMd5Hash(LPCTSTR Filename,
 		hash.GetValue(MD5Hash, & HashLen);
 	}
 	CloseHandle(hFile);
-	if (bStopOperation)
+	if (NULL != pProgressDialog
+		&& pProgressDialog->m_StopRunThread)
 	{
 		res = FALSE;
 		LastError = ERROR_CANCELLED;

@@ -261,9 +261,8 @@ public:
 	bool m_bIsPhantomFile:1;
 
 	BOOL CalculateHashes(CMd5HashCalculator * pMd5Calc,
-						BOOL volatile & bStopOperation,
-						LONGLONG volatile & BytesComplete,
-						HWND volatile const & hNotifyWnd);
+						class CProgressDialog * pProgressDialog);
+
 	void SetMD5(BYTE md5[16]);
 
 	// add line from memory. Assuming the file created dynamically by the program
@@ -421,9 +420,9 @@ public:
 
 	int ComparisionResultPriority() const;
 
-	eFileComparisionResult CompareFiles(BOOL volatile & bStopOperation);
-	eFileComparisionResult CompareTextFiles(BOOL volatile & bStopOperation);
-	eFileComparisionResult CompareBinaryFiles(BOOL volatile & bStopOperation);
+	eFileComparisionResult CompareFiles(class CProgressDialog * pProgressDialog);
+	eFileComparisionResult CompareTextFiles(class CProgressDialog * pProgressDialog);
+	eFileComparisionResult CompareBinaryFiles(class CProgressDialog * pProgressDialog);
 	struct FileSection
 	{
 		FileSection * pNext;
@@ -437,9 +436,9 @@ public:
 	FileSection * BuildSectionList(int NumLine1Begin, int NumLine1AfterEnd,
 									int NumLine2Begin, int NumLine2AfterEnd, bool UseLineGroups);
 
-	eFileComparisionResult PreCompareFiles(CMd5HashCalculator * pMd5Calc, BOOL volatile & bStopOperation);
-	eFileComparisionResult PreCompareTextFiles(BOOL volatile & bStopOperation);
-	eFileComparisionResult PreCompareBinaryFiles(CMd5HashCalculator * pMd5Calc, BOOL volatile & bStopOperation);
+	eFileComparisionResult PreCompareFiles(CMd5HashCalculator * pMd5Calc, class CProgressDialog * pProgressDialog);
+	eFileComparisionResult PreCompareTextFiles(class CProgressDialog * pProgressDialog);
+	eFileComparisionResult PreCompareBinaryFiles(CMd5HashCalculator * pMd5Calc, class CProgressDialog * pProgressDialog);
 
 	int m_CompletedPercent;
 	eFileComparisionResult m_ComparisionResult;

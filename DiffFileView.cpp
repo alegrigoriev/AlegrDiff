@@ -29,6 +29,7 @@ CDiffFileView::CDiffFileView()
 	m_ShowLineNumbers(false),
 	m_OnActivateViewEntered(false),
 	m_LineNumberMarginWidth(0),
+	m_CharOverhang(0),
 	m_DrawnSelEnd(0, 0)
 {
 	// init font size, to avoid zero divide
@@ -455,14 +456,8 @@ void CDiffFileView::OnWindowCloseDiff()
 
 void CDiffFileView::OnInitialUpdate()
 {
-	// create font
-	{
-		CWindowDC wdc(this);
-		CFont * pOldFont = wdc.SelectObject( & GetApp()->m_NormalFont);
-		wdc.GetTextMetrics( & m_FontMetric);
-		wdc.SelectObject(pOldFont);
-	}
 	CView::OnInitialUpdate();
+	UpdateTextMetrics();
 	UpdateVScrollBar();
 	UpdateHScrollBar();
 	CreateAndShowCaret();
@@ -1447,3 +1442,33 @@ void CDiffFileView::OnEditSelectAll()
 	CreateAndShowCaret();
 }
 
+
+void CDiffFileView::UpdateTextMetrics()
+{
+	// create font
+	CThisApp * pApp = GetApp();
+
+	CWindowDC wdc(this);
+	CFont * pFont =  & pApp->m_NormalFont;
+
+	CFont font;
+	if (pApp->m_NormalLogFont.lfItalic
+		|| pApp->m_AddedLogFont.lfItalic
+		|| pApp->m_ErasedLogFont.lfItalic
+		|| pApp->m_NormalLogFont.lfWeight > FW_NORMAL
+		|| pApp->m_AddedLogFont.lfWeight > FW_NORMAL
+		|| pApp->m_ErasedLogFont.lfWeight > FW_NORMAL)
+	{
+		LOGFONT lf = pApp->m_NormalLogFont;
+		lf.lfItalic = TRUE;
+		lf.lfWeight = FW_BLACK;
+		font.CreateFontIndirect( & lf);
+
+		pFont = & font;
+	}
+
+	CFont * pOldFont = wdc.SelectObject(pFont);
+	wdc.GetTextMetrics( & m_FontMetric);
+	wdc.SelectObject(pOldFont);
+
+}

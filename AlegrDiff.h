@@ -78,7 +78,7 @@ public:
 	CFont m_ErasedFont;
 	int m_FontPointSize;
 	void OnFontChanged();
-	void UpdateAllDiffViews();
+	void UpdateAllDiffViews(LPARAM lHint = 0L, CObject* pHint = NULL);
 
 	void OpenFilePairView(FilePair * pPair);
 	// Overrides

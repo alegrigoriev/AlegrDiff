@@ -276,7 +276,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 0.699 beta",IDC_STATIC,35,14,128,8,
+    CTEXT           "AlegrDiff Version 0.8 beta",IDC_STATIC,35,14,128,8,
                     SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001\nalegr@earthlink.net",
                     IDC_STATIC,35,34,128,21
@@ -309,9 +309,10 @@ BEGIN
     CONTROL         "&Binary comparison only",IDC_CHECK_BINARY,"Button",
                     BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,99,126,10
     LTEXT           "File&name filter: ",IDC_STATIC,7,117,46,8
-    EDITTEXT        IDC_EDITFILENAME_FILTER,64,114,136,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,35,148,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,115,148,50,14
+    COMBOBOX        IDC_EDITFILENAME_FILTER,64,116,136,60,CBS_DROPDOWN | 
+                    WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_DIALOG_COMPARE_DIRS_ADVANCED DIALOG DISCARDABLE  0, 0, 207, 295
@@ -333,7 +334,6 @@ BEGIN
     CONTROL         "&Binary comparison only",IDC_CHECK_BINARY,"Button",
                     BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,99,126,10
     LTEXT           "File&name filter: ",IDC_STATIC,7,117,46,8
-    EDITTEXT        IDC_EDITFILENAME_FILTER,57,114,143,14,ES_AUTOHSCROLL
     CONTROL         "Compare the following files as C/C++:",IDC_CHECK_C_CPP,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,133,126,10
     EDITTEXT        IDC_EDIT_C_CPP,7,151,193,14,ES_AUTOHSCROLL
@@ -353,6 +353,8 @@ BEGIN
                     UDS_NOTHOUSANDS,85,250,10,14
     DEFPUSHBUTTON   "OK",IDOK,29,274,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,123,274,50,14
+    COMBOBOX        IDC_EDITFILENAME_FILTER,64,116,136,56,CBS_DROPDOWN | 
+                    WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_DIALOG_GOTO_LINE DIALOG DISCARDABLE  0, 0, 154, 80
@@ -470,8 +472,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,6,9,0
- PRODUCTVERSION 0,6,9,1
+ FILEVERSION 0,8,0,0
+ PRODUCTVERSION 0,8,0,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -489,14 +491,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "AleGr Software\0"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application\0"
-            VALUE "FileVersion", "0, 6, 9, 0\0"
+            VALUE "FileVersion", "0, 8, 0, 0\0"
             VALUE "InternalName", "AlegrDiff\0"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "AlegrDiff.EXE\0"
-            VALUE "PrivateBuild", "Beta 0.69\0"
+            VALUE "PrivateBuild", "Beta 0.8\0"
             VALUE "ProductName", "AlegrDiff Application\0"
-            VALUE "ProductVersion", "0, 6, 9, 1\0"
+            VALUE "ProductVersion", "0, 8, 0, 1\0"
             VALUE "SpecialBuild", "\0"
         END
     END

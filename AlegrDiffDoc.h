@@ -38,8 +38,6 @@ public:
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CAlegrDiffDoc)
 public:
-	virtual BOOL OnNewDocument();
-	virtual void Serialize(CArchive& ar);
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -97,7 +95,14 @@ public:
 	LinePair * GetLinePair(int line) const;
 	int GetTotalLines() const { return m_TotalLines; }
 	void SetCaretPosition(int pos, int line, int flags);
-	enum { CaretPositionChanged = 0x100, FileLoaded = 0x200, InvalidateRange = 0x400, };
+
+	enum {
+		CaretPositionChanged = 1,
+		FileLoaded,
+		InvalidateRange,
+		FontChanged,
+	};
+
 	void SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags = SetPositionMakeCentered);
 	void OnEditGotonextdiff();
 	void OnEditGotoprevdiff();
@@ -109,7 +114,6 @@ public:
 	//{{AFX_VIRTUAL(CFilePairDoc)
 public:
 protected:
-	virtual BOOL OnNewDocument();
 	virtual BOOL SaveModified();
 	//}}AFX_VIRTUAL
 

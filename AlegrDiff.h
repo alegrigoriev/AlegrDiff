@@ -121,6 +121,7 @@ public:
 	afx_msg void OnUpdateViewShowLineNumbers(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditAccept(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditDecline(CCmdUI* pCmdUI);
+	afx_msg void OnHelpUsing();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

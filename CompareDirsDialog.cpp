@@ -68,7 +68,7 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 	if (m_bAdvanced)
 	{
 		DDX_Control(pDX, IDC_SPIN1, m_Spin);
-		DDX_Check(pDX, IDC_CHECK_BINARY_FILES, m_bUseBinaryFilesFilter);
+//	    DDX_Check(pDX, IDC_CHECK_BINARY_FILES, m_bUseBinaryFilesFilter);
 		DDX_Check(pDX, IDC_CHECK_C_CPP, m_bUseCppFilter);
 		DDX_Check(pDX, IDC_CHECK_IGNORE, m_bUseIgnoreFilter);
 		DDX_Text(pDX, IDC_EDIT_BINARY_FILES, m_sBinaryFilesFilter);
@@ -232,7 +232,7 @@ void CCompareDirsDialog::OnCheckBinary()
 	pWnd = GetDlgItem(IDC_CHECK_BINARY_FILES);
 	if (pWnd)
 	{
-		pWnd->EnableWindow(NotBinary);
+		pWnd->EnableWindow(0 && NotBinary);
 	}
 	pWnd = GetDlgItem(IDC_EDIT_BINARY_FILES);
 	if (pWnd)

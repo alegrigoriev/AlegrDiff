@@ -442,6 +442,7 @@ CPreferencesPropertySheet::CPreferencesPropertySheet(UINT nIDCaption, CWnd* pPar
 CPreferencesPropertySheet::CPreferencesPropertySheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
 	:CPropertySheet(pszCaption, pParentWnd, iSelectPage)
 {
+	m_psh.dwFlags |= PSH_NOAPPLYNOW;
 	AddPage( & m_FilesPage);
 	AddPage( & m_ComparisionPage);
 	AddPage( & m_ViewPage);

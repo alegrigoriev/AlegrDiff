@@ -200,6 +200,10 @@ public:
 	afx_msg void OnFileCopySecondDirFile();
 	afx_msg void OnFileProperties();
 	afx_msg void OnUpdateFileMergeSave(CCmdUI* pCmdUI);
+	afx_msg void OnMergeInclude();
+	afx_msg void OnUpdateMergeInclude(CCmdUI* pCmdUI);
+	afx_msg void OnMergeExclude();
+	afx_msg void OnUpdateMergeExclude(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 protected:
 	DECLARE_MESSAGE_MAP()

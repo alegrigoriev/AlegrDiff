@@ -34,6 +34,7 @@ BEGIN_MESSAGE_MAP(CAlegrDiffApp, CWinApp)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_LINE_NUMBERS, OnUpdateViewShowLineNumbers)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_ACCEPT, OnUpdateEditAccept)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DECLINE, OnUpdateEditDecline)
+	ON_COMMAND(ID_HELP_USING, OnHelpUsing)
 	//}}AFX_MSG_MAP
 	// Standard file based document commands
 //	ON_COMMAND(ID_FILE_OPEN, CWinApp::OnFileOpen)
@@ -1178,4 +1179,26 @@ void AddStringToHistory(const CString & str, CString history[], int NumItems, bo
 		history[i] = history[i - 1];
 	}
 	history[0] = str;
+}
+
+void CAlegrDiffApp::OnHelpUsing()
+{
+	TCHAR ModuleName[MAX_PATH] = {0};
+	TCHAR FullPathName[MAX_PATH];
+	LPTSTR FilePart = FullPathName;
+	GetModuleFileName(NULL, ModuleName, MAX_PATH);
+	GetFullPathName(ModuleName, MAX_PATH, FullPathName, & FilePart);
+	*FilePart = 0;
+	CString HelpfileName(FullPathName);
+	HelpfileName += _T("AlegrDiff.mht");
+
+	SHELLEXECUTEINFO shex;
+	memset( & shex, 0, sizeof shex);
+	shex.cbSize = sizeof shex;
+	shex.hwnd = NULL;
+	//shex.lpVerb = _T("Open");
+	shex.lpFile = HelpfileName;
+	shex.nShow = SW_SHOWDEFAULT;
+	ShellExecuteEx( & shex);
+
 }

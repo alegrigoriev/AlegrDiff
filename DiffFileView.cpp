@@ -179,11 +179,11 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 			{
 				Color = pApp->m_AddedTextColor;
 				pFont = & pApp->m_AddedFont;
-				if (pSection->IsAccepted())
+				if (pSection->IsAccepted() || pSection->IsIncluded())
 				{
 					BackgroundColor = pApp->m_AcceptedTextBackgroundColor;
 				}
-				else if (pSection->IsDeclined())
+				else if (pSection->IsDeclined() || pSection->IsDiscarded())
 				{
 					BackgroundColor = pApp->m_DiscardedTextBackgroundColor;
 				}
@@ -192,11 +192,11 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 			{
 				Color = pApp->m_ErasedTextColor;
 				pFont = & pApp->m_ErasedFont;
-				if (pSection->IsAccepted())
+				if (pSection->IsAccepted() || pSection->IsDiscarded())
 				{
 					BackgroundColor = pApp->m_DiscardedTextBackgroundColor;
 				}
-				else if (pSection->IsDeclined())
+				else if (pSection->IsDeclined() || pSection->IsIncluded())
 				{
 					BackgroundColor = pApp->m_AcceptedTextBackgroundColor;
 				}

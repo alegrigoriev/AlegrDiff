@@ -112,7 +112,6 @@ BEGIN
     BUTTON      ID_VIEW_SHOW_LINE_NUMBERS
     BUTTON      ID_VIEW_IGNORE_WHITESPACES
     SEPARATOR
-    BUTTON      ID_FILE_PRINT
     BUTTON      ID_APP_ABOUT
 END
 
@@ -139,11 +138,136 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
+        MENUITEM "Using AlegrDiff...",          ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
     END
 END
 
 IDR_ALEGRDTYPE MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Compare &Directories...",     ID_FILE_COMPAREDIRECTORIES
+        MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
+        MENUITEM "Merge Files And Save...",     ID_FILE_MERGE_SAVE
+        MENUITEM SEPARATOR
+        MENUITEM "Edit 1st File",               ID_FILE_EDIT_FIRST
+        MENUITEM "Edit 2nd File",               ID_FILE_EDIT_SECOND
+        MENUITEM "Properties...\tAlt+Enter",    ID_FILE_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "Copy 1st File To Folder...",  ID_FILE_COPY_FIRST_DIR_FILE
+        MENUITEM "Copy 2nd File To Folder...",  ID_FILE_COPY_SECOND_DIR_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "Preferences...",              ID_FILE_PREFERENCES
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit\tAlt+F4",               ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Go To Next Diff\tF7",         ID_EDIT_GOTONEXTDIFF
+        MENUITEM "Go To Prev Diff\tShift+F7",   ID_EDIT_GOTOPREVDIFF
+        MENUITEM "Go To Line...\tCtrl+G",       ID_EDIT_GOTOLINE
+        MENUITEM SEPARATOR
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "Select All\tCtrl+A",          ID_EDIT_SELECT_ALL
+        MENUITEM "&Find...\tCtrl+F",            ID_EDIT_FIND
+        MENUITEM "Find Next\tF3",               ID_EDIT_FIND_NEXT
+    END
+    POPUP "&Merge"
+    BEGIN
+        MENUITEM "Merge File &2 Text\tShift+F6", ID_EDIT_ACCEPT
+        MENUITEM "Merge File &1 Text\tF6",      ID_EDIT_DECLINE
+        MENUITEM "Merge Files And Save...",     ID_FILE_MERGE_SAVE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+        MENUITEM SEPARATOR
+        MENUITEM "Refresh\tF5",                 ID_VIEW_REFRESH
+        MENUITEM "Show Line Numbers",           ID_VIEW_SHOW_LINE_NUMBERS
+        MENUITEM "Ignore &Whitespaces\tCtrl+W", ID_VIEW_IGNORE_WHITESPACES
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&New Window",                 ID_WINDOW_NEW
+        MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
+        MENUITEM "&Tile",                       ID_WINDOW_TILE_HORZ
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Using AlegrDiff...",          ID_HELP_USING
+        MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
+    END
+END
+
+IDR_MENU_LISTVIEW_CONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP " "
+    BEGIN
+        MENUITEM "&View differences\tEnter",    ID_LISTVIEW_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "Edit &1st file",              ID_FILE_EDIT_FIRST
+        MENUITEM "Edit &2nd file",              ID_FILE_EDIT_SECOND
+        MENUITEM SEPARATOR
+        MENUITEM "Copy files from 1st dir...",  ID_FILE_COPY_FIRST_DIR
+        MENUITEM "Copy files from 2nd dir...",  ID_FILE_COPY_SECOND_DIR
+    END
+END
+
+IDR_MENU_FILEDIFF_CONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP " "
+    BEGIN
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "Merge File 1 Version\tF6",    ID_EDIT_DECLINE
+        MENUITEM "Merge File 2 Version\tShift+F6", ID_EDIT_ACCEPT
+        MENUITEM "Include To Merged",           ID_MERGE_INCLUDE
+        MENUITEM "Exclude From Merged",         ID_MERGE_EXCLUDE
+    END
+END
+
+IDR_ALEGRDTYPE_LIST MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Compare &Directories...",     ID_FILE_COMPAREDIRECTORIES
+        MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
+        MENUITEM SEPARATOR
+        MENUITEM "&View differences\tEnter",    ID_LISTVIEW_OPEN1
+        MENUITEM "Edit 1st File",               ID_FILE_EDIT_FIRST
+        MENUITEM "Edit 2nd File",               ID_FILE_EDIT_SECOND
+        MENUITEM SEPARATOR
+        MENUITEM "Copy Files From 1st Folder",  ID_FILE_COPY_FIRST_DIR
+        MENUITEM "Copy Files From 2nd Folder",  ID_FILE_COPY_SECOND_DIR
+        MENUITEM "Save File List...",           ID_FILE_SAVE_LIST
+        MENUITEM SEPARATOR
+        MENUITEM "Preferences...",              ID_FILE_PREFERENCES
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit\tAlt+F4",               ID_APP_EXIT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Hide Selected Files",        ID_VIEW_HIDESELECTEDFILES
+        MENUITEM "&Show All Files",             ID_VIEW_SHOWALLFILES
+        MENUITEM "Refresh\tF5",                 ID_VIEW_REFRESH
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
+        MENUITEM "&Tile",                       ID_WINDOW_TILE_HORZ
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Using AlegrDiff...",          ID_HELP_USING
+        MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
+    END
+END
+
+IDR_ALEGRDTYPE_V2 MENU PRELOAD DISCARDABLE 
 BEGIN
     POPUP "&File"
     BEGIN
@@ -199,79 +323,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
-    END
-END
-
-IDR_MENU_LISTVIEW_CONTEXT MENU DISCARDABLE 
-BEGIN
-    POPUP " "
-    BEGIN
-        MENUITEM "&View differences\tEnter",    ID_LISTVIEW_OPEN
-        MENUITEM SEPARATOR
-        MENUITEM "Edit &1st file",              ID_FILE_EDIT_FIRST
-        MENUITEM "Edit &2nd file",              ID_FILE_EDIT_SECOND
-        MENUITEM SEPARATOR
-        MENUITEM "Copy files from 1st dir...",  ID_FILE_COPY_FIRST_DIR
-        MENUITEM "Copy files from 2nd dir...",  ID_FILE_COPY_SECOND_DIR
-    END
-END
-
-IDR_MENU_FILEDIFF_CONTEXT MENU DISCARDABLE 
-BEGIN
-    POPUP " "
-    BEGIN
-        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
-        MENUITEM "Merge File 1 Version\tF6",    ID_EDIT_DECLINE
-        MENUITEM "Merge File 2 Version\tShift+F6", ID_EDIT_ACCEPT
-        MENUITEM "Include To Merged",           ID_MERGE_INCLUDE
-        MENUITEM "Exclude From Merged",         ID_MERGE_EXCLUDE
-    END
-END
-
-IDR_ALEGRDTYPE_LIST MENU PRELOAD DISCARDABLE 
-BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "Compare &Directories...",     ID_FILE_COMPAREDIRECTORIES
-        MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
-        MENUITEM SEPARATOR
-        MENUITEM "&View differences\tEnter",    ID_LISTVIEW_OPEN1
-        MENUITEM "Edit 1st File",               ID_FILE_EDIT_FIRST
-        MENUITEM "Edit 2nd File",               ID_FILE_EDIT_SECOND
-        MENUITEM SEPARATOR
-        MENUITEM "Copy Files From 1st Folder",  ID_FILE_COPY_FIRST_DIR
-        MENUITEM "Copy Files From 2nd Folder",  ID_FILE_COPY_SECOND_DIR
-        MENUITEM "Save File List...",           ID_FILE_SAVE_LIST
-        MENUITEM SEPARATOR
-        MENUITEM "Preferences...",              ID_FILE_PREFERENCES
-        MENUITEM SEPARATOR
-        MENUITEM "E&xit\tAlt+F4",               ID_APP_EXIT
-    END
-    POPUP "&Edit"
-    BEGIN
-        MENUITEM "Go To Next Diff\tF7",         ID_EDIT_GOTONEXTDIFF
-        MENUITEM "Go To Prev Diff\tShift+F7",   ID_EDIT_GOTOPREVDIFF
-        MENUITEM SEPARATOR
-        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
-        MENUITEM "Select All\tCtrl+A",          ID_EDIT_SELECT_ALL
-    END
-    POPUP "&View"
-    BEGIN
-        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
-        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
-        MENUITEM SEPARATOR
-        MENUITEM "&Hide Selected Files",        ID_VIEW_HIDESELECTEDFILES
-        MENUITEM "&Show All Files",             ID_VIEW_SHOWALLFILES
-        MENUITEM "Refresh\tF5",                 ID_VIEW_REFRESH
-    END
-    POPUP "&Window"
-    BEGIN
-        MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
-        MENUITEM "&Tile",                       ID_WINDOW_TILE_HORZ
-    END
-    POPUP "&Help"
-    BEGIN
+        MENUITEM "Using AlegrDiff...",          ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
     END
 END
@@ -328,8 +380,8 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 0.99.03 beta",IDC_STATIC_VERSION,35,
-                    14,128,8,SS_NOPREFIX
+    CTEXT           "AlegrDiff Version 1.00",IDC_STATIC_VERSION,35,14,128,8,
+                    SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001",IDC_STATIC,35,
                     29,128,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
@@ -637,13 +689,13 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,99,3,0
- PRODUCTVERSION 0,99,3,0
+ FILEVERSION 1,0,0,0
+ PRODUCTVERSION 1,0,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
- FILEFLAGS 0x9L
+ FILEFLAGS 0x1L
 #else
- FILEFLAGS 0x8L
+ FILEFLAGS 0x0L
 #endif
  FILEOS 0x4L
  FILETYPE 0x1L
@@ -656,14 +708,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "AleGr Software\0"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application\0"
-            VALUE "FileVersion", "0, 99, 3, 0\0"
+            VALUE "FileVersion", "1, 0, 0, 0\0"
             VALUE "InternalName", "AlegrDiff\0"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "AlegrDiff.EXE\0"
-            VALUE "PrivateBuild", "Beta 0.99.03\0"
+            VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "AlegrDiff Application\0"
-            VALUE "ProductVersion", "0, 99, 3, 0\0"
+            VALUE "ProductVersion", "1, 0, 0, 0\0"
             VALUE "SpecialBuild", "\0"
         END
     END
@@ -858,6 +910,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
     ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+    ID_HELP_USING           "Opens help file about the application use\nHelp"
 END
 
 STRINGTABLE DISCARDABLE 

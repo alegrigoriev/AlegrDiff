@@ -510,6 +510,10 @@ BEGIN_MESSAGE_MAP(CFilePairDoc, CDocument)
 	ON_COMMAND(ID_FILE_COPY_SECOND_DIR_FILE, OnFileCopySecondDirFile)
 	ON_COMMAND(ID_FILE_PROPERTIES, OnFileProperties)
 	ON_UPDATE_COMMAND_UI(ID_FILE_MERGE_SAVE, OnUpdateFileMergeSave)
+	ON_COMMAND(ID_MERGE_INCLUDE, OnMergeInclude)
+	ON_UPDATE_COMMAND_UI(ID_MERGE_INCLUDE, OnUpdateMergeInclude)
+	ON_COMMAND(ID_MERGE_EXCLUDE, OnMergeExclude)
+	ON_UPDATE_COMMAND_UI(ID_MERGE_EXCLUDE, OnUpdateMergeExclude)
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
 END_MESSAGE_MAP()
@@ -720,7 +724,11 @@ void CFilePairDoc::OnViewRefresh()
 	}
 	// check if there are any changes labeled
 	int flags = GetAcceptDeclineFlags(TextPos(0, 0), TextPos(GetTotalLines(), 0));
-	if (0 != (flags & (FileDiffSection::FlagDecline | FileDiffSection::FlagAccept)))
+	if (0 != (flags &
+			(StringSection::Declined
+				| StringSection::Accepted
+				| StringSection::Included
+				| StringSection::Discarded)))
 	{
 		CString s;
 		s.Format(IDS_QUERY_RELOAD_FILES,
@@ -1339,12 +1347,18 @@ void CFilePairDoc::OnEditAccept()
 	{
 		int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
 
-		int SetFlags = FileDiffSection::FlagAccept;
-		int ResetFlags = FileDiffSection::FlagDecline | FileDiffSection::FlagUndefined;
-		if (flags & FileDiffSection::FlagAccept)
+		int SetFlags = StringSection::Accepted;
+		int ResetFlags = StringSection::Declined
+						| StringSection::Undefined
+						| StringSection::Included
+						| StringSection::Discarded;
+		if (flags & StringSection::Accepted)
 		{
-			SetFlags = FileDiffSection::FlagUndefined;
-			ResetFlags = FileDiffSection::FlagAccept | FileDiffSection::FlagDecline;
+			SetFlags = StringSection::Undefined;
+			ResetFlags = StringSection::Accepted
+						| StringSection::Declined
+						| StringSection::Included
+						| StringSection::Discarded;
 		}
 
 		TextPos begin = DisplayPosToLinePos(m_SelectionAnchor);
@@ -1363,8 +1377,8 @@ void CFilePairDoc::OnEditAccept()
 void CFilePairDoc::OnUpdateEditAccept(CCmdUI* pCmdUI)
 {
 	int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
-	pCmdUI->Enable(0 == (flags & FileDiffSection::FlagNoDifference));
-	pCmdUI->SetCheck(0 != (flags & FileDiffSection::FlagAccept));
+	pCmdUI->Enable(0 == (flags & StringSection::NoDifference));
+	pCmdUI->SetCheck(0 != (flags & StringSection::Accepted));
 }
 
 void CFilePairDoc::OnEditDecline()
@@ -1372,12 +1386,18 @@ void CFilePairDoc::OnEditDecline()
 	if (NULL != m_pFilePair)
 	{
 		int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
-		int SetFlags = FileDiffSection::FlagDecline;
-		int ResetFlags = FileDiffSection::FlagAccept | FileDiffSection::FlagUndefined;
-		if (flags & FileDiffSection::FlagDecline)
+		int SetFlags = StringSection::Declined;
+		int ResetFlags = StringSection::Accepted
+						| StringSection::Undefined
+						| StringSection::Included
+						| StringSection::Discarded;
+		if (flags & StringSection::Declined)
 		{
-			SetFlags = FileDiffSection::FlagUndefined;
-			ResetFlags = FileDiffSection::FlagAccept | FileDiffSection::FlagDecline;
+			SetFlags = StringSection::Undefined;
+			ResetFlags = StringSection::Accepted
+						| StringSection::Declined
+						| StringSection::Included
+						| StringSection::Discarded;
 		}
 		TextPos begin = DisplayPosToLinePos(m_SelectionAnchor);
 		TextPos end = DisplayPosToLinePos(m_CaretPos);
@@ -1395,8 +1415,8 @@ void CFilePairDoc::OnEditDecline()
 void CFilePairDoc::OnUpdateEditDecline(CCmdUI* pCmdUI)
 {
 	int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
-	pCmdUI->Enable(0 == (flags & FileDiffSection::FlagNoDifference));
-	pCmdUI->SetCheck(0 != (flags & FileDiffSection::FlagDecline));
+	pCmdUI->Enable(0 == (flags & StringSection::NoDifference));
+	pCmdUI->SetCheck(0 != (flags & StringSection::Declined));
 }
 
 BOOL CFilePairDoc::SaveModified()
@@ -1407,7 +1427,8 @@ BOOL CFilePairDoc::SaveModified()
 	}
 	int flags = m_pFilePair->GetAcceptDeclineFlags(TextPos(0, 0),
 													TextPos(GetTotalLines(), 0), false);
-	if (0 != (flags & (FileDiffSection::FlagDecline | FileDiffSection::FlagAccept)))
+	if (0 != (flags & (StringSection::Declined | StringSection::Accepted
+				| StringSection::Included | StringSection::Discarded)))
 	{
 		CString s;
 		s.Format(IDS_QUERY_SAVE_MERGED_FILE,
@@ -1434,17 +1455,17 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 									TextPos(GetTotalLines(), 0));
 	int DefaultFlags = 0;
 	CThisApp * pApp = GetApp();
-	if (flags & FileDiffSection::FlagUndefined)
+	if (flags & StringSection::Undefined)
 	{
 		CDialog dlg(IDD_DIALOG_ACCEPT_OR_DECLINE_ALL);
 		int result = dlg.DoModal();
 		if (IDOK == result)
 		{
-			DefaultFlags = FileDiffSection::FlagAccept;
+			DefaultFlags = StringSection::Accepted;
 		}
 		else if (IDNO == result)
 		{
-			DefaultFlags = FileDiffSection::FlagDecline;
+			DefaultFlags = StringSection::Declined;
 		}
 		else
 		{
@@ -1454,7 +1475,7 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 	}
 	CString FileExt;
 	CString FileName;
-	if (DefaultFlags == FileDiffSection::FlagDecline)
+	if (DefaultFlags == StringSection::Declined)
 	{
 		FileName = m_pFilePair->pFirstFile->GetName();
 	}
@@ -1543,8 +1564,9 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags)
 		if (NULL == pPair->pFirstLine && NULL != pSection)
 		{
 			if (pSection->IsDeclined()
-				|| ( ! pSection->IsAccepted()
-					&& (DefaultFlags & FileDiffSection::FlagDecline)))
+				|| pSection->IsDiscarded()
+				|| ( ! pSection->IsAccepted() && ! pSection->IsIncluded()
+					&& (DefaultFlags & StringSection::Declined)))
 			{
 				// skip the line completely
 				continue;
@@ -1553,8 +1575,9 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags)
 		else if (NULL == pPair->pSecondLine && NULL != pSection)
 		{
 			if (pSection->IsAccepted()
-				|| ( ! pSection->IsDeclined()
-					&& (DefaultFlags & FileDiffSection::FlagAccept)))
+				|| pSection->IsDiscarded()
+				|| ( ! pSection->IsDeclined() && ! pSection->IsIncluded()
+					&& (DefaultFlags & StringSection::Accepted)))
 			{
 				// skip the line completely
 				continue;
@@ -1568,15 +1591,17 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags)
 			// check if the block is accepted
 			if ((pSection->Attr & pSection->Erased)
 				&& (pSection->IsAccepted()
-					|| ( ! pSection->IsDeclined()
-						&& (DefaultFlags & FileDiffSection::FlagAccept))))
+					|| pSection->IsDiscarded()
+					|| ( ! pSection->IsDeclined() && ! pSection->IsIncluded()
+						&& (DefaultFlags & StringSection::Accepted))))
 			{
 				continue;
 			}
 			else if ((pSection->Attr & pSection->Inserted)
 					&& (pSection->IsDeclined()
 						|| ( ! pSection->IsAccepted()
-							&& (DefaultFlags & FileDiffSection::FlagDecline))))
+							|| pSection->IsDiscarded() && ! pSection->IsIncluded()
+							&& (DefaultFlags & StringSection::Declined))))
 			{
 				continue;
 			}
@@ -1662,7 +1687,7 @@ int CFilePairDoc::GetAcceptDeclineFlags(TextPos begin, TextPos end)
 {
 	if (NULL == m_pFilePair)
 	{
-		return FileDiffSection::FlagNoDifference;
+		return StringSection::NoDifference;
 	}
 	return m_pFilePair->GetAcceptDeclineFlags(
 											DisplayPosToLinePos(begin), DisplayPosToLinePos(end), m_bIgnoreWhitespaces);
@@ -1820,4 +1845,85 @@ void CFilePairDoc::OnUpdateFileMergeSave(CCmdUI* pCmdUI)
 	pCmdUI->Enable(m_pFilePair != NULL
 					&& m_pFilePair->pFirstFile != NULL
 					&& m_pFilePair->pSecondFile != NULL);
+}
+
+
+void CFilePairDoc::OnMergeInclude()
+{
+	if (NULL != m_pFilePair)
+	{
+		int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
+
+		int SetFlags = StringSection::Included;
+		int ResetFlags = StringSection::Declined
+						| StringSection::Undefined
+						| StringSection::Accepted
+						| StringSection::Discarded;
+		if (flags & StringSection::Included)
+		{
+			SetFlags = StringSection::Undefined;
+			ResetFlags = StringSection::Accepted
+						| StringSection::Declined
+						| StringSection::Included
+						| StringSection::Discarded;
+		}
+
+		TextPos begin = DisplayPosToLinePos(m_SelectionAnchor);
+		TextPos end = DisplayPosToLinePos(m_CaretPos);
+		if (m_pFilePair->ModifyAcceptDeclineFlags(begin, end, SetFlags, ResetFlags))
+		{
+			InvalidatedRange ir;
+			ir.begin = LinePosToDisplayPos(begin);
+			ir.end = LinePosToDisplayPos(end);
+			UpdateAllViews(NULL, InvalidateRange, & ir);
+			SetModifiedFlag(TRUE);
+		}
+	}
+}
+
+void CFilePairDoc::OnUpdateMergeInclude(CCmdUI* pCmdUI)
+{
+	int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
+	pCmdUI->Enable(0 == (flags & StringSection::NoDifference));
+	pCmdUI->SetCheck(0 != (flags & StringSection::Included));
+}
+
+void CFilePairDoc::OnMergeExclude()
+{
+	if (NULL != m_pFilePair)
+	{
+		int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
+
+		int SetFlags = StringSection::Discarded;
+		int ResetFlags = StringSection::Declined
+						| StringSection::Undefined
+						| StringSection::Accepted
+						| StringSection::Included;
+		if (flags & StringSection::Discarded)
+		{
+			SetFlags = StringSection::Undefined;
+			ResetFlags = StringSection::Accepted
+						| StringSection::Declined
+						| StringSection::Included
+						| StringSection::Discarded;
+		}
+
+		TextPos begin = DisplayPosToLinePos(m_SelectionAnchor);
+		TextPos end = DisplayPosToLinePos(m_CaretPos);
+		if (m_pFilePair->ModifyAcceptDeclineFlags(begin, end, SetFlags, ResetFlags))
+		{
+			InvalidatedRange ir;
+			ir.begin = LinePosToDisplayPos(begin);
+			ir.end = LinePosToDisplayPos(end);
+			UpdateAllViews(NULL, InvalidateRange, & ir);
+			SetModifiedFlag(TRUE);
+		}
+	}
+}
+
+void CFilePairDoc::OnUpdateMergeExclude(CCmdUI* pCmdUI)
+{
+	int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
+	pCmdUI->Enable(0 == (flags & StringSection::NoDifference));
+	pCmdUI->SetCheck(0 != (flags & StringSection::Discarded));
 }

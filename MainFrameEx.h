@@ -1,5 +1,4 @@
 #pragma once
-#include <afxpriv.h>
 #include "MessageMapT.h"
 
 // MainFrameExT template

@@ -27,12 +27,22 @@ public:
 				CWnd* pParentWnd = NULL,
 				class CStringHistory * pHistory = NULL);
 
+	CFolderDialog(UINT TitleId,
+				LPCTSTR lpszStartingDirectory = NULL,
+				bool EnableCreateFolder = false,
+				DWORD dwFlags = BIF_RETURNFSANCESTORS |
+								BIF_RETURNONLYFSDIRS |
+								BIF_NEWDIALOGSTYLE,
+				CWnd* pParentWnd = NULL,
+				class CStringHistory * pHistory = NULL);
+
 	BROWSEINFO m_bi;
 	TCHAR szBuffer[MAX_PATH + 1];
 	bool m_bEnableCreateDir;
 	CString szStartupDir;
 	CString szDisplayName;
 	CString szPath;
+	CString m_sTitle;
 	CComboBox m_HistoryCombo;
 // Operations
 	virtual int DoModal();

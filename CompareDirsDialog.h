@@ -30,8 +30,6 @@ public:
 	CString	m_FilenameFilter;
 	CString	m_sFirstDir;
 	CString	m_sSecondDir;
-	CString m_sHistory[15];
-	CString m_sFilters[10];
 	bool m_bAdvanced;
 
 	// Advanced items:

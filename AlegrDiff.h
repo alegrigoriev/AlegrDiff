@@ -62,7 +62,8 @@ public:
 	CString m_CopyFilesDir;
 
 	CString m_sFindHistory[15];
-
+	CString m_RecentFolders[15];
+	CString m_sFilters[10];
 
 	int m_UsedFilenameFilter;
 

@@ -67,8 +67,15 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 	FileList FileList1;
 	FileList FileList2;
 
-	m_sFirstDir = dir1;
-	m_sSecondDir = dir2;
+	// make full names from the directories
+	LPTSTR pFilePart;
+	TCHAR buf[MAX_PATH];
+
+	GetFullPathName(dir1, MAX_PATH, buf, & pFilePart);
+	m_sFirstDir = buf;
+
+	GetFullPathName(dir2, MAX_PATH, buf, & pFilePart);
+	m_sSecondDir = buf;
 
 	if (! FileList1.LoadFolder(m_sFirstDir, bRecurseSubdirs,
 								m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern))

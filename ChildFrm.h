@@ -18,7 +18,7 @@ public:
 
 // Attributes
 public:
-
+	using CMDIChildWnd::OnClose;
 // Operations
 public:
 

@@ -1588,16 +1588,69 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection ** ppSections, int nMinMatchingChars)
 {
 	int nDifferentChars = 0;
-	LPCTSTR str1 = pStr1->GetText();
-	LPCTSTR str2 = pStr2->GetText();
-
-	LPCTSTR pEqualStrBegin = str1;
-	StringSection * pLastSection = NULL;
 	// zero the sections list
 	if (ppSections != NULL)
 	{
 		*ppSections = NULL;
 	}
+	if (NULL == pStr2 && NULL == pStr1)
+	{
+		return 0;
+	}
+
+	if (NULL == pStr2)
+	{
+		if (NULL == ppSections)
+		{
+			return pStr1->GetLength();
+		}
+		StringSection * pSection = new StringSection;
+		if (NULL != pSection)
+		{
+			pSection->pBegin = pStr1->GetText();
+			pSection->Length = pStr1->GetLength();
+			pSection->Attr = StringSection::Erased;
+			pSection->pNext = NULL;
+
+			// check if it is whitespace difference
+			if (pStr1->IsBlank())
+			{
+				pSection->Attr |= pSection->Whitespace;
+			}
+			*ppSections = pSection;
+		}
+		return pStr1->GetLength();
+	}
+
+	if (NULL == pStr1)
+	{
+		if (NULL == ppSections)
+		{
+			return pStr2->GetLength();
+		}
+		StringSection * pSection = new StringSection;
+		if (NULL != pSection)
+		{
+			pSection->pBegin = pStr2->GetText();
+			pSection->Length = pStr2->GetLength();
+			pSection->Attr = StringSection::Inserted;
+			pSection->pNext = NULL;
+
+			// check if it is whitespace difference
+			if (pStr2->IsBlank())
+			{
+				pSection->Attr |= pSection->Whitespace;
+			}
+			*ppSections = pSection;
+		}
+		return pStr2->GetLength();
+	}
+
+	LPCTSTR str1 = pStr1->GetText();
+	LPCTSTR str2 = pStr2->GetText();
+
+	LPCTSTR pEqualStrBegin = str1;
+	StringSection * pLastSection = NULL;
 	while (1)
 	{
 		if (str1[0] == str2[0]
@@ -1898,7 +1951,7 @@ FileLine::~FileLine()
 
 bool FileLine::LooksLike(const FileLine * pOtherLine, int PercentsDifferent) const
 {
-	unsigned nCharsDifferent = MatchStrings(this, pOtherLine, NULL, 3);
+	unsigned nCharsDifferent = MatchStrings(this, pOtherLine, NULL, GetApp()->m_MinMatchingChars);
 	// nCharsDifferent won't count whitespace difference
 
 	unsigned nLength = GetNormalizedLength();
@@ -2697,15 +2750,34 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 	nPrevSectionEnd2 = 0;
 	for (pSection = pFirstSection; pSection != NULL; pSection = pSection->pNext)
 	{
-		while (pSection->File1LineBegin > nPrevSectionEnd1
+		while (1)
+		{
+			if (pSection->File1LineBegin > nPrevSectionEnd1
+				&& pFirstFile->GetLine(pSection->File1LineBegin - 1)->IsBlank())
+			{
+				pSection->File1LineBegin--;
+				continue;
+			}
+			if (pSection->File2LineBegin > nPrevSectionEnd2
+				&& pSecondFile->GetLine(pSection->File2LineBegin - 1)->IsBlank())
+			{
+				pSection->File2LineBegin--;
+				continue;
+			}
+			if (pSection->File1LineBegin > nPrevSectionEnd1
 				&& pSection->File2LineBegin > nPrevSectionEnd2
 				&& pFirstFile->GetLine(pSection->File1LineBegin - 1)->
 				LooksLike(pSecondFile->GetLine(pSection->File2LineBegin - 1),
 						pApp->m_PercentsOfLookLikeDifference))
-		{
-			// expand the section down, to include alike lines
-			pSection->File1LineBegin--;
-			pSection->File2LineBegin--;
+			{
+				// expand the section down, to include alike lines
+				pSection->File1LineBegin--;
+				pSection->File2LineBegin--;
+			}
+			else
+			{
+				break;
+			}
 		}
 
 		nPrevSectionEnd1 = pSection->File1LineEnd;
@@ -2717,15 +2789,35 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 		int nNextSectionBegin1 = pSection->pNext->File1LineBegin;
 		int nNextSectionBegin2 = pSection->pNext->File2LineBegin;
 
-		while (pSection->File1LineEnd < nNextSectionBegin1
+		while (1)
+		{
+			if (pSection->File1LineEnd < nNextSectionBegin1
+				&& pFirstFile->GetLine(pSection->File1LineEnd)->IsBlank())
+			{
+				pSection->File1LineEnd++;
+				continue;
+			}
+			if (pSection->File2LineEnd < nNextSectionBegin2
+				&& pSecondFile->GetLine(pSection->File2LineEnd)->IsBlank())
+			{
+				pSection->File2LineEnd++;
+				continue;
+			}
+
+			if (pSection->File1LineEnd < nNextSectionBegin1
 				&& pSection->File2LineEnd < nNextSectionBegin2
 				&& pFirstFile->GetLine(pSection->File1LineEnd)->
 				LooksLike(pSecondFile->GetLine(pSection->File2LineEnd),
 						pApp->m_PercentsOfLookLikeDifference))
-		{
-			// expand the section up, to include alike lines
-			pSection->File1LineEnd++;
-			pSection->File2LineEnd++;
+			{
+				// expand the section up, to include alike lines
+				pSection->File1LineEnd++;
+				pSection->File2LineEnd++;
+			}
+			else
+			{
+				break;
+			}
 		}
 
 	}
@@ -2760,6 +2852,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 				pDiffSection->m_Begin.pos = 0;
 				pDiffSection->m_End.line = nLineIndex + pSection->File1LineBegin - nPrevSectionEnd1;
 				pDiffSection->m_End.pos = 0;
+				pDiffSection->m_Flags |= FileDiffSection::FlagWhitespace;
 				m_DiffSections.Add(pDiffSection);
 			}
 			for (i = nPrevSectionEnd1; i < pSection->File1LineBegin; i++, nLineIndex++)
@@ -2769,21 +2862,30 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 				{
 					break;
 				}
-				m_LinePairs[nLineIndex] = pPair;
+				m_LinePairs.SetAtGrow(nLineIndex, pPair);
 
 				pPair->pFirstLine = pFirstFile->GetLine(i);
 				pPair->pSecondLine = NULL;
 
-				pPair->pFirstSection = new StringSection;
-				if (NULL == pPair->pFirstSection)
+				StringSection * pSection = new StringSection;
+				pPair->pFirstSection = pSection;
+				if (NULL == pSection)
 				{
 					break;
 				}
-				pPair->pFirstSection->pNext = NULL;
-				pPair->pFirstSection->Attr = StringSection::Erased;
-				pPair->pFirstSection->pBegin = pPair->pFirstLine->GetText();
-				pPair->pFirstSection->Length = pPair->pFirstLine->GetLength();
-				pPair->pFirstSection->pDiffSection = pDiffSection;
+				pSection->pNext = NULL;
+				pSection->Attr = StringSection::Erased;
+				pSection->pBegin = pPair->pFirstLine->GetText();
+				pSection->Length = pPair->pFirstLine->GetLength();
+				pSection->pDiffSection = pDiffSection;
+				if (pPair->pFirstLine->IsBlank())
+				{
+					pSection->Attr |= StringSection::Whitespace;
+				}
+				else if (NULL != pDiffSection)
+				{
+					pDiffSection->m_Flags &= ~FileDiffSection::FlagWhitespace;
+				}
 			}
 		}
 		if (pSection->File2LineBegin > nPrevSectionEnd2)
@@ -2795,6 +2897,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 				pDiffSection->m_Begin.pos = 0;
 				pDiffSection->m_End.line = nLineIndex + pSection->File2LineBegin - nPrevSectionEnd2;
 				pDiffSection->m_End.pos = 0;
+				pDiffSection->m_Flags |= FileDiffSection::FlagWhitespace;
 				m_DiffSections.Add(pDiffSection);
 			}
 			// add lines from second file (mark as added)
@@ -2805,38 +2908,96 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 				{
 					break;
 				}
-				m_LinePairs[nLineIndex] = pPair;
+				m_LinePairs.SetAtGrow(nLineIndex, pPair);
 
 				pPair->pFirstLine = NULL;
 				pPair->pSecondLine = pSecondFile->GetLine(i);
 
-				pPair->pFirstSection = new StringSection;
-				if (NULL == pPair->pFirstSection)
+				StringSection * pSection = new StringSection;
+				pPair->pFirstSection = pSection;
+				if (NULL == pSection)
 				{
 					break;
 				}
-				pPair->pFirstSection->pNext = NULL;
-				pPair->pFirstSection->Attr = StringSection::Inserted;
-				pPair->pFirstSection->pBegin = pPair->pSecondLine->GetText();
-				pPair->pFirstSection->Length = pPair->pSecondLine->GetLength();
-				pPair->pFirstSection->pDiffSection = pDiffSection;
+				pSection->pNext = NULL;
+				pSection->Attr = StringSection::Inserted;
+				pSection->pBegin = pPair->pSecondLine->GetText();
+				pSection->Length = pPair->pSecondLine->GetLength();
+				pSection->pDiffSection = pDiffSection;
+				if (pPair->pSecondLine->IsBlank())
+				{
+					pSection->Attr |= StringSection::Whitespace;
+				}
+				else if (NULL != pDiffSection)
+				{
+					pDiffSection->m_Flags &= ~FileDiffSection::FlagWhitespace;
+				}
 			}
 
 		}
-		for (i = 0; i < pSection->File1LineEnd - pSection->File1LineBegin; i++, nLineIndex++)
+		int line1 = pSection->File1LineBegin;
+		int line2 = pSection->File2LineBegin;
+		for ( ; line1 < pSection->File1LineEnd || line2 < pSection->File2LineEnd; nLineIndex++)
 		{
 			pPair = new LinePair;
 			if (NULL == pPair)
 			{
 				break;
 			}
-			m_LinePairs[nLineIndex] = pPair;
+			m_LinePairs.SetAtGrow(nLineIndex, pPair);
+
 			pPair->pFirstSection = NULL;
 
-			pPair->pFirstLine = pFirstFile->GetLine(i + pSection->File1LineBegin);
-			pPair->pSecondLine = pSecondFile->GetLine(i + pSection->File2LineBegin);
+			if (line1 < pSection->File1LineEnd)
+			{
+				pPair->pFirstLine = pFirstFile->GetLine(line1);
+			}
+			else
+			{
+				pPair->pFirstLine = NULL;
+			}
+
+			if (line2 < pSection->File2LineEnd)
+			{
+				pPair->pSecondLine = pSecondFile->GetLine(line2);
+			}
+			else
+			{
+				pPair->pSecondLine = NULL;
+			}
+
+			// if only one of the strings is blank, make a single-line entry
+			if (NULL != pPair->pFirstLine
+				&& pPair->pFirstLine->IsBlank())
+			{
+				if (NULL == pPair->pSecondLine
+					|| ! pPair->pSecondLine->IsBlank())
+				{
+					pPair->pSecondLine = NULL;
+				}
+			}
+
+			if (NULL != pPair->pSecondLine
+				&& pPair->pSecondLine->IsBlank())
+			{
+				if (NULL == pPair->pFirstLine
+					|| ! pPair->pFirstLine->IsBlank())
+				{
+					pPair->pFirstLine = NULL;
+				}
+			}
+			if (NULL != pPair->pFirstLine)
+			{
+				line1++;
+			}
+
+			if (NULL != pPair->pSecondLine)
+			{
+				line2++;
+			}
+
 			MatchStrings(pPair->pFirstLine, pPair->pSecondLine,
-						& pPair->pFirstSection, 3);
+						& pPair->pFirstSection, pApp->m_MinMatchingChars);
 
 			int pos = 0;
 			for (StringSection * pSection = pPair->pFirstSection; pSection != NULL; pSection = pSection->pNext)
@@ -2882,7 +3043,8 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 		nPrevSectionEnd1 = pSection->File1LineEnd;
 		nPrevSectionEnd2 = pSection->File2LineEnd;
 	}
-	ASSERT(nLineIndex == nTotalLines);
+	//ASSERT(nLineIndex == nTotalLines);
+	m_LinePairs.SetSize(nLineIndex);
 	// deallocate the sections, don't need them anymore
 	for (pSection = pFirstSection; pSection != NULL; )
 	{

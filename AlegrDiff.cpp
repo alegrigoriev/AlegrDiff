@@ -47,7 +47,6 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_pFileDiffTemplate(NULL),
 	m_pListDiffTemplate(NULL),
 	m_TabIndent(4),
-	m_MinIdenticalChars(3),
 	m_NormalTextColor(0),
 	m_ErasedTextColor(0x000000FF),  // red
 	m_AddedTextColor(0x00FF0000),   // blue
@@ -61,6 +60,7 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_bCaseSensitive(true),
 	m_bIgnoreWhitespaces(true),
 	m_MinimalLineLength(2),
+	m_MinMatchingChars(3),
 	m_NumberOfIdenticalLines(5),
 	m_PercentsOfLookLikeDifference(30),
 	m_MinIdenticalLines(5)
@@ -331,6 +331,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("MinimalLineLength"), m_MinimalLineLength, 2, 1, 2048);
 	Profile.AddItem(_T("Settings"), _T("NumberOfIdenticalLines"), m_NumberOfIdenticalLines, 5, 1, 50);
 	Profile.AddItem(_T("Settings"), _T("PercentsOfLookLikeDifference"), m_PercentsOfLookLikeDifference, 30, 0, 99);
+	Profile.AddItem(_T("Settings"), _T("MinMatchingChars"), m_MinMatchingChars, 3, 1, 32);
 
 	Profile.AddItem(_T("Settings"), _T("BinaryFiles"), m_sBinaryFilesFilter,
 					_T("*.exe;*.dll;*.sys;*.obj;*.pdb;*.zip"));
@@ -376,10 +377,14 @@ BOOL CAlegrDiffApp::InitInstance()
 	// Dispatch commands specified on the command line
 	if (!ProcessShellCommand(cmdInfo))
 		return FALSE;
+#else
 #endif
 	// The main window has been initialized, so show and update it.
+	m_pMainWnd->DragAcceptFiles();
 	pMainFrame->ShowWindow(SW_SHOWMAXIMIZED);
 	pMainFrame->UpdateWindow();
+	// process names from the command line
+	ParseCommandLine();
 
 	return TRUE;
 }
@@ -448,72 +453,7 @@ int CAlegrDiffApp::ExitInstance()
 
 void CAlegrDiffApp::OnFileComparedirectories()
 {
-	CCompareDirsDialog dlg;
-	dlg.m_bIncludeSubdirs = m_bRecurseSubdirs;
-	//dlg.m_FilenameFilter = m_sFilenameFilter;
-
-	dlg.m_bUseBinaryFilesFilter = m_bUseBinaryFilesFilter;
-	dlg.m_sBinaryFilesFilter = m_sBinaryFilesFilter;
-
-	dlg.m_bUseCppFilter = m_bUseCppFilter;
-	dlg.m_sCppFilesFilter = m_sCppFilesFilter;
-
-	dlg.m_bUseIgnoreFilter = m_bUseIgnoreFilter;
-	dlg.m_sIgnoreFilesFilter = m_sIgnoreFilesFilter;
-
-	dlg.m_nTabIndent = m_TabIndent;
-
-	dlg.m_BinaryComparision = m_BinaryComparision;
-
-	dlg.m_bAdvanced = m_bAdvancedCompareDialog;
-
-	if (IDOK == dlg.DoModal())
-	{
-		m_sFilenameFilter = dlg.m_FilenameFilter;
-		m_bRecurseSubdirs = (1 == dlg.m_bIncludeSubdirs);
-
-		m_bUseBinaryFilesFilter = (0 != dlg.m_bUseBinaryFilesFilter);
-		m_sBinaryFilesFilter = dlg.m_sBinaryFilesFilter;
-
-		m_bUseCppFilter = (0 != dlg.m_bUseCppFilter);
-		m_sCppFilesFilter = dlg.m_sCppFilesFilter;
-
-		m_bUseIgnoreFilter = (0 != dlg.m_bUseIgnoreFilter);
-		m_sIgnoreFilesFilter = dlg.m_sIgnoreFilesFilter;
-
-		m_TabIndent = dlg.m_nTabIndent;
-
-		m_BinaryComparision = dlg.m_BinaryComparision;
-
-		m_bAdvancedCompareDialog = dlg.m_bAdvanced;
-
-		CAlegrDiffDoc * pDoc = (CAlegrDiffDoc *)
-								m_pListDiffTemplate->OpenDocumentFile(NULL);
-		if (NULL == pDoc)
-		{
-			return;
-		}
-		pDoc->SetTitle("");
-
-		// make full names from the directories
-		LPTSTR pFilePart;
-		TCHAR buf[MAX_PATH];
-
-		GetFullPathName(dlg.m_sFirstDir, MAX_PATH, buf, & pFilePart);
-		dlg.m_sFirstDir = buf;
-
-		GetFullPathName(dlg.m_sSecondDir, MAX_PATH, buf, & pFilePart);
-		dlg.m_sSecondDir = buf;
-
-		if (pDoc->BuildFilePairList(dlg.m_sFirstDir, dlg.m_sSecondDir, m_bRecurseSubdirs))
-		{
-			pDoc->UpdateAllViews(NULL);
-		}
-		else
-		{
-			pDoc->OnCloseDocument();
-		}
-	}
+	CompareDirectories(NULL, NULL);
 }
 
 void CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
@@ -529,116 +469,7 @@ void CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 
 void CAlegrDiffApp::OnFileComparefiles()
 {
-	// check if there is already a CFilePairDoc
-	CString Name1;
-	CString Name2;
-
-	CString title1;
-	title1.LoadString(IDS_OPEN_FIRST_TITLE);
-
-	CString title2;
-	title2.LoadString(IDS_OPEN_SECOND_TITLE);
-
-	CString Filter;
-	Filter.LoadString(IDS_FILENAME_FILTER);
-
-	COpenDiffDialog dlg1(TRUE, NULL, NULL,
-						OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLETEMPLATE,
-						Filter);
-	dlg1.m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_OPEN_TEMPLATE);
-
-	dlg1.m_ofn.lpstrInitialDir = m_FileDir1;
-	dlg1.m_ofn.lpstrTitle = title1;
-	dlg1.m_ofn.nFilterIndex = m_UsedFilenameFilter;
-
-	dlg1.m_bBinaryMode = m_BinaryComparision;
-
-	if (IDOK != dlg1.DoModal())
-	{
-		return;
-	}
-	TCHAR CurrDir1[MAX_PATH] = {0};
-	GetCurrentDirectory(MAX_PATH, CurrDir1);
-
-	COpenDiffDialog dlg2(TRUE, NULL, NULL,
-						OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLETEMPLATE,
-						Filter);
-
-	dlg2.m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_OPEN_TEMPLATE);
-	dlg2.m_ofn.lpstrInitialDir = m_FileDir2;
-	dlg2.m_ofn.lpstrTitle = title2;
-	dlg2.m_ofn.nFilterIndex = dlg1.m_ofn.nFilterIndex;
-
-	dlg2.m_bBinaryMode = dlg1.m_bBinaryMode;
-
-	if (IDOK != dlg2.DoModal())
-	{
-		return;
-	}
-
-	m_UsedFilenameFilter = dlg1.m_ofn.nFilterIndex;
-	m_BinaryComparision = dlg1.m_bBinaryMode;
-
-	TCHAR CurrDir2[MAX_PATH] = {0};
-	GetCurrentDirectory(MAX_PATH, CurrDir2);
-
-	Name1 = dlg1.GetPathName();
-	Name2 = dlg2.GetPathName();
-
-	TCHAR FileDir1[MAX_PATH];
-	LPTSTR pFileName1 = FileDir1;
-	GetFullPathName(Name1, MAX_PATH, FileDir1, & pFileName1);
-	*pFileName1 = 0;
-
-	TCHAR FileDir2[MAX_PATH];
-	LPTSTR pFileName2 = FileDir2;
-	GetFullPathName(Name2, MAX_PATH, FileDir2, & pFileName2);
-	*pFileName2 = 0;
-
-	m_FileDir1 = CurrDir1;
-	m_FileDir2 = CurrDir2;
-
-	WIN32_FIND_DATA wfd1;
-	WIN32_FIND_DATA wfd2;
-	HANDLE hFind = FindFirstFile(Name1, & wfd1);
-	if (INVALID_HANDLE_VALUE == hFind
-		|| NULL == hFind)
-	{
-		AfxMessageBox("Couldn't open first source file");
-		return;
-	}
-	FindClose(hFind);
-
-	hFind = FindFirstFile(Name2, & wfd2);
-	if (INVALID_HANDLE_VALUE == hFind
-		|| NULL == hFind)
-	{
-		AfxMessageBox("Couldn't open second source file");
-		return;
-	}
-	FindClose(hFind);
-
-	CFilePairDoc * pDoc = (CFilePairDoc *)m_pFileDiffTemplate->OpenDocumentFile(NULL);
-	if (NULL != pDoc)
-	{
-		FilePair * pPair = new FilePair;
-
-		CString sCFilesPattern;
-		if (m_bUseCppFilter)
-		{
-			sCFilesPattern = PatternToMultiCString(m_sCppFilesFilter);
-		}
-		pPair->pFirstFile = new FileItem( & wfd1, FileDir1, "",
-										MultiPatternMatches(wfd1.cFileName, sCFilesPattern));
-
-		pPair->pSecondFile = new FileItem( & wfd2, FileDir2, "",
-											MultiPatternMatches(wfd2.cFileName, sCFilesPattern));
-
-		pDoc->SetFilePair(pPair);
-		// SetFilePair references the pair, we need to compensate it
-		pPair->Dereference();
-	}
-
+	CompareFiles(NULL, NULL);
 }
 
 void CAlegrDiffApp::OnFilePreferences()
@@ -670,6 +501,7 @@ void CAlegrDiffApp::OnFilePreferences()
 	dlg.m_ComparisionPage.m_MinimalLineLength = m_MinimalLineLength;
 	dlg.m_ComparisionPage.m_NumberOfIdenticalLines = m_NumberOfIdenticalLines;
 	dlg.m_ComparisionPage.m_PercentsOfLookLikeDifference = m_PercentsOfLookLikeDifference;
+	dlg.m_ComparisionPage.m_MinMatchingChars = m_MinMatchingChars;
 
 	if (IDOK == dlg.DoModal())
 	{
@@ -688,6 +520,7 @@ void CAlegrDiffApp::OnFilePreferences()
 		m_MinimalLineLength = dlg.m_ComparisionPage.m_MinimalLineLength;
 		m_NumberOfIdenticalLines = dlg.m_ComparisionPage.m_NumberOfIdenticalLines;
 		m_PercentsOfLookLikeDifference = dlg.m_ComparisionPage.m_PercentsOfLookLikeDifference;
+		m_MinMatchingChars = dlg.m_ComparisionPage.m_MinMatchingChars;
 
 		if (dlg.m_ViewPage.m_bFontChanged)
 		{
@@ -870,4 +703,336 @@ void CAlegrDiffApp::OnUpdateEditDecline(CCmdUI* pCmdUI)
 	// if there is no handler, disable and uncheck
 	pCmdUI->Enable(FALSE);
 	pCmdUI->SetCheck(0);
+}
+
+void CAlegrDiffApp::ParseCommandLine()
+{
+	LPTSTR Arg1 = NULL;
+	LPTSTR Arg2 = NULL;
+
+	for (int i = 1; i < __argc; i++)
+	{
+		LPTSTR pszParam = __targv[i];
+		if (pszParam[0] == '-' || pszParam[0] == '/')
+		{
+			// remove flag specifier
+			++pszParam;
+		}
+		else
+		{
+			if (NULL == Arg1 || 0 == Arg1[0])
+			{
+				Arg1 = pszParam;
+			}
+			else if (NULL == Arg2 || 0 == Arg2[0])
+			{
+				Arg2 = pszParam;
+			}
+			else
+			{
+				//return;
+			}
+		}
+	}
+	if (NULL == Arg1 || 0 == Arg1[0])
+	{
+		return;
+	}
+	OpenPairOfPathnames(Arg1, Arg2);
+}
+
+		// compare folders. If only one folder specified, open dialog
+void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filter)
+{
+	CCompareDirsDialog dlg;
+	dlg.m_bIncludeSubdirs = m_bRecurseSubdirs;
+	dlg.m_bUseBinaryFilesFilter = m_bUseBinaryFilesFilter;
+	dlg.m_sBinaryFilesFilter = m_sBinaryFilesFilter;
+
+	dlg.m_bUseCppFilter = m_bUseCppFilter;
+	dlg.m_sCppFilesFilter = m_sCppFilesFilter;
+
+	dlg.m_bUseIgnoreFilter = m_bUseIgnoreFilter;
+	dlg.m_sIgnoreFilesFilter = m_sIgnoreFilesFilter;
+
+	dlg.m_nTabIndent = m_TabIndent;
+
+	dlg.m_BinaryComparision = m_BinaryComparision;
+
+	dlg.m_bAdvanced = m_bAdvancedCompareDialog;
+
+	if (NULL != filter)
+	{
+		dlg.m_FilenameFilter = m_sFilenameFilter;
+	}
+
+	if (NULL != dir1)
+	{
+		dlg.m_sFirstDir = dir1;
+	}
+
+	if (NULL != dir2)
+	{
+		dlg.m_sSecondDir = dir2;
+	}
+
+	// run the dialog only if one of the directoriees is not specified
+	if ( ! (dlg.m_sFirstDir.IsEmpty() || dlg.m_sSecondDir.IsEmpty())
+		|| IDOK == dlg.DoModal())
+	{
+		m_sFilenameFilter = dlg.m_FilenameFilter;
+		m_bRecurseSubdirs = (1 == dlg.m_bIncludeSubdirs);
+
+		m_bUseBinaryFilesFilter = (0 != dlg.m_bUseBinaryFilesFilter);
+		m_sBinaryFilesFilter = dlg.m_sBinaryFilesFilter;
+
+		m_bUseCppFilter = (0 != dlg.m_bUseCppFilter);
+		m_sCppFilesFilter = dlg.m_sCppFilesFilter;
+
+		m_bUseIgnoreFilter = (0 != dlg.m_bUseIgnoreFilter);
+		m_sIgnoreFilesFilter = dlg.m_sIgnoreFilesFilter;
+
+		m_TabIndent = dlg.m_nTabIndent;
+
+		m_BinaryComparision = dlg.m_BinaryComparision;
+
+		m_bAdvancedCompareDialog = dlg.m_bAdvanced;
+
+		CAlegrDiffDoc * pDoc = (CAlegrDiffDoc *)
+								m_pListDiffTemplate->OpenDocumentFile(NULL);
+		if (NULL == pDoc)
+		{
+			return;
+		}
+		pDoc->SetTitle("");
+
+		if (pDoc->BuildFilePairList(dlg.m_sFirstDir, dlg.m_sSecondDir, m_bRecurseSubdirs))
+		{
+			pDoc->UpdateAllViews(NULL);
+		}
+		else
+		{
+			pDoc->OnCloseDocument();
+		}
+	}
+}
+
+void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
+{
+	// TODO: check if there is already a CFilePairDoc
+	CString Name1;
+	CString Name2;
+	if (pName1 != NULL)
+	{
+		Name1 = pName1;
+	}
+
+	if (pName2 != NULL)
+	{
+		Name2 = pName2;
+	}
+
+
+	CString Filter;
+	Filter.LoadString(IDS_FILENAME_FILTER);
+
+	CString title1;
+	title1.LoadString(IDS_OPEN_FIRST_TITLE);
+	COpenDiffDialog dlg1(TRUE, NULL, NULL,
+						OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLETEMPLATE,
+						Filter);
+	dlg1.m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_OPEN_TEMPLATE);
+
+	dlg1.m_ofn.lpstrInitialDir = m_FileDir1;
+	dlg1.m_ofn.lpstrTitle = title1;
+	dlg1.m_ofn.nFilterIndex = m_UsedFilenameFilter;
+
+	dlg1.m_bBinaryMode = m_BinaryComparision;
+
+	if (Name1.IsEmpty())
+	{
+		if (IDOK != dlg1.DoModal())
+		{
+			return;
+		}
+		Name1 = dlg1.GetPathName();
+		TCHAR CurrDir1[MAX_PATH] = {0};
+		GetCurrentDirectory(MAX_PATH, CurrDir1);
+		m_FileDir1 = CurrDir1;
+	}
+
+	CString title2;
+	title2.LoadString(IDS_OPEN_SECOND_TITLE);
+
+	COpenDiffDialog dlg2(TRUE, NULL, NULL,
+						OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLETEMPLATE,
+						Filter);
+
+	dlg2.m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG_OPEN_TEMPLATE);
+	dlg2.m_ofn.lpstrInitialDir = m_FileDir2;
+	dlg2.m_ofn.lpstrTitle = title2;
+	dlg2.m_ofn.nFilterIndex = dlg1.m_ofn.nFilterIndex;
+
+	dlg2.m_bBinaryMode = dlg1.m_bBinaryMode;
+	if (Name2.IsEmpty())
+	{
+
+		if (IDOK != dlg2.DoModal())
+		{
+			return;
+		}
+
+
+		TCHAR CurrDir2[MAX_PATH] = {0};
+		GetCurrentDirectory(MAX_PATH, CurrDir2);
+		m_FileDir2 = CurrDir2;
+
+		Name2 = dlg2.GetPathName();
+	}
+
+	m_UsedFilenameFilter = dlg2.m_ofn.nFilterIndex;
+	m_BinaryComparision = dlg2.m_bBinaryMode;
+
+	TCHAR FileDir1[MAX_PATH];
+	LPTSTR pFileName1 = FileDir1;
+	GetFullPathName(Name1, MAX_PATH, FileDir1, & pFileName1);
+	*pFileName1 = 0;
+
+	TCHAR FileDir2[MAX_PATH];
+	LPTSTR pFileName2 = FileDir2;
+	GetFullPathName(Name2, MAX_PATH, FileDir2, & pFileName2);
+	*pFileName2 = 0;
+
+
+	WIN32_FIND_DATA wfd1;
+	WIN32_FIND_DATA wfd2;
+	HANDLE hFind = FindFirstFile(Name1, & wfd1);
+	if (INVALID_HANDLE_VALUE == hFind
+		|| NULL == hFind)
+	{
+		CString s;
+		s.Format("Couldn't open \"%s\"", LPCTSTR(Name1));
+		AfxMessageBox(s);
+		return;
+	}
+	FindClose(hFind);
+
+	hFind = FindFirstFile(Name2, & wfd2);
+	if (INVALID_HANDLE_VALUE == hFind
+		|| NULL == hFind)
+	{
+		CString s;
+		s.Format("Couldn't open \"%s\"", LPCTSTR(Name2));
+		AfxMessageBox(s);
+		return;
+	}
+	FindClose(hFind);
+
+	CFilePairDoc * pDoc = (CFilePairDoc *)m_pFileDiffTemplate->OpenDocumentFile(NULL);
+	if (NULL != pDoc)
+	{
+		FilePair * pPair = new FilePair;
+
+		CString sCFilesPattern;
+		if (m_bUseCppFilter)
+		{
+			sCFilesPattern = PatternToMultiCString(m_sCppFilesFilter);
+		}
+		pPair->pFirstFile = new FileItem( & wfd1, FileDir1, "",
+										MultiPatternMatches(wfd1.cFileName, sCFilesPattern));
+
+		pPair->pSecondFile = new FileItem( & wfd2, FileDir2, "",
+											MultiPatternMatches(wfd2.cFileName, sCFilesPattern));
+
+		pDoc->SetFilePair(pPair);
+		// SetFilePair references the pair, we need to compensate it
+		pPair->Dereference();
+	}
+}
+
+void CAlegrDiffApp::OpenPairOfPathnames(LPTSTR Arg1, LPTSTR Arg2)
+{
+	// check if the string contains '*' or '?'
+	TRACE("CAlegrDiffApp::OpenPairOfPathnames: name1=%s, name2=%s\n", Arg1, Arg2);
+	LPTSTR pArg1 = Arg1;
+	CString filter;
+	// find end of line
+	while (*pArg1 != 0) { pArg1++; }
+
+	bool hasWildcard = false;
+	while (pArg1 >= Arg1)
+	{
+		if ('*' == *pArg1
+			|| '?' == *pArg1)
+		{
+			hasWildcard = true;
+		}
+		if ('\\' == *pArg1
+			|| ':' == *pArg1)
+		{
+			if (hasWildcard)
+			{
+				filter = pArg1+1;
+				pArg1[1] = 0;
+			}
+			if ('\\' == *pArg1)
+			{
+				//*pArg = 0;
+			}
+			break;
+		}
+		pArg1--;
+	}
+
+	WIN32_FIND_DATA wfd;
+	HANDLE hFind = FindFirstFile(Arg1, & wfd);
+	if (NULL == hFind || INVALID_HANDLE_VALUE == hFind)
+	{
+		return;
+	}
+	FindClose(hFind);
+	// check if it's folder or file
+	if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	{
+		if (Arg2 != NULL && Arg2[0] != 0)
+		{
+			WIN32_FIND_DATA wfd2;
+			hFind = FindFirstFile(Arg2, & wfd2);
+			if (NULL == hFind
+				|| INVALID_HANDLE_VALUE == hFind)
+			{
+				// TODO: show error or open dialog
+				return;
+			}
+			FindClose(hFind);
+			if (! (wfd2.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+			{
+				return;
+			}
+			if ( ! hasWildcard)
+			{
+				// find which folder is older
+				if (0) if (wfd2.ftLastWriteTime.dwHighDateTime < wfd.ftLastWriteTime.dwHighDateTime
+							|| (wfd2.ftLastWriteTime.dwHighDateTime == wfd.ftLastWriteTime.dwHighDateTime
+								&& wfd2.ftLastWriteTime.dwLowDateTime < wfd.ftLastWriteTime.dwLowDateTime))
+					{
+						LPTSTR tmp = Arg1;
+						Arg1 = Arg2;
+						Arg2 = tmp;
+					}
+			}
+		}
+		// TODO: process /B (binary) option
+		CompareDirectories(Arg1, Arg2, filter);
+	}
+	else
+	{
+		if (hasWildcard)
+		{
+			return;
+		}
+		// TODO: find which file is older
+		// TODO: process /B (binary) option
+		CompareFiles(Arg1, Arg2);
+	}
 }

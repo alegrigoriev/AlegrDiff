@@ -2763,7 +2763,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 		nPrevSectionEnd2 = pSection->File2LineEnd;
 	}
 
-	// scan list of sections and try to expand them downwards with looking like lines
+	// scan list of sections and try to expand them downwards with looking like and blank lines
 	nPrevSectionEnd1 = 0;
 	nPrevSectionEnd2 = 0;
 	for (pSection = pFirstSection; pSection != NULL; pSection = pSection->pNext)

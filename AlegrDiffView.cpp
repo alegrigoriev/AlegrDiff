@@ -290,7 +290,7 @@ void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, FilePa
 		break;
 	}
 
-	sort(PairArray.begin(), PairArray.end(), bind3rd(FilePairSortFunc(FilePair::Compare), comp));
+	std::sort(PairArray.begin(), PairArray.end(), bind3rd(FilePairSortFunc(FilePair::Compare), comp));
 }
 
 void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)

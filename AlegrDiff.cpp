@@ -849,12 +849,10 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 	TCHAR FileDir1[MAX_PATH];
 	LPTSTR pFileName1 = FileDir1;
 	GetFullPathName(Name1, MAX_PATH, FileDir1, & pFileName1);
-	*pFileName1 = 0;
 
 	TCHAR FileDir2[MAX_PATH];
 	LPTSTR pFileName2 = FileDir2;
 	GetFullPathName(Name2, MAX_PATH, FileDir2, & pFileName2);
-	*pFileName2 = 0;
 
 	WIN32_FIND_DATA wfd1;
 	WIN32_FIND_DATA wfd2;
@@ -880,11 +878,13 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 	}
 	FindClose(hFind);
 
-	AddStringToHistory(FileDir2 + Name2, m_RecentFiles,
+	AddStringToHistory(FileDir2, m_RecentFiles,
 						sizeof m_RecentFiles / sizeof m_RecentFiles[0], false);
-	AddStringToHistory(FileDir1 + Name1, m_RecentFiles,
+	AddStringToHistory(FileDir1, m_RecentFiles,
 						sizeof m_RecentFiles / sizeof m_RecentFiles[0], false);
 
+	*pFileName1 = 0;
+	*pFileName2 = 0;
 	CFilePairDoc * pDoc = (CFilePairDoc *)m_pFileDiffTemplate->OpenDocumentFile(NULL);
 	if (NULL != pDoc)
 	{

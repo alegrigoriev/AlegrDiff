@@ -1,5 +1,7 @@
 #pragma once
 #include "MessageMapT.h"
+// if you use MainFrameHandlePaletteChange,
+// #include "GdiObjectSave.h" before this file
 
 // MainFrameExT template
 enum MainFrameFeatures

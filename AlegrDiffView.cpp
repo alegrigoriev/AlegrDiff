@@ -426,6 +426,49 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
 	CHeaderCtrl * pHeader = pListCtrl->GetHeaderCtrl();
 
+	{
+		CFont * pFont = pHeader->GetFont();
+		CDC * pDC = GetWindowDC();
+		CDC cdc;
+		cdc.CreateCompatibleDC(pDC);
+
+		CFont * pOldFont = pDC->SelectObject(pFont);
+
+		TEXTMETRIC tm;
+		pDC->GetTextMetrics( & tm);
+		pDC->SelectObject(pOldFont);
+		ReleaseDC(pDC);
+
+		unsigned const ArrowWidth = (tm.tmAscent - tm.tmInternalLeading) | 1;
+		unsigned const ArrowHeight = ArrowWidth / 2 + 1;
+
+		int const ArrayWidth = ((ArrowWidth / 8) + 1) & ~1;
+		int const ArraySize = ArrowHeight * 2 * ArrayWidth;
+
+		UCHAR * pBmp = new UCHAR[ArraySize];
+		if (pBmp)
+		{
+			memset(pBmp, 0xFF, ArraySize);
+
+			for (unsigned y = 0; y < ArrowHeight; y++)
+			{
+				for (unsigned x = y; x < ArrowWidth - y; x++)
+				{
+					pBmp[y * ArrayWidth + x / 8] &= 0xFF7F >> (x & 7);
+					pBmp[(ArrowHeight * 2 - 1 - y) * ArrayWidth + x / 8] &= 0xFF7F >> (x & 7);
+				}
+			}
+
+			m_ArrowDownBitmap.DeleteObject();
+			m_ArrowUpBitmap.DeleteObject();
+
+			m_ArrowDownBitmap.CreateBitmap(ArrowWidth, ArrowHeight, 1, 1, pBmp);
+			m_ArrowUpBitmap.CreateBitmap(ArrowWidth, ArrowHeight, 1, 1, pBmp + ArrowHeight * ArrayWidth);
+
+			delete[] pBmp;
+		}
+
+	}
 	// Delete all of the items.
 	for (int i = pHeader->GetItemCount(); i > 0; i--)
 	{
@@ -468,7 +511,8 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 			{
 				TRACE(_T("Inserting column \"%s\" %d, subitem %d\n"),
 					LPCTSTR(titles[i]), col, i);
-				pListCtrl->InsertColumn(col, titles[i], LVCFMT_LEFT, m_ColumnWidthArray[i], i);
+				pListCtrl->InsertColumn(col, titles[i],
+										LVCFMT_BITMAP_ON_RIGHT | LVCFMT_LEFT, m_ColumnWidthArray[i], i);
 
 				m_ViewItemToColumnType[col] = eColumns(i);
 				m_ColumnTypeToViewItem[i] = col;
@@ -478,19 +522,37 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 				if (i == m_SortColumns[0])
 				{
 					HDITEM hdi;
-					hdi.mask = HDI_FORMAT;
 					pHeader->GetItem(col, & hdi);
-					if (m_AscendingSortOrder[0])
+					if (GetApp()->GetComctrl32Ver() >= 0x0600)
 					{
-						hdi.fmt &= ~HDF_SORTUP;
-						hdi.fmt |= HDF_SORTDOWN;
+						hdi.mask = HDI_FORMAT;
+						if (m_AscendingSortOrder[0])
+						{
+							hdi.fmt &= ~HDF_SORTUP;
+							hdi.fmt |= HDF_SORTDOWN;
+						}
+						else
+						{
+							hdi.fmt &= ~HDF_SORTDOWN;
+							hdi.fmt |= HDF_SORTUP;
+						}
 					}
 					else
 					{
-						hdi.fmt &= ~HDF_SORTDOWN;
-						hdi.fmt |= HDF_SORTUP;
+						hdi.mask = HDI_BITMAP | HDI_FORMAT;
+						hdi.fmt |= HDF_BITMAP | HDF_BITMAP_ON_RIGHT;
+
+						if (m_AscendingSortOrder[0])
+						{
+							hdi.hbm = m_ArrowDownBitmap;
+						}
+						else
+						{
+							hdi.hbm = m_ArrowUpBitmap;
+						}
 					}
 					pHeader->SetItem(col, & hdi);
+					pHeader->GetItem(col, & hdi);
 				}
 
 				col++;
@@ -733,7 +795,7 @@ BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 	CThisApp * pApp = GetApp();
 
 	CListCtrl * pListCtrl = & GetListCtrl();
-	CArray<FileItem *, FileItem *> FilesArray;
+	vector<FileItem *> FilesArray;
 
 	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
@@ -756,17 +818,17 @@ BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 			}
 			if (NULL != pFile)
 			{
-				FilesArray.Add(pFile);
+				FilesArray.push_back(pFile);
 			}
 		}
 		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
 	}
-	if (0 == FilesArray.GetSize())
+	if (FilesArray.empty())
 	{
 		return FALSE;
 	}
 
-	CopyFilesToFolder(FilesArray.GetData(), FilesArray.GetSize(), true);
+	CopyFilesToFolder(FilesArray.begin().base(), FilesArray.size(), true);
 	return TRUE;
 }
 

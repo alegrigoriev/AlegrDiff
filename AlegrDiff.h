@@ -34,7 +34,13 @@ enum eColumns
 class CAlegrDiffApp : public CWinApp
 {
 	bool m_bIsWin9x;
+	DWORD m_MajorComctlrVer, m_MinorComcctrlVer;
 public:
+
+	DWORD GetComctrl32Ver() const
+	{
+		return ((m_MajorComctlrVer & 0xFF) << 8) | (m_MinorComcctrlVer & 0xFF);
+	}
 	void OpenPairOfPathnames(LPTSTR path1, LPTSTR path2);
 	void CompareFiles(LPCTSTR name1, LPCTSTR name2);
 	void CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filter = NULL);

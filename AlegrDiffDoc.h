@@ -48,7 +48,8 @@ public:
 public:
 	bool BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 							bool bRecurseSubdirs, bool BinaryComparison);
-	void BuildFilePairList(FileList & FileList1, FileList & FileList2);
+	// if returns true, call UpdateAllViews
+	bool BuildFilePairList(FileList & FileList1, FileList & FileList2);
 	void FreeFilePairList();
 
 
@@ -77,6 +78,8 @@ protected:
 	afx_msg void OnFileCancel();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnUpdateViewRefresh(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

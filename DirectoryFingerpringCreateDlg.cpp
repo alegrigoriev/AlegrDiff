@@ -103,7 +103,7 @@ unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 	// load the directory
 	FileList FileList1;
-	int i;
+	unsigned i;
 
 	// make full names from the directories
 	LPTSTR pFilePart;
@@ -125,7 +125,7 @@ unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
 		InclusionPattern = PatternToMultiCString(_T("*"));
 	}
 
-	if (! FileList1.LoadFolder(FullDirectoryName, m_bIncludeSubdirectories,
+	if (! FileList1.LoadFolder(FullDirectoryName, m_bIncludeSubdirectories != 0,
 								InclusionPattern, ExclusionPattern, PatternToMultiCString(_T("")),
 								PatternToMultiCString(_T(""))))
 	{
@@ -140,11 +140,11 @@ unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
 		return 0;
 	}
 
-	CArray<FileItem *, FileItem *> Files1;
+	vector<FileItem *> Files1;
 
 	FileList1.GetSortedList(Files1, FileList::SortDirFirst);
 	m_TotalDataSize = 0;
-	for (i = 0; i < Files1.GetSize(); i++)
+	for (i = 0; i < Files1.size(); i++)
 	{
 		FileItem * pFile = Files1[i];
 		if ( ! pFile->IsFolder())
@@ -185,7 +185,7 @@ unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
 			m_bIncludeDirectoryStructure, crlf, crlf);
 
 
-	for (i = 0; i < Files1.GetSize() && ! m_StopRunThread; i++)
+	for (i = 0; i < Files1.size() && ! m_StopRunThread; i++)
 	{
 		FileItem * pFile = Files1[i];
 		if (pFile->IsFolder())

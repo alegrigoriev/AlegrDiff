@@ -55,6 +55,20 @@ CAlegrDiffDoc::~CAlegrDiffDoc()
 	FreeFilePairList();
 }
 
+void CAlegrDiffDoc::SetFingerprintCheckingMode(LPCTSTR DirectoryToCheck,
+												LPCTSTR FingerprintFilename)
+{
+	m_bCheckingFingerprint = true;
+
+	m_sSecondDir = DirectoryToCheck;
+
+	CString title(FingerprintFilename);
+	title += _T(" - ");
+	title += DirectoryToCheck;
+
+	SetTitle(title);
+}
+
 bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
 											bool bRecurseSubdirs, bool BinaryComparison)
 {
@@ -187,8 +201,8 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 
 	// amount of data to process
 	ULONGLONG TotalFilesSize = 0;
-	ULONG DirectoryNameIndex = 0;
-	ULONG FileNameIndex = 0;
+//    ULONG DirectoryNameIndex = 0;
+//    ULONG FileNameIndex = 0;
 
 	for (unsigned idx1 = 0, idx2 = 0; idx1 < Files1.size() || idx2 < Files2.size(); )
 	{
@@ -787,7 +801,7 @@ ULONG CFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen,
 {
 	// FileSelect 1 - file 1, 2 - file 2, 0 = both files
 	ULONG TotalChars = 0;
-	CThisApp * pApp = GetApp();
+//    CThisApp * pApp = GetApp();
 	TextPosDisplay begin, end;
 	if (pFrom < pTo)
 	{
@@ -1235,7 +1249,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 	}
 
 	int nStartSearchPos = nSearchPos;
-	int nStartSearchLine = nSearchLine;
+	unsigned nStartSearchLine = nSearchLine;
 	int nPatternLen = _tcslen(pStrToFind);
 
 	if (0 == nPatternLen)
@@ -1356,8 +1370,8 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 					if (0 == _tcsncmp(pStr + nSearchPos, pStrToFind, nPatternLen))
 					{
 						// found
-						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, SearchScope),
-									TextPosDisplay(nSearchLine, nSearchPos, SearchScope));
+						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, (short)SearchScope),
+									TextPosDisplay(nSearchLine, nSearchPos, (short)SearchScope));
 						return true;
 					}
 				}
@@ -1366,8 +1380,8 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 					if (0 ==_tcsnicmp(pStr + nSearchPos, pStrToFind, nPatternLen))
 					{
 						// found
-						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, SearchScope),
-									TextPosDisplay(nSearchLine, nSearchPos, SearchScope));
+						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, (short)SearchScope),
+									TextPosDisplay(nSearchLine, nSearchPos, (short)SearchScope));
 						return true;
 					}
 				}
@@ -1408,7 +1422,7 @@ bool CFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, Tex
 	End.line = OnPos.line;
 
 	int nPos = 0;
-	int CaretPos = OnPos.pos;
+	short CaretPos = OnPos.pos;
 
 	ListHead<StringSection> StrSections;
 	StringSection Section;
@@ -1430,7 +1444,7 @@ bool CFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, Tex
 				return false;
 			}
 			Section.pBegin = pPair->pFirstLine->GetText();
-			Section.Length = pPair->pFirstLine->GetLength();
+			Section.Length = (USHORT)pPair->pFirstLine->GetLength();
 		}
 		else
 		{
@@ -1439,7 +1453,7 @@ bool CFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, Tex
 				return false;
 			}
 			Section.pBegin = pPair->pSecondLine->GetText();
-			Section.Length = pPair->pSecondLine->GetLength();
+			Section.Length = (USHORT)pPair->pSecondLine->GetLength();
 		}
 		StrSections.InsertHead( & Section);
 	}
@@ -1533,8 +1547,8 @@ bool CFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, Tex
 					return false;
 				}
 				// get one char under the cursor
-				Start.pos = CaretPos;
-				End.pos = CaretPos + 1;
+				Start.pos = short(CaretPos);
+				End.pos = short(CaretPos + 1);
 			}
 #ifdef _DEBUG
 			StrSections.RemoveHead();
@@ -1552,7 +1566,7 @@ bool CFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, Tex
 
 void CFilePairDoc::GetWordUnderCursor(CString & Str)
 {
-	int nBeginOffset;
+	int nBeginOffset = 0;
 	int nLength = 0;
 	if (m_CaretPos == m_SelectionAnchor
 		|| m_CaretPos.line != m_SelectionAnchor.line)
@@ -2034,11 +2048,14 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 			return FALSE;
 		}
 		SetModifiedFlag(FALSE);
+		if (bOpenResultFile)
+		{
 #ifndef DEMO_VERSION
-		pApp->OpenSingleFile(FileName);
+			pApp->OpenSingleFile(FileName);
 #else
-		AfxMessageBox("DEMO version doesn't save the merged file. You can only view it\n", MB_OK);
+			AfxMessageBox("DEMO version doesn't save the merged file. You can only view it\n", MB_OK);
 #endif
+		}
 		return TRUE;
 	}
 	else
@@ -2202,7 +2219,7 @@ TextPosDisplay CFilePairDoc::LinePosToDisplayPos(TextPosLine position, int FileS
 {
 	if (NULL == m_pFilePair)
 	{
-		return TextPosDisplay(position.line, position.pos, FileScope);
+		return TextPosDisplay(position.line, (short)position.pos, (short)FileScope);
 	}
 	return m_pFilePair->LinePosToDisplayPos(position, m_bIgnoreWhitespaces, FileScope);
 }

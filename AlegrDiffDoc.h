@@ -64,6 +64,8 @@ public:
 							CProgressDialog * pDlg);
 	bool RebuildFilePairList(CProgressDialog * pDlg);
 	void FreeFilePairList();
+	void SetFingerprintCheckingMode(LPCTSTR DirectoryToCheck,
+									LPCTSTR FingerprintFilename);
 
 // Overrides
 	virtual void OnUpdateAllViews(CView* pSender,

@@ -37,7 +37,7 @@ public:
 	static bool SupportsV5FileDialog();
 
 protected:
-	static size_t OpenfilenameSize();
+	static DWORD OpenfilenameSize();
 
 	CSize m_PrevSize;
 	enum

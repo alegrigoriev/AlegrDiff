@@ -1572,6 +1572,7 @@ void CAlegrDiffApp::OnFileCheckDirectoryFingerprint()
 	}
 
 	pDoc->m_sSecondDir = dlg.m_sDirectory;
+	pDoc->m_bCheckingFingerprint = true;
 
 	CDirectoryFingerprintCheckDlg dlg1(pDoc);
 

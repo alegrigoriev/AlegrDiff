@@ -54,6 +54,11 @@ public:
 		}
 		return false;
 	}
+	CPathExT & operator =(StringType const & src)
+	{
+		m_strPath = src;
+		return *this;
+	}
 };
 
 typedef CPathExT<CString> CPathEx;

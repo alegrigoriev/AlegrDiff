@@ -88,14 +88,14 @@ protected:
 public:
 	TextPos m_CaretPos;
 	TextPos m_SelectionAnchor;
+	bool m_bIgnoreWhitespaces;
 
 // Operations
 public:
 	void SetFilePair(FilePair * pPair);
 	FilePair * GetFilePair() const { return m_pFilePair; }
+	LinePair * GetLinePair(int line) const;
 	int GetTotalLines() const { return m_TotalLines; }
-	bool UseLinePairArray() const { return m_UseLinePairArray; }
-	bool BaseOnFirstFile() const { return m_BaseOnFirstFile; }
 	void SetCaretPosition(int pos, int line, int flags);
 	enum { CaretPositionChanged = 0x100, FileLoaded = 0x200, InvalidateRange = 0x400, };
 	void SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags = SetPositionMakeCentered);
@@ -108,15 +108,13 @@ public:
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CFilePairDoc)
 public:
-	virtual void Serialize(CArchive& ar);   // overridden for document i/o
 protected:
 	virtual BOOL OnNewDocument();
+	virtual BOOL SaveModified();
 	//}}AFX_VIRTUAL
 
 // Implementation
-	bool m_BaseOnFirstFile;
 	int m_TotalLines;
-	bool m_UseLinePairArray;
 	FilePair * m_pFilePair;
 public:
 	virtual ~CFilePairDoc();
@@ -128,12 +126,21 @@ public:
 protected:
 	// Generated message map functions
 public:
+	BOOL DoSaveMerged(BOOL bOpenResultFile);
+	BOOL SaveMergedFile(LPCTSTR Name, int DefaultFlags);
+
 	LPCTSTR GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int * pStrLen);
+	// recalculates offset in the raw line to offset in the line with or without whitespaces shown
+	TextPos LinePosToDisplayPos(TextPos position);
+	// recalculates offset in the line with or without whitespaces shown to offset in the raw line
+	TextPos DisplayPosToLinePos(TextPos position);
+
 	bool GetWordUnderCaret(TextPos & Start, TextPos & End);
-	bool FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive);
 	bool FindWordOrSelection(bool bBackwards);
 	void CaretLeftToWord(bool bCancelSelection);
 	void CaretRightToWord(bool bCancelSelection);
+
+	bool FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive);
 	bool OnEditFind();
 	bool OnEditFindNext();
 	bool OnEditFindPrev();
@@ -155,6 +162,9 @@ public:
 	afx_msg void OnUpdateEditAccept(CCmdUI* pCmdUI);
 	afx_msg void OnEditDecline();
 	afx_msg void OnUpdateEditDecline(CCmdUI* pCmdUI);
+	afx_msg void OnFileMergeSave();
+	afx_msg void OnViewIgnoreWhitespaces();
+	afx_msg void OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 protected:
 	DECLARE_MESSAGE_MAP()

@@ -27,10 +27,10 @@ CDiffFileView::CDiffFileView()
 	m_PreferredRect(0, 0, 0, 0),
 	m_NumberMarginWidth(0),
 	m_ShowLineNumbers(false),
+	m_OnActivateViewEntered(false),
 	m_LineNumberMarginWidth(0),
 	m_DrawnSelEnd(0, 0)
 {
-	m_bIgnoreWhitespaces = GetApp()->m_bIgnoreWhitespaces;
 	// init font size, to avoid zero divide
 	m_FontMetric.tmAveCharWidth = 1;
 	m_FontMetric.tmExternalLeading = 1;
@@ -72,8 +72,6 @@ BEGIN_MESSAGE_MAP(CDiffFileView, CView)
 	ON_COMMAND(ID_EDIT_GOTOLINE, OnEditGotoline)
 	ON_WM_RBUTTONDOWN()
 	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
-	ON_COMMAND(ID_VIEW_IGNORE_WHITESPACES, OnViewIgnoreWhitespaces)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_IGNORE_WHITESPACES, OnUpdateViewIgnoreWhitespaces)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -84,6 +82,7 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 										int nSkipChars, int nVisibleChars, int nTabIndent, int SelBegin, int SelEnd)
 {
 	TCHAR buf[2048];
+	CFilePairDoc* pDoc = GetDocument();
 	CThisApp * pApp = GetApp();
 
 	SelBegin -= nSkipChars;
@@ -109,6 +108,11 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 	int ExpandedLinePos = 0;    // position with expanded tabs
 	for (int nDrawnChars = 0; pSection != NULL && nDrawnChars < nVisibleChars; pSection = pSection->pNext)
 	{
+		if ((pSection->Attr & pSection->Whitespace)
+			&& pDoc->m_bIgnoreWhitespaces)
+		{
+			continue;   // don't show the section
+		}
 		LPCTSTR pText = pSection->pBegin;
 		int Length = pSection->Length;
 		for (int j = 0, k = 0; j < sizeof buf / sizeof buf[0] && k < Length; j++, ExpandedLinePos++)
@@ -1309,6 +1313,11 @@ void CDiffFileView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* 
 {
 	CView::OnActivateView(bActivate, pActivateView, pDeactivateView);
 	TRACE("bActivate=%d, this=%08X, pActivateView=%08X\n", bActivate, this, pActivateView);
+	if (m_OnActivateViewEntered)
+	{
+		return;
+	}
+	m_OnActivateViewEntered = true;
 	if (GetApp()->m_AutoReloadChangedFiles)
 	{
 		if (bActivate && this == pActivateView)
@@ -1316,6 +1325,7 @@ void CDiffFileView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* 
 			GetDocument()->OnViewRefresh();
 		}
 	}
+	m_OnActivateViewEntered = false;
 }
 
 void CDiffFileView::OnEditFind()
@@ -1415,9 +1425,14 @@ void CDiffFileView::OnRButtonDown(UINT nFlags, CPoint point)
 	}
 	else
 	{
-		SetCaretPosition(m_FirstPosSeen + (point1.x + CharWidth() / 2) / CharWidth(),
-						nLine,
-						flags);
+		TextPos NewPos(nLine, m_FirstPosSeen + (point1.x + CharWidth() / 2) / CharWidth());
+		if (GetDocument()->m_CaretPos <= GetDocument()->m_SelectionAnchor
+			&& (NewPos < GetDocument()->m_CaretPos || NewPos > GetDocument()->m_SelectionAnchor)
+			|| GetDocument()->m_CaretPos > GetDocument()->m_SelectionAnchor
+			&& (NewPos > GetDocument()->m_CaretPos || NewPos < GetDocument()->m_SelectionAnchor))
+		{
+			SetCaretPosition(NewPos.pos, nLine, flags);
+		}
 	}
 
 	CView::OnRButtonDown(nFlags, point);
@@ -1429,14 +1444,3 @@ void CDiffFileView::OnEditSelectAll()
 	CreateAndShowCaret();
 }
 
-void CDiffFileView::OnViewIgnoreWhitespaces()
-{
-	m_bIgnoreWhitespaces = ! m_bIgnoreWhitespaces;
-	GetApp()->m_bIgnoreWhitespaces = m_bIgnoreWhitespaces;
-	Invalidate();
-}
-
-void CDiffFileView::OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI)
-{
-	pCmdUI->SetCheck(m_bIgnoreWhitespaces);
-}

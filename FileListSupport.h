@@ -62,7 +62,7 @@ struct TextToken
 class FileDiffSection
 {
 public:
-	FileDiffSection() { m_Flags = 0; }
+	FileDiffSection() { m_Flags = FlagUndefined; }
 	~FileDiffSection() {}
 	TextPos m_Begin;
 	TextPos m_End;
@@ -70,7 +70,9 @@ public:
 	enum { FlagAccept = 1,
 		FlagDecline = 2,
 		FlagNoDifference = 4,
-		FlagWhitespace = 8, };
+		FlagUndefined = 8,
+		FlagWhitespace = 0x100,
+	};
 
 	void AcceptChange() { m_Flags &= ~FlagDecline; m_Flags |= FlagAccept; }
 	void DeclineChange() { m_Flags &= ~FlagAccept; m_Flags |= FlagDecline; }
@@ -123,10 +125,11 @@ public:
 	bool LooksLike(const FileLine * pOtherLine, int PercentsDifferent) const;
 	bool IsBlank() const { return 0 == m_NormalizedStringLength; }
 
-//    bool GetNextToken(TextToken & token);
+	bool IsExtraWhitespace(unsigned pos) const
+	{
+		return 0 != (m_pWhitespaceMask[pos / 8] & (1 << (pos & 7)));
+	}
 
-//    void SetLink(FileLine * pLine) { m_Link = pLine; }
-//    FileLine * GetLink() const { return m_Link; }
 	void SetNext(FileLine * pNext) { m_pNext = pNext; }
 	FileLine * Next() const { return m_pNext; }
 
@@ -134,10 +137,10 @@ public:
 	void SetLineNumber(int num) { m_Number = num; }
 
 	LPCSTR GetText() const { return m_pString; }
-	int GetLength() const { return m_Length; }
+	unsigned GetLength() const { return m_Length; }
 
 	LPCSTR GetNormalizedText() const { return m_pNormalizedString; }
-	int GetNormalizedLength() const { return m_NormalizedStringLength; }
+	unsigned GetNormalizedLength() const { return m_NormalizedStringLength; }
 
 	static int _cdecl HashCompareFunc(const void * p1, const void * p2);
 	static int _cdecl HashAndLineNumberCompareFunc(const void * p1, const void * p2);
@@ -151,24 +154,21 @@ private:
 	DWORD m_GroupHashCode;
 	DWORD m_NormalizedHashCode;
 	DWORD m_NormalizedGroupHashCode;
-//    DWORD m_Flags;
-	//enum { HashValid = 1,
-	//BlankString = 2,
-	//};
 	union {
 		int m_Number; // line ordinal number in the file
 		FileLine * m_pNext;
 	};
 	// length of the source string
-	int m_Length;
-	int m_NormalizedStringLength;
+	unsigned m_Length;
+	unsigned m_NormalizedStringLength;
 	//int m_FirstTokenIndex;
 	//FileLine * m_Link;
 	char * m_pAllocatedBuf;
+	const char * m_pWhitespaceMask;
 	const char * m_pString;
 	// points to the string with extra spaces removed
 	const char * m_pNormalizedString;
-	// String and normalized string share common buffer.
+	// String, normalized string and whitespace mask share common buffer.
 	// you only need to delete m_pAllocatedBuf
 	static CSmallAllocator m_Allocator;
 };
@@ -194,9 +194,10 @@ struct StringSection
 		Erased = 2,
 		Accepted = 4,
 		Declined = 8,
-		Whitespace = 0x10,
+		Undefined = 0x10,
+		Whitespace = 0x100,
 	};
-	DWORD Attr;
+	USHORT Attr;
 private:
 	static CSmallAllocator m_Allocator;
 };
@@ -218,7 +219,11 @@ struct LinePair
 private:
 	static CSmallAllocator m_Allocator;
 public:
-	LPCTSTR GetText(LPTSTR buf, size_t nBufChars, int * pStrLen);
+	// recalculates offset in the raw line to offset in the line with or without whitespaces shown
+	int LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces);
+	// recalculates offset in the line with or without whitespaces shown to offset in the raw line
+	int DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces);
+	LPCTSTR GetText(LPTSTR buf, size_t nBufChars, int * pStrLen, BOOL IgnoreWhitespaces);
 };
 
 enum FileCheckResult { FileDeleted, FileUnchanged, FileTimeChanged, };
@@ -318,8 +323,8 @@ public:
 	PairCheckResult CheckForFilesChanged();
 	PairCheckResult ReloadIfChanged();
 
-	TextPos NextDifference(TextPos PosFrom);
-	TextPos PrevDifference(TextPos PosFrom);
+	TextPos NextDifference(TextPos PosFrom, BOOL IgnoreWhitespaces);
+	TextPos PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces);
 
 	int GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo);
 	void ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, int Set, int Reset,

@@ -21,8 +21,8 @@ CCompareDirsDialog::CCompareDirsDialog(CWnd* pParent /*=NULL*/)
 {
 	//{{AFX_DATA_INIT(CCompareDirsDialog)
 	m_bIncludeSubdirs = FALSE;
-	m_sSecondDirCombo = _T("");
-	m_sFirstDirCombo = _T("");
+	m_sSecondDir = _T("");
+	m_sFirstDir = _T("");
 	//}}AFX_DATA_INIT
 }
 
@@ -35,8 +35,8 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_SECOND_DIR, m_SecondDirCombo);
 	DDX_Check(pDX, IDC_CHECK_INCLUDE_SUBDIRS, m_bIncludeSubdirs);
 	//}}AFX_DATA_MAP
-	DDX_CBString(pDX, IDC_COMBO_FIRST_DIR, m_sFirstDirCombo);
-	DDX_CBString(pDX, IDC_COMBO_SECOND_DIR, m_sSecondDirCombo);
+	DDX_CBString(pDX, IDC_COMBO_FIRST_DIR, m_sFirstDir);
+	DDX_CBString(pDX, IDC_COMBO_SECOND_DIR, m_sSecondDir);
 }
 
 
@@ -52,9 +52,9 @@ END_MESSAGE_MAP()
 
 void CCompareDirsDialog::OnButtonBrowseFirstDir()
 {
-	m_FirstDirCombo.GetWindowText(m_sFirstDirCombo);
+	m_FirstDirCombo.GetWindowText(m_sFirstDir);
 	CFolderDialog dlg("Select First Folder To Compare",
-					m_sFirstDirCombo);
+					m_sFirstDir);
 	if (IDOK == dlg.DoModal())
 	{
 		m_FirstDirCombo.SetWindowText(dlg.GetFolderPath());
@@ -63,9 +63,9 @@ void CCompareDirsDialog::OnButtonBrowseFirstDir()
 
 void CCompareDirsDialog::OnButtonBrowseSecondDir()
 {
-	m_SecondDirCombo.GetWindowText(m_sSecondDirCombo);
+	m_SecondDirCombo.GetWindowText(m_sSecondDir);
 	CFolderDialog dlg("Select Second Folder To Compare",
-					m_sSecondDirCombo);
+					m_sSecondDir);
 	if (IDOK == dlg.DoModal())
 	{
 		m_SecondDirCombo.SetWindowText(dlg.GetFolderPath());

@@ -23,8 +23,8 @@ public:
 	CComboBox	m_SecondDirCombo;
 	BOOL	m_bIncludeSubdirs;
 	//}}AFX_DATA
-	CString	m_sFirstDirCombo;
-	CString	m_sSecondDirCombo;
+	CString	m_sFirstDir;
+	CString	m_sSecondDir;
 
 
 // Overrides

@@ -8,7 +8,7 @@
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
-
+#include "FileListSupport.h"
 
 class CAlegrDiffDoc : public CDocument
 {
@@ -21,10 +21,19 @@ public:
 	CString m_sInclusionPattern;
 	CString m_sExclusionPattern;
 	CString m_sCFilesPattern;
+	CString m_sBinaryFilesPattern;
+	bool m_bRecurseSubdirs;
+	FileList m_FileList1;
+	FileList m_FileList2;
+	CString	m_sFirstDir;
+	CString	m_sSecondDir;
+	FilePair * m_pPairList;
 // Operations
 public:
 	bool BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2);
-	bool BuildFileList(LPCTSTR dir);
+	void FreeFilePairList();
+	//bool BuildFileList(LPCTSTR dir);
+
 
 // Overrides
 	// ClassWizard generated virtual function overrides

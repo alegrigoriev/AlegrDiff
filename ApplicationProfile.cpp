@@ -3,6 +3,285 @@
 #include "ApplicationProfile.h"
 #include <float.h>
 #include <afxpriv.h>
+#include <vector>
+
+class CApplicationProfileItem : public ListItem<CApplicationProfileItem>
+{
+protected:
+	virtual void WriteData(BOOL bForceWrite=FALSE) =0;
+	virtual void ReadData() =0;
+	virtual void ResetToDefault() = 0;
+	virtual void ResetToInitial() = 0;
+	virtual ~CApplicationProfileItem() {}
+
+	CApplicationProfileItem(CApplicationProfile * pProfile, LPCTSTR szSection, LPCTSTR szName);
+	CString Section;
+	CString Name;
+	CApplicationProfile * m_pProfile;
+	BOOL Exists;
+
+	friend class CApplicationProfile;
+};
+
+class CApplicationProfileItemStr: public CApplicationProfileItem
+{
+	CString & StrRef;
+	CString InitialData;
+	CString m_Default;
+public:
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+	virtual void ResetToDefault();
+	virtual void ResetToInitial();
+	CApplicationProfileItemStr(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName,
+								CString& StringReference, LPCTSTR Default);
+
+	friend class CApplicationProfile;
+};
+
+class CApplicationProfileItemLong: public CApplicationProfileItem
+{
+	LONG & LongRef;
+	LONG InitialData;
+	LONG m_Default;
+	LONG m_MinVal;
+	LONG m_MaxVal;
+
+protected:
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+	virtual void ResetToDefault();
+	virtual void ResetToInitial();
+	CApplicationProfileItemLong(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, LONG & RefValue,
+								LONG Default, LONG MinVal, LONG MaxVal);
+
+	friend class CApplicationProfile;
+};
+
+class CApplicationProfileItemInt: public CApplicationProfileItem
+{
+protected:
+	int & Ref;
+	int InitialData;
+	int m_Default;
+	int m_MinVal;
+	int m_MaxVal;
+
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+	virtual void ResetToDefault();
+	virtual void ResetToInitial();
+
+	CApplicationProfileItemInt(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, int & RefValue,
+								int Default, int MinVal, int MaxVal);
+
+	friend class CApplicationProfile;
+};
+
+class CApplicationProfileItemUint: public CApplicationProfileItem
+{
+protected:
+	unsigned int & Ref;
+	unsigned int InitialData;
+	unsigned int m_Default;
+	unsigned int m_MinVal;
+	unsigned int m_MaxVal;
+
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+	virtual void ResetToDefault();
+	virtual void ResetToInitial();
+	CApplicationProfileItemUint(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, unsigned int & RefValue,
+								unsigned int Default, unsigned int MinVal, unsigned int MaxVal);
+
+	friend class CApplicationProfile;
+};
+
+class CApplicationProfileItemShort : public CApplicationProfileItemInt
+{
+	short & ShortRef;
+	int m_TempInt;
+
+protected:
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+	virtual void ResetToDefault();
+	virtual void ResetToInitial();
+	CApplicationProfileItemShort(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, short & RefValue,
+								short Default, short MinVal, short MaxVal);
+
+	friend class CApplicationProfile;
+};
+
+class CApplicationProfileItemUshort : public CApplicationProfileItemUint
+{
+	unsigned short & ShortRef;
+	unsigned int m_TempInt;
+
+protected:
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+	virtual void ResetToDefault();
+	virtual void ResetToInitial();
+	CApplicationProfileItemUshort(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, unsigned short & RefValue,
+								unsigned short Default, unsigned short MinVal, unsigned short MaxVal);
+
+	friend class CApplicationProfile;
+};
+
+class CApplicationProfileItemBool: public CApplicationProfileItemInt
+{
+	bool & Ref;
+	int m_TempVal;
+	bool InitialData;
+	bool m_bDefault;
+protected:
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+	virtual void ResetToDefault();
+	virtual void ResetToInitial();
+	CApplicationProfileItemBool(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, bool & RefValue,
+								bool Default = false);
+
+	friend class CApplicationProfile;
+};
+
+class CApplicationProfileItemUlong: public CApplicationProfileItem
+{
+	ULONG & LongRef;
+	ULONG InitialData;
+	ULONG m_Default;
+	ULONG m_MinVal;
+	ULONG m_MaxVal;
+protected:
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+	virtual void ResetToDefault();
+	virtual void ResetToInitial();
+	CApplicationProfileItemUlong(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, ULONG & RefValue,
+								ULONG Default, ULONG MinVal, ULONG MaxVal);
+
+	friend class CApplicationProfile;
+};
+
+class CApplicationProfileItemDouble: public CApplicationProfileItem
+{
+protected:
+	double & DoubleRef;
+	double InitialData;
+	double m_Default;
+	double m_MinVal;
+	double m_MaxVal;
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+	virtual void ResetToDefault();
+	virtual void ResetToInitial();
+	CApplicationProfileItemDouble(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, double & RefValue,
+								double Default, double MinVal, double MaxVal);
+
+	friend class CApplicationProfile;
+};
+
+class CApplicationProfileItemFloat: public CApplicationProfileItemDouble
+{
+protected:
+	float & FloatRef;
+	double InitialData;
+	double IntermediateValue;
+
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+	virtual void ResetToDefault();
+	virtual void ResetToInitial();
+	CApplicationProfileItemFloat(CApplicationProfile * pProfile,
+								LPCTSTR szSection, LPCTSTR szName, float & RefValue,
+								double Default, double MinVal, double MaxVal);
+
+	friend class CApplicationProfile;
+};
+
+class CApplicationProfileItemBinary: public CApplicationProfileItem
+{
+	void * const m_Pointer;
+	std::vector<UCHAR> m_InitialData;
+	std::vector<UCHAR> m_Default;
+	size_t const m_Size;
+
+protected:
+	virtual void WriteData(BOOL bForceWrite=FALSE);
+	virtual void ReadData();
+
+	virtual void ResetToDefault();
+	virtual void ResetToInitial();
+
+	CApplicationProfileItemBinary(
+								CApplicationProfile * pProfile, LPCTSTR szSection, LPCTSTR szName,
+								void * Pointer, void const * pDefault, size_t size);
+
+	friend class CApplicationProfile;
+};
+
+CApplicationProfileItemBinary::CApplicationProfileItemBinary(
+															CApplicationProfile * pProfile, LPCTSTR szSection, LPCTSTR szName,
+															void * Pointer, void const * pDefault, size_t size)
+	: CApplicationProfileItem(pProfile, szSection, szName)
+	, m_Size(size)
+// save default data:
+	, m_Default((UCHAR const *) pDefault, size + (UCHAR const *) pDefault)
+// allocate initial data array:
+	, m_InitialData(size)
+	, m_Pointer(Pointer)
+{
+	ASSERT(0 != size);
+	// read value
+	ReadData();
+	// save initial data:
+	std::copy((UCHAR const *) m_Pointer, size + (UCHAR const *) m_Pointer, m_InitialData.begin());
+}
+
+void CApplicationProfileItemBinary::ReadData()
+{
+	BYTE * pData = NULL;
+	UINT ReadBytes = 0;
+	BOOL res = m_pProfile->GetProfileBinary(Section, Name, & pData, & ReadBytes);
+
+	if (res && NULL != pData && ReadBytes == m_Size)
+	{
+		memcpy(m_Pointer, pData, m_Size);
+	}
+	else
+	{
+		memcpy(m_Pointer, & m_Default.front(), m_Size);
+	}
+	delete[] pData;
+}
+
+void CApplicationProfileItemBinary::WriteData(BOOL bForceWrite)
+{
+	if (bForceWrite || memcmp(m_Pointer, & m_InitialData.front(), m_Size))
+	{
+		m_pProfile->WriteProfileBinary(Section, Name, LPBYTE(m_Pointer), m_Size);
+	}
+}
+
+void CApplicationProfileItemBinary::ResetToDefault()
+{
+	memcpy(m_Pointer, & m_Default.front(), m_Size);
+}
+
+void CApplicationProfileItemBinary::ResetToInitial()
+{
+	memcpy(m_Pointer, & m_InitialData.front(), m_Size);
+}
 
 CApplicationProfileItem::CApplicationProfileItem(CApplicationProfile * pProfile,
 												LPCTSTR szSection, LPCTSTR szName)
@@ -376,132 +655,115 @@ void CApplicationProfileItemFloat::ResetToDefault()
 }
 
 CApplicationProfile::CApplicationProfile()
-	:pItems(NULL),
-	hCachedRegistryKey(NULL),
+	:hCachedRegistryKey(NULL),
 	hCachedSectionKey(NULL)
 {
 }
 
 CApplicationProfile::~CApplicationProfile()
 {
-	CApplicationProfileItem * pTmp;
-	while (pItems != NULL)
+	while (! Items.IsEmpty())
 	{
-		pTmp = pItems;
-		pItems = pTmp->Next;
-		delete pTmp;
+		delete Items.RemoveHead();
 	}
+
 	CloseCachedKeys();
 }
 
 void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, CString & str,
 								LPCTSTR szDefault,int /*MaxLen*/)
 {
-	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemStr(this, szSection, szName, str, szDefault);
-	pTmp->Next = pItems;
-	pItems = pTmp;
+
+	Items.InsertTail(new CApplicationProfileItemStr(this, szSection, szName, str, szDefault));
 }
 
 void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, LONG & val,
 								LONG nDefault, LONG nMin, LONG nMax)
 {
-	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemLong(this, szSection, szName, val, nDefault, nMin, nMax);
-	pTmp->Next = pItems;
-	pItems = pTmp;
+
+	Items.InsertTail(new CApplicationProfileItemLong(this, szSection, szName, val, nDefault, nMin, nMax));
 }
 
 void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, ULONG & val,
 								ULONG nDefault, ULONG nMin, ULONG nMax)
 {
-	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemUlong(this, szSection, szName, val, nDefault, nMin, nMax);
-	pTmp->Next = pItems;
-	pItems = pTmp;
+
+	Items.InsertTail(new CApplicationProfileItemUlong(this, szSection, szName, val, nDefault, nMin, nMax));
 }
 
 void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, int & val,
 								int nDefault, int nMin, int nMax)
 {
-	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemInt(this, szSection, szName, val, nDefault, nMin, nMax);
-	pTmp->Next = pItems;
-	pItems = pTmp;
+
+	Items.InsertTail(new CApplicationProfileItemInt(this, szSection, szName, val, nDefault, nMin, nMax));
 }
 
 void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, unsigned int & val,
 								unsigned int nDefault, unsigned int nMin, unsigned int nMax)
 {
-	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemUint(this, szSection, szName, val, nDefault, nMin, nMax);
-	pTmp->Next = pItems;
-	pItems = pTmp;
+
+	Items.InsertTail(new CApplicationProfileItemUint(this, szSection, szName, val, nDefault, nMin, nMax));
 }
 
 void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, short & val,
 								short nDefault, short nMin, short nMax)
 {
-	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemShort(this, szSection, szName, val, nDefault, nMin, nMax);
-	pTmp->Next = pItems;
-	pItems = pTmp;
+
+	Items.InsertTail(new CApplicationProfileItemShort(this, szSection, szName, val, nDefault, nMin, nMax));
 }
 
 void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, unsigned short & val,
 								unsigned short nDefault, unsigned short nMin, unsigned short nMax)
 {
-	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemUshort(this, szSection, szName, val, nDefault, nMin, nMax);
-	pTmp->Next = pItems;
-	pItems = pTmp;
+
+	Items.InsertTail(new CApplicationProfileItemUshort(this, szSection, szName, val, nDefault, nMin, nMax));
 }
 
 void CApplicationProfile::AddBoolItem(LPCTSTR szSection, LPCTSTR szName, int & val,
 									int nDefault)
 {
-	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemInt(this, szSection, szName, val, nDefault, 0, 1);
-	pTmp->Next = pItems;
-	pItems = pTmp;
+
+	Items.InsertTail(new CApplicationProfileItemInt(this, szSection, szName, val, nDefault, 0, 1));
 }
 
 void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, bool & val,
 								bool nDefault)
 {
-	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemBool(this, szSection, szName, val, nDefault);
-	pTmp->Next = pItems;
-	pItems = pTmp;
+
+	Items.InsertTail(new CApplicationProfileItemBool(this, szSection, szName, val, nDefault));
 }
 
 void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, double & val,
 								double nDefault, double nMin, double nMax)
 {
-	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemDouble(this, szSection, szName, val, nDefault, nMin, nMax);
-	pTmp->Next = pItems;
-	pItems = pTmp;
+
+	Items.InsertTail(new CApplicationProfileItemDouble(this, szSection, szName, val, nDefault, nMin, nMax));
 }
 
 void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName, float & val,
 								double nDefault, double nMin, double nMax)
 {
-	CApplicationProfileItem * pTmp;
 	RemoveItem(szSection, szName);
-	pTmp = new CApplicationProfileItemFloat(this, szSection, szName, val, nDefault, nMin, nMax);
-	pTmp->Next = pItems;
-	pItems = pTmp;
+
+	Items.InsertTail(new CApplicationProfileItemFloat(this, szSection, szName, val, nDefault, nMin, nMax));
+}
+
+void CApplicationProfile::AddItem(LPCTSTR szSection, LPCTSTR szName,
+								void * pValue, void const * pDefault, size_t size)
+{
+	RemoveItem(szSection, szName);
+
+	Items.InsertTail(new CApplicationProfileItemBinary(this, szSection, szName, pValue, pDefault, size));
 }
 
 void CApplicationProfile::RemoveFromRegistry(LPCTSTR szSection, LPCTSTR szName)
@@ -511,85 +773,66 @@ void CApplicationProfile::RemoveFromRegistry(LPCTSTR szSection, LPCTSTR szName)
 
 BOOL CApplicationProfile::RemoveItem(LPCTSTR szSection, LPCTSTR szName)
 {
-	CApplicationProfileItem * pTmp = pItems;
-	CApplicationProfileItem * pPrev = NULL;
-	while(pTmp != NULL)
+	for (CApplicationProfileItem * p = Items.First();
+		Items.NotEnd(p); p = Items.Next(p))
 	{
-		if (0 == pTmp->Name.CompareNoCase(szName)
-			&& 0 == pTmp->Section.CompareNoCase(szSection))
+		if (0 == p->Name.CompareNoCase(szName)
+			&& 0 == p->Section.CompareNoCase(szSection))
 		{
-			if (pPrev)
-			{
-				pPrev->Next = pTmp->Next;
-			}
-			else
-			{
-				pItems = pTmp->Next;
-			}
-			delete pTmp;
+			p->RemoveFromList();
+
+			delete p;
+
 			return TRUE;
 		}
-		pPrev = pTmp;
-		pTmp = pTmp->Next;
 	}
 	return FALSE;
 }
 
 void CApplicationProfile::RemoveSection(LPCTSTR szSection)
 {
-	CApplicationProfileItem * pTmp = pItems;
-	CApplicationProfileItem * pPrev = NULL;
-	while(pTmp != NULL)
+	for (CApplicationProfileItem * p = Items.First();
+		Items.NotEnd(p); )
 	{
+		CApplicationProfileItem * next = Items.Next(p);
+
 		if (NULL == szSection
-			|| 0 == pTmp->Section.CompareNoCase(szSection))
+			|| 0 == p->Section.CompareNoCase(szSection))
 		{
-			if (pPrev)
-			{
-				pPrev->Next = pTmp->Next;
-				delete pTmp;
-				pTmp = pPrev->Next;
-			}
-			else
-			{
-				pItems = pTmp->Next;
-				delete pTmp;
-				pTmp = pItems;
-			}
-			continue;
+			p->RemoveFromList();
+
+			delete p;
 		}
-		pPrev = pTmp;
-		pTmp = pTmp->Next;
+
+		p = next;
 	}
 }
 
 BOOL CApplicationProfile::FlushItem(LPCTSTR szSection, LPCTSTR szName)
 {
-	CApplicationProfileItem * pTmp = pItems;
-	while(pTmp != NULL)
+	for (CApplicationProfileItem * p = Items.First();
+		Items.NotEnd(p); p = Items.Next(p))
 	{
-		if (0 == pTmp->Name.CompareNoCase(szName)
-			&& 0 == pTmp->Section.CompareNoCase(szSection))
+		if (0 == p->Name.CompareNoCase(szName)
+			&& 0 == p->Section.CompareNoCase(szSection))
 		{
-			pTmp->WriteData();
+			p->WriteData();
 			return TRUE;
 		}
-		pTmp = pTmp->Next;
 	}
 	return FALSE;
 }
 
 void CApplicationProfile::FlushSection(LPCTSTR szSection)
 {
-	CApplicationProfileItem * pTmp = pItems;
-	while(pTmp != NULL)
+	for (CApplicationProfileItem * p = Items.First();
+		Items.NotEnd(p); p = Items.Next(p))
 	{
 		if (NULL == szSection
-			|| 0 == pTmp->Section.CompareNoCase(szSection))
+			|| 0 == p->Section.CompareNoCase(szSection))
 		{
-			pTmp->WriteData();
+			p->WriteData();
 		}
-		pTmp = pTmp->Next;
 	}
 }
 
@@ -606,59 +849,57 @@ void CApplicationProfile::UnloadSection(LPCTSTR szSection)
 
 BOOL CApplicationProfile::ResetItemToDefault(LPCTSTR szSection, LPCTSTR szName)
 {
-	CApplicationProfileItem * pTmp = pItems;
-	while(pTmp != NULL)
+	for (CApplicationProfileItem * p = Items.First();
+		Items.NotEnd(p); p = Items.Next(p))
 	{
-		if (0 == pTmp->Name.CompareNoCase(szName)
-			&& 0 == pTmp->Section.CompareNoCase(szSection))
+		if (0 == p->Name.CompareNoCase(szName)
+			&& 0 == p->Section.CompareNoCase(szSection))
 		{
-			pTmp->ResetToDefault();
+			p->ResetToDefault();
 			return TRUE;
 		}
-		pTmp = pTmp->Next;
 	}
 	return FALSE;
 }
 
 void CApplicationProfile::ResetSectionToDefault(LPCTSTR szSection)
 {
-	CApplicationProfileItem * pTmp = pItems;
-	while(pTmp != NULL)
+	for (CApplicationProfileItem * p = Items.First();
+		Items.NotEnd(p); p = Items.Next(p))
 	{
-		if (0 == pTmp->Section.CompareNoCase(szSection))
+		if (NULL == szSection
+			|| 0 == p->Section.CompareNoCase(szSection))
 		{
-			pTmp->ResetToDefault();
+			p->ResetToDefault();
 		}
-		pTmp = pTmp->Next;
 	}
 }
 
 BOOL CApplicationProfile::RevertItemToInitial(LPCTSTR szSection, LPCTSTR szName)
 {
-	CApplicationProfileItem * pTmp = pItems;
-	while(pTmp != NULL)
+	for (CApplicationProfileItem * p = Items.First();
+		Items.NotEnd(p); p = Items.Next(p))
 	{
-		if (0 == pTmp->Name.CompareNoCase(szName)
-			&& 0 == pTmp->Section.CompareNoCase(szSection))
+		if (0 == p->Name.CompareNoCase(szName)
+			&& 0 == p->Section.CompareNoCase(szSection))
 		{
-			pTmp->ResetToInitial();
+			p->ResetToInitial();
 			return TRUE;
 		}
-		pTmp = pTmp->Next;
 	}
 	return FALSE;
 }
 
 void CApplicationProfile::RevertSectionToInitial(LPCTSTR szSection)
 {
-	CApplicationProfileItem * pTmp = pItems;
-	while(pTmp != NULL)
+	for (CApplicationProfileItem * p = Items.First();
+		Items.NotEnd(p); p = Items.Next(p))
 	{
-		if (0 == pTmp->Section.CompareNoCase(szSection))
+		if (NULL == szSection
+			|| 0 == p->Section.CompareNoCase(szSection))
 		{
-			pTmp->ResetToInitial();
+			p->ResetToInitial();
 		}
-		pTmp = pTmp->Next;
 	}
 }
 		// saves the section in INI file. If section name is empty,
@@ -671,21 +912,23 @@ BOOL CApplicationProfile::ExportSection(LPCTSTR szSection, LPCTSTR szFilename)
 	}
 	CString OldRegistryKeyName = m_pszRegistryKey;
 	CString OldProfileName = m_pszProfileName;
+
 	m_pszRegistryKey.Empty();
 	m_pszProfileName = szFilename;
+
 	CloseCachedKeys();
+
 	try
 	{
-		CApplicationProfileItem * pTmp = pItems;
-		while(pTmp != NULL)
+		for (CApplicationProfileItem * p = Items.First();
+			Items.NotEnd(p); p = Items.Next(p))
 		{
 			if (NULL == szSection
 				|| 0 == szSection[0]
-				|| 0 == pTmp->Section.CompareNoCase(szSection))
+				|| 0 == p->Section.CompareNoCase(szSection))
 			{
-				pTmp->WriteData(TRUE);  // force to write
+				p->WriteData(TRUE);  // force to write
 			}
-			pTmp = pTmp->Next;
 		}
 	}
 	catch(...)
@@ -713,8 +956,10 @@ BOOL CApplicationProfile::ImportSection(LPCTSTR szSection, LPCTSTR szFilename)
 	}
 	CString OldRegistryKeyName = m_pszRegistryKey;
 	CString OldProfileName = m_pszProfileName;
+
 	m_pszRegistryKey.Empty();
 	m_pszProfileName = szFilename;
+
 	CloseCachedKeys();
 
 	// flush the cached files
@@ -722,16 +967,15 @@ BOOL CApplicationProfile::ImportSection(LPCTSTR szSection, LPCTSTR szFilename)
 
 	try
 	{
-		CApplicationProfileItem * pTmp = pItems;
-		while(pTmp != NULL)
+		for (CApplicationProfileItem * p = Items.First();
+			Items.NotEnd(p); p = Items.Next(p))
 		{
 			if (NULL == szSection
 				|| 0 == szSection[0]
-				|| 0 == pTmp->Section.CompareNoCase(szSection))
+				|| 0 == p->Section.CompareNoCase(szSection))
 			{
-				pTmp->ReadData();
+				p->ReadData();
 			}
-			pTmp = pTmp->Next;
 		}
 	}
 	catch(...)

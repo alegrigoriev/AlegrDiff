@@ -21,6 +21,8 @@
 #include "afxwin.h"
 #include "AlegrDiffVer.h"
 #include "DirectoryFingerpringCreateDlg.h"
+#include "CheckFingerprintDlg.h"
+#include "DirectoryFingerprintCheckDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1690,5 +1692,27 @@ void CAlegrDiffApp::OnFileCreatedirectoryfingerprint()
 
 void CAlegrDiffApp::OnFileCheckDirectoryFingerprint()
 {
-	// TODO: Add your command handler code here
+	CCheckFingerprintDlg dlg;
+	if (IDOK != dlg.DoModal())
+	{
+		return;
+	}
+
+	CAlegrDiffDoc * pDoc = (CAlegrDiffDoc *)
+							m_pListDiffTemplate->OpenDocumentFile(NULL);
+	if (NULL == pDoc)
+	{
+		return;
+	}
+	pDoc->SetTitle(_T(""));
+	CDirectoryFingerprintCheckDlg dlg1(pDoc);
+
+	dlg1.m_sDirectory = dlg.m_sDirectory;
+	dlg1.m_FingerprintFilename = dlg.m_sFilename;
+
+	if (IDOK != dlg1.DoModal())
+	{
+		delete pDoc;
+		return;
+	}
 }

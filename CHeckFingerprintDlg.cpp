@@ -27,6 +27,19 @@ void CCheckFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_CBString(pDX, IDC_COMBO_FIRST_DIR, m_sDirectory);
 	DDX_Control(pDX, IDC_COMBO_SAVE_FILENAME, m_cbFilename);
 	DDX_CBString(pDX, IDC_COMBO_SAVE_FILENAME, m_sFilename);
+
+	if (pDX->m_bSaveAndValidate)
+	{
+		CThisApp * pApp = GetApp();
+
+		AddStringToHistory(m_sDirectory, pApp->m_RecentFolders,
+							sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0], false);
+
+		AddStringToHistory(m_sFilename, m_sFingerprintFilenameHistory,
+							sizeof m_sFingerprintFilenameHistory / sizeof m_sFingerprintFilenameHistory[0], false);
+
+		m_Profile.FlushAll();
+	}
 }
 
 
@@ -72,4 +85,25 @@ void CCheckFingerprintDlg::OnBnClickedButtonBrowseOpenFilename()
 	}
 
 	m_cbFilename.SetWindowText(dlg.GetPathName());
+}
+
+BOOL CCheckFingerprintDlg::OnInitDialog()
+{
+	CThisApp * pApp = GetApp();
+	LoadHistory(m_Profile, _T("History"), _T("FingerprintFile%d"), m_sFingerprintFilenameHistory,
+				sizeof m_sFingerprintFilenameHistory / sizeof m_sFingerprintFilenameHistory[0], true);
+
+	m_sFilename = m_sFingerprintFilenameHistory[0];
+	m_sDirectory = pApp->m_RecentFolders[0];
+
+	CDialog::OnInitDialog();
+
+	LoadHistoryCombo(m_cbDirectory, pApp->m_RecentFolders,
+					sizeof pApp->m_RecentFolders / sizeof pApp->m_RecentFolders[0]);
+
+	LoadHistoryCombo(m_cbFilename, m_sFingerprintFilenameHistory,
+					sizeof m_sFingerprintFilenameHistory / sizeof m_sFingerprintFilenameHistory[0]);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+	// EXCEPTION: OCX Property Pages should return FALSE
 }

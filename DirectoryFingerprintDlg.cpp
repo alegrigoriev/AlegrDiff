@@ -38,6 +38,7 @@ void CDirectoryFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_CBString(pDX, IDC_COMBO_IGNORE_FILES, m_sIgnoreFiles);
 	DDX_Control(pDX, IDC_COMBO_SAVE_FILENAME, m_SaveFilename);
 	DDX_CBString(pDX, IDC_COMBO_SAVE_FILENAME, m_sSaveFilename);
+	DDX_Check(pDX, IDC_CHECK_SAVE_AS_UNICODE, m_bSaveAsUnicode);
 
 	if (pDX->m_bSaveAndValidate)
 	{
@@ -57,7 +58,6 @@ void CDirectoryFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 
 		m_Profile.FlushAll();
 	}
-	DDX_Check(pDX, IDC_CHECK_SAVE_AS_UNICODE, m_bSaveAsUnicode);
 }
 
 

@@ -153,11 +153,14 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 		LONGLONG FileLength;
 		ULONG MD5[16];
 
-		int NumScannedItems = _stscanf(buf, _T("\"%[^\"]511s\" %I64u ")
+		int NumScannedItems = _stscanf(buf,
+										_T("\"%511[^\"]\" %I64u ")
 										_T("%2x%2x%2x%2x")
 										_T("%2x%2x%2x%2x")
 										_T("%2x%2x%2x%2x")
-										_T("%2x%2x%2x%2x"),
+										_T("%2x%2x%2x%2x")
+										_T("\n")
+										,
 										FileName, & FileLength,
 										& MD5[0], & MD5[1], & MD5[2], & MD5[3],
 										& MD5[4], & MD5[5], & MD5[6], & MD5[7],
@@ -218,6 +221,7 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 		}
 		else
 		{
+			NamePart = Dir + 1;
 			SubDir = CString(FileName, Dir - FileName + 1);
 		}
 		_tcsncpy(wfd.cFileName, NamePart, sizeof wfd.cFileName / sizeof wfd.cFileName[0] - 1);

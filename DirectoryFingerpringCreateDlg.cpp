@@ -105,30 +105,31 @@ unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
 
 	// make full names from the directories
 	LPTSTR pFilePart;
-	TCHAR buf[MAX_PATH];
+	TCHAR FullDirectoryName[MAX_PATH];
 	LPCTSTR crlf = _T("\n");
 	if (m_bSaveAsUnicode)
 	{
 		crlf = _T("\r\n");
 	}
 
-	GetFullPathName(m_sDirectory, MAX_PATH, buf, & pFilePart);
+	GetFullPathName(m_sDirectory, MAX_PATH, FullDirectoryName, & pFilePart);
 
 	CString ExclusionPattern(PatternToMultiCString(m_sIgnoreFiles));
 	CString InclusionPattern(PatternToMultiCString(m_sFilenameFilter));
 
 	if (InclusionPattern.IsEmpty())
 	{
-		InclusionPattern = '*';
+		m_sFilenameFilter = '*';
+		InclusionPattern = PatternToMultiCString(_T("*"));
 	}
 
-	if (! FileList1.LoadFolder(buf, m_bIncludeSubdirectories,
-								InclusionPattern, ExclusionPattern, _T(""),
-								_T("")))
+	if (! FileList1.LoadFolder(FullDirectoryName, m_bIncludeSubdirectories,
+								InclusionPattern, ExclusionPattern, PatternToMultiCString(_T("")),
+								PatternToMultiCString(_T(""))))
 	{
 		DWORD error = GetLastError();
 		CString s;
-		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, buf);
+		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, FullDirectoryName);
 		AfxMessageBox(s);
 		if (NULL != m_hWnd)
 		{
@@ -139,7 +140,7 @@ unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
 
 	CArray<FileItem *, FileItem *> Files1;
 
-	FileList1.GetSortedList(Files1, FileList::SortDirFirst | FileList::SortBackwards);
+	FileList1.GetSortedList(Files1, FileList::SortDirFirst);
 	m_TotalDataSize = 0;
 	for (i = 0; i < Files1.GetSize(); i++)
 	{
@@ -152,6 +153,35 @@ unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
 	}
 
 	CMd5HashCalculator HashCalc;
+	// save inclusion pattern, exclusion pattern,
+	// "IncludeSubdirs", "IncludeDirs"
+	int const TimeBufSize = 64;
+	TCHAR time[TimeBufSize] = {0};
+	TCHAR date[TimeBufSize] = {0};
+	SYSTEMTIME SystemTime;
+	SYSTEMTIME LocalTime;
+	memzero(LocalTime);
+
+	GetSystemTime( & SystemTime);
+	SystemTimeToTzSpecificLocalTime(NULL, & SystemTime, & LocalTime);
+
+	GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, & LocalTime, NULL, date, TimeBufSize - 1);
+
+	GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, & LocalTime, NULL, time, TimeBufSize - 1);
+
+	_ftprintf(m_pFile,
+			_T("; Fingerprint of \"%s\", created %s %s%s")
+			_T("IncludeFiles=%s%s")
+			_T("ExcludeFiles=%s%s")
+			_T("IncludeSubdirs=%d%s")
+			_T("IncludeDirInfo=%d%s%s"),
+			FullDirectoryName,
+			date, time, crlf,
+			LPCTSTR(m_sFilenameFilter), crlf,
+			LPCTSTR(m_sIgnoreFiles), crlf,
+			m_bIncludeSubdirectories, crlf,
+			m_bIncludeDirectoryStructure, crlf, crlf);
+
 
 	for (i = 0; i < Files1.GetSize() && ! m_StopRunThread; i++)
 	{
@@ -181,10 +211,10 @@ unsigned CDirectoryFingerpringCreateDlg::_ThreadProc()
 		{
 			_ftprintf(m_pFile,
 					_T("\"%s%s\" %I64d ")
-					_T("%02x%02x%02x%02x")
-					_T("%02x%02x%02x%02x")
-					_T("%02x%02x%02x%02x")
-					_T("%02x%02x%02x%02x")
+					_T("%02X%02X%02X%02X")
+					_T("%02X%02X%02X%02X")
+					_T("%02X%02X%02X%02X")
+					_T("%02X%02X%02X%02X")
 					_T("%s"),
 					pFile->GetSubdir(),
 					pFile->GetName(),

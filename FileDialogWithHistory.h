@@ -10,6 +10,7 @@
 #include "ApplicationProfile.h"
 ////////////////////////////////////////////////////////////////////////////
 // CFileDialogWithHistory dialog
+bool SupportsV5FileDialog();
 
 class CResizableFileDialog : public CFileDialog
 {
@@ -28,7 +29,6 @@ public:
 		m_pResizeItems(NULL),
 		m_ResizeItemsCount(0)
 	{
-		m_ParentWnd.m_pSubDialog = this;
 		m_PrevSize.cx = -1;
 		m_PrevSize.cy = -1;
 		m_ofn.Flags |= OFN_ENABLESIZING;
@@ -60,28 +60,6 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
-	class CParentWnd : public CWnd
-	{
-	public:
-		DECLARE_DYNAMIC(CParentWnd)
-		CResizableFileDialog * m_pSubDialog;
-
-		LRESULT OnGetFilePath(WPARAM, LPARAM);
-		LRESULT OnGetFolderPath(WPARAM, LPARAM);
-		LRESULT OnGetSpec(WPARAM, LPARAM);
-		LRESULT OnSetControlText(WPARAM, LPARAM);
-		LRESULT OnSetDefExt(WPARAM, LPARAM);
-		DECLARE_MESSAGE_MAP()
-	};
-	static UINT_PTR CALLBACK ResizableFileDialogHook(
-													HWND hdlg,      // handle to child dialog box
-													UINT uiMsg,     // message identifier
-													WPARAM wParam,  // message parameter
-													LPARAM lParam   // message parameter
-													);
-	CParentWnd  m_ParentWnd;
-
-	void UpdateOfn(OPENFILENAMEA & ofn);
 };
 /////////////////////////////////////////////////////////////////////////////
 // CFileDialogWithHistory dialog

@@ -1001,8 +1001,8 @@ VS_VERSION_INFO$(RETAIL_VERSION) VERSIONINFO
 #else
 VS_VERSION_INFO VERSIONINFO
 #endif
- FILEVERSION 1,0,14,0
- PRODUCTVERSION 1,0,14,0
+ FILEVERSION 1,0,15,0
+ PRODUCTVERSION 1,0,15,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -1019,13 +1019,13 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "AleGr Software"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application"
-            VALUE "FileVersion", "1, 0, 14, 0"
+            VALUE "FileVersion", "1, 0, 15, 0"
             VALUE "InternalName", "AlegrDiff"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001-2002"
             VALUE "OriginalFilename", "AlegrDiff.EXE"
-            VALUE "PrivateBuild", "Beta 1.14"
+            VALUE "PrivateBuild", "Beta 1.15"
             VALUE "ProductName", "AlegrDiff Application"
-            VALUE "ProductVersion", "1, 0, 14, 0"
+            VALUE "ProductVersion", "1, 0, 15, 0"
         END
     END
     BLOCK "VarFileInfo"

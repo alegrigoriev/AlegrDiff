@@ -338,28 +338,29 @@ template<class T> void CApplicationProfileItemBinary<T>::WriteData(BOOL bForceWr
 class CStringHistory
 {
 public:
+	enum { Trim = 1, CaseSensitive = 2 };
 	CStringHistory(CApplicationProfile * pProfile,
-					LPCTSTR Section, LPCTSTR KeyFormat, int NumStrings, bool Trim = true);
+					LPCTSTR Section, LPCTSTR KeyFormat, int NumStrings, ULONG Flags = CStringHistory::Trim);
 	CStringHistory(CStringHistory * pSourceHistory);
 	~CStringHistory();
-	void Load();
+	void Load(LPCTSTR DefaultFirstString = _T(""));
 	void Flush();
 	void LoadCombo(CComboBox * pCb);
-	void AddString(CString const & str, bool CaseSensitive, int AtIndex = 0);
-	void DeleteString(CString const & str, bool CaseSensitive, int StartFromIndex = 0);
+	void AddString(CString const & str, int AtIndex = 0);
+	void DeleteString(CString const & str, int StartFromIndex = 0);
 
 	int Size() const { return m_NumStrings; }
 	CString const & operator[](int index) const { return m_Strings[index]; }
 	CString & operator[](int index) { return m_Strings[index]; }
 
 protected:
+	enum { AttachedHistory = 4 };
 	CString * m_Strings;
 	int m_NumStrings;
 	CApplicationProfile * m_pProfile;
 	CString m_ProfileSection;
 	CString m_KeyFormat;
-	bool m_bTrim;
-	bool m_bAttached;
+	ULONG m_Flags;
 private:
 };
 

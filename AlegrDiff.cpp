@@ -78,10 +78,10 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_MinPercentWeakIdenticalLines(10),
 	m_PercentsOfLookLikeDifference(30),
 
-	m_RecentFolders( & Profile, _T("History"), _T("dir%d"), 15, true),
-	m_FindHistory( & Profile, _T("History"), _T("find%d"), 15, false),
-	m_FileFilters( & Profile, _T("History"), _T("filter%d"), 10, true),
-	m_RecentFiles( & Profile, _T("History"), _T("file%d"), 15, true),
+	m_RecentFolders( & Profile, _T("History"), _T("dir%d"), 15),
+	m_FindHistory( & Profile, _T("History"), _T("find%d"), 15, CStringHistory::CaseSensitive),
+	m_FileFilters( & Profile, _T("History"), _T("filter%d"), 10),
+	m_RecentFiles( & Profile, _T("History"), _T("file%d"), 15),
 
 	m_MinIdenticalLines(5)
 {
@@ -264,6 +264,13 @@ BOOL CAlegrDiffApp::InitInstance()
 	m_FileFilters.Load();
 	m_FindHistory.Load();
 	m_RecentFolders.Load();
+
+	// set the default folder directory to My Documents
+	TCHAR MyDocuments[MAX_PATH] = { 0};
+	if (S_OK == SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, MyDocuments))
+	{
+		SetCurrentDirectory(MyDocuments);
+	}
 
 	m_TextBackgroundColor = GetSysColor(COLOR_WINDOW);
 	m_SelectedTextColor = 0xFFFFFF;
@@ -1019,8 +1026,8 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 	}
 	FindClose(hFind);
 
-	m_RecentFiles.AddString(FileDir1, false);
-	m_RecentFiles.AddString(FileDir2, false, 1);
+	m_RecentFiles.AddString(FileDir1);
+	m_RecentFiles.AddString(FileDir2, 1);
 
 	*pFileName1 = 0;
 	*pFileName2 = 0;
@@ -1303,76 +1310,6 @@ void CAboutDlg::OnButtonMailto()
 	EndDialog(IDOK);
 }
 
-void AddStringToHistory(const CString & str, CString history[], int NumItems, bool CaseSensitive)
-{
-	// remove those that match the currently selected dirs
-	int i, j;
-	for (i = 0, j = 0; i < NumItems; i++)
-	{
-		if (CaseSensitive)
-		{
-			if (0 == str.Compare(history[i])
-				// check if previous string is the same
-				|| j > 0
-				&& 0 == history[j - 1].Compare(history[i]))
-			{
-				continue;
-			}
-		}
-		else
-		{
-			if (0 == str.CompareNoCase(history[i])
-				// check if previous string is the same
-				|| j > 0
-				&& 0 == history[j - 1].CompareNoCase(history[i]))
-			{
-				continue;
-			}
-		}
-		if (i != j)
-		{
-			history[j] = history[i];
-		}
-		j++;
-	}
-	for (; j < NumItems; j++)
-	{
-		history[j].Empty();
-	}
-
-	// remove last dir from the list
-	for (i = NumItems - 1; i >= 1; i--)
-	{
-		history[i] = history[i - 1];
-	}
-	history[0] = str;
-}
-
-void LoadHistory(CApplicationProfile & Profile, LPCTSTR szKey, LPCTSTR Format, CString history[], int NumItems, bool Trim)
-{
-	for (int i = 0; i < NumItems; i++)
-	{
-		CString s;
-		s.Format(Format, i);
-		Profile.AddItem(szKey, s, history[i]);
-		if (Trim)
-		{
-			history[i].Trim();
-		}
-	}
-}
-
-void LoadHistoryCombo(CComboBox & Combo, CString history[], int NumItems)
-{
-	for (int i = 0; i < NumItems; i++)
-	{
-		if (! history[i].IsEmpty())
-		{
-			Combo.AddString(history[i]);
-		}
-	}
-}
-
 void CAlegrDiffApp::OnHelpUsing()
 {
 	TCHAR ModuleName[MAX_PATH] = {0};
@@ -1540,8 +1477,7 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 
 	CFileDialogWithHistory dlg(TRUE, & pApp->m_RecentFolders, NULL, NULL,
 								OFN_HIDEREADONLY | OFN_FILEMUSTEXIST
-								//| OFN_NOCHANGEDIR | OFN_EXPLORER
-								,
+								| OFN_NOCHANGEDIR | OFN_EXPLORER,
 								Filter);
 	// copy initial file name
 	_tcsncpy(dlg.m_ofn.lpstrFile, LastFileName, dlg.m_ofn.nMaxFile - 1);

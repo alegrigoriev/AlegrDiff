@@ -188,10 +188,6 @@ CString FileTimeToStr(FILETIME FileTime, LCID locale = LOCALE_USER_DEFAULT);
 CString UlonglongToStr(ULONGLONG Length, LCID locale = LOCALE_USER_DEFAULT);
 CString FileLengthToStrKb(ULONGLONG Length);
 
-void AddStringToHistory(const CString & str, CString history[], int NumItems, bool CaseSensitive = false);
-void LoadHistory(CApplicationProfile & Profile, LPCTSTR szKey, LPCTSTR Format, CString history[], int NumItems, bool Trim);
-void LoadHistoryCombo(CComboBox & Combo, CString history[], int NumItems);
-
 CString CreateCustomFilter(LPCTSTR Extension);
 int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 				CStringHistory * pHistory);

@@ -84,7 +84,7 @@ void CFileDialogWithHistory::OnComboSelendOK()
 			return;
 		}
 		pCb->GetLBText(sel, str);
-		TRACE("CFileDialogWithHistory::OnComboSelendOK: %s selected\n", str);
+		TRACE(_T("CFileDialogWithHistory::OnComboSelendOK: %s selected\n"), str);
 		if (str.IsEmpty())
 		{
 			return;
@@ -122,7 +122,7 @@ void CFileDialogWithHistory::OnComboSelendOK()
 			AfxMessageBox(s);
 			// delete the string from combobox
 			// delete also from the application list
-			m_RecentFolders.DeleteString(str, false);
+			m_RecentFolders.DeleteString(str);
 
 			pCb->DeleteString(sel);
 			pCb->SetCurSel(-1); // no selection
@@ -153,21 +153,13 @@ void CFileDialogWithHistory::OnComboSelendOK()
 
 			if (vi.dwPlatformId != VER_PLATFORM_WIN32_NT)
 			{
-				CStringA nameA(name);
-				CStringA strA(str);
-				pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCSTR(strA)));
-				CString newText;
-				pParent->GetDlgItem(edt1)->GetWindowText(newText);
-
-				pParent->SendMessage(WM_COMMAND, IDOK, 0);
-
-				if (m_bOpenFileDialog)
+				if (NULL != pTmp)
 				{
-					pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCSTR("")));
-				}
-				else
-				{
-					pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCSTR(nameA)));
+					pTmp->SetWindowText(str);
+
+					pParent->SendMessage(WM_COMMAND, IDOK, 0);
+
+					pTmp->SetWindowText(name);
 				}
 			}
 			else
@@ -176,20 +168,14 @@ void CFileDialogWithHistory::OnComboSelendOK()
 				pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(str)));
 				pParent->SendMessage(WM_COMMAND, IDOK, 0);
 
-				if (m_bOpenFileDialog)
-				{
-					pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(_T(""))));
-				}
-				else
-				{
-					pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(name)));
-				}
+				pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(name)));
 			}
 			if (NULL != pTmp)
 			{
 				pTmp->SetFocus();
 			}
 		}
+
 
 	}
 }
@@ -211,7 +197,14 @@ INT_PTR CFileDialogWithHistory::DoModal()
 		}
 		else
 		{
-			m_SubstituteInitialFolder = m_ofn.lpstrFile;
+			if (0 != m_ofn.lpstrFile[0])
+			{
+				m_SubstituteInitialFolder = m_ofn.lpstrFile;
+			}
+			else
+			{
+				m_SubstituteInitialFolder = m_RecentFolders[0];
+			}
 		}
 		m_ofn.lpstrInitialDir = m_SubstituteInitialFolder;
 	}
@@ -237,7 +230,7 @@ BOOL CFileDialogWithHistory::OnFileNameOK()
 	sCurrDir.ReleaseBuffer();
 	TRACE("CFileDialogWithHistory::OnFileNameOK Folder Path=%s\n", sCurrDir);
 
-	m_RecentFolders.AddString(sCurrDir, false);
+	m_RecentFolders.AddString(sCurrDir);
 
 	m_RecentFolders.Flush();
 	return 0;
@@ -266,7 +259,6 @@ CString CResizableFileDialog::GetNextPathName(POSITION& pos) const
 	{
 		return CFileDialog::GetNextPathName(pos);
 	}
-	TCHAR const chDelimiter = '\0';
 
 	LPTSTR lpsz = (LPTSTR)pos;
 	if (lpsz == m_ofn.lpstrFile) // first time
@@ -284,46 +276,68 @@ CString CResizableFileDialog::GetNextPathName(POSITION& pos) const
 		}
 	}
 
-	CString strPath = m_ofn.lpstrFile;
+	ASSERT(lpsz > m_ofn.lpstrFile
+			|| lpsz < m_ofn.lpstrFile + m_ofn.nMaxFile);
 
-	LPTSTR lpszFileName = lpsz;
-	CString strFileName = lpsz;
+	if (lpsz < m_ofn.lpstrFile
+		|| lpsz >= m_ofn.lpstrFile + m_ofn.nMaxFile)
+	{
+		pos = NULL;
+		return CString();
+	}
+
+	LPCTSTR NewCurrentDir = m_ofn.lpstrFile;
+
+	LPCTSTR lpszFileName = lpsz;
 
 	// find char pos at next Delimiter
 	while( *lpsz != '\0')
+	{
 		lpsz = _tcsinc(lpsz);
+	}
 
 	lpsz = _tcsinc(lpsz);
 	if (*lpsz == '\0') // if double terminated then done
+	{
 		pos = NULL;
+	}
 	else
+	{
 		pos = (POSITION)lpsz;
+	}
 
-	// check if the filename is already absolute
-	if (strFileName[0] == '/' || strFileName[0] == '\\'
-		|| (strFileName.GetLength() > 1 && strFileName[1] == ':'))
+	// check if the filename is network path
+	if ((lpszFileName[0] == '/' && lpszFileName[1] == '/')
+		|| (lpszFileName[0] == '\\' && lpszFileName[1] == '\\'))
 	{
-		TCHAR * pTitle;
-		GetFullPathName(strFileName,MAX_PATH,strPath.GetBuffer(MAX_PATH), & pTitle);
-		strPath.ReleaseBuffer();
-		return strPath;
+		return lpszFileName;
 	}
-	// only add '\\' if it is needed
-	if (!strPath.IsEmpty())
+
+	// TODO: if the current directory is network directory,
+	// try not to change the directory
+	// if the name doesn't start with \\ or //
+	// set the path as current folder, then get fully qualified names
+	TCHAR OldCurrentDir[MAX_PATH * 2];
+
+	// save old directory
+	GetCurrentDirectory(countof(OldCurrentDir), OldCurrentDir);
+	// set new current directory
+	if (0 != _tcsicmp(OldCurrentDir, NewCurrentDir))
 	{
-		// check for last back-slash or forward slash (handles DBCS)
-		LPCTSTR lpsz = _tcsrchr(strPath, '\\');
-		if (lpsz == NULL)
-			lpsz = _tcsrchr(strPath, '/');
-		// if it is also the last character, then we don't need an extra
-		if (lpsz != NULL &&
-			(lpsz - (LPCTSTR)strPath) == strPath.GetLength()-1)
-		{
-			ASSERT(*lpsz == '\\' || *lpsz == '/');
-			return strPath + strFileName;
-		}
+		SetCurrentDirectory(NewCurrentDir);
 	}
-	return strPath + '\\' + strFileName;
+
+	TCHAR * pTitle;
+	TCHAR FullPath[MAX_PATH * 2];
+
+	GetFullPathName(lpszFileName, countof(FullPath), FullPath, & pTitle);
+
+	if (0 != _tcsicmp(OldCurrentDir, NewCurrentDir))
+	{
+		SetCurrentDirectory(OldCurrentDir);
+	}
+
+	return FullPath;
 }
 
 size_t CResizableFileDialog::OpenfilenameSize()

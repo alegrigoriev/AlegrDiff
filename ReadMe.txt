@@ -5,7 +5,6 @@ Close file view if the file is updated in the list view
 Update comparison result in the list view on load and reload
 make word by word comparison in MatchStrings
 Find full word only
-If a file(s) exists only in one directory, don't show "Copy From" for another directory
 Version stamp keywords: $Archive: $Revision: $Date:
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
 Add Copy 1st file text, copy 2nd file text
@@ -32,7 +31,6 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-Name dialog doesn't work if directory name with backslash is specified
 Directory share name cannot be selected if no '\' appended
 Blank lines prevent from proper line matching inside difference blocks
 "   if()" and "  if ()" shows non-whitespace difference	- need full word mode
@@ -42,6 +40,8 @@ screen move in two directions may corrupt the image (??)
 Directory dialog allows to select network host. It won't return anything then.
 
 Fixed:
+Name dialog doesn't work if directory name with backslash is specified
+File dialog resize doesn't work if there is no _visible_ items below the separator
 If fingerprint: "File Exists only in """
 Scroll back in binary view redraws the whole view
 Wrong arrow direction for name/dir sort
@@ -65,6 +65,8 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+If a file(s) exists only in one directory, don't show "Copy From" for another directory
+Don't change current directory
 Add "CStringHistory" class
 Set fingerprint list view title
 Set file from fingerprint view title as single file only

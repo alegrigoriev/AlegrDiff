@@ -20,9 +20,9 @@ CCompareDirsDialog::CCompareDirsDialog(CWnd* pParent /*=NULL*/)
 	: CDialog(CCompareDirsDialog::IDD, pParent),
 	m_bAdvanced(false),
 	m_nTabIndent(4)
-	, m_BinaryFilterHistory(& m_Profile, _T("History"), _T("BinaryFiles%d"), 5, true)
-	, m_CppFilterHistory(& m_Profile, _T("History"), _T("CppFiles%d"), 5, true)
-	, m_IgnoreFilterHistory(& m_Profile, _T("History"), _T("IgnoreFiles%d"), 10, true)
+	, m_BinaryFilterHistory(& m_Profile, _T("History"), _T("BinaryFiles%d"), 5)
+	, m_CppFilterHistory(& m_Profile, _T("History"), _T("CppFiles%d"), 5)
+	, m_IgnoreFilterHistory(& m_Profile, _T("History"), _T("IgnoreFiles%d"), 10)
 {
 	//{{AFX_DATA_INIT(CCompareDirsDialog)
 	m_bIncludeSubdirs = FALSE;
@@ -68,14 +68,15 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 	if (pDX->m_bSaveAndValidate)
 	{
 		// Update MRU, case insensitive
-		pApp->m_RecentFolders.AddString(m_sFirstDir, false);
+		pApp->m_RecentFolders.AddString(m_sFirstDir);
 		// second folder added after the first. If they both are the same, two same folders added
-		pApp->m_RecentFolders.AddString(m_sSecondDir, false, 1);
-		pApp->m_FileFilters.AddString(m_FilenameFilter, false);
+		pApp->m_RecentFolders.AddString(m_sSecondDir, 1);
 
-		m_BinaryFilterHistory.AddString(m_sBinaryFilesFilter, false);
-		m_CppFilterHistory.AddString(m_sCppFilesFilter, false);
-		m_IgnoreFilterHistory.AddString(m_sIgnoreFilesFilter, false);
+		pApp->m_FileFilters.AddString(m_FilenameFilter);
+
+		m_BinaryFilterHistory.AddString(m_sBinaryFilesFilter);
+		m_CppFilterHistory.AddString(m_sCppFilesFilter);
+		m_IgnoreFilterHistory.AddString(m_sIgnoreFilesFilter);
 
 		m_Profile.UnloadAll();
 	}

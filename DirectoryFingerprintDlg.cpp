@@ -22,7 +22,7 @@ CDirectoryFingerprintDlg::CDirectoryFingerprintDlg(CWnd* pParent /*=NULL*/)
 	, m_bNeedUpdateControls(TRUE)
 	, m_bOkToOverwriteFile(FALSE)
 	, m_bSaveAsUnicode(FALSE)
-	, m_IgnoreFilterHistory(& m_Profile, _T("History"), _T("IgnoreFiles%d"), 15)
+	, m_IgnoreFilterHistory( & m_Profile, _T("History"), _T("IgnoreFiles%d"), 10)
 	, m_FingerprintFilenameHistory( & m_Profile, _T("History"), _T("FingerprintFile%d"), 15)
 {
 }
@@ -50,11 +50,11 @@ void CDirectoryFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 	{
 		CThisApp * pApp = GetApp();
 
-		pApp->m_RecentFolders.AddString(m_sDirectory, false);
-		pApp->m_FileFilters.AddString(m_sFilenameFilter, false);
+		pApp->m_RecentFolders.AddString(m_sDirectory);
+		pApp->m_FileFilters.AddString(m_sFilenameFilter);
 
-		m_IgnoreFilterHistory.AddString(m_sIgnoreFiles, false);
-		m_FingerprintFilenameHistory.AddString(m_sSaveFilename, false);
+		m_IgnoreFilterHistory.AddString(m_sIgnoreFiles);
+		m_FingerprintFilenameHistory.AddString(m_sSaveFilename);
 
 		m_Profile.FlushAll();
 	}
@@ -98,7 +98,10 @@ void CDirectoryFingerprintDlg::OnBnClickedButtonBrowseSaveFilename()
 	m_SaveFilename.GetWindowText(m_sSaveFilename);
 
 	CFileDialogWithHistory dlg(FALSE, & GetApp()->m_RecentFolders, _T("md5fp"), m_sSaveFilename,
-								OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+								OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT
+								| OFN_NOTESTFILECREATE
+								| OFN_PATHMUSTEXIST
+								| OFN_NOCHANGEDIR | OFN_EXPLORER,
 								Filter);
 	dlg.m_ofn.lpstrTitle = Title;
 

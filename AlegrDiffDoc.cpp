@@ -1350,7 +1350,7 @@ bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvok
 		bBackwards = pApp->m_bFindBackward;
 	}
 	// update MRU, case sensitive
-	pApp->m_FindHistory.AddString(pApp->m_FindString, true);
+	pApp->m_FindHistory.AddString(pApp->m_FindString);
 
 	return FindTextString(pApp->m_FindString, bBackwards, pApp->m_bCaseSensitive);
 }
@@ -1763,7 +1763,10 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 							OFN_HIDEREADONLY
 							| OFN_EXPLORER
 							| OFN_ENABLESIZING
+							| OFN_NOTESTFILECREATE
+							| OFN_PATHMUSTEXIST
 							| OFN_NONETWORKBUTTON
+							| OFN_NOCHANGEDIR
 							| OFN_OVERWRITEPROMPT,
 							filter,
 							NULL);

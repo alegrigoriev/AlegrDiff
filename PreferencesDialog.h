@@ -49,11 +49,13 @@ public:
 	CComboBox m_cbCppFilter;
 	CComboBox m_cbBinaryFilter;
 	CComboBox m_cbIgnoreFilter;
-	CString m_sBinaryFilterHistory[5];
-	CString m_sCppFilterHistory[5];
-	CString m_sIgnoreFilterHistory[10];
-
+protected:
 	CApplicationProfile m_Profile;
+
+	CStringHistory m_BinaryFilterHistory;
+	CStringHistory m_CppFilterHistory;
+	CStringHistory m_IgnoreFilterHistory;
+
 };
 
 /////////////////////////////////////////////////////////////////////////////

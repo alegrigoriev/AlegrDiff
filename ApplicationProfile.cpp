@@ -1116,31 +1116,29 @@ BOOL CApplicationProfile::WriteProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEn
 
 /////////////////////////////////////////////////////////////////////////////
 CStringHistory::CStringHistory(CApplicationProfile * pProfile,
-								LPCTSTR Section, LPCTSTR KeyFormat, int NumStrings, bool Trim)
+								LPCTSTR Section, LPCTSTR KeyFormat, int NumStrings, ULONG Flags)
 	: m_NumStrings(NumStrings)
-	, m_bAttached(false)
 	, m_KeyFormat(KeyFormat)
 	, m_ProfileSection(Section)
 	, m_pProfile(pProfile)
 	, m_Strings(new CString[NumStrings])
-	, m_bTrim(Trim)
+	, m_Flags(Flags & (Trim | CaseSensitive))
 {
 }
 
 CStringHistory::CStringHistory(CStringHistory * pSourceHistory)
 	: m_NumStrings(pSourceHistory->m_NumStrings)
-	, m_bAttached(true)
 	, m_KeyFormat(pSourceHistory->m_KeyFormat)
 	, m_ProfileSection(pSourceHistory->m_ProfileSection)
 	, m_pProfile(pSourceHistory->m_pProfile)
 	, m_Strings(pSourceHistory->m_Strings)
-	, m_bTrim(pSourceHistory->m_bTrim)
+	, m_Flags(AttachedHistory | (pSourceHistory->m_Flags & (Trim | CaseSensitive)))
 {
 }
 
 CStringHistory::~CStringHistory()
 {
-	if (! m_bAttached)
+	if (0 == (m_Flags & AttachedHistory))
 	{
 		for (int i = 0; i < m_NumStrings; i++)
 		{
@@ -1152,10 +1150,10 @@ CStringHistory::~CStringHistory()
 	}
 }
 
-void CStringHistory::Load()
+void CStringHistory::Load(LPCTSTR DefaultFirstString)
 {
 	// if it is attached, the history must already be loaded
-	if (m_bAttached)
+	if (m_Flags & AttachedHistory)
 	{
 		return;
 	}
@@ -1164,9 +1162,12 @@ void CStringHistory::Load()
 	{
 		CString s;
 		s.Format(m_KeyFormat, i);
-		m_pProfile->AddItem(m_ProfileSection, s, m_Strings[i]);
+		m_pProfile->AddItem(m_ProfileSection, s, m_Strings[i], DefaultFirstString);
 
-		if (m_bTrim)
+		// use default for the first string only
+		DefaultFirstString = _T("");
+
+		if (m_Flags & Trim)
 		{
 			m_Strings[i].Trim();
 		}
@@ -1194,12 +1195,12 @@ void CStringHistory::LoadCombo(CComboBox * pCb)
 	}
 }
 
-void CStringHistory::DeleteString(CString const & str, bool CaseSensitive, int StartFromIndex)
+void CStringHistory::DeleteString(CString const & str, int StartFromIndex)
 {
 	int i, j;
 	for (i = StartFromIndex, j = StartFromIndex; i < m_NumStrings; i++)
 	{
-		if (CaseSensitive)
+		if (m_Flags & CaseSensitive)
 		{
 			if (0 == str.Compare(m_Strings[i])
 				// check if previous string is the same
@@ -1231,14 +1232,14 @@ void CStringHistory::DeleteString(CString const & str, bool CaseSensitive, int S
 		m_Strings[j].Empty();
 	}
 }
-void CStringHistory::AddString(CString const & str, bool CaseSensitive, int AtIndex)
+void CStringHistory::AddString(CString const & str, int AtIndex)
 {
 	// remove those that match the currently selected dirs
 	if (AtIndex >= m_NumStrings)
 	{
 		return;
 	}
-	DeleteString(str, CaseSensitive, AtIndex);
+	DeleteString(str, AtIndex);
 	// remove last dir from the list
 	for (int i = m_NumStrings - 1; i > AtIndex; i--)
 	{

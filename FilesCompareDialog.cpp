@@ -55,8 +55,8 @@ void CFilesCompareDialog::DoDataExchange(CDataExchange* pDX)
 	// save file names to history
 	if (pDX->m_bSaveAndValidate)
 	{
-		pApp->m_RecentFiles.AddString(m_sFirstFileName, false);
-		pApp->m_RecentFiles.AddString(m_sSecondFileName, false, 1);
+		pApp->m_RecentFiles.AddString(m_sFirstFileName);
+		pApp->m_RecentFiles.AddString(m_sSecondFileName, 1);
 	}
 }
 

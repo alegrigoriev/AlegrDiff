@@ -1483,10 +1483,6 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 		return IDCANCEL;
 	}
 
-	TCHAR CurrDir[MAX_PATH] = {0};
-	GetCurrentDirectory(MAX_PATH, CurrDir);
-	BrowseFolder = CurrDir;
-
 	LPTSTR pFilter = OfnCustomFilter;
 	// skip first string (it's usually of sero length
 	while (*(pFilter++) != 0) {}
@@ -1512,6 +1508,8 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 	}
 
 	Name = dlg.GetPathName();
+
+	BrowseFolder = dlg.GetLastFolder();
 	return IDOK;
 }
 

@@ -81,7 +81,7 @@ BOOL CDirectoryFingerprintCheckDlg::OnInitDialog()
 
 unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 {
-	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
+	//SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 	// load the directory
 	FileList FileList1;
 	FileList FileList2;
@@ -255,19 +255,19 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 
 	m_pDocument->m_bRecurseSubdirs = (m_bIncludeSubdirectories != 0);
 
+	CString s;
+	s.Format(IDS_STRING_LOADING_DIRECTORY, buf);
+	SetNextItem(s, 0, 0);
+
 	if (! FileList2.LoadFolder(buf, m_bIncludeSubdirectories != 0,
 								InclusionPattern, ExclusionPattern, PatternToMultiCString(_T("")),
 								PatternToMultiCString(_T("*"))))
 	{
-		// todo: post a command
-		DWORD error = GetLastError();
-		CString s;
 		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, buf);
-		AfxMessageBox(s);
-		if (NULL != m_hWnd)
-		{
-			::PostMessage(m_hWnd, WM_COMMAND, IDCANCEL, NULL);
-		}
+
+		SetNextItem(s, 0, 0);
+
+		SignalDialogEnd(IDABORT);
 		return 0;
 	}
 

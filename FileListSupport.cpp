@@ -804,7 +804,10 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 {
 	if (NULL == m_hFile)
 	{
-		m_hFile = CreateFile(GetFullName(), GENERIC_READ, FILE_SHARE_READ, NULL,
+		// Open the file with FILE_SHARE_DELETE, to allow other applications
+		// to delete or move the file
+		m_hFile = CreateFile(GetFullName(), GENERIC_READ,
+							FILE_SHARE_READ | FILE_SHARE_DELETE, NULL,
 							OPEN_EXISTING, FILE_FLAG_NO_BUFFERING, NULL);
 		if (NULL == m_hFile
 			|| INVALID_HANDLE_VALUE == m_hFile)
@@ -2629,6 +2632,7 @@ FilePair::FilePair()
 	m_bChanged(false),
 	m_bHideFromListView(false),
 	m_bSelected(false),
+	m_bDeleted(false),
 	m_CompletedPercent(0),
 	m_ComparisionResult(ResultUnknown)
 {
@@ -3229,6 +3233,10 @@ FilePair::eFileComparisionResult FilePair::PreCompareFiles(CMd5HashCalculator * 
 
 	if (LoadFiles())
 	{
+		if (NULL != pProgressDialog)
+		{
+			pProgressDialog->SetCurrentItemDone(pFirstFile->GetFileLength() + pSecondFile->GetFileLength());
+		}
 #ifdef _DEBUG
 		DWORD BeginTime = timeGetTime();
 #endif
@@ -3644,22 +3652,36 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 		if ( ! pFirstFile->m_bMd5Calculated)
 		{
 			m_ComparisionResult = CalculatingFirstFingerprint;
+
 			if (NULL != pProgressDialog)
 			{
 				pProgressDialog->SetNextItem(GetComparisonResult(),
 											pFirstFile->GetFileLength(), FILE_OPEN_OVERHEAD);
 			}
+
 			pFirstFile->CalculateHashes(pMd5Calc, pProgressDialog);
+
+			if (NULL != pProgressDialog)
+			{
+				pProgressDialog->AddDoneItem(pFirstFile->GetFileLength());
+			}
 		}
 		if ( ! pSecondFile->m_bMd5Calculated)
 		{
 			m_ComparisionResult = CalculatingSecondFingerprint;
+
 			if (NULL != pProgressDialog)
 			{
 				pProgressDialog->SetNextItem(GetComparisonResult(),
 											pSecondFile->GetFileLength(), FILE_OPEN_OVERHEAD);
 			}
+
 			pSecondFile->CalculateHashes(pMd5Calc, pProgressDialog);
+
+			if (NULL != pProgressDialog)
+			{
+				pProgressDialog->AddDoneItem(pSecondFile->GetFileLength());
+			}
 		}
 	}
 	// if files have MD5 calculated, use it

@@ -595,12 +595,12 @@ void CFileDialogWithHistory::OnInitDone()
 
 BOOL CFileDialogWithHistory::OnFileNameOK()
 {
-	CString sCurrDir;
-	GetParent()->SendMessage(CDM_GETFOLDERPATH, MAX_PATH, LPARAM(sCurrDir.GetBuffer(MAX_PATH)));
-	sCurrDir.ReleaseBuffer();
-	TRACE("CFileDialogWithHistory::OnFileNameOK Folder Path=%s\n", sCurrDir);
+	GetParent()->SendMessage(CDM_GETFOLDERPATH, MAX_PATH, LPARAM(m_LastFolder.GetBuffer(MAX_PATH)));
+	m_LastFolder.ReleaseBuffer();
 
-	m_RecentFolders.AddString(sCurrDir);
+	TRACE("CFileDialogWithHistory::OnFileNameOK Folder Path=%s\n", m_LastFolder);
+
+	m_RecentFolders.AddString(m_LastFolder);
 
 	m_RecentFolders.Flush();
 	return 0;
@@ -608,17 +608,17 @@ BOOL CFileDialogWithHistory::OnFileNameOK()
 
 void CFileDialogWithHistory::OnFolderChange()
 {
-	CString dir = GetFolderPath();
-	if (dir.GetLength() > 1
-		&& (dir[dir.GetLength() - 1] == '\\'
-			|| dir[dir.GetLength() - 1] == '/'))
+	m_LastFolder = GetFolderPath();
+	if (m_LastFolder.GetLength() > 1
+		&& (m_LastFolder[m_LastFolder.GetLength() - 1] == '\\'
+			|| m_LastFolder[m_LastFolder.GetLength() - 1] == '/'))
 	{
-		dir.SetAt(dir.GetLength() - 1, 0);
+		m_LastFolder.SetAt(m_LastFolder.GetLength() - 1, 0);
 	}
 	CComboBox * pCb = static_cast<CComboBox *>(GetDlgItem(IDC_COMBO_RECENT));
 	if (NULL != pCb)
 	{
-		pCb->SelectString(-1, dir);
+		pCb->SelectString(-1, m_LastFolder);
 	}
 }
 

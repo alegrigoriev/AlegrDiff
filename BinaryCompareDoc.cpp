@@ -38,7 +38,8 @@ CBinaryCompareDoc::~CBinaryCompareDoc()
 void CBinaryCompareDoc::OnUpdateAllViews(CView* pSender,
 										LPARAM lHint, CObject* pHint)
 {
-	if (UpdateViewsFilePairDeleted == lHint)
+	if (UpdateViewsFilePairDeleteFromList == lHint
+		|| UpdateViewsFilePairDeleteView == lHint)
 	{
 		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
 		if (NULL != pArg
@@ -47,6 +48,10 @@ void CBinaryCompareDoc::OnUpdateAllViews(CView* pSender,
 			OnCloseDocument();
 			return;
 		}
+	}
+	else if (UpdateViewsCloseOpenFiles == lHint)
+	{
+		m_pFilePair->UnloadFiles(true); // force close
 	}
 	else
 	{

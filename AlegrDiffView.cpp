@@ -84,6 +84,7 @@ ON_COMMAND(ID_VIEW_RESETCOLUMNS, OnViewResetcolumns)
 ON_COMMAND(ID_FILE_PROPERTIES, OnFileProperties)
 ON_UPDATE_COMMAND_UI(ID_FILE_PROPERTIES, OnUpdateFileProperties)
 ON_NOTIFY_REFLECT(LVN_ITEMCHANGED, OnLvnItemchanged)
+ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -412,7 +413,7 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		}
 		return;
 	}
-	else if (UpdateViewsFilePairDeleted == lHint)
+	else if (UpdateViewsFilePairDeleteFromList == lHint)
 	{
 		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
 		if (NULL == pArg)
@@ -1524,12 +1525,31 @@ void CAlegrDiffView::OnUpdateFileProperties(CCmdUI *pCmdUI)
 void CAlegrDiffView::OnLvnItemchanged(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
-	// TODO: Add your control notification handler code here
-	if (pNMLV->uChanged & LVIF_STATE
+
+	if ((pNMLV->uChanged & LVIF_STATE)
 		&& unsigned(pNMLV->iItem) < m_PairArray.size())
 	{
-		m_PairArray[pNMLV->iItem]->m_bSelected =
-			0 != (pNMLV->uNewState & LVIS_SELECTED);
+		if (pNMLV->uNewState & LVIS_SELECTED)
+		{
+			m_PairArray[pNMLV->iItem]->m_bSelected = true;
+		}
+		if (pNMLV->uOldState & LVIS_SELECTED)
+		{
+			m_PairArray[pNMLV->iItem]->m_bSelected = false;
+		}
 	}
 	*pResult = 0;
 }
+
+void CAlegrDiffView::OnEditSelectAll()
+{
+	// TODO: Add your command handler code here
+	CListCtrl * pList = &GetListCtrl();
+	int Count = pList->GetItemCount();
+
+	for (int i = 0; i < Count; i++)
+	{
+		pList->SetItemState(i, LVIS_SELECTED, LVIS_SELECTED);
+	}
+}
+

@@ -448,6 +448,7 @@ public:
 	bool m_bChanged;
 	bool m_bHideFromListView;
 	bool m_bSelected;
+	bool m_bDeleted;
 
 	vector<LinePair *> m_LinePairs;
 	vector<FileDiffSection *> m_DiffSections;

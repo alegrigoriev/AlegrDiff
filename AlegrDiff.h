@@ -37,7 +37,9 @@ enum {
 	UpdateViewsColorsChanged = 0x100000,
 	UpdateViewsFilePairChanged = 0x200000,
 	UpdateViewsMetricsChanged = 0x300000,
-	UpdateViewsFilePairDeleted = 0x400000,
+	UpdateViewsFilePairDeleteFromList = 0x400000,
+	UpdateViewsFilePairDeleteView = 0x400000,
+	UpdateViewsCloseOpenFiles = 0x500000,
 };
 
 class FilePairChangedArg : public CObject

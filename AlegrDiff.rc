@@ -278,8 +278,8 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Sort &By"
         BEGIN
-            MENUITEM "Name",                        ID_LISTVIEW_SORTBY_NAME
-            MENUITEM "Folder",                      ID_LISTVIEW_SORTBY_FOLDER
+            MENUITEM "&Name",                       ID_LISTVIEW_SORTBY_NAME
+            MENUITEM "&Folder",                     ID_LISTVIEW_SORTBY_FOLDER
 
             MENUITEM "1st Modification Date",       ID_LISTVIEW_SORTBY_1STMODIFICATIONDATE
 
@@ -289,17 +289,18 @@ BEGIN
 
             MENUITEM "2nd Length",                  ID_LISTVIEW_SORTBY_2NDLENGTH
 
-            MENUITEM "Comparison Result",           ID_LISTVIEW_SORTBY_COMPARISONRESULT
+            MENUITEM "&Comparison Result",          ID_LISTVIEW_SORTBY_COMPARISONRESULT
 
             MENUITEM SEPARATOR
-            MENUITEM "Descending Order",            ID_LISTVIEW_SORTBY_DESCENDINGORDER
+            MENUITEM "&Descending Order",           ID_LISTVIEW_SORTBY_DESCENDINGORDER
 
         END
         MENUITEM "&Hide Selected Files",        ID_VIEW_HIDESELECTEDFILES
-        MENUITEM "Unhide &All Files",           ID_VIEW_SHOWALLFILES
+        MENUITEM "&Unhide All Files",           ID_VIEW_SHOWALLFILES
         MENUITEM SEPARATOR
         MENUITEM "R&escan Files\tF5",           ID_VIEW_REFRESH
         MENUITEM "&Reset Columns",              ID_VIEW_RESETCOLUMNS
+        MENUITEM "Select &All\tCtrl+A",         57642
     END
     POPUP "&Window"
     BEGIN
@@ -912,15 +913,15 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION |
 CAPTION "Comparing directories"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT           "",IDC_STATIC_FILENAME,7,45,256,27
+    LTEXT           "",IDC_STATIC_FILENAME,7,44,256,27
     CONTROL         "",IDC_PROGRESS1,"msctls_progress32",WS_BORDER | 0x1,7,
-                    79,256,14
+                    24,256,14
     PUSHBUTTON      "Cancel",IDCANCEL,108,119,50,14
     CONTROL         "",IDC_PROGRESS2,"msctls_progress32",WS_BORDER | 0x1,7,
-                    24,256,14
+                    83,256,14
     CTEXT           " ",IDC_STATIC,35,63,198,8
-    LTEXT           "Static",IDC_TIME_LEFT,7,7,122,8
-    CTEXT           "",IDC_STATIC_PERCENT_ITEM,7,101,256,8
+    RTEXT           "",IDC_TIME_LEFT,141,7,122,8
+    CTEXT           "",IDC_STATIC_PERCENT_ITEM,7,105,256,8
 END
 
 IDD_DIALOG_FINGERPRINT_CHECK_PROGRESS DIALOGEX 0, 0, 269, 122
@@ -1027,8 +1028,8 @@ VS_VERSION_INFO$(RETAIL_VERSION) VERSIONINFO
 #else
 VS_VERSION_INFO VERSIONINFO
 #endif
- FILEVERSION 1,0,19,0
- PRODUCTVERSION 1,0,19,0
+ FILEVERSION 1,0,20,0
+ PRODUCTVERSION 1,0,20,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -1045,13 +1046,13 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "AleGr Software"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application"
-            VALUE "FileVersion", "1, 0, 19, 0"
+            VALUE "FileVersion", "1, 0, 20, 0"
             VALUE "InternalName", "AlegrDiff"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001-2002"
             VALUE "OriginalFilename", "AlegrDiff.EXE"
-            VALUE "PrivateBuild", "Beta 1.19"
+            VALUE "PrivateBuild", "Beta 1.20"
             VALUE "ProductName", "AlegrDiff Application"
-            VALUE "ProductVersion", "1, 0, 19, 0"
+            VALUE "ProductVersion", "1, 0, 20, 0"
         END
     END
     BLOCK "VarFileInfo"
@@ -1614,6 +1615,8 @@ BEGIN
     IDS_TIME_LEFT_SECONDS   "%d seconds left"
     IDS_TIME_LEFT_MINUTES   "%d minutes left"
     IDS_STRING_LOADING_DIRECTORY "Loading dirrectory ""%s"""
+    IDS_STRING_NO_FILES_TO_COMPARE 
+                            "Both directories are empty or no files match the filter pattern"
 END
 
 #endif    // English (U.S.) resources

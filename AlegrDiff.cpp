@@ -246,10 +246,10 @@ BOOL CAlegrDiffApp::InitInstance()
 
 	static UCHAR DefaultSortOrder[MaxColumns] =
 	{
-		ColumnSubdir,
-		ColumnName,
-		ColumnDate1 | 0x80,
-		ColumnDate2 | 0x80,
+		ColumnSubdir | 0x80,
+		ColumnName | 0x80,
+		ColumnDate1,
+		ColumnDate2,
 		ColumnLength1 | 0x80,
 		ColumnLength2 | 0x80,
 		ColumnComparisionResult,
@@ -267,9 +267,17 @@ BOOL CAlegrDiffApp::InitInstance()
 
 	// set the default folder directory to My Documents
 	TCHAR MyDocuments[MAX_PATH] = { 0};
-	if (S_OK == SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, MyDocuments))
+	char MyDocumentsA[MAX_PATH] = { 0};
+	if (SHGetSpecialFolderPath(NULL, MyDocuments, CSIDL_PERSONAL, FALSE))
 	{
 		SetCurrentDirectory(MyDocuments);
+	}
+	else
+	{
+		if (SHGetSpecialFolderPathA(NULL, MyDocumentsA, CSIDL_PERSONAL, FALSE))
+		{
+			SetCurrentDirectoryA(MyDocumentsA);
+		}
 	}
 
 	m_TextBackgroundColor = GetSysColor(COLOR_WINDOW);

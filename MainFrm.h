@@ -47,6 +47,7 @@ protected:  // control bar embedded members
 // Generated message map functions
 protected:
 	void OnUpdateCaretPosIndicator(CCmdUI* pCmdUI);
+	afx_msg LRESULT OnSetMessageStringPost(WPARAM wParam, LPARAM lParam);
 	//{{AFX_MSG(CMainFrame)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDropFiles(HDROP hDropInfo);

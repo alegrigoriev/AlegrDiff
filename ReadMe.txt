@@ -31,6 +31,8 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+Windows ME: old style file open dialog
+Default sort for names: reversed
 Directory share name cannot be selected if no '\' appended
 Blank lines prevent from proper line matching inside difference blocks
 "   if()" and "  if ()" shows non-whitespace difference	- need full word mode
@@ -40,6 +42,7 @@ screen move in two directions may corrupt the image (??)
 Directory dialog allows to select network host. It won't return anything then.
 
 Fixed:
+status string on open files: garbled
 Name dialog doesn't work if directory name with backslash is specified
 File dialog resize doesn't work if there is no _visible_ items below the separator
 If fingerprint: "File Exists only in """

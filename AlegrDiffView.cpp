@@ -282,62 +282,71 @@ void CAlegrDiffView::ResetColumnsArray()
 
 }
 
-void CAlegrDiffView::SetSortColumn(eColumns nColumn, eSetSortColumnOrder Order)
+bool CAlegrDiffView::ChangeSortItem(eColumns nColumn, eSetSortColumnOrder Order)
 {
+	// if actual sort order changed, return 'true'
 	if (nColumn >= MaxColumns)
 	{
-		return;
+		return false;
 	}
 
 	if (m_SortColumns[0] == nColumn)
 	{
 		if (Order != SetSortColumnMouseClick
-			&& (Order == SetSortColumnAscending) == m_AscendingSortOrder[0])
+			&& (SetSortColumnUnchanged == Order
+				|| (Order == SetSortColumnAscending) == m_AscendingSortOrder[0]))
 		{
 			// sort order remains the same
-			return;
+			return false;
 		}
 		m_AscendingSortOrder[0] = ! m_AscendingSortOrder[0];
+		return true;
 	}
-	else
+	// remove the column from the array
+	int i, j;
+	for (i = 0, j = 0; i < countof (m_SortColumns); i++)
 	{
-		// remove the column from the array
-		int i, j;
-		for (i = 0, j = 0; i < countof (m_SortColumns); i++)
+		if (m_SortColumns[i] != nColumn)
 		{
-			if (m_SortColumns[i] != nColumn)
+			m_SortColumns[j] = m_SortColumns[i];
+			m_AscendingSortOrder[j] = m_AscendingSortOrder[i];
+			j++;
+		}
+		else if (Order == SetSortColumnMouseClick
+				|| SetSortColumnUnchanged == Order)
+		{
+			// if column header was clicked, retain previous sort order
+			if (m_AscendingSortOrder[i])
 			{
-				m_SortColumns[j] = m_SortColumns[i];
-				m_AscendingSortOrder[j] = m_AscendingSortOrder[i];
-				j++;
+				Order = SetSortColumnAscending;
 			}
-			else if (Order == SetSortColumnMouseClick)
+			else
 			{
-				// if column header was clicked, retain previous sort order
-				if (m_AscendingSortOrder[i])
-				{
-					Order = SetSortColumnAscending;
-				}
-				else
-				{
-					Order = SetSortColumnDescending;
-				}
+				Order = SetSortColumnDescending;
 			}
 		}
-
-		for (i = MaxColumns - 1; i > 0; i--)
-		{
-			m_SortColumns[i] = m_SortColumns[i - 1];
-			m_AscendingSortOrder[i] = m_AscendingSortOrder[i - 1];
-		}
-
-		m_SortColumns[0] = eColumns(nColumn);
-		m_AscendingSortOrder[0] = (Order != SetSortColumnDescending);
 	}
 
-	UpdateAppColumns();
+	for (i = MaxColumns - 1; i > 0; i--)
+	{
+		m_SortColumns[i] = m_SortColumns[i - 1];
+		m_AscendingSortOrder[i] = m_AscendingSortOrder[i - 1];
+	}
 
-	OnUpdate(NULL, 0, NULL);
+	m_SortColumns[0] = eColumns(nColumn);
+	m_AscendingSortOrder[0] = (Order != SetSortColumnDescending);
+
+	return true;
+}
+
+void CAlegrDiffView::SetSortColumn(eColumns nColumn, eSetSortColumnOrder Order)
+{
+	if (ChangeSortItem(nColumn, Order))
+	{
+		UpdateAppColumns();
+
+		OnUpdate(NULL, 0, NULL);
+	}
 }
 
 void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
@@ -480,6 +489,16 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	}
 
 	int col = 0;    // real column
+
+	// if the current sort column is not visible, set it to Name
+	if (m_SortColumns[0] >= MaxColumns
+		|| m_ColumnWidthArray[m_SortColumns[0]] <= 0
+		|| (! pDoc->m_bRecurseSubdirs
+			&& ColumnSubdir == m_SortColumns[0]))
+	{
+		ChangeSortItem(ColumnName, SetSortColumnUnchanged);
+	}
+
 	for (int j = 0; j < countof(m_ColumnArray); j++)
 	{
 		// j is column number (including hidden ones)

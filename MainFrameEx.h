@@ -9,8 +9,10 @@ enum MainFrameFeatures
 	MainFrameRecalcLayoutOnDisplayChange = 4,
 	MainFrameRecalcLayoutOnSettingChange = 8,
 	MainFrameHandlePaletteChange = 0x10,
+	MainFrameRememberSize = 0x20,
 };
 template<int _Feature = MainFrameRememberMaximized
+						| MainFrameRememberSize
 						| MainFrameNeatCtrlTab,
 		class Base = CMDIFrameWnd>
 class FrameExParameters
@@ -29,26 +31,67 @@ class CMainFrameExT : public Parameters::BaseClass
 	enum { Feature = Parameters::Feature };
 
 public:
-	BOOL ShowWindow(int CmdShow)
+	void InitialShowWindow(int CmdShow)
 	{
-		if ((SW_SHOWDEFAULT == CmdShow || SW_SHOWNORMAL == CmdShow)
+		WINDOWPLACEMENT wp;
+		wp.length = sizeof wp;
+
+		if ((SW_SHOWMINIMIZED != CmdShow)
 			&& m_bOpenMaximized)
 		{
 			CmdShow = SW_SHOWMAXIMIZED;
 		}
-		return BaseClass::ShowWindow(CmdShow);
+
+		if (GetWindowPlacement( & wp))
+		{
+			if (m_bOpenMaximized)
+			{
+				wp.flags |= WPF_RESTORETOMAXIMIZED;
+			}
+			wp.showCmd = CmdShow;
+			if (Feature & MainFrameRememberSize)
+			{
+				if (m_NormalWindowSize.left >= 0
+					&& m_NormalWindowSize.right <= 8192
+					&& m_NormalWindowSize.right >= m_NormalWindowSize.left + 32
+					&& m_NormalWindowSize.top >= 0
+					&& m_NormalWindowSize.bottom < 8192
+					&& m_NormalWindowSize.bottom >= m_NormalWindowSize.top + 32)
+				{
+					wp.rcNormalPosition = m_NormalWindowSize;
+				}
+			}
+			SetWindowPlacement( & wp);
+		}
+		else
+		{
+			ShowWindow(CmdShow);
+		}
 	}
+
 protected:
 	CMainFrameExT()
 		: m_nRotateChildIndex(0)
+		, m_bOpenMaximized(true)
+		, m_NormalWindowSize(0, 0, 0, 0)
 	{
 		if (Feature & MainFrameRememberMaximized)
 		{
 			GetApp()->Profile.AddItem(_T("Settings"), _T("OpenMaximized"), m_bOpenMaximized, true);
 		}
+		if (Feature & MainFrameRememberSize)
+		{
+			GetApp()->Profile.AddItem(_T("Settings"), _T("MainWindowSize"),
+									m_NormalWindowSize, m_NormalWindowSize);
+		}
 	}
 	~CMainFrameExT()
 	{
+		if (Feature & MainFrameRememberSize)
+		{
+
+			GetApp()->Profile.RemoveItem(_T("Settings"), _T("MainWindowSize"));
+		}
 		if (Feature & MainFrameRememberMaximized)
 		{
 			GetApp()->Profile.RemoveItem(_T("Settings"), _T("OpenMaximized"));
@@ -169,6 +212,7 @@ protected:
 private:
 	int m_nRotateChildIndex;  // used for Ctrl+Tab handling
 	bool m_bOpenMaximized;
+	CRect m_NormalWindowSize;
 
 	afx_msg LRESULT OnDisplayChange(WPARAM wParam, LPARAM lParam)
 	{
@@ -228,14 +272,24 @@ protected:
 	}
 	afx_msg void OnDestroy()
 	{
-		if (Feature & MainFrameRememberMaximized)
+		if (Feature & (MainFrameRememberMaximized | MainFrameRememberSize))
 		{
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof wp;
 
 			GetWindowPlacement( & wp);
-			m_bOpenMaximized = 0 != (wp.flags & WPF_RESTORETOMAXIMIZED);
-			GetApp()->Profile.FlushItem(_T("Settings"), _T("OpenMaximized"));
+
+			if (Feature & MainFrameRememberMaximized)
+			{
+				m_bOpenMaximized = 0 != (wp.flags & WPF_RESTORETOMAXIMIZED);
+				GetApp()->Profile.UnloadItem(_T("Settings"), _T("OpenMaximized"));
+			}
+
+			if (Feature & MainFrameRememberSize)
+			{
+				m_NormalWindowSize = wp.rcNormalPosition;
+				GetApp()->Profile.UnloadItem(_T("Settings"), _T("MainWindowSize"));
+			}
 		}
 		BaseClass::OnDestroy();
 	}

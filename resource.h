@@ -9,7 +9,6 @@
 #define IDD_DIALOG_COMPARE_DIRS         130
 #define IDR_FILEDIFFTYPE                131
 #define IDS_FILENAME_FILTER             132
-#define IDD_DIALOG_PREFERENCES          132
 #define IDD_DIALOG_COMPARE_DIRS_ADVANCED 133
 #define IDS_OPEN_FIRST_TITLE            133
 #define IDC_CURSOR_LEFT_ARROW           133
@@ -48,13 +47,9 @@
 #define IDC_STATIC_ADDED_TEXT           1020
 #define IDC_STATIC_DELETED_TEXT         1021
 #define IDC_CHECK_AUTO_RELOAD           1022
-#define IDC_BUTTON_NORMAL_BACKGROUND    1022
 #define IDC_EDIT_LINE_NUMBER            1023
 #define IDC_BUTTON_ADDED_BACKGROUND     1023
 #define IDC_BUTTON_ERASED_BACKGROUND    1024
-#define IDC_EDIT1                       1026
-#define IDC_EDIT2                       1027
-#define IDC_EDIT3                       1028
 #define IDC_EDIT_NUMBER_OF_IDENTICAL_LINES 1029
 #define IDC_EDIT_MINIMAL_LINE_LENGTH    1030
 #define IDC_EDIT_PERCENT_OF_LOOKLIKE_DIFFERENCE 1031

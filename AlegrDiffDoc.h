@@ -126,6 +126,7 @@ public:
 protected:
 	// Generated message map functions
 public:
+	int GetAcceptDeclineFlags(TextPos begin, TextPos end);
 	BOOL DoSaveMerged(BOOL bOpenResultFile);
 	BOOL SaveMergedFile(LPCTSTR Name, int DefaultFlags);
 
@@ -137,8 +138,8 @@ public:
 
 	bool GetWordUnderCaret(TextPos & Start, TextPos & End);
 	bool FindWordOrSelection(bool bBackwards);
-	void CaretLeftToWord(bool bCancelSelection);
-	void CaretRightToWord(bool bCancelSelection);
+	void CaretLeftToWord(int SelectionFlags);
+	void CaretRightToWord(int SelectionFlags);
 
 	bool FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive);
 	bool OnEditFind();

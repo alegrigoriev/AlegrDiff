@@ -196,7 +196,6 @@ BEGIN
         MENUITEM "&New Window",                 ID_WINDOW_NEW
         MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
         MENUITEM "&Tile",                       ID_WINDOW_TILE_HORZ
-        MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGE
     END
     POPUP "&Help"
     BEGIN
@@ -307,58 +306,12 @@ BEGIN
     CONTROL         "Include &subdirectories",IDC_CHECK_INCLUDE_SUBDIRS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,122,10
     PUSHBUTTON      "&Advanced >>",IDC_BUTTON_ADVANCED,150,86,50,14
-    CONTROL         "&Binary comparision only",IDC_CHECK_BINARY,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,99,126,10
+    CONTROL         "&Binary comparison only",IDC_CHECK_BINARY,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,99,126,10
     LTEXT           "File&name filter: ",IDC_STATIC,7,117,46,8
     EDITTEXT        IDC_EDITFILENAME_FILTER,64,114,136,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,35,148,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,115,148,50,14
-END
-
-IDD_DIALOG_PREFERENCES DIALOG DISCARDABLE  0, 0, 187, 299
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Preferences"
-FONT 8, "MS Sans Serif"
-BEGIN
-    CONTROL         "Compare the following files as C/C++:",IDC_CHECK_C_CPP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,9,126,10
-    EDITTEXT        IDC_EDIT_C_CPP,7,21,173,14,ES_AUTOHSCROLL
-    CONTROL         "Compare the following files as binary:",
-                    IDC_CHECK_BINARY_FILES,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,39,126,10
-    EDITTEXT        IDC_EDIT_BINARY_FILES,7,51,173,14,ES_AUTOHSCROLL
-    CONTROL         "Ignore the following files:",IDC_CHECK_IGNORE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,69,88,10
-    EDITTEXT        IDC_EDIT_IGNORE,7,81,173,14,ES_AUTOHSCROLL
-    LTEXT           "Tab indent:",IDC_STATIC,7,189,43,8
-    EDITTEXT        IDC_EDIT_TAB_INDENT,54,186,32,14,ES_AUTOHSCROLL | 
-                    ES_NUMBER
-    CONTROL         "Spin1",IDC_SPIN1,"msctls_updown32",UDS_SETBUDDYINT | 
-                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
-                    UDS_NOTHOUSANDS,86,187,10,14
-    DEFPUSHBUTTON   "OK",IDOK,37,278,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,100,278,50,14
-    PUSHBUTTON      "Font...",IDC_BUTTON_NORMAL_FONT,139,207,36,17
-    PUSHBUTTON      "Font...",IDC_BUTTON_INSERTED_FONT,139,228,36,17
-    PUSHBUTTON      "Font...",IDC_BUTTON_ERASED_FONT,138,249,37,17
-    CTEXT           " Normal Text",IDC_STATIC_NORMAL_TEXT,7,208,113,16,
-                    SS_CENTERIMAGE
-    CTEXT           " Added Text",IDC_STATIC_ADDED_TEXT,7,229,113,16,
-                    SS_CENTERIMAGE
-    CTEXT           " Deleted Text",IDC_STATIC_DELETED_TEXT,7,249,113,16,
-                    SS_CENTERIMAGE
-    CONTROL         "Automatically reload modified files",
-                    IDC_CHECK_AUTO_RELOAD,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,100,118,10
-    LTEXT           "Number of consecutive identical lines:",IDC_STATIC,7,
-                    116,125,8
-    LTEXT           "Minimal line length for search: ",IDC_STATIC,7,133,120,
-                    8
-    LTEXT           "Percent of difference in ""looking like"" lines:",
-                    IDC_STATIC,7,151,126,8
-    EDITTEXT        IDC_EDIT1,140,114,40,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT2,140,131,40,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT3,140,148,40,14,ES_AUTOHSCROLL
 END
 
 IDD_DIALOG_COMPARE_DIRS_ADVANCED DIALOG DISCARDABLE  0, 0, 207, 295
@@ -377,8 +330,8 @@ BEGIN
     CONTROL         "Include &subdirectories",IDC_CHECK_INCLUDE_SUBDIRS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,122,10
     PUSHBUTTON      "&Advanced <<",IDC_BUTTON_ADVANCED,150,86,50,14
-    CONTROL         "&Binary comparision only",IDC_CHECK_BINARY,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,99,126,10
+    CONTROL         "&Binary comparison only",IDC_CHECK_BINARY,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,99,126,10
     LTEXT           "File&name filter: ",IDC_STATIC,7,117,46,8
     EDITTEXT        IDC_EDITFILENAME_FILTER,57,114,143,14,ES_AUTOHSCROLL
     CONTROL         "Compare the following files as C/C++:",IDC_CHECK_C_CPP,
@@ -386,8 +339,9 @@ BEGIN
     EDITTEXT        IDC_EDIT_C_CPP,7,151,193,14,ES_AUTOHSCROLL
     CONTROL         "Compare the following files as binary:",
                     IDC_CHECK_BINARY_FILES,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,173,126,10
-    EDITTEXT        IDC_EDIT_BINARY_FILES,7,191,193,14,ES_AUTOHSCROLL
+                    WS_DISABLED | WS_TABSTOP,7,173,126,10
+    EDITTEXT        IDC_EDIT_BINARY_FILES,7,191,193,14,ES_AUTOHSCROLL | 
+                    WS_DISABLED
     CONTROL         "Ignore the following files:",IDC_CHECK_IGNORE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,213,88,10
     EDITTEXT        IDC_EDIT_IGNORE,7,231,193,14,ES_AUTOHSCROLL
@@ -417,12 +371,12 @@ IDD_DIALOG_OPEN_TEMPLATE DIALOG DISCARDABLE  0, 0, 281, 49
 STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS
 FONT 8, "MS Sans Serif"
 BEGIN
-    RTEXT           "Re&cent: ",IDC_STATIC,7,9,26,8
-    COMBOBOX        IDC_COMBO_RECENT,40,7,228,68,CBS_DROPDOWNLIST | 
+    RTEXT           "Re&cent Dirs: ",IDC_STATIC,7,9,39,8
+    COMBOBOX        IDC_COMBO_RECENT,55,7,219,68,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     RTEXT           "",1119,7,22,265,8,NOT WS_VISIBLE
     CONTROL         "Binary comparision",IDC_CHECK_BINARY,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,32,78,10
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,32,78,10
 END
 
 IDD_PROPPAGE_FILE_PREFERENCES DIALOG DISCARDABLE  0, 0, 195, 127
@@ -435,8 +389,9 @@ BEGIN
     EDITTEXT        IDC_EDIT_C_CPP,7,21,173,14,ES_AUTOHSCROLL
     CONTROL         "Compare the following files as binary:",
                     IDC_CHECK_BINARY_FILES,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,39,126,10
-    EDITTEXT        IDC_EDIT_BINARY_FILES,7,51,173,14,ES_AUTOHSCROLL
+                    WS_DISABLED | WS_TABSTOP,7,39,126,10
+    EDITTEXT        IDC_EDIT_BINARY_FILES,7,51,173,14,ES_AUTOHSCROLL | 
+                    WS_DISABLED
     CONTROL         "Ignore the following files:",IDC_CHECK_IGNORE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,69,88,10
     EDITTEXT        IDC_EDIT_IGNORE,7,81,173,14,ES_AUTOHSCROLL
@@ -447,7 +402,7 @@ END
 
 IDD_PROPPAGE_COMPARISION_PREFERENCES DIALOG DISCARDABLE  0, 0, 195, 92
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Comparision"
+CAPTION "Comparison"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "Number of consecutive identical lines:",IDC_STATIC,7,15,
@@ -473,18 +428,16 @@ BEGIN
     CONTROL         "Spin1",IDC_SPIN1,"msctls_updown32",UDS_SETBUDDYINT | 
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
                     UDS_NOTHOUSANDS,87,15,10,14
-    PUSHBUTTON      "Font...",IDC_BUTTON_NORMAL_FONT,102,35,36,17
-    PUSHBUTTON      "Font...",IDC_BUTTON_INSERTED_FONT,102,56,36,17
-    PUSHBUTTON      "Font...",IDC_BUTTON_ERASED_FONT,101,77,37,17
     CTEXT           " Normal Text",IDC_STATIC_NORMAL_TEXT,8,36,89,16,
                     SS_CENTERIMAGE
+    PUSHBUTTON      "Font...",IDC_BUTTON_NORMAL_FONT,102,35,36,17
     CTEXT           " Added Text",IDC_STATIC_ADDED_TEXT,8,57,89,16,
                     SS_CENTERIMAGE
+    PUSHBUTTON      "Font...",IDC_BUTTON_INSERTED_FONT,102,56,36,17
+    PUSHBUTTON      "Background...",IDC_BUTTON_ADDED_BACKGROUND,145,56,50,17
     CTEXT           " Deleted Text",IDC_STATIC_DELETED_TEXT,8,77,89,16,
                     SS_CENTERIMAGE
-    PUSHBUTTON      "Background...",IDC_BUTTON_NORMAL_BACKGROUND,145,35,50,
-                    17
-    PUSHBUTTON      "Background...",IDC_BUTTON_ADDED_BACKGROUND,145,56,50,17
+    PUSHBUTTON      "Font...",IDC_BUTTON_ERASED_FONT,101,77,37,17
     PUSHBUTTON      "Background...",IDC_BUTTON_ERASED_BACKGROUND,145,77,50,
                     17
 END
@@ -535,7 +488,7 @@ BEGIN
         BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "AleGr Software\0"
-            VALUE "FileDescription", "AlegrDiff: file comparision and merging application\0"
+            VALUE "FileDescription", "AlegrDiff: file comparison and merging application\0"
             VALUE "FileVersion", "0, 6, 9, 0\0"
             VALUE "InternalName", "AlegrDiff\0"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001\0"
@@ -578,14 +531,6 @@ BEGIN
         RIGHTMARGIN, 200
         TOPMARGIN, 7
         BOTTOMMARGIN, 162
-    END
-
-    IDD_DIALOG_PREFERENCES, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 180
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 292
     END
 
     IDD_DIALOG_COMPARE_DIRS_ADVANCED, DIALOG

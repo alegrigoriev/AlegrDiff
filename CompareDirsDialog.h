@@ -60,6 +60,9 @@ protected:
 	virtual void OnCancel();
 	afx_msg void OnButtonAdvanced();
 	afx_msg void OnCheckBinary();
+	afx_msg void OnCheckBinaryFiles();
+	afx_msg void OnCheckCCpp();
+	afx_msg void OnCheckIgnore();
 	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()

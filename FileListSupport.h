@@ -80,6 +80,7 @@ public:
 
 	bool IsAccepted() const { return 0 != (m_Flags & FlagAccept); }
 	bool IsDeclined() const { return 0 != (m_Flags & FlagDecline); }
+	bool IsWhitespace() const { return 0 != (m_Flags & FlagWhitespace); }
 	bool IsUndetermined() const { return 0 == (m_Flags & (FlagAccept | FlagDecline)); }
 
 	static void * operator new(size_t size)
@@ -333,7 +334,7 @@ public:
 	TextPos NextDifference(TextPos PosFrom, BOOL IgnoreWhitespaces);
 	TextPos PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces);
 
-	int GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo);
+	int GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, bool bIgnoreWhitespaces);
 	void ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, int Set, int Reset,
 								FileDiffSection *const ** ppFirstSection, int * pNumSections);
 

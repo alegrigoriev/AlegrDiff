@@ -128,6 +128,8 @@ public:
 	LinePair * GetLinePair(int line) const;
 	int GetTotalLines() const { return m_TotalLines; }
 	void SetCaretPosition(int pos, int line, int flags);
+	void SetCaretPosition(TextPosDisplay pos, int flags);
+	void SetCaretPosition(TextPosLine pos, int FileScope, int flags);
 
 	enum {
 		CaretPositionChanged = 1,
@@ -181,16 +183,12 @@ public:
 	TextPosLine FilePosToLinePos(TextPosLine position, int FileScope = 0);
 
 	bool GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay & Start, TextPosDisplay & End);
+	void GetWordUnderCursor(CString & Str);
 	void CaretLeftToWord(int SelectionFlags);
 	void CaretRightToWord(int SelectionFlags);
 
 	bool FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive, bool WholeWord, int SearchScope);
-	bool OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvokeDialog);
-	bool OnEditFind();
-	bool OnEditFindNext();
-	bool OnEditFindPrev();
-	bool OnEditFindWordNext();
-	bool OnEditFindWordPrev();
+
 	void OnEditCopy(int FileSelect);
 	afx_msg void OnUpdateCaretPosIndicator(CCmdUI* pCmdUI);
 	// Generated message map functions

@@ -683,6 +683,12 @@
 				RelativePath=".\res\AlegrDiffDoc.ico">
 			</File>
 			<File
+				RelativePath="res\CompareDirs.ico">
+			</File>
+			<File
+				RelativePath="res\FilesDialog.ico">
+			</File>
+			<File
 				RelativePath=".\res\Toolbar.bmp">
 			</File>
 			<File
@@ -696,6 +702,375 @@
 			</File>
 			<File
 				RelativePath="res\idr_aleg.ico">
+			</File>
+		</Filter>
+		<Filter
+			Name="HTML Help Files"
+			Filter="">
+			<File
+				RelativePath="hlp\AlegrDiff.hhc">
+			</File>
+			<File
+				RelativePath="hlp\AlegrDiff.hhk">
+			</File>
+			<File
+				RelativePath="hlp\AlegrDiff.hhp">
+				<FileConfiguration
+					Name="DEMO Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Making help file..."
+						CommandLine="start /wait hhc &quot;hlp\AlegrDiff.hhp&quot;
+if not exist &quot;hlp\AlegrDiff.chm&quot; goto :HelpError
+copy &quot;hlp\AlegrDiff.chm&quot; &quot;$(OutDir)\AlegrDiff.chm&quot;
+goto :HelpDone
+:HelpError
+echo hlp\AlegrDiff.hhp(1) : error:Problem encountered creating help file
+echo.
+:HelpDone
+echo.
+"
+						AdditionalDependencies="hlp\HTMLDefines.h"
+						Outputs="$(OutDir)\$(ProjectName).chm"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Making help file..."
+						CommandLine="start /wait hhc &quot;hlp\AlegrDiff.hhp&quot;
+if not exist &quot;hlp\AlegrDiff.chm&quot; goto :HelpError
+copy &quot;hlp\AlegrDiff.chm&quot; &quot;$(OutDir)\AlegrDiff.chm&quot;
+goto :HelpDone
+:HelpError
+echo hlp\AlegrDiff.hhp(1) : error:Problem encountered creating help file
+echo.
+:HelpDone
+echo.
+"
+						AdditionalDependencies="hlp\HTMLDefines.h"
+						Outputs="$(OutDir)\$(ProjectName).chm"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DEMO Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Making help file..."
+						CommandLine="start /wait hhc &quot;hlp\AlegrDiff.hhp&quot;
+if not exist &quot;hlp\AlegrDiff.chm&quot; goto :HelpError
+copy &quot;hlp\AlegrDiff.chm&quot; &quot;$(OutDir)\AlegrDiff.chm&quot;
+goto :HelpDone
+:HelpError
+echo hlp\AlegrDiff.hhp(1) : error:Problem encountered creating help file
+echo.
+:HelpDone
+echo.
+"
+						AdditionalDependencies="hlp\HTMLDefines.h"
+						Outputs="$(OutDir)\$(ProjectName).chm"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Making help file..."
+						CommandLine="start /wait hhc &quot;hlp\AlegrDiff.hhp&quot;
+if not exist &quot;hlp\AlegrDiff.chm&quot; goto :HelpError
+copy &quot;hlp\AlegrDiff.chm&quot; &quot;$(OutDir)\AlegrDiff.chm&quot;
+goto :HelpDone
+:HelpError
+echo hlp\AlegrDiff.hhp(1) : error:Problem encountered creating help file
+echo.
+:HelpDone
+echo.
+"
+						AdditionalDependencies="hlp\HTMLDefines.h"
+						Outputs="$(OutDir)\$(ProjectName).chm"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug non-MSLU|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Making help file..."
+						CommandLine="start /wait hhc &quot;hlp\AlegrDiff.hhp&quot;
+if not exist &quot;hlp\AlegrDiff.chm&quot; goto :HelpError
+copy &quot;hlp\AlegrDiff.chm&quot; &quot;$(OutDir)\AlegrDiff.chm&quot;
+goto :HelpDone
+:HelpError
+echo hlp\AlegrDiff.hhp(1) : error:Problem encountered creating help file
+echo.
+:HelpDone
+echo.
+"
+						AdditionalDependencies="hlp\HTMLDefines.h"
+						Outputs="$(OutDir)\$(ProjectName).chm"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release ANSI|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Making help file..."
+						CommandLine="start /wait hhc &quot;hlp\AlegrDiff.hhp&quot;
+if not exist &quot;hlp\AlegrDiff.chm&quot; goto :HelpError
+copy &quot;hlp\AlegrDiff.chm&quot; &quot;$(OutDir)\AlegrDiff.chm&quot;
+goto :HelpDone
+:HelpError
+echo hlp\AlegrDiff.hhp(1) : error:Problem encountered creating help file
+echo.
+:HelpDone
+echo.
+"
+						AdditionalDependencies="hlp\HTMLDefines.h"
+						Outputs="$(OutDir)\$(ProjectName).chm"/>
+				</FileConfiguration>
+			</File>
+		</Filter>
+		<Filter
+			Name="HTML Help Topics"
+			Filter="">
+			<File
+				RelativePath="hlp\afx_hidd_fileopen.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\afx_hidd_filesave.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\afx_hidd_newtypedlg.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\afx_hidd_print.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\afx_hidd_printdlg.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\afx_hidd_printsetup.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\afx_hidp_default.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\afx_hidw_dockbar_top.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\afx_hidw_preview_bar.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\afx_hidw_status_bar.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\afx_hidw_toolbar.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_app_about.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_app_exit.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_context_help.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_edit_copy.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_edit_find.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_file_close.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_file_mru_file1.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_file_new.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_file_open.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_file_page_setup.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_file_print.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_file_print_preview.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_file_print_setup.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_file_save.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_file_save_as.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_file_send_mail.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_help_index.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_help_using.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_ht_caption.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_ht_nowhere.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_next_pane.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_prev_pane.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_sc_close.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_sc_maximize.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_sc_minimize.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_sc_move.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_sc_nextwindow.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_sc_prevwindow.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_sc_restore.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_sc_size.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_sc_tasklist.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_view_ruler.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_view_status_bar.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_view_toolbar.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_window_all.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_window_arrange.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_window_cascade.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_window_new.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_window_split.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_window_tile.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_window_tile_horz.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hid_window_tile_vert.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\hidr_doc1type.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\main_index.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\menu_edit.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\menu_file.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\menu_help.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\menu_view.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\menu_window.htm"
+				DeploymentContent="TRUE">
+			</File>
+			<File
+				RelativePath="hlp\scrollbars.htm"
+				DeploymentContent="TRUE">
 			</File>
 		</Filter>
 		<File

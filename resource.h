@@ -2,7 +2,7 @@
 // Microsoft Visual C++ generated include file.
 // Used by AlegrDiff.rc
 //
-#define _CREATEPROCESS_MANIFEST_RESOURCE_ID 1
+#define IDR_MANIFEST                    1
 #define IDD_ABOUTBOX                    100
 #define IDD_PROPPAGE_FILE_PREFERENCES   102
 #define IDD_PROGRESSDIALOG              103
@@ -73,6 +73,10 @@
 #define ID_DOC_UPDATEALLVIEWS           177
 #define ID_VIEW_VIEWASTEXTFILES         178
 #define ID_VIEW_SIDEBYSIDE              179
+#define IDI_ICON1                       180
+#define IDI_COMPARE_DIRS                180
+#define IDI_FILES_DIALOG                181
+#define IDI_COMPARE_FILES               181
 #define IDC_COMBO_FIRST_DIR             1000
 #define IDC_COMBO_SECOND_DIR            1001
 #define IDC_COMBO_SAVE_FILENAME         1001
@@ -271,6 +275,7 @@
 #define IDS_STRING_PERCENTS_DONE        32886
 #define ID_VIEW_AS_BINARY               32887
 #define IDC_VIEW_SIDE_BY_SIDE           32888
+#define ID_BUTTON32890                  32890
 #define IDS_UNABLE_TO_CREATE_FILE       57608
 #define ID_INDICATOR_CARET_POS          0xE705
 
@@ -279,8 +284,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        180
-#define _APS_NEXT_COMMAND_VALUE         32889
+#define _APS_NEXT_RESOURCE_VALUE        181
+#define _APS_NEXT_COMMAND_VALUE         32891
 #define _APS_NEXT_CONTROL_VALUE         1083
 #define _APS_NEXT_SYMED_VALUE           105
 #endif

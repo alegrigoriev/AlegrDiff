@@ -4252,13 +4252,28 @@ bool FilePair::NextDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
 			pSection = *pFound;
 		}
 	}
+
+	int NewFileScope = 0;
+	if (0 != PosFrom.scope)
+	{
+		int flags = GetAcceptDeclineFlags(pSection->m_Begin, pSection->m_End, IgnoreWhitespaces != FALSE);
+		if (flags & StringSection::Erased)
+		{
+			NewFileScope = 1;
+		}
+		else
+		{
+			NewFileScope = 2;
+		}
+	}
+
 	if (NULL != DiffPos)
 	{
-		*DiffPos = LinePosToDisplayPos(pSection->m_Begin, IgnoreWhitespaces, PosFrom.scope);
+		*DiffPos = LinePosToDisplayPos(pSection->m_Begin, IgnoreWhitespaces, NewFileScope);
 	}
 	if (NULL != EndPos)
 	{
-		*EndPos = LinePosToDisplayPos(pSection->m_End, IgnoreWhitespaces, PosFrom.scope);
+		*EndPos = LinePosToDisplayPos(pSection->m_End, IgnoreWhitespaces, NewFileScope);
 	}
 	return TRUE;
 }
@@ -4294,13 +4309,28 @@ bool FilePair::PrevDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
 			pSection = *pFound;
 		}
 	}
+
+	int NewFileScope = 0;
+	if (0 != PosFrom.scope)
+	{
+		int flags = GetAcceptDeclineFlags(pSection->m_Begin, pSection->m_End, IgnoreWhitespaces != FALSE);
+		if (flags & StringSection::Erased)
+		{
+			NewFileScope = 1;
+		}
+		else
+		{
+			NewFileScope = 2;
+		}
+	}
+
 	if (NULL != DiffPos)
 	{
-		*DiffPos = LinePosToDisplayPos(pSection->m_Begin, IgnoreWhitespaces, PosFrom.scope);
+		*DiffPos = LinePosToDisplayPos(pSection->m_Begin, IgnoreWhitespaces, NewFileScope);
 	}
 	if (NULL != EndPos)
 	{
-		*EndPos = LinePosToDisplayPos(pSection->m_End, IgnoreWhitespaces, PosFrom.scope);
+		*EndPos = LinePosToDisplayPos(pSection->m_End, IgnoreWhitespaces, NewFileScope);
 	}
 	return TRUE;
 }

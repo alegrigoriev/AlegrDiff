@@ -83,6 +83,8 @@ IDR_MAINFRAME           ICON                    "res\\AlegrDiff.ico"
 IDR_ALEGRDTYPE_LIST     ICON                    "res\\AlegrDiffDoc.ico"
 IDR_ALEGRDTYPE          ICON                    "res\\icon1.ico"
 IDR_ALEGRDTYPE_BIN      ICON                    "res\\idr_aleg.ico"
+IDI_COMPARE_DIRS        ICON                    "res\\CompareDirs.ico"
+IDI_COMPARE_FILES       ICON                    "res\\FilesDialog.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -150,6 +152,7 @@ BEGIN
     BEGIN
         MENUITEM "Using AlegrDiff...",          ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
+        MENUITEM "&Help Topics",                57667
     END
 END
 
@@ -217,6 +220,7 @@ BEGIN
     BEGIN
         MENUITEM "&Using AlegrDiff...",         ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
+        MENUITEM "&Help Topics",                57667
     END
 END
 
@@ -315,6 +319,7 @@ BEGIN
     BEGIN
         MENUITEM "&Using AlegrDiff...",         ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
+        MENUITEM "&Help Topics",                57667
     END
 END
 
@@ -439,6 +444,7 @@ BEGIN
     BEGIN
         MENUITEM "&Using AlegrDiff...",         ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
+        MENUITEM "&Help Topics",                57667
     END
 END
 
@@ -558,7 +564,7 @@ BEGIN
     LTEXT           "TODO: layout dialog bar ",IDC_STATIC,12,4,300,8
 END
 
-IDD_DIALOG_COMPARE_DIRS DIALOGEX 0, 0, 230, 170
+IDD_DIALOG_COMPARE_DIRS DIALOGEX 0, 0, 230, 173
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | 
     WS_THICKFRAME
 EXSTYLE WS_EX_ACCEPTFILES
@@ -581,8 +587,8 @@ BEGIN
     LTEXT           "File&name filter: ",IDC_STATIC,7,117,53,8
     COMBOBOX        IDC_EDITFILENAME_FILTER,66,116,157,60,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,47,149,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,123,149,50,14
+    DEFPUSHBUTTON   "OK",IDOK,47,152,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,123,152,50,14
 END
 
 IDD_DIALOG_COMPARE_DIRS_ADVANCED DIALOGEX 0, 0, 230, 311
@@ -761,7 +767,7 @@ BEGIN
     PUSHBUTTON      "File &1",IDNO,7,128,50,14
 END
 
-IDD_DIALOG_FIND DIALOGEX 0, 0, 263, 100
+IDD_DIALOG_FIND DIALOGEX 0, 0, 263, 73
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
     WS_SYSMENU
 CAPTION "Find"
@@ -771,21 +777,14 @@ BEGIN
     COMBOBOX        IDC_COMBO_FIND,53,8,144,77,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Match &whole word only",IDC_CHECK_WHOLE_WORD,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,29,112,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,26,112,10
     CONTROL         "Match &case",IDC_CHECK_CASE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,41,84,10
-    GROUPBOX        "Direction",IDC_STATIC,7,54,59,39,WS_GROUP
+                    WS_TABSTOP,7,38,84,10
+    GROUPBOX        "Direction",IDC_STATIC,119,27,59,39,WS_GROUP
     CONTROL         "&Up",IDC_RADIO_UP,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP | WS_TABSTOP,13,65,42,10
-    CONTROL         "&Down",IDC_RADIO_DOWN,"Button",BS_AUTORADIOBUTTON,13,77,
-                    44,10
-    GROUPBOX        "Search in",IDC_STATIC,103,42,90,51,WS_GROUP
-    CONTROL         "&Combined file",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP | WS_TABSTOP,112,77,74,10
-    CONTROL         "File &1",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON,112,53,
-                    66,10
-    CONTROL         "File &2",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,112,65,
-                    66,10
+                    WS_GROUP | WS_TABSTOP,125,38,42,10
+    CONTROL         "&Down",IDC_RADIO_DOWN,"Button",BS_AUTORADIOBUTTON,125,
+                    50,44,10
     DEFPUSHBUTTON   "Find",IDOK,206,7,50,14,WS_GROUP
     PUSHBUTTON      "Cancel",IDCANCEL,206,24,50,14
     PUSHBUTTON      "&Help",IDHELP,206,46,50,14
@@ -1065,8 +1064,8 @@ VS_VERSION_INFO$(RETAIL_VERSION) VERSIONINFO
 #else
 VS_VERSION_INFO VERSIONINFO
 #endif
- FILEVERSION 1,0,26,0
- PRODUCTVERSION 1,0,26,0
+ FILEVERSION 1,0,27,0
+ PRODUCTVERSION 1,0,27,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -1083,13 +1082,13 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "AleGr Software"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application"
-            VALUE "FileVersion", "1, 0, 26, 0"
+            VALUE "FileVersion", "1, 0, 27, 0"
             VALUE "InternalName", "AlegrDiff"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001-2002"
             VALUE "OriginalFilename", "AlegrDiff.EXE"
-            VALUE "PrivateBuild", "Beta 1.26"
+            VALUE "PrivateBuild", "Beta 1.27"
             VALUE "ProductName", "AlegrDiff Application"
-            VALUE "ProductVersion", "1, 0, 26, 0"
+            VALUE "ProductVersion", "1, 0, 27, 0"
         END
     END
     BLOCK "VarFileInfo"
@@ -1163,7 +1162,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 223
         TOPMARGIN, 7
-        BOTTOMMARGIN, 163
+        BOTTOMMARGIN, 166
     END
 
     IDD_DIALOG_COMPARE_DIRS_ADVANCED, DIALOG
@@ -1227,7 +1226,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 256
         TOPMARGIN, 7
-        BOTTOMMARGIN, 93
+        BOTTOMMARGIN, 66
     END
 
     IDD_DIALOG_PROPERTIES, DIALOG
@@ -1358,7 +1357,7 @@ IDC_CURSOR_LEFT_ARROW   CURSOR                  "res\\cursor1.cur"
 // RT_MANIFEST
 //
 
-_CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST             "AlegrDiff.manifest"
+IDR_MANIFEST            RT_MANIFEST             "AlegrDiff.manifest"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1412,6 +1411,7 @@ STRINGTABLE
 BEGIN
     ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
     ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+    ID_HELP_FINDER          "List Help topics\nHelp Topics"
     ID_HELP_USING           "Opens help file about the application use\nHelp"
 END
 
@@ -1664,7 +1664,7 @@ BEGIN
                             "Both directories are empty or no files match the filter pattern"
     IDS_STRING_PERCENTS_DONE "%d%% done"
     ID_VIEW_AS_BINARY       "Compare the files as non-text (binary) files\nBinary comparison"
-    IDC_VIEW_SIDE_BY_SIDE   "View two files side by side\nSide by side"
+    IDC_VIEW_SIDE_BY_SIDE   "Show two files side by side\nShow side by side"
 END
 
 #endif    // English (U.S.) resources

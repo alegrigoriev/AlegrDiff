@@ -90,6 +90,9 @@ public:
 
 	void MoveCaretBy(int dx, int dy, int flags = SetPositionCancelSelection);
 	void SetCaretPosition(int pos, int line, int flags = SetPositionCancelSelection);
+	void SetCaretPosition(TextPosDisplay pos, int flags = SetPositionCancelSelection);
+	void SetCaretPosition(TextPosLine pos, int FileScope, int flags = SetPositionCancelSelection);
+
 	void CreateAndShowCaret();
 	void UpdateVScrollBar();
 	void DoVScroll(int nLinesToScroll); // > 0 - scroll up (to see lines toward end),
@@ -107,6 +110,7 @@ public:
 	int PointToPaneNumber(int x);
 	int PointToPaneOffset(int x, int nPane = -1);
 	int GetPaneWidth();
+	bool OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvokeDialog);
 
 protected:
 	void DrawStringSections(CDC* pDC, CPoint point,

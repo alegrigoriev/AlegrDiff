@@ -41,7 +41,6 @@ void CMyFindDialog::DoDataExchange(CDataExchange* pDX)
 
 	if (-1 != m_SearchScope)
 	{
-		DDX_Radio(pDX, IDC_RADIO3, m_SearchScope);
 		if (0 == m_SearchScope)
 		{
 			EnableDlgItem(IDC_CHECK_WHOLE_WORD, FALSE);
@@ -56,9 +55,6 @@ void CMyFindDialog::DoDataExchange(CDataExchange* pDX)
 	{
 		// disable the controls
 		DDX_Check(pDX, IDC_CHECK_WHOLE_WORD, m_bWholeWord);
-		EnableDlgItem(IDC_RADIO1, FALSE);
-		EnableDlgItem(IDC_RADIO2, FALSE);
-		EnableDlgItem(IDC_RADIO3, FALSE);
 	}
 
 	if ( ! pDX->m_bSaveAndValidate)
@@ -79,9 +75,6 @@ BEGIN_MESSAGE_MAP(CMyFindDialog, CUiUpdatedDlg)
 	//{{AFX_MSG_MAP(CMyFindDialog)
 	ON_CBN_EDITCHANGE(IDC_COMBO_FIND, OnEditchangeComboFind)
 	//}}AFX_MSG_MAP
-	ON_BN_CLICKED(IDC_RADIO1, OnBnClickedRadio1)
-	ON_BN_CLICKED(IDC_RADIO2, OnBnClickedRadio2)
-	ON_BN_CLICKED(IDC_RADIO3, OnBnClickedRadio3)
 	ON_BN_CLICKED(IDC_CHECK_WHOLE_WORD, OnBnClickedCheckWholeWord)
 	ON_CBN_SELCHANGE(IDC_COMBO_FIND, OnEditchangeComboFind)
 	ON_CBN_SELENDOK(IDC_COMBO_FIND, OnEditchangeComboFind)
@@ -109,24 +102,6 @@ void CMyFindDialog::OnUpdateCheckWholeWord(CCmdUI* pCmdUI)
 void CMyFindDialog::OnUpdateOk(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(0 != m_FindCombo.GetWindowTextLength());
-}
-
-void CMyFindDialog::OnBnClickedRadio1()
-{
-	m_SearchScope = 1;
-	NeedUpdateControls();
-}
-
-void CMyFindDialog::OnBnClickedRadio2()
-{
-	m_SearchScope = 2;
-	NeedUpdateControls();
-}
-
-void CMyFindDialog::OnBnClickedRadio3()
-{
-	m_SearchScope = 0;
-	NeedUpdateControls();
 }
 
 void CMyFindDialog::OnBnClickedCheckWholeWord()

@@ -5,6 +5,7 @@
 #include "AlegrDiff.h"
 #include "DiffFileView.h"
 #include "GoToLineDialog.h"
+#include "ChildFrm.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -446,8 +447,10 @@ CFilePairDoc* CDiffFileView::GetDocument() // non-debug version is inline
 
 void CDiffFileView::OnWindowCloseDiff()
 {
-	CFrameWnd* pFrame = GetParentFrame();
+	CChildFrame * pFrame = (CChildFrame *)GetParentFrame();
 	ASSERT_VALID(pFrame);
+	pFrame->OnClose();
+	return;
 
 	// and close it
 	GetDocument()->PreCloseFrame(pFrame);
@@ -458,6 +461,17 @@ void CDiffFileView::OnInitialUpdate()
 {
 	CView::OnInitialUpdate();
 	UpdateTextMetrics();
+	CRect r;
+	GetClientRect( & r);
+
+	m_VisibleRect.bottom = r.Height() / LineHeight() - 1;
+	m_PreferredRect.bottom = m_VisibleRect.bottom / 4;
+	m_PreferredRect.top = m_PreferredRect.bottom; //m_VisibleRect.bottom - m_VisibleRect.bottom / 4;
+
+	m_VisibleRect.right =  r.Width() / CharWidth();
+	m_PreferredRect.left = m_VisibleRect.right / 3;
+	m_PreferredRect.right = m_VisibleRect.right - m_VisibleRect.right / 3;
+
 	UpdateVScrollBar();
 	UpdateHScrollBar();
 	CreateAndShowCaret();

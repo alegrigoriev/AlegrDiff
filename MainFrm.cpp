@@ -22,6 +22,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	//{{AFX_MSG_MAP(CMainFrame)
 	ON_WM_CREATE()
 	ON_COMMAND(ID_WINDOW_NEW, OnWindowNew)
+	ON_WM_DROPFILES()
 	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
 END_MESSAGE_MAP()
@@ -139,3 +140,40 @@ void CMainFrame::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
 	pCmdUI->SetText("           ");
 }
 
+
+void CMainFrame::OnDropFiles(HDROP hDropInfo)
+{
+	SetActiveWindow();      // activate us first !
+	UINT nFiles = ::DragQueryFile(hDropInfo, (UINT)-1, NULL, 0);
+
+	CThisApp * pApp = GetApp();
+
+	ASSERT(pApp != NULL);
+	TCHAR szFileName1[_MAX_PATH] = {0};
+	TCHAR szFileName2[_MAX_PATH] = {0};
+	if (nFiles >=1)
+	{
+		::DragQueryFile(hDropInfo, 0, szFileName1, _MAX_PATH);
+	}
+
+	if (nFiles >=2)
+	{
+		::DragQueryFile(hDropInfo, 1, szFileName2, _MAX_PATH);
+	}
+
+	::DragFinish(hDropInfo);
+	GetApp()->OpenPairOfPathnames(szFileName1, szFileName2);
+}
+
+BOOL CMainFrame::PreTranslateMessage(MSG* pMsg)
+{
+	// catch Ctrl key down and up
+	if (WM_KEYDOWN == pMsg->message)
+	{
+	}
+	else if (WM_KEYUP == pMsg->message)
+	{
+	}
+
+	return CMDIFrameWnd::PreTranslateMessage(pMsg);
+}

@@ -23,16 +23,16 @@
 class CAlegrDiffApp : public CWinApp
 {
 public:
+	void OpenPairOfPathnames(LPTSTR path1, LPTSTR path2);
+	void CompareFiles(LPCTSTR name1, LPCTSTR name2);
+	void CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filter = NULL);
+	void ParseCommandLine();
 	void OpenSingleFile(LPCTSTR pName);
 	void NotifyFilePairChanged(FilePair * pPair);
 	CAlegrDiffApp();
 	~CAlegrDiffApp();
 
 	CApplicationProfile Profile;
-	int m_MaxSearchDistance;
-	int m_MinIdenticalLines;
-	int m_MinIdenticalChars;
-	int m_TabIndent;
 
 	DWORD m_NormalTextColor;
 	DWORD m_ErasedTextColor;
@@ -69,6 +69,10 @@ public:
 	DWORD	m_MinimalLineLength;
 	DWORD	m_NumberOfIdenticalLines;
 	DWORD	m_PercentsOfLookLikeDifference;
+	DWORD	m_MinMatchingChars;
+	int m_MaxSearchDistance;
+	int m_MinIdenticalLines;
+	int m_TabIndent;
 
 	LOGFONT m_NormalLogFont;
 	CFont m_NormalFont;

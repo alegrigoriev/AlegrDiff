@@ -148,6 +148,7 @@ CComparisionPreferencesPage::CComparisionPreferencesPage() : CPropertyPage(CComp
 	m_MinimalLineLength = 0;
 	m_NumberOfIdenticalLines = 0;
 	m_PercentsOfLookLikeDifference = 0;
+	m_MinMatchingChars = 0;
 	//}}AFX_DATA_INIT
 }
 
@@ -165,6 +166,8 @@ void CComparisionPreferencesPage::DoDataExchange(CDataExchange* pDX)
 	DDV_MinMaxUInt(pDX, m_NumberOfIdenticalLines, 1, 50);
 	DDX_Text(pDX, IDC_EDIT_PERCENT_OF_LOOKLIKE_DIFFERENCE, m_PercentsOfLookLikeDifference);
 	DDV_MinMaxUInt(pDX, m_PercentsOfLookLikeDifference, 0, 99);
+	DDX_Text(pDX, IDC_EDIT_MIN_MATCHING_CHARS, m_MinMatchingChars);
+	DDV_MinMaxUInt(pDX, m_MinMatchingChars, 1, 32);
 	//}}AFX_DATA_MAP
 }
 
@@ -220,7 +223,6 @@ BEGIN_MESSAGE_MAP(CViewPreferencesPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_BUTTON_INSERTED_FONT, OnButtonInsertedFont)
 	ON_BN_CLICKED(IDC_BUTTON_ERASED_FONT, OnButtonErasedFont)
 	ON_WM_CTLCOLOR()
-//	ON_BN_CLICKED(IDC_BUTTON_NORMAL_BACKGROUND, OnButtonNormalBackground)
 	ON_BN_CLICKED(IDC_BUTTON_ADDED_BACKGROUND, OnButtonAddedBackground)
 	ON_BN_CLICKED(IDC_BUTTON_ERASED_BACKGROUND, OnButtonErasedBackground)
 	//}}AFX_MSG_MAP
@@ -273,6 +275,18 @@ void CViewPreferencesPage::FontChanged()
 	if (pWnd)
 	{
 		pWnd->SetFont( & m_ErasedFont, TRUE);
+	}
+
+	pWnd = GetDlgItem(IDC_STATIC_DISCARDED_TEXT);
+	if (pWnd)
+	{
+		pWnd->SetFont( & m_NormalFont, TRUE);
+	}
+
+	pWnd = GetDlgItem(IDC_STATIC_ACCEPTED_TEXT);
+	if (pWnd)
+	{
+		pWnd->SetFont( & m_NormalFont, TRUE);
 	}
 }
 
@@ -376,7 +390,6 @@ HBRUSH CViewPreferencesPage::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 		switch (id)
 		{
 		case IDC_STATIC_NORMAL_TEXT:
-			TRACE("OnCtlColor IDC_BUTTON_NORMAL_FONT\n");
 			pDC->SetTextColor(m_NormalTextColor);
 			hbr = GetSysColorBrush(COLOR_WINDOW);
 			pDC->SetBkColor(m_NormalTextBackground);
@@ -385,11 +398,23 @@ HBRUSH CViewPreferencesPage::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 		case IDC_STATIC_ADDED_TEXT:
 			pDC->SetTextColor(m_AddedTextColor);
 			hbr = GetSysColorBrush(COLOR_WINDOW);
-			pDC->SetBkColor(m_AddedTextBackground);
+			pDC->SetBkColor(m_NormalTextBackground);
 			pDC->SetBkMode(OPAQUE);
 			break;
 		case IDC_STATIC_DELETED_TEXT:
 			pDC->SetTextColor(m_ErasedTextColor);
+			hbr = GetSysColorBrush(COLOR_WINDOW);
+			pDC->SetBkColor(m_NormalTextBackground);
+			pDC->SetBkMode(OPAQUE);
+			break;
+		case IDC_STATIC_ACCEPTED_TEXT:
+			pDC->SetTextColor(m_NormalTextColor);
+			hbr = GetSysColorBrush(COLOR_WINDOW);
+			pDC->SetBkColor(m_AddedTextBackground);
+			pDC->SetBkMode(OPAQUE);
+			break;
+		case IDC_STATIC_DISCARDED_TEXT:
+			pDC->SetTextColor(m_NormalTextColor);
 			hbr = GetSysColorBrush(COLOR_WINDOW);
 			pDC->SetBkColor(m_ErasedTextBackground);
 			pDC->SetBkMode(OPAQUE);
@@ -434,28 +459,13 @@ BEGIN_MESSAGE_MAP(CPreferencesPropertySheet, CPropertySheet)
 END_MESSAGE_MAP()
 
 
-void CViewPreferencesPage::OnButtonNormalBackground()
-{
-	CColorDialog dlg(m_NormalTextBackground, CC_RGBINIT | CC_PREVENTFULLOPEN | CC_SOLIDCOLOR);
-	if (IDOK == dlg.DoModal())
-	{
-		m_NormalTextBackground = dlg.GetColor();
-		CWnd * pWnd = GetDlgItem(IDC_STATIC_NORMAL_TEXT);
-		if (pWnd)
-		{
-			pWnd->Invalidate();
-		}
-		m_bColorChanged = true;
-	}
-}
-
 void CViewPreferencesPage::OnButtonAddedBackground()
 {
 	CColorDialog dlg(m_AddedTextBackground, CC_RGBINIT | CC_PREVENTFULLOPEN | CC_SOLIDCOLOR);
 	if (IDOK == dlg.DoModal())
 	{
 		m_AddedTextBackground = dlg.GetColor();
-		CWnd * pWnd = GetDlgItem(IDC_STATIC_ADDED_TEXT);
+		CWnd * pWnd = GetDlgItem(IDC_STATIC_ACCEPTED_TEXT);
 		if (pWnd)
 		{
 			pWnd->Invalidate();
@@ -470,7 +480,7 @@ void CViewPreferencesPage::OnButtonErasedBackground()
 	if (IDOK == dlg.DoModal())
 	{
 		m_ErasedTextBackground = dlg.GetColor();
-		CWnd * pWnd = GetDlgItem(IDC_STATIC_DELETED_TEXT);
+		CWnd * pWnd = GetDlgItem(IDC_STATIC_DISCARDED_TEXT);
 		if (pWnd)
 		{
 			pWnd->Invalidate();

@@ -50,8 +50,14 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 			m_sHistory[i].TrimLeft();
 			m_sHistory[i].TrimRight();
 		}
-		m_sFirstDir = m_sHistory[0];
-		m_sSecondDir = m_sHistory[1];
+		if (m_sFirstDir.IsEmpty())
+		{
+			m_sFirstDir = m_sHistory[0];
+		}
+		if (m_sSecondDir.IsEmpty())
+		{
+			m_sSecondDir = m_sHistory[1];
+		}
 
 		// read last filters from the registry
 		for (i = 0; i < sizeof m_sFilters / sizeof m_sFilters[0]; i++)
@@ -62,7 +68,10 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 			m_sFilters[i].TrimLeft();
 			m_sFilters[i].TrimRight();
 		}
-		m_FilenameFilter = m_sFilters[0];
+		if (m_FilenameFilter.IsEmpty())
+		{
+			m_FilenameFilter = m_sFilters[0];
+		}
 	}
 	//{{AFX_DATA_MAP(CCompareDirsDialog)
 	DDX_Control(pDX, IDC_COMBO_FIRST_DIR, m_FirstDirCombo);
@@ -88,8 +97,6 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 	}
 	if ( ! pDX->m_bSaveAndValidate)
 	{
-		//m_FirstDirCombo.SetExtendedUI();
-		//m_SecondDirCombo.SetExtendedUI();
 		// set the dirs to combobox
 		for (i = 0; i < sizeof m_sHistory / sizeof m_sHistory[0]; i++)
 		{

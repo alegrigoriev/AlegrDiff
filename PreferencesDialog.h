@@ -70,6 +70,7 @@ public:
 	UINT	m_MinimalLineLength;
 	UINT	m_NumberOfIdenticalLines;
 	UINT	m_PercentsOfLookLikeDifference;
+	UINT	m_MinMatchingChars;
 	//}}AFX_DATA
 
 
@@ -145,7 +146,6 @@ protected:
 	afx_msg void OnButtonInsertedFont();
 	afx_msg void OnButtonErasedFont();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
-	afx_msg void OnButtonNormalBackground();
 	afx_msg void OnButtonAddedBackground();
 	afx_msg void OnButtonErasedBackground();
 	//}}AFX_MSG

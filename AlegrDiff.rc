@@ -130,10 +130,6 @@ BEGIN
         MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
         MENUITEM "Preferences...",              ID_FILE_PREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP, GRAYED
-        MENUITEM SEPARATOR
-        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
-        MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_APP_EXIT
     END
     POPUP "&View"
@@ -158,29 +154,27 @@ BEGIN
         MENUITEM "Edit 1st File",               ID_FILE_EDIT_FIRST
         MENUITEM "Edit 2nd File",               ID_FILE_EDIT_SECOND
         MENUITEM SEPARATOR
-        MENUITEM "Preferences...",              ID_FILE_PREFERENCES
-        MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP, GRAYED
-        MENUITEM SEPARATOR
-        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
-        MENUITEM SEPARATOR
-        MENUITEM "E&xit",                       ID_APP_EXIT
         MENUITEM "Copy Files From 1st Folder",  ID_FILE_COPY_FIRST_DIR
         MENUITEM "Copy Files From 2nd Folder",  ID_FILE_COPY_SECOND_DIR
+        MENUITEM SEPARATOR
+        MENUITEM "Preferences...",              ID_FILE_PREFERENCES
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit\tAlt+F4",               ID_APP_EXIT
     END
     POPUP "&Edit"
     BEGIN
-        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
-        MENUITEM "Select All\tCtrl+A",          ID_EDIT_SELECT_ALL
-        MENUITEM SEPARATOR
         MENUITEM "Go To Next Diff\tF7",         ID_EDIT_GOTONEXTDIFF
         MENUITEM "Go To Prev Diff\tShift+F7",   ID_EDIT_GOTOPREVDIFF
         MENUITEM "Go To Line...\tCtrl+G",       ID_EDIT_GOTOLINE
         MENUITEM SEPARATOR
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "Select All\tCtrl+A",          ID_EDIT_SELECT_ALL
     END
     POPUP "&Merge"
     BEGIN
         MENUITEM "Accept\tShift+F6",            ID_EDIT_ACCEPT
-        MENUITEM "Decline\tF6",                 ID_EDIT_DECLINE
+        MENUITEM "Discard\tF6",                 ID_EDIT_DECLINE
+        MENUITEM "Merge Files And Save...",     ID_FILE_MERGE_SAVE
     END
     POPUP "&View"
     BEGIN
@@ -213,7 +207,7 @@ BEGIN
         MENUITEM "Edit &2nd file",              ID_FILE_EDIT_SECOND
         MENUITEM SEPARATOR
         MENUITEM "Copy files from 1st dir...",  ID_FILE_COPY_FIRST_DIR
-        MENUITEM "Copy files from 2nd dir",     ID_FILE_COPY_SECOND_DIR
+        MENUITEM "Copy files from 2nd dir...",  ID_FILE_COPY_SECOND_DIR
     END
 END
 
@@ -221,9 +215,9 @@ IDR_MENU_FILEDIFF_CONTEXT MENU DISCARDABLE
 BEGIN
     POPUP " "
     BEGIN
-        MENUITEM "Copy\tCtrl+C",                ID_EDIT_COPY
-        MENUITEM "Accept",                      ID_EDIT_ACCEPT
-        MENUITEM "Decline",                     ID_EDIT_DECLINE
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Accept\tShift+F6",           ID_EDIT_ACCEPT
+        MENUITEM "&Discard\tF6",                ID_EDIT_DECLINE
     END
 END
 
@@ -276,7 +270,7 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 0.8 beta",IDC_STATIC,35,14,128,8,
+    CTEXT           "AlegrDiff Version 0.81 beta",IDC_STATIC,35,14,128,8,
                     SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001\nalegr@earthlink.net",
                     IDC_STATIC,35,34,128,21
@@ -377,7 +371,7 @@ BEGIN
     COMBOBOX        IDC_COMBO_RECENT,55,7,219,68,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     RTEXT           "",1119,7,22,265,8,NOT WS_VISIBLE
-    CONTROL         "Binary comparision",IDC_CHECK_BINARY,"Button",
+    CONTROL         "Binary comparison",IDC_CHECK_BINARY,"Button",
                     BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,32,78,10
 END
 
@@ -402,24 +396,27 @@ BEGIN
                     WS_TABSTOP,7,100,118,10
 END
 
-IDD_PROPPAGE_COMPARISION_PREFERENCES DIALOG DISCARDABLE  0, 0, 195, 92
+IDD_PROPPAGE_COMPARISION_PREFERENCES DIALOG DISCARDABLE  0, 0, 206, 103
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Comparison"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "Number of consecutive identical lines:",IDC_STATIC,7,15,
                     125,8
-    EDITTEXT        IDC_EDIT_NUMBER_OF_IDENTICAL_LINES,148,13,40,14,
+    EDITTEXT        IDC_EDIT_NUMBER_OF_IDENTICAL_LINES,159,13,40,14,
                     ES_AUTOHSCROLL
     LTEXT           "Minimal line length for search: ",IDC_STATIC,7,32,120,8
-    EDITTEXT        IDC_EDIT_MINIMAL_LINE_LENGTH,148,30,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MINIMAL_LINE_LENGTH,159,30,40,14,ES_AUTOHSCROLL
     LTEXT           "Percent of difference in ""looking like"" lines:",
-                    IDC_STATIC,7,50,126,8
-    EDITTEXT        IDC_EDIT_PERCENT_OF_LOOKLIKE_DIFFERENCE,148,47,40,14,
+                    IDC_STATIC,7,49,126,8
+    EDITTEXT        IDC_EDIT_PERCENT_OF_LOOKLIKE_DIFFERENCE,159,47,40,14,
                     ES_AUTOHSCROLL
+    LTEXT           "Minimum matching chars for in-line comparison:",
+                    IDC_STATIC,7,66,141,8
+    EDITTEXT        IDC_EDIT_MIN_MATCHING_CHARS,159,64,40,14,ES_AUTOHSCROLL
 END
 
-IDD_PROPPAGE_VIEW_PREFERENCES DIALOG DISCARDABLE  0, 0, 208, 118
+IDD_PROPPAGE_VIEW_PREFERENCES DIALOG DISCARDABLE  0, 0, 208, 143
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "View"
 FONT 8, "MS Sans Serif"
@@ -430,17 +427,21 @@ BEGIN
     CONTROL         "Spin1",IDC_SPIN1,"msctls_updown32",UDS_SETBUDDYINT | 
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
                     UDS_NOTHOUSANDS,87,15,10,14
-    CTEXT           " Normal Text",IDC_STATIC_NORMAL_TEXT,8,36,89,16,
+    CTEXT           "Common Text",IDC_STATIC_NORMAL_TEXT,8,35,132,16,
                     SS_CENTERIMAGE
-    PUSHBUTTON      "Font...",IDC_BUTTON_NORMAL_FONT,102,35,36,17
-    CTEXT           " Added Text",IDC_STATIC_ADDED_TEXT,8,57,89,16,
+    PUSHBUTTON      "Font...",IDC_BUTTON_NORMAL_FONT,149,35,36,17
+    CTEXT           "File 1 Only Text",IDC_STATIC_ADDED_TEXT,8,56,132,16,
                     SS_CENTERIMAGE
-    PUSHBUTTON      "Font...",IDC_BUTTON_INSERTED_FONT,102,56,36,17
-    PUSHBUTTON      "Background...",IDC_BUTTON_ADDED_BACKGROUND,145,56,50,17
-    CTEXT           " Deleted Text",IDC_STATIC_DELETED_TEXT,8,77,89,16,
+    PUSHBUTTON      "Font...",IDC_BUTTON_INSERTED_FONT,149,56,36,17
+    CTEXT           "File 2 Only Text",IDC_STATIC_DELETED_TEXT,8,77,132,16,
                     SS_CENTERIMAGE
-    PUSHBUTTON      "Font...",IDC_BUTTON_ERASED_FONT,101,77,37,17
-    PUSHBUTTON      "Background...",IDC_BUTTON_ERASED_BACKGROUND,145,77,50,
+    PUSHBUTTON      "Font...",IDC_BUTTON_ERASED_FONT,149,77,37,17
+    CTEXT           "Text Accepted For Merge",IDC_STATIC_ACCEPTED_TEXT,8,98,
+                    132,16,SS_CENTERIMAGE
+    PUSHBUTTON      "Background...",IDC_BUTTON_ADDED_BACKGROUND,149,98,50,17
+    CTEXT           "Text Discarded From Merged",IDC_STATIC_DISCARDED_TEXT,8,
+                    119,132,16,SS_CENTERIMAGE
+    PUSHBUTTON      "Background...",IDC_BUTTON_ERASED_BACKGROUND,149,119,50,
                     17
 END
 
@@ -449,11 +450,11 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Accept Or Decline Differences"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "Accept",IDOK,7,61,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,122,61,50,14
-    PUSHBUTTON      "Decline",IDNO,64,61,50,14
-    CTEXT           "Some of the differences are not marked as ""Accepted"" or ""Declined"". How would you like to merge them?",
-                    IDC_STATIC,15,22,148,29
+    DEFPUSHBUTTON   "File &2",IDOK,64,61,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,121,61,50,14
+    CTEXT           "Some of the differences are not marked as ""Accepted"" or ""Discarded"". Which file would you like to use as a base for the new file?",
+                    IDC_STATIC,15,16,148,35
+    PUSHBUTTON      "File &1",IDNO,7,61,50,14
 END
 
 IDD_DIALOG_SAVE_MERGED_TEMPLATE DIALOG DISCARDABLE  0, 0, 281, 30
@@ -570,9 +571,9 @@ BEGIN
     IDD_PROPPAGE_COMPARISION_PREFERENCES, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 188
+        RIGHTMARGIN, 199
         TOPMARGIN, 7
-        BOTTOMMARGIN, 85
+        BOTTOMMARGIN, 96
     END
 
     IDD_PROPPAGE_VIEW_PREFERENCES, DIALOG
@@ -580,7 +581,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 201
         TOPMARGIN, 7
-        BOTTOMMARGIN, 111
+        BOTTOMMARGIN, 136
     END
 
     IDD_DIALOG_ACCEPT_OR_DECLINE_ALL, DIALOG
@@ -748,7 +749,7 @@ BEGIN
     ID_FILE_COMPAREFILES    "Compare two files\nCompare files"
     ID_FILE_PREFERENCES     "Change program preferences\nPreferences"
     ID_EDIT_ACCEPT          "Accept change\nAccept"
-    ID_EDIT_DECLINE         "Decline change\nDecline"
+    ID_EDIT_DECLINE         "Discard text from merged version\nDiscard"
     ID_EDIT_GOTONEXTDIFF    "Go to the next difference\nNext difference"
 END
 

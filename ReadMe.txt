@@ -1,5 +1,11 @@
 TODO:
-Open directories or files from the command line
+Catch Ctrl+Tab
+Context menu on selection: Merge File1 version, Merge File2 version
+mark accept/decline line by line
+make selective accept/decline, for some lines of group
+show version of file1, file2 of the line
+Show Left-only, right-only, merged line (single line only)
+Change concept to include/exclude, use file 1, use file2
 Cancel selection on Accept/Decline commands (to see the result immediately). ???
 Maybe different color for selected accepted/declined
 Add Save differences
@@ -16,32 +22,21 @@ UNICODE file support
 //show subdir-only names in the status bar during comparision
 
 Problems:
-Blank lines are ignored during comparision, but may not be inored when line pair list built
+Blank lines are ignored during comparison, but may not be inored when line pair list built
 
 Fixed:
+Wrong button order in View properties
+Inserted line with only spaces is not whitespace
+Child window is created not maximized
+Esc closes without prompting to save merged
 Go To next differences when whitespaces ignored
-when checking for alpnanum, check also for '_'
-invalidates too much when cursor moved after scroll
-Identical lines in the beginning of the file may be shown different
-doesn't erase line ends after scrolling
-If two files are completely different, only first file is shown
-BIG file takes too much to read. Eliminated array reallocation.
-File with differences: last lines not drawn
-Wrong status for inserted and removed parts of strings
 
 Done:
+Open directories or files from the command line
+Processed blank lines during section expansion
+make separate selection for background
+make "Number Of matching chars" in preferences
 Make combobox for last file filters
 in InvalidateRange, add for letter overlap.
 Make Word Left, Word Right.
 Show added whitespaces
-Add color selection for background.
-Hide Apply in the preferences sheet
-Add Copy files
-Ignore whitespace-only differences
-Add Merge function
-If a file reloaded and some changes are marked, ask confirmation.
-don't cancel selection if right click inside the selection
-Paint accepted and declined changes with color
-Add "Number of lines to match", "Min string length to match", "percents of look-like difference"
-Check difference area of the file for identical lines
-Make Binary compare checkbox for file compare dialog

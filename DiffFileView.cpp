@@ -1364,12 +1364,25 @@ void CDiffFileView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 			InvalidateRange(begin, end);
 		}
 	}
-	else if (lHint == CFilePairDoc::FileLoaded
-			|| lHint == CFilePairDoc::MetricsChanged)
+	else if (lHint == UpdateViewsFilePairChanged)
+	{
+		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
+		if (NULL != pArg
+			&& pArg->pPair == pDoc->GetFilePair())
+		{
+			OnMetricsChange();
+			Invalidate(TRUE);
+			UpdateHScrollBar();
+			UpdateVScrollBar();
+			CreateAndShowCaret();
+		}
+	}
+	else if (lHint == UpdateViewsMetricsChanged)
 	{
 		OnMetricsChange();
 	}
-	else
+	else if (0 == lHint
+			|| UpdateViewsColorsChanged == lHint)
 	{
 		Invalidate(TRUE);
 		UpdateHScrollBar();
@@ -1438,7 +1451,7 @@ void CDiffFileView::OnViewShowLineNumbers()
 	m_ShowLineNumbers = ! m_ShowLineNumbers;
 	GetApp()->m_bShowLineNumbers = m_ShowLineNumbers;
 
-	OnUpdate(NULL, CFilePairDoc::MetricsChanged, NULL);
+	OnUpdate(NULL, UpdateViewsMetricsChanged, NULL);
 }
 
 void CDiffFileView::OnUpdateViewShowLineNumbers(CCmdUI* pCmdUI)

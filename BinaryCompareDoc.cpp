@@ -7,7 +7,7 @@
 
 // CBinaryCompareDoc
 
-IMPLEMENT_DYNCREATE(CBinaryCompareDoc, CDocument)
+IMPLEMENT_DYNCREATE(CBinaryCompareDoc, CAlegrDiffBaseDoc)
 
 CBinaryCompareDoc::CBinaryCompareDoc()
 	: m_pFilePair(NULL)
@@ -19,7 +19,7 @@ CBinaryCompareDoc::CBinaryCompareDoc()
 
 BOOL CBinaryCompareDoc::OnNewDocument()
 {
-	if (!CDocument::OnNewDocument())
+	if (!CAlegrDiffBaseDoc::OnNewDocument())
 		return FALSE;
 	m_CaretPos = 0;
 	m_SelectionAnchor = 0;
@@ -35,8 +35,26 @@ CBinaryCompareDoc::~CBinaryCompareDoc()
 	}
 }
 
+void CBinaryCompareDoc::OnUpdateAllViews(CView* pSender,
+										LPARAM lHint, CObject* pHint)
+{
+	if (UpdateViewsFilePairDeleted == lHint)
+	{
+		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
+		if (NULL != pArg
+			&& pArg->pPair == m_pFilePair)
+		{
+			OnCloseDocument();
+			return;
+		}
+	}
+	else
+	{
+		CAlegrDiffBaseDoc::OnUpdateAllViews(pSender, lHint, pHint);
+	}
+}
 
-BEGIN_MESSAGE_MAP(CBinaryCompareDoc, CDocument)
+BEGIN_MESSAGE_MAP(CBinaryCompareDoc, CAlegrDiffBaseDoc)
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
 END_MESSAGE_MAP()
 
@@ -46,12 +64,12 @@ END_MESSAGE_MAP()
 #ifdef _DEBUG
 void CBinaryCompareDoc::AssertValid() const
 {
-	CDocument::AssertValid();
+	CAlegrDiffBaseDoc::AssertValid();
 }
 
 void CBinaryCompareDoc::Dump(CDumpContext& dc) const
 {
-	CDocument::Dump(dc);
+	CAlegrDiffBaseDoc::Dump(dc);
 }
 #endif //_DEBUG
 
@@ -104,7 +122,11 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 		}
 	}
 	m_CaretPos = 0;
-	UpdateAllViews(NULL, FileLoaded);
+
+	FilePairChangedArg arg;
+	arg.pPair = pPair;
+	UpdateAllViews(NULL, UpdateViewsFilePairChanged, & arg);
+
 	SetCaretPosition(0, SetPositionCancelSelection);
 }
 

@@ -412,6 +412,45 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		}
 		return;
 	}
+	else if (UpdateViewsFilePairDeleted == lHint)
+	{
+		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
+		if (NULL == pArg)
+		{
+			return;
+		}
+		FilePair * const pFindPair = pArg->pPair;
+
+		for (unsigned item = 0; item < m_PairArray.size(); item++)
+		{
+			if (pFindPair == m_PairArray[item])
+			{
+				pListCtrl->DeleteItem(item);
+				m_PairArray.erase(m_PairArray.begin() + item);
+			}
+		}
+		return;
+	}
+	else if (UpdateViewsFilePairChanged == lHint)
+	{
+		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
+		if (NULL == pArg)
+		{
+			return;
+		}
+		FilePair * const pFindPair = pArg->pPair;
+
+		for (unsigned item = 0; item < m_PairArray.size(); item++)
+		{
+			if (pFindPair == m_PairArray[item])
+			{
+				pListCtrl->DeleteItem(item);
+				AddListViewItem(pFindPair, item);
+			}
+		}
+		return;
+	}
+
 	// TODO: keep focus on the same item
 	// fill the list control
 	LockWindowUpdate();

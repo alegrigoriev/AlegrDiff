@@ -23,9 +23,10 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CAlegrDiffDoc
 
-IMPLEMENT_DYNCREATE(CAlegrDiffDoc, CDocument)
+IMPLEMENT_DYNCREATE(CAlegrDiffBaseDoc, CDocument)
+IMPLEMENT_DYNCREATE(CAlegrDiffDoc, CAlegrDiffBaseDoc)
 
-BEGIN_MESSAGE_MAP(CAlegrDiffDoc, CDocument)
+BEGIN_MESSAGE_MAP(CAlegrDiffDoc, CAlegrDiffBaseDoc)
 	//{{AFX_MSG_MAP(CAlegrDiffDoc)
 	ON_COMMAND(ID_FILE_SAVE, OnFileSave)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
@@ -34,6 +35,11 @@ BEGIN_MESSAGE_MAP(CAlegrDiffDoc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_REFRESH, OnUpdateViewRefresh)
 END_MESSAGE_MAP()
 
+void CAlegrDiffBaseDoc::OnUpdateAllViews(CView* pSender,
+										LPARAM lHint, CObject* pHint)
+{
+	UpdateAllViews(pSender, lHint, pHint);
+}
 /////////////////////////////////////////////////////////////////////////////
 // CAlegrDiffDoc construction/destruction
 
@@ -272,6 +278,12 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 				FilePair * tmp = pInsertBefore;
 				pInsertBefore = pInsertBefore->Next();
 				tmp->RemoveFromList();
+
+				FilePairChangedArg arg;
+				arg.pPair = tmp;
+
+				GetApp()->UpdateAllViews(UpdateViewsFilePairDeleted, & arg);
+
 				tmp->Dereference();
 				m_nFilePairs--;
 				NeedUpdateViews = true;
@@ -308,6 +320,12 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 				FilePair * tmp = pInsertBefore;
 				pInsertBefore = pInsertBefore->Next();
 				tmp->RemoveFromList();
+
+				FilePairChangedArg arg;
+				arg.pPair = tmp;
+
+				GetApp()->UpdateAllViews(UpdateViewsFilePairDeleted, & arg);
+
 				tmp->Dereference();
 				m_nFilePairs--;
 			}
@@ -327,6 +345,12 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 		FilePair * tmp = pInsertBefore;
 		pInsertBefore = pInsertBefore->Next();
 		tmp->RemoveFromList();
+
+		FilePairChangedArg arg;
+		arg.pPair = tmp;
+
+		GetApp()->UpdateAllViews(UpdateViewsFilePairDeleted, & arg);
+
 		tmp->Dereference();
 		NeedUpdateViews = true;
 		m_nFilePairs--;
@@ -346,18 +370,44 @@ void CAlegrDiffDoc::FreeFilePairList()
 	m_nFilePairs = 0;
 }
 
+void CAlegrDiffDoc::OnUpdateAllViews(CView* pSender,
+									LPARAM lHint, CObject* pHint)
+{
+	CAlegrDiffBaseDoc::OnUpdateAllViews(pSender, lHint, pHint);
+
+	if (UpdateViewsFilePairDeleted == lHint)
+	{
+		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
+		if (NULL != pArg)
+		{
+			FilePair * const pPairToDelete = pArg->pPair;
+			CSimpleCriticalSectionLock lock(m_FileListCs);
+			// find if it is in the list and remove from the list
+			for (FilePair * pPair = m_PairList.Next(); pPair != m_PairList.Head() && ! m_bStopThread; pPair = pPair->Next())
+			{
+				if (pPairToDelete == pPair)
+				{
+					pPair->RemoveFromList();
+					pPair->Dereference();
+					break;
+				}
+			}
+		}
+	}
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // CAlegrDiffDoc diagnostics
 
 #ifdef _DEBUG
 void CAlegrDiffDoc::AssertValid() const
 {
-	CDocument::AssertValid();
+	CAlegrDiffBaseDoc::AssertValid();
 }
 
 void CAlegrDiffDoc::Dump(CDumpContext& dc) const
 {
-	CDocument::Dump(dc);
+	CAlegrDiffBaseDoc::Dump(dc);
 }
 #endif //_DEBUG
 
@@ -367,7 +417,7 @@ void CAlegrDiffDoc::Dump(CDumpContext& dc) const
 /////////////////////////////////////////////////////////////////////////////
 // CFilePairDoc
 
-IMPLEMENT_DYNCREATE(CFilePairDoc, CDocument)
+IMPLEMENT_DYNCREATE(CFilePairDoc, CAlegrDiffBaseDoc)
 
 CFilePairDoc::CFilePairDoc()
 	: m_TotalLines(0),
@@ -386,6 +436,25 @@ CFilePairDoc::~CFilePairDoc()
 		m_pFilePair->UnloadFiles();
 		m_pFilePair->Dereference();
 		m_pFilePair = NULL;
+	}
+}
+
+void CFilePairDoc::OnUpdateAllViews(CView* pSender,
+									LPARAM lHint, CObject* pHint)
+{
+	if (UpdateViewsFilePairDeleted == lHint)
+	{
+		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
+		if (NULL != pArg
+			&& pArg->pPair == m_pFilePair)
+		{
+			OnCloseDocument();
+			return;
+		}
+	}
+	else
+	{
+		CAlegrDiffBaseDoc::OnUpdateAllViews(pSender, lHint, pHint);
 	}
 }
 
@@ -438,7 +507,11 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 		m_ComparisonResult[countof(m_ComparisonResult) - 1] = 0;
 		((CFrameWnd*)AfxGetMainWnd())->PostMessage(WM_SETMESSAGESTRING_POST, 0, (LPARAM)m_ComparisonResult);
 	}
-	UpdateAllViews(NULL, FileLoaded);
+
+	FilePairChangedArg arg;
+	arg.pPair = pPair;
+	UpdateAllViews(NULL, UpdateViewsFilePairChanged, & arg);
+
 	SetCaretPosition(0, 0, SetPositionCancelSelection);
 }
 
@@ -604,7 +677,7 @@ void CFilePairDoc::CaretToEnd(int flags)
 	SetCaretPosition(pos, NewLine, flags);
 }
 
-BEGIN_MESSAGE_MAP(CFilePairDoc, CDocument)
+BEGIN_MESSAGE_MAP(CFilePairDoc, CAlegrDiffBaseDoc)
 	//{{AFX_MSG_MAP(CFilePairDoc)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_GOTONEXTDIFF, OnUpdateEditGotonextdiff)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_GOTOPREVDIFF, OnUpdateEditGotoprevdiff)
@@ -643,12 +716,12 @@ END_MESSAGE_MAP()
 #ifdef _DEBUG
 void CFilePairDoc::AssertValid() const
 {
-	CDocument::AssertValid();
+	CAlegrDiffBaseDoc::AssertValid();
 }
 
 void CFilePairDoc::Dump(CDumpContext& dc) const
 {
-	CDocument::Dump(dc);
+	CAlegrDiffBaseDoc::Dump(dc);
 }
 #endif //_DEBUG
 
@@ -937,12 +1010,16 @@ void CFilePairDoc::OnViewRefresh()
 	{
 		return;
 	}
+
 	if (FilesDeleted == res1)
 	{
 		// close this document
-		OnCloseDocument();
+		FilePairChangedArg arg;
+		arg.pPair = m_pFilePair;
+		GetApp()->UpdateAllViews(UpdateViewsFilePairDeleted, & arg);
 		return;
 	}
+
 	TRACE("Reloading the files\n");
 	TextPos caretpos = m_CaretPos;
 
@@ -955,7 +1032,9 @@ void CFilePairDoc::OnViewRefresh()
 	m_pFilePair->Dereference();
 
 	SetCaretPosition(caretpos.pos, caretpos.line, SetPositionCancelSelection);
-	UpdateAllViews(NULL);
+	FilePairChangedArg arg;
+	arg.pPair = m_pFilePair;
+	GetApp()->UpdateAllViews(UpdateViewsFilePairChanged, & arg);
 }
 
 void CFilePairDoc::OnUpdateFileEditFirst(CCmdUI* pCmdUI)

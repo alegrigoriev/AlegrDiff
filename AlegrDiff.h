@@ -33,6 +33,19 @@ enum eColumns
 	MaxColumns,
 };
 
+enum {
+	UpdateViewsColorsChanged = 0x100000,
+	UpdateViewsFilePairChanged = 0x200000,
+	UpdateViewsMetricsChanged = 0x300000,
+	UpdateViewsFilePairDeleted = 0x400000,
+};
+
+class FilePairChangedArg : public CObject
+{
+public:
+	class FilePair * pPair;
+};
+
 class CAlegrDiffApp : public CWinApp
 {
 	bool m_bIsWin9x;
@@ -128,7 +141,7 @@ public:
 	CFont m_ErasedFont;
 	int m_FontPointSize;
 	void OnFontChanged();
-	void UpdateAllDiffViews(LPARAM lHint = 0L, CObject* pHint = NULL);
+	void UpdateAllViews(LPARAM lHint = 0L, CObject* pHint = NULL);
 
 	CDocument * OpenFilePairView(FilePair * pPair);
 	void CloseFilePairView(FilePair * pPair);

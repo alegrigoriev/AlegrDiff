@@ -40,6 +40,7 @@ public:
 
 	CComboBox m_SaveFilename;
 	CString m_sSaveFilename;
+	BOOL m_bOkToOverwriteFile;
 	CString m_sFingerprintFilenameHistory[10];
 
 	virtual BOOL OnInitDialog();
@@ -51,4 +52,6 @@ public:
 	afx_msg void OnCbnEditchangeComboSaveFilename();
 	afx_msg void OnCbnSelchangeComboSaveFilename();
 	void OnUpdateOk(CCmdUI * pCmdUI);
+protected:
+	virtual void OnOK();
 };

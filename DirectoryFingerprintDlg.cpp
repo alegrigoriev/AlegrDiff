@@ -19,6 +19,7 @@ CDirectoryFingerprintDlg::CDirectoryFingerprintDlg(CWnd* pParent /*=NULL*/)
 	, m_sIgnoreFiles(_T(""))
 	, m_sSaveFilename(_T(""))
 	, m_bNeedUpdateControls(TRUE)
+	, m_bOkToOverwriteFile(FALSE)
 	, m_bSaveAsUnicode(FALSE)
 {
 }
@@ -100,7 +101,7 @@ void CDirectoryFingerprintDlg::OnBnClickedButtonBrowseSaveFilename()
 	m_SaveFilename.GetWindowText(m_sSaveFilename);
 
 	CFileDialog dlg(FALSE, _T("md5fp"), m_sSaveFilename,
-					OFN_HIDEREADONLY,
+					OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
 					Filter);
 	dlg.m_ofn.lpstrTitle = Title;
 
@@ -109,6 +110,8 @@ void CDirectoryFingerprintDlg::OnBnClickedButtonBrowseSaveFilename()
 		return;
 	}
 	m_SaveFilename.SetWindowText(dlg.GetPathName());
+
+	m_bOkToOverwriteFile = TRUE;
 	m_bNeedUpdateControls = TRUE;
 }
 
@@ -169,11 +172,13 @@ void CDirectoryFingerprintDlg::OnCbnSelchangeComboFirstDir()
 
 void CDirectoryFingerprintDlg::OnCbnEditchangeComboSaveFilename()
 {
+	m_bOkToOverwriteFile = FALSE;
 	m_bNeedUpdateControls = TRUE;
 }
 
 void CDirectoryFingerprintDlg::OnCbnSelchangeComboSaveFilename()
 {
+	m_bOkToOverwriteFile = FALSE;
 	m_bNeedUpdateControls = TRUE;
 }
 
@@ -187,3 +192,26 @@ void CDirectoryFingerprintDlg::OnUpdateOk(CCmdUI * pCmdUI)
 	pCmdUI->Enable(! s1.IsEmpty() && ! s2.IsEmpty());
 }
 
+
+void CDirectoryFingerprintDlg::OnOK()
+{
+	// Check if it's OK to overwrite the file
+
+	if ( ! m_bOkToOverwriteFile)
+	{
+		// check if the file exists
+		m_SaveFilename.GetWindowText(m_sSaveFilename);
+		DWORD attr = GetFileAttributes(m_sSaveFilename);
+		if (0xFFFFFFFF != attr)
+		{
+			CString s;
+			s.Format(IDS_REPLACEYESNO, LPCTSTR(m_sSaveFilename));
+			if (IDYES != AfxMessageBox(s, MB_YESNO | MB_DEFBUTTON2))
+			{
+				return;
+			}
+		}
+	}
+
+	CDialog::OnOK();
+}

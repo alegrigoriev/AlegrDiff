@@ -43,12 +43,22 @@ protected:
 public:
 	void AddListViewItem(FilePair * pPair, int item);
 	BOOL CopySelectedFiles(bool bSecondDir);
-	enum eColumns {ColumnName, ColumnSubdir, ColumnDate1, ColumnDate2, ColumnComparisionResult };
+	enum eColumns
+	{
+		ColumnName,
+		ColumnSubdir,
+		ColumnDate1,
+		ColumnDate2,
+		ColumnComparisionResult,
+		ColumnLength1,
+		ColumnLength2,
+	};
 	eColumns m_SortColumn;
 	eColumns m_PrevSortColumn;
 	bool m_bAscendingOrder;
 	bool m_bPrevAscendingOrder;
 	bool m_bSubdirColumnPresent;
+	void UpdateAppSort();
 
 	virtual ~CAlegrDiffView();
 #ifdef _DEBUG
@@ -86,6 +96,27 @@ protected:
 	afx_msg void OnUpdateViewShowallfiles(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnListviewFilelength();
+	afx_msg void OnUpdateListviewFilelength(CCmdUI *pCmdUI);
+	afx_msg void OnListviewModificationtime();
+	afx_msg void OnUpdateListviewModificationtime(CCmdUI *pCmdUI);
+	afx_msg void OnListviewSortby1stlength();
+	afx_msg void OnUpdateListviewSortby1stlength(CCmdUI *pCmdUI);
+	afx_msg void OnListviewSortby1stmodificationdate();
+	afx_msg void OnUpdateListviewSortby1stmodificationdate(CCmdUI *pCmdUI);
+	afx_msg void OnListviewSortby2ndlength();
+	afx_msg void OnUpdateListviewSortby2ndlength(CCmdUI *pCmdUI);
+	afx_msg void OnListviewSortbyComparisonresult();
+	afx_msg void OnUpdateListviewSortbyComparisonresult(CCmdUI *pCmdUI);
+	afx_msg void OnListviewSortbyFolder();
+	afx_msg void OnUpdateListviewSortbyFolder(CCmdUI *pCmdUI);
+	afx_msg void OnListviewSortbyName();
+	afx_msg void OnUpdateListviewSortbyName(CCmdUI *pCmdUI);
+	afx_msg void OnListviewSortbyDescendingorder();
+	afx_msg void OnUpdateListviewSortbyDescendingorder(CCmdUI *pCmdUI);
+	afx_msg void OnListviewSortby2ndmodificationdate();
+	afx_msg void OnUpdateListviewSortby2ndmodificationdate(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp

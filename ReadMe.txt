@@ -1,19 +1,17 @@
 TODO:
 
-Show progress inside one file
-Check fingerprint
-Show replace fingerprint file warning
-Add Copy 1st file text, copy 2nd file text
-Copy binary dump as text
-Switch from text view to binary view
-Support comparison of BIG lists
 Save columns width and order
-Make "Show columns" dialog with reset button
+Make "Show columns" menu with "reset Columns"
 For binary comparison: show file size
 In Properties dialog: show file size
 Add 1st file size, 2nd file size (with exact size tooltips?)
 Refresh list view
+Add Copy 1st file text, copy 2nd file text
+Copy binary dump as text
+Switch from text view to binary view
 
+Detect "Version stamp different only"
+Detect "Different in spaces only"
 make word by word comparison in MatchStrings
 show version of file1, file2 of the line
 Show Left-only, right-only, merged line (single line only)
@@ -21,8 +19,6 @@ Import font settings from Visual C/VisualStudio
 Maybe different color for selected accepted/declined
 add option to keep the caret on one line during F3 and F7
 If main window is minimized, save its state before minimization
-Detect "Version stamp different only"
-Detect "Different in spaces only"
 
 V1.5:
 Compare EXE version info for DLL, EXE, SYS
@@ -51,6 +47,9 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
+Show replace fingerprint file warning
+Show progress inside one file
+Check fingerprint
 Horizontal scroll in binary view scroll data bytes only
 Set line size for binary view
 Change short tooltip to Create Fingerprint, Check fingerprint

@@ -31,15 +31,6 @@ CDirectoryFingerpringCreateDlg::CDirectoryFingerpringCreateDlg(CWnd* pParent /*=
 
 CDirectoryFingerpringCreateDlg::~CDirectoryFingerpringCreateDlg()
 {
-	if (m_Thread.m_hThread)
-	{
-		m_StopRunThread = TRUE;
-		if (WAIT_TIMEOUT == WaitForSingleObject(m_Thread.m_hThread, 5000))
-		{
-			TerminateThread(m_Thread.m_hThread, -1);
-		}
-	}
-
 	if (m_hThreadEvent)
 	{
 		CloseHandle(m_hThreadEvent);
@@ -79,7 +70,17 @@ INT_PTR CDirectoryFingerpringCreateDlg::DoModal()
 		fputwc(0xFEFF, m_pFile);
 	}
 
-	return CDialog::DoModal();
+	UINT_PTR result = CDialog::DoModal();
+	if (m_Thread.m_hThread)
+	{
+		m_StopRunThread = TRUE;
+		if (WAIT_TIMEOUT == WaitForSingleObject(m_Thread.m_hThread, 5000))
+		{
+			TerminateThread(m_Thread.m_hThread, -1);
+		}
+	}
+
+	return result;
 }
 
 BOOL CDirectoryFingerpringCreateDlg::OnInitDialog()

@@ -53,6 +53,27 @@ BEGIN_MESSAGE_MAP(CAlegrDiffView, CListView)
 	ON_COMMAND(ID_FILE_PRINT, CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, CView::OnFilePrintPreview)
+//    ON_COMMAND(ID_LISTVIEW__FILELENGTH, OnListview)
+ON_COMMAND(ID_LISTVIEW_FILELENGTH, OnListviewFilelength)
+ON_UPDATE_COMMAND_UI(ID_LISTVIEW_FILELENGTH, OnUpdateListviewFilelength)
+ON_COMMAND(ID_LISTVIEW_MODIFICATIONTIME, OnListviewModificationtime)
+ON_UPDATE_COMMAND_UI(ID_LISTVIEW_MODIFICATIONTIME, OnUpdateListviewModificationtime)
+ON_COMMAND(ID_LISTVIEW_SORTBY_1STLENGTH, OnListviewSortby1stlength)
+ON_UPDATE_COMMAND_UI(ID_LISTVIEW_SORTBY_1STLENGTH, OnUpdateListviewSortby1stlength)
+ON_COMMAND(ID_LISTVIEW_SORTBY_1STMODIFICATIONDATE, OnListviewSortby1stmodificationdate)
+ON_UPDATE_COMMAND_UI(ID_LISTVIEW_SORTBY_1STMODIFICATIONDATE, OnUpdateListviewSortby1stmodificationdate)
+ON_COMMAND(ID_LISTVIEW_SORTBY_2NDLENGTH, OnListviewSortby2ndlength)
+ON_UPDATE_COMMAND_UI(ID_LISTVIEW_SORTBY_2NDLENGTH, OnUpdateListviewSortby2ndlength)
+ON_COMMAND(ID_LISTVIEW_SORTBY_COMPARISONRESULT, OnListviewSortbyComparisonresult)
+ON_UPDATE_COMMAND_UI(ID_LISTVIEW_SORTBY_COMPARISONRESULT, OnUpdateListviewSortbyComparisonresult)
+ON_COMMAND(ID_LISTVIEW_SORTBY_FOLDER, OnListviewSortbyFolder)
+ON_UPDATE_COMMAND_UI(ID_LISTVIEW_SORTBY_FOLDER, OnUpdateListviewSortbyFolder)
+ON_COMMAND(ID_LISTVIEW_SORTBY_NAME, OnListviewSortbyName)
+ON_UPDATE_COMMAND_UI(ID_LISTVIEW_SORTBY_NAME, OnUpdateListviewSortbyName)
+ON_COMMAND(ID_LISTVIEW_SORTBY_DESCENDINGORDER, OnListviewSortbyDescendingorder)
+ON_UPDATE_COMMAND_UI(ID_LISTVIEW_SORTBY_DESCENDINGORDER, OnUpdateListviewSortbyDescendingorder)
+ON_COMMAND(ID_LISTVIEW_SORTBY_2NDMODIFICATIONDATE, OnListviewSortby2ndmodificationdate)
+ON_UPDATE_COMMAND_UI(ID_LISTVIEW_SORTBY_2NDMODIFICATIONDATE, OnUpdateListviewSortby2ndmodificationdate)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -170,7 +191,8 @@ void CAlegrDiffView::OnInitialUpdate()
 	pList->InsertColumn(ColumnComparisionResult, s, LVCFMT_LEFT, 400, ColumnComparisionResult);
 	m_bSubdirColumnPresent = true;
 
-	pList->SetExtendedStyle(pList->GetExtendedStyle() | LVS_EX_FULLROWSELECT);
+	pList->SetExtendedStyle(pList->GetExtendedStyle()
+							| LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP);
 }
 
 void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
@@ -195,17 +217,8 @@ void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
 		m_SortColumn = eColumns(nColumn);
 		m_bAscendingOrder = true;
 	}
-	CThisApp * pApp = GetApp();
 
-	pApp->m_FileListSort = m_SortColumn | (m_PrevSortColumn << 16);
-	if ( ! m_bAscendingOrder)
-	{
-		pApp->m_FileListSort |= 0x100;
-	}
-	if ( ! m_bPrevAscendingOrder)
-	{
-		pApp->m_FileListSort |= 0x1000000;
-	}
+	UpdateAppSort();
 
 	OnUpdate(NULL, 0, NULL);
 	*pResult = 0;
@@ -507,7 +520,22 @@ void CAlegrDiffView::OnContextMenu(CWnd* pWnd, CPoint point)
 	GetParentFrame()->ActivateFrame();
 
 	CMenu menu;
-	if (menu.LoadMenu(IDR_MENU_LISTVIEW_CONTEXT))
+
+	CListCtrl * pListCtrl = & GetListCtrl();
+
+	CHeaderCtrl * pHeader = pListCtrl->GetHeaderCtrl();
+
+	CRect HeaderRect;
+	pHeader->GetWindowRect( & HeaderRect);
+
+	UINT MenuId = IDR_MENU_LISTVIEW_CONTEXT;
+
+	if (HeaderRect.PtInRect(point))
+	{
+		MenuId = IDR_MENU_LISTVIEW_HEADER;
+	}
+
+	if (menu.LoadMenu(MenuId))
 	{
 		CMenu* pPopup = menu.GetSubMenu(0);
 		if(pPopup != NULL)
@@ -908,4 +936,192 @@ void CAlegrDiffView::OnUpdateViewShowallfiles(CCmdUI* pCmdUI)
 		}
 	}
 	pCmdUI->Enable(FALSE);
+}
+
+
+void CAlegrDiffView::OnListviewFilelength()
+{
+	// TODO: Add your command handler code here
+}
+
+void CAlegrDiffView::OnUpdateListviewFilelength(CCmdUI *pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
+}
+
+void CAlegrDiffView::OnListviewModificationtime()
+{
+	// TODO: Add your command handler code here
+}
+
+void CAlegrDiffView::OnUpdateListviewModificationtime(CCmdUI *pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
+}
+
+void CAlegrDiffView::UpdateAppSort()
+{
+	CThisApp * pApp = GetApp();
+
+	pApp->m_FileListSort = m_SortColumn | (m_PrevSortColumn << 16);
+	if ( ! m_bAscendingOrder)
+	{
+		pApp->m_FileListSort |= 0x100;
+	}
+	if ( ! m_bPrevAscendingOrder)
+	{
+		pApp->m_FileListSort |= 0x1000000;
+	}
+}
+
+void CAlegrDiffView::OnListviewSortby1stlength()
+{
+	if (ColumnLength1 == m_SortColumn)
+	{
+		return;
+	}
+	m_bPrevAscendingOrder = m_bAscendingOrder;
+	m_PrevSortColumn = m_SortColumn;
+	m_bAscendingOrder = true;
+
+	m_SortColumn = ColumnLength1;
+	UpdateAppSort();
+	OnUpdate(NULL, 0, NULL);
+}
+
+void CAlegrDiffView::OnUpdateListviewSortby1stlength(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetRadio(ColumnLength1 == m_SortColumn);
+}
+
+void CAlegrDiffView::OnListviewSortby1stmodificationdate()
+{
+	if (ColumnDate1 == m_SortColumn)
+	{
+		return;
+	}
+	m_bPrevAscendingOrder = m_bAscendingOrder;
+	m_PrevSortColumn = m_SortColumn;
+	m_bAscendingOrder = true;
+
+	m_SortColumn = ColumnDate1;
+	UpdateAppSort();
+	OnUpdate(NULL, 0, NULL);
+}
+
+void CAlegrDiffView::OnUpdateListviewSortby1stmodificationdate(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetRadio(ColumnDate1 == m_SortColumn);
+}
+
+void CAlegrDiffView::OnListviewSortby2ndlength()
+{
+	if (ColumnLength2 == m_SortColumn)
+	{
+		return;
+	}
+	m_bPrevAscendingOrder = m_bAscendingOrder;
+	m_PrevSortColumn = m_SortColumn;
+	m_bAscendingOrder = true;
+
+	m_SortColumn = ColumnLength2;
+	UpdateAppSort();
+	OnUpdate(NULL, 0, NULL);
+}
+
+void CAlegrDiffView::OnUpdateListviewSortby2ndlength(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetRadio(ColumnLength2 == m_SortColumn);
+}
+
+void CAlegrDiffView::OnListviewSortbyComparisonresult()
+{
+	if (ColumnComparisionResult == m_SortColumn)
+	{
+		return;
+	}
+	m_bPrevAscendingOrder = m_bAscendingOrder;
+	m_PrevSortColumn = m_SortColumn;
+	m_bAscendingOrder = true;
+
+	m_SortColumn = ColumnComparisionResult;
+	UpdateAppSort();
+	OnUpdate(NULL, 0, NULL);
+}
+
+void CAlegrDiffView::OnUpdateListviewSortbyComparisonresult(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetRadio(ColumnComparisionResult == m_SortColumn);
+}
+
+void CAlegrDiffView::OnListviewSortbyFolder()
+{
+	if (ColumnSubdir == m_SortColumn)
+	{
+		return;
+	}
+	m_bPrevAscendingOrder = m_bAscendingOrder;
+	m_PrevSortColumn = m_SortColumn;
+	m_bAscendingOrder = true;
+
+	m_SortColumn = ColumnSubdir;
+	UpdateAppSort();
+	OnUpdate(NULL, 0, NULL);
+}
+
+void CAlegrDiffView::OnUpdateListviewSortbyFolder(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetRadio(ColumnSubdir == m_SortColumn);
+}
+
+void CAlegrDiffView::OnListviewSortbyName()
+{
+	if (ColumnName == m_SortColumn)
+	{
+		return;
+	}
+	m_bPrevAscendingOrder = m_bAscendingOrder;
+	m_PrevSortColumn = m_SortColumn;
+	m_bAscendingOrder = true;
+
+	m_SortColumn = ColumnName;
+	UpdateAppSort();
+	OnUpdate(NULL, 0, NULL);
+}
+
+void CAlegrDiffView::OnUpdateListviewSortbyName(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetRadio(ColumnName == m_SortColumn);
+}
+
+void CAlegrDiffView::OnListviewSortbyDescendingorder()
+{
+	m_bAscendingOrder = ! m_bAscendingOrder;
+	UpdateAppSort();
+	OnUpdate(NULL, 0, NULL);
+}
+
+void CAlegrDiffView::OnUpdateListviewSortbyDescendingorder(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetCheck( ! m_bAscendingOrder);
+}
+
+void CAlegrDiffView::OnListviewSortby2ndmodificationdate()
+{
+	if (ColumnDate2 == m_SortColumn)
+	{
+		return;
+	}
+	m_bPrevAscendingOrder = m_bAscendingOrder;
+	m_PrevSortColumn = m_SortColumn;
+	m_bAscendingOrder = true;
+
+	m_SortColumn = ColumnDate2;
+	UpdateAppSort();
+	OnUpdate(NULL, 0, NULL);
+}
+
+void CAlegrDiffView::OnUpdateListviewSortby2ndmodificationdate(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetRadio(ColumnDate2 == m_SortColumn);
 }

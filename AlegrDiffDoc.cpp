@@ -1206,21 +1206,15 @@ void CFilePairDoc::OnEditAccept()
 			SetFlags = 0;
 			ResetFlags = FileDiffSection::FlagAccept | FileDiffSection::FlagDecline;
 		}
-		int NumSections = 0;
-		FileDiffSection *const * ppSection = NULL;
 
-		m_pFilePair->ModifyAcceptDeclineFlags(
-											DisplayPosToLinePos(m_SelectionAnchor), DisplayPosToLinePos(m_CaretPos),
-											SetFlags, ResetFlags, & ppSection, & NumSections);
-		for (int i = 0; i < NumSections; i++)
+		TextPos begin = DisplayPosToLinePos(m_SelectionAnchor);
+		TextPos end = DisplayPosToLinePos(m_CaretPos);
+		if (m_pFilePair->ModifyAcceptDeclineFlags(begin, end, SetFlags, ResetFlags))
 		{
 			InvalidatedRange ir;
-			ir.begin = ppSection[i]->m_Begin;
-			ir.end = ppSection[i]->m_End;
+			ir.begin = LinePosToDisplayPos(begin);
+			ir.end = LinePosToDisplayPos(end);
 			UpdateAllViews(NULL, InvalidateRange, & ir);
-		}
-		if (0 != NumSections)
-		{
 			SetModifiedFlag(TRUE);
 		}
 	}
@@ -1245,21 +1239,14 @@ void CFilePairDoc::OnEditDecline()
 			SetFlags = 0;
 			ResetFlags = FileDiffSection::FlagAccept | FileDiffSection::FlagDecline;
 		}
-		int NumSections = 0;
-		FileDiffSection *const * ppSection = NULL;
-
-		m_pFilePair->ModifyAcceptDeclineFlags(
-											DisplayPosToLinePos(m_SelectionAnchor), DisplayPosToLinePos(m_CaretPos),
-											SetFlags, ResetFlags, & ppSection, & NumSections);
-		for (int i = 0; i < NumSections; i++)
+		TextPos begin = DisplayPosToLinePos(m_SelectionAnchor);
+		TextPos end = DisplayPosToLinePos(m_CaretPos);
+		if (m_pFilePair->ModifyAcceptDeclineFlags(begin, end, SetFlags, ResetFlags))
 		{
 			InvalidatedRange ir;
-			ir.begin = ppSection[i]->m_Begin;
-			ir.end = ppSection[i]->m_End;
+			ir.begin = LinePosToDisplayPos(begin);
+			ir.end = LinePosToDisplayPos(end);
 			UpdateAllViews(NULL, InvalidateRange, & ir);
-		}
-		if (0 != NumSections)
-		{
 			SetModifiedFlag(TRUE);
 		}
 	}

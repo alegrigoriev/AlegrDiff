@@ -192,7 +192,9 @@ struct StringSection
 	{
 		Identical = 0,
 		Inserted = 1,
+		File2Only = 1,
 		Erased = 2,
+		File1Only = 2,
 		Accepted = 4,
 		Declined = 8,
 		Undefined = 0x10,
@@ -339,6 +341,7 @@ public:
 	void ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, int Set, int Reset,
 								FileDiffSection *const ** ppFirstSection, int * pNumSections);
 #else
+	BOOL ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int Set, int Reset);
 #endif
 	enum eFileComparisionResult
 	{

@@ -22,20 +22,6 @@ F8 - hold anchor
 Problems:
 
 Fixed:
-If the file is already open, it won't be activated from the list view
-horizontal autoscroll is wrong (one character not updated)
-National characters are not recognized as letters (prevent sign expansion!)
-forward search next can't continue sometimes if there are whitespaces
-can't find next diff with whitespaces in the line
-goto next diff doesn't work sometimes when whitespaces are on
-fast rolling of mouse wheel confuses scrolling
-page down in short file causes crash
-Word Right doesn't skip spaces after the word
-Accept/Decline for a pair doesn't change the second
-Line numbers were zero-bazed
-Auto Scroll is too fast
-Use Collate to sort the filenames
-Tries to reload files during modal state
 
 Done:
 
@@ -47,11 +33,3 @@ save Show Toolbar, Show Status Bar options
 Make search dialog
 Add Ctrl+F6 interception for window switch
 Add progress to File list view and file diff view
-Ctrl+mouse selection - make full words
-Change concept to include/exclude, use file 1, use file2
-Context menu on selection: Merge File1 version, Merge File2 version
-mark accept/decline line by line
-make selective accept/decline, for some lines of group
-Remember last sort in list view
-Make copy to folder for the open file
-Open new frame with the same size attr as active frame

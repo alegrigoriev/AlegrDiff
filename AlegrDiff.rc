@@ -169,6 +169,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
         MENUITEM "Select All\tCtrl+A",          ID_EDIT_SELECT_ALL
+        MENUITEM "&Find...\tCtrl+F",            ID_EDIT_FIND
+        MENUITEM "Find Next\tF3",               ID_EDIT_FIND_NEXT
     END
     POPUP "&Merge"
     BEGIN
@@ -841,6 +843,7 @@ BEGIN
                             "Show line numbers at the left margin\nShow line numbers"
     ID_FILE_EDIT_FIRST      "Open first file for editing\nEdit first file"
     ID_FILE_EDIT_SECOND     "Open second file for editing\nEdit second file"
+    ID_EDIT_FIND_NEXT       "Find next occurence of the search string\nFind next"
 END
 
 STRINGTABLE DISCARDABLE 

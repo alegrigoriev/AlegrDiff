@@ -479,6 +479,11 @@ void CAlegrDiffApp::OnFileComparedirectories()
 
 void CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 {
+	if (pPair->m_ComparisionResult == pPair->ResultUnknown)
+	{
+		// the file not compared yet, can't open
+		return;
+	}
 	// check if there is already a CFilePairDoc
 	POSITION position = m_pFileDiffTemplate->GetFirstDocPosition();
 	while(position)
@@ -941,6 +946,7 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 
 		if (pDoc->BuildFilePairList(dlg.m_sFirstDir, dlg.m_sSecondDir, m_bRecurseSubdirs))
 		{
+			pDoc->RunComparisionThread();
 			pDoc->UpdateAllViews(NULL);
 		}
 		else

@@ -3282,7 +3282,7 @@ void FilePair::ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo,
 #else
 BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int Set, int Reset)
 {
-	TextPos begin = PosFrom, end = PosFrom;
+	TextPos begin = PosFrom, end = PosTo;
 	if (begin == end)
 	{
 		// if the range is of zero length, then modify all neighbor sections
@@ -3294,13 +3294,12 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 		// find first inclusive section
 
 		int pos = 0;
-		for  (StringSection * pSection = pPair->pFirstSection
+		for (StringSection * pSection = pPair->pFirstSection
 			; pSection != NULL; pos += pSection->Length, pSection = pSection->pNext)
 		{
 			if (pos > begin.pos)
 			{
-				pSection = NULL;
-				break;
+				return FALSE;
 			}
 			if (0 == (pSection->Attr & (pSection->Inserted | pSection->Erased)))
 			{
@@ -3327,7 +3326,7 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 			end.pos = 0;
 			end.line = begin.line + 1;
 
-			pSection->Attr &= Reset;
+			pSection->Attr &= ~Reset;
 			pSection->Attr |= Set;
 
 			while (begin.line > 0)
@@ -3339,7 +3338,7 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 				{
 					break;
 				}
-				pSection->Attr &= Reset;
+				pSection->Attr &= ~Reset;
 				pSection->Attr |= Set;
 
 				begin.line--;
@@ -3354,7 +3353,7 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 				{
 					break;
 				}
-				pSection->Attr &= Reset;
+				pSection->Attr &= ~Reset;
 				pSection->Attr |= Set;
 
 				end.line++;
@@ -3365,7 +3364,7 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 			begin.pos = pos;
 			end.pos = pos + pSection->Length;
 
-			pSection->Attr &= Reset;
+			pSection->Attr &= ~Reset;
 			pSection->Attr |= Set;
 
 			pSection = pSection->pNext;
@@ -3374,7 +3373,7 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 			{
 				PosTo.pos += pSection->Length;
 
-				pSection->Attr &= Reset;
+				pSection->Attr &= ~Reset;
 				pSection->Attr |= Set;
 			}
 		}
@@ -3383,7 +3382,7 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 		return TRUE;
 	}
 	// if the range is not of zero length, then modify all included
-	if (begin < end)
+	if (begin > end)
 	{
 		TextPos tmp = end;
 		end = begin;
@@ -3397,23 +3396,68 @@ BOOL FilePair::ModifyAcceptDeclineFlags(TextPos & PosFrom, TextPos & PosTo, int 
 	// find first inclusive section
 
 	int pos = 0;
-	for  (StringSection * pSection = pPair->pFirstSection
+	StringSection * pSection;
+	for (pSection = pPair->pFirstSection
 		; pSection != NULL; pos += pSection->Length, pSection = pSection->pNext)
 	{
-		if (0 == (pSection->Attr & (pSection->Inserted | pSection->Erased)) )
+		if (end.line == begin.line
+			&& pos >= end.pos)
 		{
-			continue;
+			// no section in this line
+			pSection = NULL;
+			break;
 		}
-		if (pos <= begin.pos
-			&& (pos + pSection->Length > begin.pos
-				|| (NULL != pSection->pNext
-					&& 0 != (pSection->pNext->Attr & (pSection->Inserted | pSection->Erased))
-					&& pos + pSection->Length + pSection->pNext->Length > begin.pos)))
+		if (0 != (pSection->Attr & (pSection->Inserted | pSection->Erased))
+			&& pos + pSection->Length > begin.pos)
 		{
 			// section found
+			begin.pos = pos;
 			break;
 		}
 	}
+	TextPos ChangeEnd = begin;
+	for ( ; pSection != NULL; pos += pSection->Length, pSection = pSection->pNext)
+	{
+		if (end.line == begin.line
+			&& pos >= end.pos)
+		{
+			// no more sections to mark
+			break;
+		}
+		if (0 != (pSection->Attr & (pSection->Inserted | pSection->Erased)))
+		{
+			pSection->Attr &= ~Reset;
+			pSection->Attr |= Set;
+			ChangeEnd.pos = pos + pSection->Length;
+		}
+	}
+	int line;
+	for (line = begin.line + 1; line < m_LinePairs.GetSize() && line <= end.line; line++)
+	{
+		for (pos = 0, pSection = m_LinePairs[line]->pFirstSection
+			; pSection != NULL; pSection = pSection->pNext)
+		{
+			if (line == end.line
+				&& pos >= end.pos)
+			{
+				break;
+			}
+			pos += pSection->Length;
+			if (0 != (pSection->Attr & (pSection->Inserted | pSection->Erased)))
+			{
+				pSection->Attr &= ~Reset;
+				pSection->Attr |= Set;
+				ChangeEnd.line = line;
+				ChangeEnd.pos = pos;
+			}
+		}
+	}
+	if (begin == ChangeEnd)
+	{
+		return FALSE;
+	}
+	PosFrom = begin;
+	PosTo = ChangeEnd;
 	return TRUE;
 }
 #endif

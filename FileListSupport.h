@@ -191,8 +191,9 @@ bool less<FileDiffSection *>::operator()
 class FileLine
 {
 public:
+	enum { eContainsVersionInfo = 1, };
 
-	FileLine(LPCTSTR src, bool MakeNormalizedString, bool c_cpp_file);
+	FileLine(LPCTSTR src, int Length, bool MakeNormalizedString, bool c_cpp_file);
 	~FileLine();
 
 	static void * operator new(size_t size)
@@ -224,6 +225,11 @@ public:
 		return 0 != (m_pWhitespaceMask[pos / 8] & (1 << (pos & 7)));
 	}
 
+	bool ContainsVersionInfo() const
+	{
+		return 0 != (m_Flags & eContainsVersionInfo);
+	}
+
 	void SetNext(FileLine * pNext) { m_pNext = pNext; }
 	FileLine * Next() const { return m_pNext; }
 
@@ -243,7 +249,13 @@ public:
 	static int _cdecl GroupHashAndLineNumberCompareFunc(FileLine const * pLine1, FileLine const * pLine2);
 	static int _cdecl NormalizedGroupHashAndLineNumberCompareFunc(FileLine const * pLine1, FileLine const * pLine2);
 
+protected:
+	int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstCount,
+								char * pWhitespaceMask, int WhitespaceMaskSize,
+								unsigned Flags);
 private:
+
+	DWORD m_Flags;
 	DWORD m_HashCode;
 	DWORD m_GroupHashCode;
 	DWORD m_NormalizedHashCode;
@@ -255,7 +267,7 @@ private:
 	unsigned m_NormalizedStringLength;
 	//int m_FirstTokenIndex;
 	//FileLine * m_Link;
-	char * m_pAllocatedBuf;
+	TCHAR * m_pAllocatedBuf;
 	const char * m_pWhitespaceMask;
 	LPCTSTR m_pString;
 	// points to the string with extra spaces removed

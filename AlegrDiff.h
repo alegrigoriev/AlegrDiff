@@ -115,8 +115,9 @@ inline CThisApp * GetApp()
 	return (CThisApp *) AfxGetApp();
 }
 
-void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, LPCTSTR Prefix);
+void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, UINT FormatID, UINT DisabledItemID);
 void OpenFileForEditing(class FileItem * pFile);
+void CopyFilesToFolder(FileItem ** ppFiles, int nCount, bool bAddSubdirToTarget);
 /////////////////////////////////////////////////////////////////////////////
 
 //{{AFX_INSERT_LOCATION}}

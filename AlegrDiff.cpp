@@ -11,6 +11,7 @@
 #include "DiffFileView.h"
 #include "CompareDirsDialog.h"
 #include "PreferencesDialog.h"
+#include "FolderDialog.h"
 #include <Dlgs.h>
 
 #ifdef _DEBUG
@@ -613,14 +614,108 @@ void CAlegrDiffApp::UpdateAllDiffViews(LPARAM lHint, CObject* pHint)
 	}
 }
 
-void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, LPCTSTR Prefix)
+UINT AFXAPI AfxGetFileName(LPCTSTR lpszPathName, LPTSTR lpszTitle, UINT nMax);
+static void AFXAPI _AfxAbbreviateName(LPTSTR lpszCanon, int cchMax, BOOL bAtLeastName)
+{
+	int cchFullPath, cchFileName, cchVolName;
+	const TCHAR* lpszCur;
+	const TCHAR* lpszBase;
+	const TCHAR* lpszFileName;
+
+	lpszBase = lpszCanon;
+	cchFullPath = lstrlen(lpszCanon);
+
+	cchFileName = AfxGetFileName(lpszCanon, NULL, 0) - 1;
+	lpszFileName = lpszBase + (cchFullPath-cchFileName);
+
+	// If cchMax is more than enough to hold the full path name, we're done.
+	// This is probably a pretty common case, so we'll put it first.
+	if (cchMax >= cchFullPath)
+		return;
+
+	// If cchMax isn't enough to hold at least the basename, we're done
+	if (cchMax < cchFileName)
+	{
+		lstrcpy(lpszCanon, (bAtLeastName) ? lpszFileName : &afxChNil);
+		return;
+	}
+
+	// Calculate the length of the volume name.  Normally, this is two characters
+	// (e.g., "C:", "D:", etc.), but for a UNC name, it could be more (e.g.,
+	// "\\server\share").
+	//
+	// If cchMax isn't enough to hold at least <volume_name>\...\<base_name>, the
+	// result is the base filename.
+
+	lpszCur = lpszBase + 2;                 // Skip "C:" or leading "\\"
+
+	if (lpszBase[0] == '\\' && lpszBase[1] == '\\') // UNC pathname
+	{
+		// First skip to the '\' between the server name and the share name,
+		while (*lpszCur != '\\')
+		{
+			lpszCur = _tcsinc(lpszCur);
+			ASSERT(*lpszCur != '\0');
+		}
+	}
+	// if a UNC get the share name, if a drive get at least one directory
+	ASSERT(*lpszCur == '\\');
+	// make sure there is another directory, not just c:\filename.ext
+	if (cchFullPath - cchFileName > 3)
+	{
+		lpszCur = _tcsinc(lpszCur);
+		while (*lpszCur != '\\')
+		{
+			lpszCur = _tcsinc(lpszCur);
+			ASSERT(*lpszCur != '\0');
+		}
+	}
+	ASSERT(*lpszCur == '\\');
+
+	cchVolName = lpszCur - lpszBase;
+	if (cchMax < cchVolName + 5 + cchFileName)
+	{
+		lstrcpy(lpszCanon, lpszFileName);
+		return;
+	}
+
+	// Now loop through the remaining directory components until something
+	// of the form <volume_name>\...\<one_or_more_dirs>\<base_name> fits.
+	//
+	// Assert that the whole filename doesn't fit -- this should have been
+	// handled earlier.
+
+	ASSERT(cchVolName + (int)lstrlen(lpszCur) > cchMax);
+	while (cchVolName + 4 + (int)lstrlen(lpszCur) > cchMax)
+	{
+		do
+		{
+			lpszCur = _tcsinc(lpszCur);
+			ASSERT(*lpszCur != '\0');
+		}
+		while (*lpszCur != '\\');
+	}
+
+	// Form the resultant string and we're done.
+	lpszCanon[cchVolName] = '\0';
+	lstrcat(lpszCanon, _T("\\..."));
+	lstrcat(lpszCanon, lpszCur);
+}
+
+void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, UINT FormatID, UINT DisabledItemID)
 {
 	if (NULL == pFile)
 	{
+		CString s;
+		s.LoadString(DisabledItemID);
+		pCmdUI->SetText(s);
+		// this works, too, but is a bit obscure
+		//pCmdUI->SetText(LPCTSTR(CString().LoadString(DisabledItemID)));
 		pCmdUI->Enable(FALSE);
 		return;
 	}
 	CString name(pFile->GetFullName());
+	_AfxAbbreviateName(name.GetBuffer(MAX_PATH * 2), 50, true);
 	// duplicate all '&' in name
 	for (int i = 0; i < name.GetLength(); i++)
 	{
@@ -632,7 +727,7 @@ void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, LPCTSTR Prefix)
 	}
 
 	CString s;
-	s = Prefix + name;
+	s.Format(FormatID, LPCTSTR(name));
 	pCmdUI->SetText(s);
 	pCmdUI->Enable(TRUE);
 }
@@ -1050,4 +1145,109 @@ void CAlegrDiffApp::OpenPairOfPathnames(LPTSTR Arg1, LPTSTR Arg2)
 		// TODO: process /B (binary) option
 		CompareFiles(Arg1, Arg2);
 	}
+}
+
+void CopyFilesToFolder(FileItem **ppFiles, int nCount, bool bAddSubdirToTarget)
+{
+	CThisApp * pApp = GetApp();
+
+	FileItem * pFile;
+
+	CString TargetDir = pApp->m_CopyFilesDir;
+	CString DlgTitle;
+	DlgTitle.LoadString(IDS_COPY_FILES_TITLE);
+
+	CFolderDialog dlg(DlgTitle, TargetDir, true);
+
+	if (IDOK != dlg.DoModal())
+	{
+		return;
+	}
+	TargetDir = dlg.GetFolderPath();
+	pApp->m_CopyFilesDir = TargetDir;
+
+	if ( ! TargetDir.IsEmpty())
+	{
+		TCHAR c;
+		c = TargetDir[TargetDir.GetLength() - 1];
+		if (':' != c
+			&& '\\' != c
+			&& '/' != c)
+		{
+			TargetDir += _T("\\");
+		}
+	}
+	int i;
+	int SrcBufLen = 1;
+	int DstBufLen = 1;
+	for (i = 0; i < nCount; i++)
+	{
+		pFile = ppFiles[i];
+		SrcBufLen += pFile->GetBasedirLength() + pFile->GetNameLength() + pFile->GetSubdirLength() + 1;
+		DstBufLen += TargetDir.GetLength() + pFile->GetNameLength() + 1;
+		if (bAddSubdirToTarget)
+		{
+			DstBufLen += pFile->GetSubdirLength();
+		}
+	}
+
+
+	LPTSTR pSrcBuf = new TCHAR[SrcBufLen];
+	LPTSTR pDstBuf = new TCHAR[SrcBufLen];
+
+	if (NULL == pSrcBuf || NULL == pDstBuf)
+	{
+		delete[] pSrcBuf;
+		delete[] pDstBuf;
+		return;
+	}
+	int SrcBufIdx = 0;
+	int DstBufIdx = 0;
+
+	for (i = 0; i < nCount; i++)
+	{
+		pFile = ppFiles[i];
+		_tcsncpy(pSrcBuf + SrcBufIdx, pFile->GetBasedir(), pFile->GetBasedirLength());
+		SrcBufIdx += pFile->GetBasedirLength();
+
+		_tcsncpy(pSrcBuf + SrcBufIdx, pFile->GetSubdir(), pFile->GetSubdirLength());
+		SrcBufIdx += pFile->GetSubdirLength();
+
+		_tcsncpy(pSrcBuf + SrcBufIdx, pFile->GetName(), pFile->GetNameLength());
+		SrcBufIdx += pFile->GetNameLength();
+
+		pSrcBuf[SrcBufIdx] = 0;
+		SrcBufIdx++;
+
+		_tcscpy(pDstBuf + DstBufIdx, TargetDir);
+		DstBufIdx += TargetDir.GetLength();
+
+		if (bAddSubdirToTarget)
+		{
+			_tcsncpy(pDstBuf + DstBufIdx, pFile->GetSubdir(), pFile->GetSubdirLength());
+			DstBufIdx += pFile->GetSubdirLength();
+		}
+
+		_tcsncpy(pDstBuf + DstBufIdx, pFile->GetName(), pFile->GetNameLength());
+		DstBufIdx += pFile->GetNameLength();
+
+		pDstBuf[DstBufIdx] = 0;
+		DstBufIdx++;
+	}
+
+	pSrcBuf[SrcBufIdx] = 0;
+	pDstBuf[DstBufIdx] = 0;
+
+	SHFILEOPSTRUCT fo;
+	memset( & fo, 0, sizeof fo);
+	fo.hwnd = AfxGetMainWnd()->m_hWnd;
+	fo.wFunc = FO_COPY;
+	fo.fFlags = FOF_MULTIDESTFILES | FOF_NOCONFIRMMKDIR;
+	fo.pFrom = pSrcBuf;
+	fo.pTo = pDstBuf;
+	SHFileOperation( & fo);
+
+	delete[ ] pSrcBuf;
+	delete[ ] pDstBuf;
+
 }

@@ -1502,7 +1502,7 @@ void CDiffFileView::OnUpdateViewFile2Version(CCmdUI* pCmdUI)
 
 void CDiffFileView::OnViewFile2Version()
 {
-// enable if there are any differences in the line, and the line is not exclusively File1
+	// enable if there are any differences in the line, and the line is not exclusively File1
 }
 
 void CDiffFileView::OnUpdateViewFile1Version(CCmdUI* pCmdUI)
@@ -1516,3 +1516,4 @@ void CDiffFileView::OnViewFile1Version()
 	// TODO: Add your command handler code here
 
 }
+

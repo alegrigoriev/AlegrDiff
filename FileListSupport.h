@@ -335,9 +335,11 @@ public:
 	TextPos PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces);
 
 	int GetAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, bool bIgnoreWhitespaces);
+#if 0
 	void ModifyAcceptDeclineFlags(TextPos PosFrom, TextPos PosTo, int Set, int Reset,
 								FileDiffSection *const ** ppFirstSection, int * pNumSections);
-
+#else
+#endif
 	enum eFileComparisionResult
 	{
 		ResultUnknown,

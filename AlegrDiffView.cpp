@@ -7,7 +7,6 @@
 #include "AlegrDiffDoc.h"
 #include "AlegrDiffView.h"
 #include "DiffFileView.h"
-#include "FolderDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -364,16 +363,15 @@ void CAlegrDiffView::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
 	}
+	FileItem * pFile = NULL;
 	if (-1 != nItem
 		&& nItem < m_PairArray.GetSize()
 		&& NULL != m_PairArray[nItem])
 	{
-		ModifyOpenFileMenu(pCmdUI, m_PairArray[nItem]->pFirstFile, _T("&1 Open "));
+		pFile = m_PairArray[nItem]->pFirstFile;
 	}
-	else
-	{
-		pCmdUI->Enable(FALSE);
-	}
+	ModifyOpenFileMenu(pCmdUI, pFile,
+						IDS_OPEN_FIRST_FILE_MENU, IDS_OPEN_FIRST_FILE_MENU_DISABLED);
 }
 
 void CAlegrDiffView::OnFileEditSecond()
@@ -400,16 +398,15 @@ void CAlegrDiffView::OnUpdateFileEditSecond(CCmdUI* pCmdUI)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
 	}
+	FileItem * pFile = NULL;
 	if (-1 != nItem
 		&& nItem < m_PairArray.GetSize()
 		&& NULL != m_PairArray[nItem])
 	{
-		ModifyOpenFileMenu(pCmdUI, m_PairArray[nItem]->pSecondFile, _T("&2 Open "));
+		pFile = m_PairArray[nItem]->pSecondFile;
 	}
-	else
-	{
-		pCmdUI->Enable(FALSE);
-	}
+	ModifyOpenFileMenu(pCmdUI, pFile,
+						IDS_OPEN_SECOND_FILE_MENU, IDS_OPEN_SECOND_FILE_MENU_DISABLED);
 }
 
 void CAlegrDiffView::OnContextMenu(CWnd* pWnd, CPoint point)
@@ -489,22 +486,10 @@ void CAlegrDiffView::OnFileCopySecondDir()
 
 BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 {
-	CString dir;
 	CThisApp * pApp = GetApp();
 
-	if (bSecondDir)
-	{
-		dir = GetDocument()->m_sSecondDir;
-	}
-	else
-	{
-		dir = GetDocument()->m_sFirstDir;
-	}
-	int BufLen = 0;
-	int NumFiles = 0;
-	int BaseDirLen = 0;
 	CListCtrl * pListCtrl = & GetListCtrl();
-	FilePair * pPair;
+	CArray<FileItem *, FileItem *> FilesArray;
 
 	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
@@ -515,7 +500,7 @@ BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 	{
 		if (nItem < m_PairArray.GetSize())
 		{
-			pPair = m_PairArray[nItem];
+			FilePair * pPair = m_PairArray[nItem];
 			FileItem * pFile;
 			if (bSecondDir)
 			{
@@ -527,130 +512,16 @@ BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 			}
 			if (NULL != pFile)
 			{
-				BufLen += pFile->GetNameLength() + pFile->GetSubdirLength() + 1;
-				BaseDirLen = pFile->GetBasedirLength();
-				NumFiles++;
+				FilesArray.Add(pFile);
 			}
 		}
 		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
 	}
-	if (0 == BufLen)
+	if (0 == FilesArray.GetSize())
 	{
 		return FALSE;
 	}
-	CString TargetDir = pApp->m_CopyFilesDir;
-	CString DlgTitle;
-	DlgTitle.LoadString(IDS_COPY_FILES_TITLE);
 
-	CFolderDialog dlg(DlgTitle, TargetDir, true);
-
-	if (IDOK == dlg.DoModal())
-	{
-		TargetDir = dlg.GetFolderPath();
-		pApp->m_CopyFilesDir = TargetDir;
-
-		if ( ! TargetDir.IsEmpty())
-		{
-			TCHAR c;
-			c = TargetDir[TargetDir.GetLength() - 1];
-			if (':' != c
-				&& '\\' != c
-				&& '/' != c)
-			{
-				TargetDir += _T("\\");
-			}
-		}
-
-		int SrcBufLen = BufLen + BaseDirLen * NumFiles + 2;
-		int DstBufLen = BufLen + TargetDir.GetLength() * NumFiles + 2;
-
-		LPTSTR pSrcBuf = new TCHAR[SrcBufLen];
-		LPTSTR pDstBuf = new TCHAR[SrcBufLen];
-
-		if (NULL == pSrcBuf || NULL == pDstBuf)
-		{
-			delete[] pSrcBuf;
-			delete[] pDstBuf;
-			return FALSE;
-		}
-		int SrcBufIdx = 0;
-		int DstBufIdx = 0;
-
-		nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
-		if (-1 == nItem)
-		{
-			nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
-		}
-		while(-1 != nItem)
-		{
-			if (nItem < m_PairArray.GetSize())
-			{
-				pPair = m_PairArray[nItem];
-				FileItem * pFile;
-				if (bSecondDir)
-				{
-					pFile = pPair->pSecondFile;
-				}
-				else
-				{
-					pFile = pPair->pFirstFile;
-				}
-				if (NULL != pFile)
-				{
-					if (SrcBufIdx + pFile->GetFullNameLength() + 2 > SrcBufLen)
-					{
-						break;
-					}
-
-					if (DstBufIdx + pFile->GetNameLength()
-						+ pFile->GetSubdirLength() + TargetDir.GetLength() + 2 > DstBufLen)
-					{
-						break;
-					}
-
-					_tcsncpy(pSrcBuf + SrcBufIdx, pFile->GetBasedir(), pFile->GetBasedirLength());
-					SrcBufIdx += pFile->GetBasedirLength();
-
-					_tcsncpy(pSrcBuf + SrcBufIdx, pFile->GetSubdir(), pFile->GetSubdirLength());
-					SrcBufIdx += pFile->GetSubdirLength();
-
-					_tcsncpy(pSrcBuf + SrcBufIdx, pFile->GetName(), pFile->GetNameLength());
-					SrcBufIdx += pFile->GetNameLength();
-
-					pSrcBuf[SrcBufIdx] = 0;
-					SrcBufIdx++;
-
-					_tcscpy(pDstBuf + DstBufIdx, TargetDir);
-					DstBufIdx += TargetDir.GetLength();
-
-					_tcsncpy(pDstBuf + DstBufIdx, pFile->GetSubdir(), pFile->GetSubdirLength());
-					DstBufIdx += pFile->GetSubdirLength();
-
-					_tcsncpy(pDstBuf + DstBufIdx, pFile->GetName(), pFile->GetNameLength());
-					DstBufIdx += pFile->GetNameLength();
-
-					pDstBuf[DstBufIdx] = 0;
-					DstBufIdx++;
-				}
-			}
-			nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
-		}
-		pSrcBuf[SrcBufIdx] = 0;
-		pDstBuf[DstBufIdx] = 0;
-
-
-		SHFILEOPSTRUCT fo;
-		memset( & fo, 0, sizeof fo);
-		fo.hwnd = AfxGetMainWnd()->m_hWnd;
-		fo.wFunc = FO_COPY;
-		fo.fFlags = FOF_MULTIDESTFILES | FOF_NOCONFIRMMKDIR;
-		fo.pFrom = pSrcBuf;
-		fo.pTo = pDstBuf;
-		SHFileOperation( & fo);
-
-		delete[ ] pSrcBuf;
-		delete[ ] pDstBuf;
-	}
-
+	CopyFilesToFolder(FilesArray.GetData(), FilesArray.GetSize(), true);
 	return TRUE;
 }

@@ -465,8 +465,8 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version %s Beta",IDC_STATIC_VERSION,35,14,128,
-                    8,SS_NOPREFIX
+    CTEXT           "AlegrDiff Version %s",IDC_STATIC_VERSION,35,14,128,8,
+                    SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001",IDC_STATIC,35,
                     29,128,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
@@ -900,8 +900,8 @@ VS_VERSION_INFO$(RETAIL_VERSION) VERSIONINFO
 #else
 VS_VERSION_INFO VERSIONINFO
 #endif
- FILEVERSION 1,0,6,0
- PRODUCTVERSION 1,0,6,0
+ FILEVERSION 1,0,8,0
+ PRODUCTVERSION 1,0,8,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -918,13 +918,13 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "AleGr Software"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application"
-            VALUE "FileVersion", "1, 0, 6, 0"
+            VALUE "FileVersion", "1, 0, 8, 0"
             VALUE "InternalName", "AlegrDiff"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001"
             VALUE "OriginalFilename", "AlegrDiff.EXE"
-            VALUE "PrivateBuild", "Beta 1.06"
+            VALUE "PrivateBuild", "Beta 1.08"
             VALUE "ProductName", "AlegrDiff Application"
-            VALUE "ProductVersion", "1, 0, 6, 0"
+            VALUE "ProductVersion", "1, 0, 8, 0"
         END
     END
     BLOCK "VarFileInfo"

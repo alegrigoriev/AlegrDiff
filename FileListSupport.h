@@ -307,17 +307,17 @@ public:
 	FileCheckResult ReloadIfChanged();
 
 	FileItem * m_pNext;
-	static int _cdecl NameSortFunc(const void * p1, const void * p2);
-	static int _cdecl DirNameSortFunc(const void * p1, const void * p2);
-	static int _cdecl TimeSortFunc(const void * p1, const void * p2);
-	static int _cdecl NameSortBackwardsFunc(const void * p1, const void * p2);
-	static int _cdecl DirNameSortBackwardsFunc(const void * p1, const void * p2);
-	static int _cdecl TimeSortBackwardsFunc(const void * p1, const void * p2);
+	static bool NameSortFunc(FileItem const * Item1, FileItem const * Item2);
+	static bool DirNameSortFunc(FileItem const * Item1, FileItem const * Item2);
+	static bool TimeSortFunc(FileItem const * Item1, FileItem const * Item2);
+	static bool NameSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2);
+	static bool DirNameSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2);
+	static bool TimeSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2);
 
-	static int NameCompare(FileItem * Item1, FileItem * Item2);
-	static int DirNameCompare(FileItem * Item1, FileItem * Item2);
-	static int TimeCompare(FileItem * Item1, FileItem * Item2);
-	static int LengthCompare(FileItem * Item1, FileItem * Item2);
+	static int NameCompare(FileItem const * Item1, FileItem const * Item2);
+	static int DirNameCompare(FileItem const * Item1, FileItem const * Item2);
+	static int TimeCompare(FileItem const * Item1, FileItem const * Item2);
+	static int LengthCompare(FileItem const * Item1, FileItem const * Item2);
 
 private:
 	CString m_Name;
@@ -500,7 +500,7 @@ public:
 
 	void FreeFileList();
 	enum { SortNameFirst = 1, SortDirFirst = 2, SortDataModified = 4, SortBackwards = 8};
-	void GetSortedList(CArray<FileItem *, FileItem *> & ItemArray, DWORD SortFlags);
+	void GetSortedList(vector<FileItem *> & ItemArray, DWORD SortFlags);
 	FileItem * m_pList;
 	CString m_BaseDir;
 	int m_NumFiles;

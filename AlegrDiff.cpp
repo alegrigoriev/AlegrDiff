@@ -24,6 +24,7 @@
 #include "CheckFingerprintDlg.h"
 #include "DirectoryFingerprintCheckDlg.h"
 #include <Shlwapi.h>
+#include <atlbase.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -76,6 +77,8 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_MinPercentWeakIdenticalLines(10),
 	m_PercentsOfLookLikeDifference(30),
 	m_MinIdenticalLines(5)
+	, m_MajorComctlrVer(4)
+	, m_MinorComcctrlVer(0)
 {
 	OSVERSIONINFO vi;
 	ZeroMemory(&vi, sizeof(OSVERSIONINFO));
@@ -148,6 +151,9 @@ BOOL CAlegrDiffApp::InitInstance()
 	//  the specific initialization routines you do not need.
 
 	// Change the registry key under which our settings are stored.
+
+	AtlGetCommCtrlVersion( & m_MajorComctlrVer, & m_MinorComcctrlVer);
+
 	SetRegistryKey(_T("AleGr SoftWare"));
 
 	LoadStdProfileSettings();  // Load standard INI file options (including MRU)
@@ -1760,7 +1766,7 @@ void CAlegrDiffApp::OnFileCreatedirectoryfingerprint()
 		return;
 	}
 
-	m_bRecurseSubdirs = dlg.m_bIncludeSubdirectories;
+	m_bRecurseSubdirs = (dlg.m_bIncludeSubdirectories != 0);
 	m_sFilenameFilter = dlg.m_sFilenameFilter;
 
 	m_sIgnoreFilesFilter = dlg.m_sIgnoreFiles;

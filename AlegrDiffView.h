@@ -80,6 +80,8 @@ public:
 
 protected:
 	vector<FilePair *> m_PairArray;
+	CBitmap m_ArrowDownBitmap;
+	CBitmap m_ArrowUpBitmap;
 
 	void BuildSortedPairArray(vector<FilePair *> & PairArray, KListEntry<FilePair> * pPairList, int nCount);
 

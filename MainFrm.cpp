@@ -302,6 +302,11 @@ BOOL CMainFrame::OnBarCheckRebar(UINT nID)
 
 void CMainFrame::OnDestroy()
 {
-	GetApp()->m_bOpenMaximized = (0 != (GetStyle() & WS_MAXIMIZE));
+	WINDOWPLACEMENT wp;
+	wp.length = sizeof wp;
+
+	GetWindowPlacement( & wp);
+	GetApp()->m_bOpenMaximized = 0 != (wp.flags & WPF_RESTORETOMAXIMIZED);
+
 	CMDIFrameWnd::OnDestroy();
 }

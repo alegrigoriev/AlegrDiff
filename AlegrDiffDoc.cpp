@@ -30,6 +30,7 @@ BEGIN_MESSAGE_MAP(CAlegrDiffDoc, CDocument)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_COMMAND(ID_FILE_CANCEL, OnFileCancel)
 	//}}AFX_MSG_MAP
+	ON_UPDATE_COMMAND_UI(ID_VIEW_REFRESH, OnUpdateViewRefresh)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -133,7 +134,12 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2,
 		AfxMessageBox(s);
 		return false;
 	}
-	BuildFilePairList(FileList1, FileList2);
+
+	if (BuildFilePairList(FileList1, FileList2))
+	{
+		UpdateAllViews(NULL);
+	}
+	((CFrameWnd*)AfxGetMainWnd())->SetMessageText(AFX_IDS_IDLEMESSAGE);
 	return true;
 }
 bool operator ==(FILETIME time1, FILETIME time2)
@@ -142,29 +148,29 @@ bool operator ==(FILETIME time1, FILETIME time2)
 			&& time1.dwHighDateTime == time2.dwHighDateTime;
 }
 
-void CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2)
+bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2)
 {
 
-	CArray<FileItem *, FileItem *> Files1;
-	CArray<FileItem *, FileItem *> Files2;
+	vector<FileItem *> Files1;
+	vector<FileItem *> Files2;
 
 	FileList1.GetSortedList(Files1, FileList::SortDirFirst | FileList::SortBackwards);
 	FileList2.GetSortedList(Files2, FileList::SortDirFirst | FileList::SortBackwards);
 
 	// we don't call FreeFilePairList, because we could be performing file list refrech
 	FilePair * pInsertBefore = m_PairList.Next();
-	BOOL NeedUpdateViews = FALSE;
+	bool NeedUpdateViews = false;
 
-	for (int idx1 = 0, idx2 = 0; idx1 < Files1.GetSize() || idx2 < Files2.GetSize(); )
+	for (unsigned idx1 = 0, idx2 = 0; idx1 < Files1.size() || idx2 < Files2.size(); )
 	{
 		FilePair * pPair = new FilePair;
 
 		int comparison;
-		if (idx1 >= Files1.GetSize())
+		if (idx1 >= Files1.size())
 		{
 			comparison = -1;
 		}
-		else if (idx2 >= Files2.GetSize())
+		else if (idx2 >= Files2.size())
 		{
 			comparison = 1;
 		}
@@ -251,7 +257,7 @@ void CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 				tmp->RemoveFromList();
 				tmp->Dereference();
 				m_nFilePairs--;
-				NeedUpdateViews = TRUE;
+				NeedUpdateViews = true;
 				continue;
 			}
 			else if (comparison > 0)
@@ -293,7 +299,7 @@ void CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 
 		if (pPair != NULL)
 		{
-			NeedUpdateViews = TRUE;
+			NeedUpdateViews = true;
 			pInsertBefore->InsertTail(pPair);
 			m_nFilePairs++;
 		}
@@ -305,17 +311,13 @@ void CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 		pInsertBefore = pInsertBefore->Next();
 		tmp->RemoveFromList();
 		tmp->Dereference();
-		NeedUpdateViews = TRUE;
+		NeedUpdateViews = true;
 		m_nFilePairs--;
 	}
 	// all files are referenced in FilePair list
 	FileList1.Detach();
 	FileList2.Detach();
-	if (NeedUpdateViews)
-	{
-		UpdateAllViews(NULL);
-	}
-	((CFrameWnd*)AfxGetMainWnd())->SetMessageText(AFX_IDS_IDLEMESSAGE);
+	return NeedUpdateViews;
 }
 
 void CAlegrDiffDoc::FreeFilePairList()
@@ -849,7 +851,11 @@ void CFilePairDoc::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
 
 void CAlegrDiffDoc::OnViewRefresh()
 {
-	// TODO: Add your command handler code here
+	if (m_sFirstDir.IsEmpty())
+	{
+		return;
+	}
+
 	// rescan the directories again
 	FileList FileList1;
 	FileList FileList2;
@@ -876,6 +882,7 @@ void CAlegrDiffDoc::OnViewRefresh()
 		return;
 	}
 	BuildFilePairList(FileList1, FileList2);
+	RunComparisionThread();
 }
 
 void CFilePairDoc::OnViewRefresh()
@@ -2037,7 +2044,8 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 	for (pPair = m_PairList.Next(); pPair != m_PairList.Head() && ! m_bStopThread; pPair = pPair->Next())
 	{
 		TRACE("First pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisionResult);
-		if (NULL == pPair->pFirstFile
+		if (pPair->m_ComparisionResult != FilePair::ResultUnknown
+			|| NULL == pPair->pFirstFile
 			|| NULL == pPair->pSecondFile
 			|| ! (pPair->pFirstFile->m_IsBinary
 				|| pPair->pSecondFile->m_IsBinary)
@@ -2247,4 +2255,9 @@ void CFilePairDoc::OnUpdateMergeExclude(CCmdUI* pCmdUI)
 	int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
 	pCmdUI->Enable(0 == (flags & StringSection::NoDifference));
 	pCmdUI->SetCheck(0 != (flags & StringSection::Discarded));
+}
+
+void CAlegrDiffDoc::OnUpdateViewRefresh(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable( ! m_sFirstDir.IsEmpty());
 }

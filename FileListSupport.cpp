@@ -572,17 +572,17 @@ bool FileItem::Load()
 }
 
 // sort directories first then names
-int _cdecl FileItem::DirNameSortFunc(const void * p1, const void * p2)
+bool FileItem::DirNameSortFunc(FileItem const * Item1, FileItem const * Item2)
 {
-	return DirNameCompare(*(FileItem * const *) p1, *(FileItem * const *) p2);
+	return DirNameCompare(Item1, Item2) < 0;
 }
 
-int _cdecl FileItem::DirNameSortBackwardsFunc(const void * p1, const void * p2)
+bool FileItem::DirNameSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2)
 {
-	return DirNameCompare(*(FileItem * const *) p2, *(FileItem * const *) p1);
+	return DirNameCompare(Item1, Item2) > 0;
 }
 
-int FileItem::DirNameCompare(FileItem * Item1, FileItem * Item2)
+int FileItem::DirNameCompare(FileItem const * Item1, FileItem const * Item2)
 {
 	if (NULL == Item1)
 	{
@@ -618,17 +618,17 @@ int FileItem::DirNameCompare(FileItem * Item1, FileItem * Item2)
 }
 
 // sort names first then directories
-int _cdecl FileItem::NameSortFunc(const void * p1, const void * p2)
+bool FileItem::NameSortFunc(FileItem const * Item1, FileItem const * Item2)
 {
-	return NameCompare(*(FileItem * const *) p1, *(FileItem * const *) p2);
+	return NameCompare(Item1, Item2) > 0;
 }
 
-int _cdecl FileItem::NameSortBackwardsFunc(const void * p1, const void * p2)
+bool FileItem::NameSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2)
 {
-	return NameCompare(*(FileItem * const *) p2, *(FileItem * const *) p1);
+	return NameCompare(Item1, Item2) < 0;
 }
 
-int FileItem::NameCompare(FileItem * Item1, FileItem * Item2)
+int FileItem::NameCompare(FileItem const * Item1, FileItem const * Item2)
 {
 	if (NULL == Item1)
 	{
@@ -660,17 +660,17 @@ int FileItem::NameCompare(FileItem * Item1, FileItem * Item2)
 }
 
 
-int _cdecl FileItem::TimeSortFunc(const void * p1, const void * p2)
+bool FileItem::TimeSortFunc(FileItem const * Item1, FileItem const * Item2)
 {
-	return TimeCompare(*(FileItem * const *) p1, *(FileItem * const *) p2);
+	return TimeCompare(Item1, Item2) > 0;
 }
 
-int _cdecl FileItem::TimeSortBackwardsFunc(const void * p1, const void * p2)
+bool FileItem::TimeSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2)
 {
-	return TimeCompare(*(FileItem * const *) p2, *(FileItem * const *) p1);
+	return TimeCompare(Item1, Item2) < 0;
 }
 
-int FileItem::TimeCompare(FileItem * Item1, FileItem * Item2)
+int FileItem::TimeCompare(FileItem const * Item1, FileItem const * Item2)
 {
 	if (NULL == Item1)
 	{
@@ -704,7 +704,7 @@ int FileItem::TimeCompare(FileItem * Item1, FileItem * Item2)
 	return 0;
 }
 
-int FileItem::LengthCompare(FileItem * Item1, FileItem * Item2)
+int FileItem::LengthCompare(FileItem const * Item1, FileItem const * Item2)
 {
 	if (NULL == Item1)
 	{
@@ -1046,29 +1046,25 @@ PairCheckResult FilePair::ReloadIfChanged()
 	return FilesTimeChanged;
 }
 
-void FileList::GetSortedList(CArray<FileItem *, FileItem *> & ItemArray, DWORD SortFlags)
+void FileList::GetSortedList(vector<FileItem *> & ItemArray, DWORD SortFlags)
 {
-	ItemArray.SetSize(m_NumFiles);
+	ItemArray.resize(m_NumFiles);
 	if (0 == m_NumFiles)
 	{
 		return;
 	}
 	// sort the file lists by subdirs and names
-	FileItem ** pItems = ItemArray.GetData();
-	if (NULL == pItems)
-	{
-		return;
-	}
+
 	FileItem * pCurItem = m_pList;
 	for (int i = 0; i < m_NumFiles; i++)
 	{
-		pItems[i] = pCurItem;
+		ItemArray[i] = pCurItem;
 		if (NULL != pCurItem)
 		{
 			pCurItem = pCurItem->m_pNext;
 		}
 	}
-	int (_cdecl * SortFunc)(const void * , const void * );
+	bool (* SortFunc)(FileItem const * Item1, FileItem const * Item2);
 	switch (SortFlags)
 	{
 	case SortNameFirst:
@@ -1091,8 +1087,8 @@ void FileList::GetSortedList(CArray<FileItem *, FileItem *> & ItemArray, DWORD S
 		SortFunc = FileItem::TimeSortBackwardsFunc;
 		break;
 	}
-	qsort(pItems, m_NumFiles, sizeof (FileItem *), SortFunc);
-#ifdef _DEBUG
+	std::sort(ItemArray.begin(), ItemArray.end(), SortFunc);
+#if 0 //def _DEBUG
 	for (i = 0; i < m_NumFiles && NULL != pItems[i]; i++)
 	{
 		if (0) TRACE(_T("Sorted file item: subdir=%s, Name=\"%s\"\n"),
@@ -2354,7 +2350,7 @@ int FilePairComparePredicate::NameCompare(const FilePair * Pair1, const FilePair
 	{
 		Item2 = Pair2->pSecondFile;
 	}
-	return FileItem::NameCompare(Item1, Item2);
+	return -FileItem::NameCompare(Item1, Item2);
 }
 
 int FilePairComparePredicate::NameCompareBackward(const FilePair * Pair1, const FilePair * Pair2)
@@ -2378,7 +2374,7 @@ int FilePairComparePredicate::DirNameCompare(const FilePair * Pair1, const FileP
 	{
 		Item2 = Pair2->pSecondFile;
 	}
-	return FileItem::DirNameCompare(Item1, Item2);
+	return -FileItem::DirNameCompare(Item1, Item2);
 }
 
 int FilePairComparePredicate::DirNameCompareBackward(const FilePair * Pair1, const FilePair * Pair2)

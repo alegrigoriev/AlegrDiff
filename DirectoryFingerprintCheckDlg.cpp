@@ -299,7 +299,7 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 		InclusionPattern = '*';
 	}
 
-	if (! FileList2.LoadFolder(buf, m_bIncludeSubdirectories,
+	if (! FileList2.LoadFolder(buf, m_bIncludeSubdirectories != 0,
 								InclusionPattern, ExclusionPattern, PatternToMultiCString(_T("*")),
 								PatternToMultiCString(_T(""))))
 	{

@@ -1,8 +1,8 @@
 TODO:
 
-Refresh list view
-If main window is minimized, save its state before minimization
-Show sort order arrows with comctrl version < 6.0
+Change sort order and appearance of subdirs
+Close file view if the file is updated in the list view
+Update comparison result in the list view on load and reload
 make word by word comparison in MatchStrings
 If a file(s) exists only in one directory, don't show "Copy From" for another directory
 Version stamp keywords: $Archive: $Revision: $Date:
@@ -12,7 +12,6 @@ Add Copy 1st file text, copy 2nd file text
 Copy binary dump as text
 Switch from text view to binary view
 Add folder picture under the fingerprint picture
-Update comparison result on load and reload
 replace edit box with a combobox in FolderDialog
 Add history to SaveListOf Files
 
@@ -42,6 +41,7 @@ screen move in two directions may corrupt the image (??)
 Directory dialog allows to select network host. It won't return anything then.
 
 Fixed:
+Wrong arrow direction for name/dir sort
 Status line for single file shows "Files DIFFERENT"
 Non-UNICODE OS: wrong status string
 Non-UNICODE OS: clipboard
@@ -62,7 +62,9 @@ insufficient space allocated for copying files
 "First file as base" button didn't work
 
 Done:
-In Properties dialog: show file size
+Show sort order arrows with comctrl version < 6.0
+If main or child window is minimized, save its state before minimization
+Refresh list view
 In Properties dialog: show file size
 Add 1st file size, 2nd file size (with exact size tooltips?)
 Make "Show columns" menu with "reset Columns"

@@ -37,16 +37,16 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-It shows the dialog with parameters instead of running the comparison for the folders specified in a command line. Please fix immediately!
+Directory share name cannot be selected if no '\' appended
 If the text comparison got aborted because of read error, this is not shown
 Blank line immediately following difference block is considered separate 
    for "Next Difference" command
 Blank lines prevent from proper line matching inside difference blocks
-Directory share name cannot be selected if no '\' appended
 Directory dialog allows to select network host. It won't return anything then.
 Estimated time left is not shown while calculating a fingerpring of a big file  (???)
 
 Fixed:
+"C:\\" shown in the list view title when checking a fingerprint
 Doesn't refresh if one file changed on list view refresh
 Fix tested:
 Focus after hiding files
@@ -103,10 +103,12 @@ insufficient space allocated for copying files
 
 Retracted:
 screen move in two directions may corrupt the image (??)
-"C:\\" shown in the list view title (???)
 
 Done:
 
+Side-by-side viewing for binary files
+It shows the dialog with parameters instead of running the comparison for 
+ the folders specified in a command line only if Shift is held
 File size in the saved list.
 Enable/disable "selected files" radio button in the Save List dialog
 "Files different in version only" checkbox in the Save List dialog

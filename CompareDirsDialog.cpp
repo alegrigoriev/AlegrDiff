@@ -121,6 +121,7 @@ BEGIN_MESSAGE_MAP(CCompareDirsDialog, CDialog)
 	ON_BN_CLICKED(IDC_CHECK_BINARY_FILES, OnCheckBinaryFiles)
 	ON_BN_CLICKED(IDC_CHECK_C_CPP, OnCheckCCpp)
 	ON_BN_CLICKED(IDC_CHECK_IGNORE, OnCheckIgnore)
+	ON_WM_DROPFILES()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -255,7 +256,63 @@ BOOL CCompareDirsDialog::OnInitDialog()
 	}
 
 	OnCheckBinary();
+	DragAcceptFiles();
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CCompareDirsDialog::OnDropFiles(HDROP hDropInfo)
+{
+	SetActiveWindow();      // activate us first !
+	UINT nFiles = ::DragQueryFile(hDropInfo, (UINT)-1, NULL, 0);
+	CPoint point;
+	::DragQueryPoint(hDropInfo, & point);
+	//TRACE("::DragQueryPoint=%d, %d\n", point.x, point.y);
+	// point contains client coordinates
+	TCHAR szFileName1[_MAX_PATH] = {0};
+
+	if (nFiles >=1)
+	{
+		::DragQueryFile(hDropInfo, 0, szFileName1, _MAX_PATH);
+	}
+
+	::DragFinish(hDropInfo);
+	if (0 == szFileName1[0])
+	{
+		return;
+	}
+	// if drop occured over an edit control, put the file name there
+	CRect r, r1, r2;
+	GetClientRect( & r);
+	m_FirstDirCombo.GetWindowRect( & r1);
+	ScreenToClient( & r1);
+
+	m_SecondDirCombo.GetWindowRect( & r2);
+	ScreenToClient( & r2);
+
+	// if drop occured outside edit controls, put the file name to the empty field
+	if (r1.PtInRect(point))
+	{
+		m_FirstDirCombo.SetWindowText(szFileName1);
+	}
+	else if (r2.PtInRect(point))
+	{
+		m_SecondDirCombo.SetWindowText(szFileName1);
+	}
+	else
+	{
+		if (0 == m_FirstDirCombo.GetWindowTextLength())
+		{
+			m_FirstDirCombo.SetWindowText(szFileName1);
+		}
+		else if (0 == m_SecondDirCombo.GetWindowTextLength())
+		{
+			m_SecondDirCombo.SetWindowText(szFileName1);
+		}
+		else
+		{
+			// TODO
+		}
+	}
 }

@@ -21,11 +21,8 @@
 #endif // _AFX_NO_AFXCMN_SUPPORT
 
 #include <limits.h>
-#ifdef _UNICODE
-#define TCHAR_MASK 0xFFFFu
-#else
-#define TCHAR_MASK 0xFFu
-#endif
+#include <afxdhtml.h>
+#define TCHAR_MASK TCHAR(-1)
 
 template<typename T> inline void memzero(T & obj)
 {
@@ -79,7 +76,40 @@ inline void AssignMultiSz(CStringA & dst, LPCWSTR src)
 #define EnableDlgItem(id, Enable) \
 	::EnableWindow(GetDlgItem(id)->GetSafeHwnd(), Enable)
 
+#if 0
+VOID
+FASTCALL
+KeAcquireInStackQueuedSpinLock (
+								IN PKSPIN_LOCK  SpinLock,
+								IN PKLOCK_QUEUE_HANDLE  LockHandle
+								)
+{
+	KeRaiseIrql(DISPATCH_LEVEL, &LockHandle->OldIrql);
+	LockHandle->LockQueue.Lock = SpinLock;
+
+	do {
+		LockHandle->LockQueue.Next = NULL;
+
+		if (NULL == InterlockedExchangePointer((PVOID*)SpinLock, LockHandle, LockHandle->LockQueue.Next))
+		{
+			return;    // it's mine!!
+		}
+	}
+}
+
+VOID
+FASTCALL
+  KeReleaseInStackQueuedSpinLock (
+								IN PKLOCK_QUEUE_HANDLE  LockHandle
+								)
+{
+
+}
+
+#endif
+
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
 #endif // !defined(AFX_STDAFX_H__4D517262_B7B6_49AF_B01C_BA14E5F944D2__INCLUDED_)
+

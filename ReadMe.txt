@@ -1,5 +1,7 @@
 TODO:
 
+File\Preferences dialog must remember selected tab for current session.
+Enable/disable OK in GOTO dialog for binary view
 Add option for file size format (in kilobytes or in bytes).
 Customizable number of MRU items
 Make more robust argorithm of version info detection (if it is version line, don't include version data to a normalized CRC).
@@ -13,8 +15,6 @@ Make sure to report read errors and file unaccessible errors during fingerprint 
 Copy binary dump as text
 make word by word comparison in MatchStrings
 Make HTML help
-Check that all dialog boxes got HWND, for the correct monitor
-File\Preferences dialog must remember selected tab for current session.
 
 Maybe different color for selected accepted/declined
 add option to keep the caret on one line during F3 and F7
@@ -107,6 +107,7 @@ screen move in two directions may corrupt the image (??)
 
 Done:
 
+GoTo command for binary view
 Increased number of MRU items to 30
 Show/hide file classes
 With binary comparison, progress update is done more often

@@ -166,12 +166,12 @@ protected:
 
 class CPreferencesPropertySheet : public CPropertySheet
 {
-	DECLARE_DYNAMIC(CPreferencesPropertySheet)
-
+	typedef CPropertySheet BaseClass;
 // Construction
 public:
 	CPreferencesPropertySheet(UINT nIDCaption = IDS_PREFERENCES, CWnd* pParentWnd = NULL, UINT iSelectPage = 0);
 	CPreferencesPropertySheet(LPCTSTR pszCaption, CWnd* pParentWnd = NULL, UINT iSelectPage = 0);
+	virtual ~CPreferencesPropertySheet();
 
 // Attributes
 public:
@@ -189,8 +189,7 @@ public:
 	CFilesPreferencePage m_FilesPage;
 	CComparisionPreferencesPage m_ComparisionPage;
 	CViewPreferencesPage m_ViewPage;
-
-	virtual ~CPreferencesPropertySheet();
+	static int m_LastPageSelected;
 
 	// Generated message map functions
 protected:
@@ -198,6 +197,10 @@ protected:
 	// NOTE - the ClassWizard will add and remove member functions here.
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+public:
+	virtual BOOL OnInitDialog();
+	virtual void OnOK();
+	virtual void OnCancel();
 };
 
 /////////////////////////////////////////////////////////////////////////////

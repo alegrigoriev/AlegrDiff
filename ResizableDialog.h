@@ -14,7 +14,7 @@
 
 class CResizableDialog : public CUiUpdatedDlg
 {
-	DECLARE_DYNAMIC(CResizableDialog)
+//	DECLARE_DYNAMIC(CResizableDialog)
 // Construction
 protected:
 	CResizableDialog(UINT id, CWnd* pParent);   // standard constructor

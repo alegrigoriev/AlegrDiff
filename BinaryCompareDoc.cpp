@@ -43,7 +43,7 @@ void CBinaryCompareDoc::OnUpdateAllViews(CView* pSender,
 	{
 		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
 		if (NULL != pArg
-			&& pArg->pPair == m_pFilePair)
+			&& pArg->m_pPair == m_pFilePair)
 		{
 			OnCloseDocument();
 			return;
@@ -132,6 +132,8 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 
 	SetCaretPosition(0, SetPositionCancelSelection | SetPositionMakeVisible);
 
+	GetApp()->NotifyFilePairChanged(pPair);
+
 	if (pPair->ResultUnknown == pPair->GetComparisonResult())
 	{
 		CDifferenceProgressDialog dlg;
@@ -161,6 +163,7 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 			SetCaretPosition(0, SetPositionCancelSelection | SetPositionMakeVisible);
 		}
 	}
+
 	_tcsncpy(m_ComparisonResult, pPair->GetComparisonResultStr(),
 			countof(m_ComparisonResult));
 	m_ComparisonResult[countof(m_ComparisonResult) - 1] = 0;

@@ -80,6 +80,10 @@ protected:
 	afx_msg void OnFileCopySecondDir();
 	afx_msg void OnFileSaveList();
 	afx_msg void OnUpdateFileSaveList(CCmdUI* pCmdUI);
+	afx_msg void OnViewHideselectedfiles();
+	afx_msg void OnUpdateViewHideselectedfiles(CCmdUI* pCmdUI);
+	afx_msg void OnViewShowallfiles();
+	afx_msg void OnUpdateViewShowallfiles(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

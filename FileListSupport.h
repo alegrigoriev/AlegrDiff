@@ -409,6 +409,8 @@ public:
 
 	eFileComparisionResult m_ComparisionResult;
 	bool m_bComparisionResultChanged;
+	bool m_bHideFromListView;
+	bool m_bSelected;
 	//bool m_bUnderComparision;
 	CArray<LinePair *, LinePair *> m_LinePairs;
 	vector<FileDiffSection *> m_DiffSections;

@@ -9,6 +9,9 @@
 #include "DifferenceProgressDialog.h"
 #include <afxpriv.h>
 #include "GdiObjectSave.h"
+#include "BinaryGoToDlg.h"
+
+#include ".\binarycompareview.h"
 
 // CBinaryCompareView
 
@@ -78,6 +81,7 @@ BEGIN_MESSAGE_MAP(CBinaryCompareView, BaseClass)
 
 	ON_COMMAND(IDC_VIEW_SIDE_BY_SIDE, OnViewSideBySide)
 	ON_UPDATE_COMMAND_UI(IDC_VIEW_SIDE_BY_SIDE, OnUpdateViewSideBySide)
+	ON_COMMAND(ID_EDIT_GOTOLINE, OnEditGoto)
 END_MESSAGE_MAP()
 
 
@@ -1972,3 +1976,15 @@ void CBinaryCompareView::OnUpdateViewSideBySide(CCmdUI *pCmdUI)
 	}
 }
 
+
+void CBinaryCompareView::OnEditGoto()
+{
+	ThisDoc * pDoc = GetDocument();
+
+	CBinaryGoToDlg dlg(pDoc->m_CaretPos);
+
+	if (IDOK == dlg.DoModal())
+	{
+		SetCaretPosition(dlg.GetOffset(), SetPositionMakeVisible | SetPositionCancelSelection);
+	}
+}

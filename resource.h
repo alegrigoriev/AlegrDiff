@@ -77,6 +77,7 @@
 #define IDI_COMPARE_DIRS                180
 #define IDI_FILES_DIALOG                181
 #define IDI_COMPARE_FILES               181
+#define IDD_DIALOG_GOTO                 181
 #define IDD_DIALOG_WITH_HISTORY_TEMPLATE_V4 187
 #define IDD_DIALOG_WITH_HISTORY_TEMPLATE_V5 188
 #define IDC_COMBO_FIRST_DIR             1000
@@ -175,6 +176,7 @@
 #define IDC_RADIO1                      1081
 #define IDC_BUTTON1                     1082
 #define IDC_RADIO_SELECTED_FILES        1083
+#define IDC_EDIT1                       1084
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -301,9 +303,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        181
+#define _APS_NEXT_RESOURCE_VALUE        182
 #define _APS_NEXT_COMMAND_VALUE         32904
-#define _APS_NEXT_CONTROL_VALUE         1084
-#define _APS_NEXT_SYMED_VALUE           105
+#define _APS_NEXT_CONTROL_VALUE         1085
+#define _APS_NEXT_SYMED_VALUE           106
 #endif
 #endif

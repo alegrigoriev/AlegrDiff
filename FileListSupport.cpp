@@ -2476,32 +2476,20 @@ FilePair::eFileComparisionResult FilePair::PreCompareTextFiles()
 	}
 }
 
-FilePair::eFileComparisionResult FilePair::CompareTextFiles()
+FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLine1AfterEnd,
+													int NumLine2Begin, int NumLine2AfterEnd, bool UseLineGroups)
 {
-	struct FileSection
-	{
-		FileSection * pNext;
-		int File1LineBegin;
-		int File1LineEnd;
-
-		int File2LineBegin;
-		int File2LineEnd;
-	};
-
-	// find similar lines
 	CThisApp * pApp = GetApp();
 	FileSection * pFirstSection = NULL;
 	FileSection * pLastSection = NULL;
 	FileSection * pSection;
 
-	int nLine1 = 0;
-	int nLine2 = 0;
+	int nLine1 = NumLine1Begin;
+	int nLine2 = NumLine2Begin;
 
-	int NumLines1 = pFirstFile->GetNumLines();
-	int NumNonBlankLines1 = pFirstFile->m_NormalizedHashSortedLines.GetSize();
+	int NumLines1 = NumLine1AfterEnd;
 
-	int NumLines2 = pSecondFile->GetNumLines();
-	int NumNonBlankLines2 = pSecondFile->m_NormalizedHashSortedLines.GetSize();
+	int NumLines2 = NumLine2AfterEnd;
 
 	// build list of equal sections
 	while (nLine1 < NumLines1
@@ -2529,11 +2517,14 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 			{
 				// check the lines in file2 in range Line2 to Line2+dist
 				const FileLine * pFoundLine;
-#if 0
-				pFoundLine = pSecondFile->FindMatchingLine(Line1, nLine2, Line1MatchIn2);
-#else
-				pFoundLine = pSecondFile->FindMatchingLineGroupLine(Line1, nLine2, Line1MatchIn2);
-#endif
+				if (UseLineGroups)
+				{
+					pFoundLine = pSecondFile->FindMatchingLineGroupLine(Line1, nLine2, Line1MatchIn2);
+				}
+				else
+				{
+					pFoundLine = pSecondFile->FindMatchingLine(Line1, nLine2, Line1MatchIn2);
+				}
 				if (NULL != pFoundLine)
 				{
 					Line1MatchIn2 = pFoundLine->GetLineNumber();
@@ -2549,11 +2540,14 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 			{
 				// check the lines in file1 in range Line2 to Line2+dist
 				const FileLine * pFoundLine;
-#if 0
-				pFoundLine = pFirstFile->FindMatchingLine(Line2, nLine1, Line2MatchIn1);
-#else
-				pFoundLine = pFirstFile->FindMatchingLineGroupLine(Line2, nLine1, Line2MatchIn1);
-#endif
+				if (UseLineGroups)
+				{
+					pFoundLine = pFirstFile->FindMatchingLineGroupLine(Line2, nLine1, Line2MatchIn1);
+				}
+				else
+				{
+					pFoundLine = pFirstFile->FindMatchingLine(Line2, nLine1, Line2MatchIn1);
+				}
 				if (NULL != pFoundLine)
 				{
 					Line2MatchIn1 = pFoundLine->GetLineNumber();
@@ -2610,8 +2604,6 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 		}
 		Line1Begin = nLine1;
 		Line2Begin = nLine2;
-		//nLine1++;
-		//nLine2++;
 
 		while (nLine1 < NumLines1
 				&& nLine2 < NumLines2)
@@ -2642,7 +2634,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 			}
 		}
 
-		FileSection * pSection = new FileSection;
+		pSection = new FileSection;
 		if (NULL != pSection)
 		{
 			pSection->File1LineBegin = Line1Begin;
@@ -2662,12 +2654,22 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 			pLastSection = pSection;
 		}
 	}
+	return pFirstSection;
+}
+
+FilePair::eFileComparisionResult FilePair::CompareTextFiles()
+{
+	// find similar lines
+	FileSection * pSection;
+	FileSection * pFirstSection =
+		BuildSectionList(0, pFirstFile->GetNumLines(),
+						0, pSecondFile->GetNumLines(), true);
 	// if the files don't start from identical lines, add an empty section
 	if (NULL == pFirstSection
 		|| (pFirstSection->File1LineBegin != 0
 			&& pFirstSection->File2LineBegin != 0))
 	{
-		FileSection * pSection = new FileSection;
+		pSection = new FileSection;
 
 		if (NULL != pSection)
 		{
@@ -2679,15 +2681,47 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles()
 
 			pSection->pNext = pFirstSection;
 			pFirstSection = pSection;
-			if (NULL == pLastSection)
-			{
-				pLastSection = pSection;
-			}
 		}
 	}
-	// scan list of sections and try to expand them downwards with looking like lines
+	// try to match single lines inside the difference areas, but limit the lookup
 	int nPrevSectionEnd1 = 0;
 	int nPrevSectionEnd2 = 0;
+	FileSection * pPrevSection = NULL;
+	for (pSection = pFirstSection; pSection != NULL; pPrevSection = pSection, pSection = pSection->pNext)
+	{
+		if (pSection->File1LineBegin > nPrevSectionEnd1
+			&& pSection->File2LineBegin > nPrevSectionEnd2)
+		{
+			FileSection * pMoreSection = BuildSectionList
+										(nPrevSectionEnd1, pSection->File1LineBegin,
+											nPrevSectionEnd2, pSection->File2LineBegin, false);
+			if (NULL != pMoreSection)
+			{
+				// insert to the list
+				if (pPrevSection != NULL)
+				{
+					pPrevSection->pNext = pMoreSection;
+				}
+				else
+				{
+					pFirstSection = pMoreSection;
+				}
+				// find the last item
+				while (NULL != pMoreSection->pNext)
+				{
+					pMoreSection = pMoreSection->pNext;
+				}
+				pMoreSection->pNext = pSection;
+			}
+		}
+
+		nPrevSectionEnd1 = pSection->File1LineEnd;
+		nPrevSectionEnd2 = pSection->File2LineEnd;
+	}
+
+	// scan list of sections and try to expand them downwards with looking like lines
+	nPrevSectionEnd1 = 0;
+	nPrevSectionEnd2 = 0;
 	for (pSection = pFirstSection; pSection != NULL; pSection = pSection->pNext)
 	{
 		while (pSection->File1LineBegin > nPrevSectionEnd1

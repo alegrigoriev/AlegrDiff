@@ -1,13 +1,12 @@
 TODO:
+Add "Number of lines to match", "Min string length to match", "percents of look-like difference"
+Add Merge function
 Make Word Left, Word Right, Word selection.
 Make search dialog
 Make Go To Line to first or second file line number
-Check difference area of the file for identical lines
 in InvalidateRange, add for letter overlap.
-Make Binary compare checkbox for file compare dialog
 Make combobox for last file filters
 Add progress to File list view and file diff view
-Add Merge function
 Add Save differences
 Add save file list
 Add Copy files
@@ -29,6 +28,8 @@ File with differences: last lines not drawn
 Wrong status for inserted and removed parts of strings
 
 Done:
+Check difference area of the file for identical lines
+Make Binary compare checkbox for file compare dialog
 Make MRU folders list for file compare dialog
 If folder not found, do dialog, destroy doc
 Make Go To Line

@@ -3,6 +3,7 @@
 // Used by AlegrDiff.rc
 //
 #define IDD_ABOUTBOX                    100
+#define IDD_PROPPAGE_FILE_PREFERENCES   102
 #define IDR_MAINFRAME                   128
 #define IDR_ALEGRDTYPE                  129
 #define IDD_DIALOG_COMPARE_DIRS         130
@@ -18,6 +19,8 @@
 #define IDS_STRING_DIRECTORY_LOAD_ERROR 135
 #define IDD_DIALOG_GOTO_LINE            136
 #define IDD_DIALOG_OPEN_TEMPLATE        137
+#define IDD_PROPPAGE_COMPARISION_PREFERENCES 138
+#define IDD_PROPPAGE_VIEW_PREFERENCES   139
 #define IDC_CURSOR_BEAM                 150
 #define IDC_COMBO_FIRST_DIR             1000
 #define IDC_COMBO_SECOND_DIR            1001
@@ -44,6 +47,9 @@
 #define IDC_STATIC_DELETED_TEXT         1021
 #define IDC_CHECK_AUTO_RELOAD           1022
 #define IDC_EDIT_LINE_NUMBER            1023
+#define IDC_EDIT1                       1026
+#define IDC_EDIT2                       1027
+#define IDC_EDIT3                       1028
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -66,6 +72,7 @@
 #define ID_FILE_COPY_SECOND_DIR         32802
 #define IDS_DIRECTORY_ACCESS_DENIED     32848
 #define IDS_DIRECTORY_NOT_FOUND         32849
+#define IDS_PREFERENCES                 32850
 #define ID_INDICATOR_CARET_POS          0xE705
 
 // Next default values for new objects
@@ -75,7 +82,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        138
 #define _APS_NEXT_COMMAND_VALUE         32803
-#define _APS_NEXT_CONTROL_VALUE         1026
+#define _APS_NEXT_CONTROL_VALUE         1029
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

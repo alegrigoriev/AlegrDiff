@@ -1,6 +1,6 @@
 #pragma once
 #include "afxwin.h"
-
+#include "ApplicationProfile.h"
 
 // CDirectoryFingerprintDlg dialog
 
@@ -22,17 +22,25 @@ protected:
 public:
 	afx_msg void OnBnClickedButtonBrowseDir();
 	afx_msg void OnBnClickedButtonBrowseSaveFilename();
-	CComboBox m_DirCombo;
+
 	BOOL m_bIncludeDirectoryStructure;
 	BOOL m_bIncludeSubdirectories;
+
+	CComboBox m_DirCombo;
 	CString m_sDirectory;
+
 	CComboBox m_FilenameFilterCombo;
 	CString m_sFilenameFilter;
-	// If TRUE, use "Ignore files" filter
-	BOOL m_bIgnoreFiles;
+
 	CComboBox m_cbIgnoreFiles;
 	CString m_sIgnoreFiles;
-	afx_msg void OnBnClickedCheckIgnoreFiles();
+	CString m_sIgnoreFilterHistory[10];
+
 	CComboBox m_SaveFilename;
 	CString m_sSaveFilename;
+	CString m_sFingerprintFilenameHistory[10];
+
+	virtual BOOL OnInitDialog();
+
+	CApplicationProfile m_Profile;
 };

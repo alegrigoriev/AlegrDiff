@@ -152,13 +152,12 @@ BEGIN
         MENUITEM "Compare &Directories...",     ID_FILE_COMPAREDIRECTORIES
         MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
         MENUITEM "Merge Files And Save...",     ID_FILE_MERGE_SAVE
-        POPUP "Directory fingerprint"
-        BEGIN
-            MENUITEM "Create...",                   ID_FILE_CREATEDIRECTORYFINGERPRINT
+        MENUITEM "&Create Directory Fingerprint...", 
+                                                ID_FILE_CREATEDIRECTORYFINGERPRINT
 
-            MENUITEM "Check...",                    ID_FILE_CHECKDIRECTORYFILNGERPRINT
+        MENUITEM "C&heck Directory Fingerprint...", 
+                                                ID_FILE_CHECKDIRECTORYFILNGERPRINT
 
-        END
         MENUITEM SEPARATOR
         MENUITEM "Edit 1st File",               ID_FILE_EDIT_FIRST
         MENUITEM "Edit 2nd File",               ID_FILE_EDIT_SECOND
@@ -243,11 +242,8 @@ BEGIN
     BEGIN
         MENUITEM "Compare &Directories...",     ID_FILE_COMPAREDIRECTORIES
         MENUITEM "Compare &Files...",           ID_FILE_COMPAREFILES
-        POPUP "Directory Fin&gerprint"
-        BEGIN
-            MENUITEM "&Create...",                  146
-            MENUITEM "C&heck...",                   147
-        END
+        MENUITEM "&Create Directory Fingerprint...", 146
+        MENUITEM "C&heck Directory Fingerprint...", 147
         MENUITEM SEPARATOR
         MENUITEM "&View differences\tEnter",    ID_LISTVIEW_OPEN1
         MENUITEM "Edit &1st File",              ID_FILE_EDIT_FIRST
@@ -406,8 +402,8 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 1.05 Beta",IDC_STATIC_VERSION,35,14,
-                    128,8,SS_NOPREFIX
+    CTEXT           "AlegrDiff Version %s Beta",IDC_STATIC_VERSION,35,14,128,
+                    8,SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001",IDC_STATIC,35,
                     29,128,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
@@ -732,17 +728,17 @@ END
 
 #if defined(APSTUDIO_INVOKED) || defined(DEMO_VERSION)
 #if defined(APSTUDIO_INVOKED)
-IDD_ABOUTBOX$(DEMO_VERSION) DIALOG  0, 0, 235, 68
+IDD_ABOUTBOX$(DEMO_VERSION) DIALOGEX 0, 0, 235, 68
 #else
-IDD_ABOUTBOX DIALOG  0, 0, 235, 68
+IDD_ABOUTBOX DIALOGEX 0, 0, 235, 68
 #endif
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About AlegrDiff"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version 1.03 DEMO",IDC_STATIC_VERSION,35,14,
-                    128,8,SS_NOPREFIX
+    CTEXT           "AlegrDiff Version %s DEMO",IDC_STATIC_VERSION,35,14,128,
+                    8,SS_NOPREFIX
     CTEXT           "Copyright (C) Alexandre Grigoriev, 2001",IDC_STATIC,35,
                     29,128,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
@@ -751,7 +747,7 @@ BEGIN
 END
 #endif
 
-IDD_DIALOG_DIR_FINGERPRINT DIALOGEX 0, 0, 230, 166
+IDD_DIALOG_DIR_FINGERPRINT DIALOGEX 0, 0, 231, 154
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
     WS_SYSMENU
 EXSTYLE WS_EX_ACCEPTFILES
@@ -761,7 +757,7 @@ BEGIN
     LTEXT           "&Directory:",IDC_STATIC,7,7,64,8
     COMBOBOX        IDC_COMBO_FIRST_DIR,7,20,189,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_DIR,206,19,17,14
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_FIRST_DIR,207,19,17,14
     CONTROL         "Include &subdirectories",IDC_CHECK_INCLUDE_SUBDIRS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,38,115,10
     CONTROL         "In&clude directory tree structure",
@@ -770,16 +766,28 @@ BEGIN
     LTEXT           "Save &as file:",IDC_STATIC,7,65,83,8
     COMBOBOX        IDC_COMBO_SAVE_FILENAME,7,77,189,69,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SAVE_FILENAME,206,76,17,14
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE_SAVE_FILENAME,207,76,17,14
     LTEXT           "File&name filter: ",IDC_STATIC,7,98,56,8
-    COMBOBOX        IDC_EDITFILENAME_FILTER,66,97,157,60,CBS_DROPDOWN | 
+    COMBOBOX        IDC_EDITFILENAME_FILTER,67,97,157,60,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "I&gnore files:",IDC_CHECK_IGNORE_FILES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,114,70,10
-    COMBOBOX        IDC_COMBO_IGNORE_FILES,7,127,216,61,CBS_DROPDOWN | 
+    COMBOBOX        IDC_COMBO_IGNORE_FILES,67,115,157,61,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,47,145,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,123,145,50,14
+    DEFPUSHBUTTON   "OK",IDOK,47,133,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,123,133,50,14
+    LTEXT           "Ignore files:",IDC_STATIC,7,116,56,8
+END
+
+IDD_DIALOG_FINGERPRINT_CREATE_PROGRESS DIALOGEX 0, 0, 269, 122
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Creating directory fingerprint"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,108,101,50,14
+    LTEXT           "Reading ""File""",IDC_STATIC_FILENAME,7,7,255,27
+    CONTROL         "",IDC_PROGRESS1,"msctls_progress32",WS_BORDER,7,50,255,
+                    14
+    CTEXT           "Static",IDC_STATIC_PERCENT,7,72,255,8
 END
 
 
@@ -794,8 +802,8 @@ VS_VERSION_INFO$(RETAIL_VERSION) VERSIONINFO
 #else
 VS_VERSION_INFO VERSIONINFO
 #endif
- FILEVERSION 1,0,5,0
- PRODUCTVERSION 1,0,5,0
+ FILEVERSION 1,0,6,0
+ PRODUCTVERSION 1,0,6,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -812,13 +820,13 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "AleGr Software"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application"
-            VALUE "FileVersion", "1, 0, 5, 0"
+            VALUE "FileVersion", "1, 0, 6, 0"
             VALUE "InternalName", "AlegrDiff"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001"
             VALUE "OriginalFilename", "AlegrDiff.EXE"
-            VALUE "PrivateBuild", "Beta 1.05"
+            VALUE "PrivateBuild", "Beta 1.06"
             VALUE "ProductName", "AlegrDiff Application"
-            VALUE "ProductVersion", "1, 0, 5, 0"
+            VALUE "ProductVersion", "1, 0, 6, 0"
         END
     END
     BLOCK "VarFileInfo"
@@ -834,13 +842,13 @@ VS_VERSION_INFO$(DEMO_VERSION) VERSIONINFO
 #else
 VS_VERSION_INFO VERSIONINFO
 #endif
- FILEVERSION 1,0,4,0
- PRODUCTVERSION 1,0,4,0
+ FILEVERSION 1,0,6,0
+ PRODUCTVERSION 1,0,6,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
- FILEFLAGS 0x21L
+ FILEFLAGS 0x29L
 #else
- FILEFLAGS 0x20L
+ FILEFLAGS 0x28L
 #endif
  FILEOS 0x4L
  FILETYPE 0x1L
@@ -853,12 +861,13 @@ BEGIN
             VALUE "Comments", "DEMO Version"
             VALUE "CompanyName", "AleGr Software"
             VALUE "FileDescription", "AlegrDiff: file comparison and merging application"
-            VALUE "FileVersion", "1, 0, 4, 0"
+            VALUE "FileVersion", "1, 0, 6, 0"
             VALUE "InternalName", "AlegrDiff"
             VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001"
             VALUE "OriginalFilename", "AlegrDiff.EXE"
+            VALUE "PrivateBuild", "Beta 1.06"
             VALUE "ProductName", "AlegrDiff Application"
-            VALUE "ProductVersion", "1, 0, 4, 0"
+            VALUE "ProductVersion", "1, 0, 6, 0"
             VALUE "SpecialBuild", "DEMO Version"
         END
     END
@@ -1001,9 +1010,17 @@ BEGIN
     IDD_DIALOG_DIR_FINGERPRINT, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 223
+        RIGHTMARGIN, 224
         TOPMARGIN, 7
-        BOTTOMMARGIN, 159
+        BOTTOMMARGIN, 147
+    END
+
+    IDD_DIALOG_FINGERPRINT_CREATE_PROGRESS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 262
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 115
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -1272,6 +1289,7 @@ STRINGTABLE
 BEGIN
     IDS_STRING_COLUMN_2ND_MODIFIED "2nd Modified at"
     IDS_STRING_COLUMN_COMPARISON_RESULT "Comparison result"
+    IDS_STRING_UNABLE_TO_CREATE_FILE "Unable to create output file ""%s"""
 END
 
 #endif    // English (U.S.) resources

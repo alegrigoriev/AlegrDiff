@@ -34,6 +34,7 @@
 #define ID_FILE_DIRECTORYFINGERPRINT    148
 #define ID__HIDE                        149
 #define IDC_CURSOR_BEAM                 150
+#define IDD_DIALOG_FINGERPRINT_CREATE_PROGRESS 151
 #define IDC_COMBO_FIRST_DIR             1000
 #define IDC_COMBO_SECOND_DIR            1001
 #define IDC_COMBO_SAVE_FILENAME         1001
@@ -110,6 +111,9 @@
 #define IDC_CHECK_USE_MD5               1073
 #define IDC_CHECK1                      1074
 #define IDC_CHECK_UNICODE               1074
+#define IDC_PROGRESS1                   1075
+#define IDC_STATIC_PERCENT              1076
+#define IDC_STATIC_FILENAME             1077
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -163,6 +167,7 @@
 #define IDS_STRING_COLUMN_1ST_MODIFIED  32831
 #define IDS_STRING_COLUMN_2ND_MODIFIED  32832
 #define IDS_STRING_COLUMN_COMPARISON_RESULT 32833
+#define IDS_STRING_UNABLE_TO_CREATE_FILE 32834
 #define IDS_DIRECTORY_ACCESS_DENIED     32848
 #define IDS_DIRECTORY_NOT_FOUND         32849
 #define IDS_PREFERENCES                 32850
@@ -201,9 +206,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        151
+#define _APS_NEXT_RESOURCE_VALUE        152
 #define _APS_NEXT_COMMAND_VALUE         32820
-#define _APS_NEXT_CONTROL_VALUE         1075
+#define _APS_NEXT_CONTROL_VALUE         1078
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

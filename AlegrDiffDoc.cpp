@@ -1611,7 +1611,7 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 
 BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 {
-	// TODO: save ANSI or UNICODE
+	// save ANSI or UNICODE
 #ifndef DEMO_VERSION
 	LPCTSTR FileMode = _T("wt");
 #ifdef _UNICODE

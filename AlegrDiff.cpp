@@ -18,6 +18,9 @@
 #include "BinaryCompareDoc.h"
 #include "BinaryCompareView.h"
 #include "DirectoryFingerprintDlg.h"
+#include "afxwin.h"
+#include "AlegrDiffVer.h"
+#include "DirectoryFingerpringCreateDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -282,6 +285,7 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 public:
+	CStatic m_sVersion;
 };
 
 CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
@@ -293,8 +297,16 @@ CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CAboutDlg)
-	//}}AFX_DATA_MAP
+//{{AFX_DATA_MAP(CAboutDlg)
+//}}AFX_DATA_MAP
+	DDX_Control(pDX, IDC_STATIC_VERSION, m_sVersion);
+	if ( ! pDX->m_bSaveAndValidate)
+	{
+		CString format, s;
+		m_sVersion.GetWindowText(format);
+		s.Format(format, ALEGR_DIFF_VERSION);
+		m_sVersion.SetWindowText(s);
+	}
 }
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
@@ -1231,6 +1243,11 @@ void AddStringToHistory(const CString & str, CString history[], int NumItems, bo
 		}
 		j++;
 	}
+	for (; j < NumItems; j++)
+	{
+		history[j].Empty();
+	}
+
 	// remove last dir from the list
 	for (i = NumItems - 1; i >= 1; i--)
 	{
@@ -1643,12 +1660,27 @@ void CAlegrDiffApp::OnFileCreatedirectoryfingerprint()
 	CDirectoryFingerprintDlg dlg;
 	dlg.m_bIncludeSubdirectories = m_bRecurseSubdirs;
 
-	//dlg.m_bUseIgnoreFilter = m_bUseIgnoreFilter;
-	//dlg.m_sIgnoreFilesFilter = m_sIgnoreFilesFilter;
+	dlg.m_sIgnoreFiles = m_sIgnoreFilesFilter;
+	dlg.m_sFilenameFilter = m_sFilenameFilter;
 
 	if (IDOK != dlg.DoModal())
 	{
 		return;
 	}
+
+	m_bRecurseSubdirs = dlg.m_bIncludeSubdirectories;
+	m_sFilenameFilter = dlg.m_sFilenameFilter;
+
+	m_sIgnoreFilesFilter = dlg.m_sIgnoreFiles;
+
+	CDirectoryFingerpringCreateDlg dlg1;
+
+	dlg1.m_bIncludeDirectoryStructure = dlg.m_bIncludeDirectoryStructure;
+	dlg1.m_bIncludeSubdirectories = dlg.m_bIncludeSubdirectories;
+	dlg1.m_sFilenameFilter = dlg.m_sFilenameFilter;
+	dlg1.m_sIgnoreFiles = dlg.m_sIgnoreFiles;
+	dlg1.m_sDirectory = dlg.m_sDirectory;
+
+	dlg1.DoModal();
 }
 

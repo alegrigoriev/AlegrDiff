@@ -28,6 +28,7 @@ public:
 	CString	m_sFirstDir;
 	CString	m_sSecondDir;
 	FilePair * m_pPairList;
+	int m_nFilePairs;
 // Operations
 public:
 	bool BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2);

@@ -40,7 +40,8 @@ protected:
 // Implementation
 public:
 	enum eColumns {ColumnName, ColumnSubdir, ColumnDate1, ColumnDate2, ColumnComparisionResult };
-	eColumns m_SortMode;
+	eColumns m_SortColumn;
+	bool m_bAscendingOrder;
 	virtual ~CAlegrDiffView();
 #ifdef _DEBUG
 	virtual void AssertValid() const;
@@ -48,12 +49,13 @@ public:
 #endif
 
 protected:
+	void SortPairArray(CArray<FilePair *,FilePair *> & PairArray, FilePair * pPairs, int nCount);
 
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CAlegrDiffView)
 	afx_msg void OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnGetdispinfo(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnDblclk(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

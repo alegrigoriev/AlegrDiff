@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "AlegrDiff.h"
 #include "PreferencesDialog.h"
+#include ".\preferencesdialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -406,8 +407,7 @@ HBRUSH CViewPreferencesPage::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
 /////////////////////////////////////////////////////////////////////////////
 // CPreferencesPropertySheet
-
-IMPLEMENT_DYNAMIC(CPreferencesPropertySheet, CPropertySheet)
+int CPreferencesPropertySheet::m_LastPageSelected = 0;
 
 CPreferencesPropertySheet::CPreferencesPropertySheet(UINT nIDCaption, CWnd* pParentWnd, UINT iSelectPage)
 	:CPropertySheet(nIDCaption, pParentWnd, iSelectPage)
@@ -467,4 +467,25 @@ void CViewPreferencesPage::OnButtonErasedBackground()
 		}
 		m_bColorChanged = true;
 	}
+}
+
+BOOL CPreferencesPropertySheet::OnInitDialog()
+{
+	BOOL bResult = BaseClass::OnInitDialog();
+
+	SetActivePage(m_LastPageSelected);
+
+	return bResult;
+}
+
+void CPreferencesPropertySheet::OnOK()
+{
+	m_LastPageSelected = GetActiveIndex();
+	BaseClass::OnOK();
+}
+
+void CPreferencesPropertySheet::OnCancel()
+{
+	m_LastPageSelected = GetActiveIndex();
+	BaseClass::OnCancel();
 }

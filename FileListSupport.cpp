@@ -3629,9 +3629,9 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 	CThisApp * pApp = GetApp();
 	// comparison can be done through CRC, or direct comparison
 	// if length is different, return it:
-	if (pFirstFile->m_Length != pSecondFile->m_Length)
+	if (pFirstFile->GetFileLength() != pSecondFile->GetFileLength())
 	{
-		if (pFirstFile->m_Length > pSecondFile->m_Length)
+		if (pFirstFile->GetFileLength() > pSecondFile->GetFileLength())
 		{
 			return m_ComparisionResult = FirstFileLonger;
 		}

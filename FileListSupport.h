@@ -262,6 +262,7 @@ public:
 
 	BOOL CalculateHashes(CMd5HashCalculator * pMd5Calc,
 						class CProgressDialog * pProgressDialog);
+	static size_t GetDigestLength() { return 16; }
 
 	void SetMD5(BYTE md5[16]);
 

@@ -49,6 +49,7 @@ public:
 	int m_nFilePairs;
 	bool m_bRecurseSubdirs;
 	bool m_bCheckingFingerprint;
+	bool m_bNeedUpdateViews;
 
 	KListEntry<FilePair> * GetFilePairList()
 	{

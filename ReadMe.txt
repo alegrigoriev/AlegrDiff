@@ -5,9 +5,9 @@ Make Go To Line
 Make search
 Add context menu to list view
 Add context menu to file view
-Make background thread for comparision
 Add progress to File list view and file diff view
 Check file dates for change, when the app is activated
+Add Merge function
 Add "Refresh" function
 Add Save differences
 Add save file list
@@ -16,6 +16,7 @@ Open directories or files from the command line
 Make binary comparision
 Compare EXE version info for DLL, EXE, SYS
 Make progress dialog for binary comparision
+Make background thread for comparision
 UNICODE file support
 
 Problems:

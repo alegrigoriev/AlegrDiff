@@ -234,6 +234,10 @@ SOURCE=.\res\cur00002.cur
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\cursor1.cur
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\icon1.ico
 # End Source File
 # Begin Source File

@@ -20,13 +20,14 @@ public:
 
 	TEXTMETRIC m_FontMetric;
 	int m_WheelAccumulator;
-	int m_BytesPerLine;
+	unsigned m_BytesPerLine;
 	int m_WordSize;   // 1, 2, 4, 8
 	int m_FirstPosSeen;
 	long m_ScrollDataScale;
 	int m_AddressMarginWidth;
 	BOOL m_LButtonDown;
 	BOOL m_TrackingSelection;
+	BOOL m_bCaretOnChars;
 
 	int GetMaxChars() const;
 	BOOL m_bShowSecondFile;

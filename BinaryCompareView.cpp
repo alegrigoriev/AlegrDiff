@@ -26,6 +26,7 @@ CBinaryCompareView::CBinaryCompareView()
 	, m_VisibleRect(0, 0, 0, 0)
 	, m_TrackingSelection(FALSE)
 	, m_bShowSecondFile(FALSE)
+	, m_bCaretOnChars(FALSE)
 	, m_AddressMarginWidth(8)
 {
 	m_FontMetric.tmAveCharWidth = 1;
@@ -190,20 +191,27 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 				for (int ByteNum = 1; ByteNum <= m_WordSize; ByteNum++)
 				{
 					UCHAR CurrChar = 0;
-					DWORD color = TextColor;
-					if (Buf1Filled > offset + m_WordSize - ByteNum)
+
+					unsigned ByteOffset = offset + m_WordSize - ByteNum;
+					if (DrawTextChars)
 					{
-						CurrChar = FileBuf1[offset + m_WordSize - ByteNum];
+						ByteOffset = offset + ByteNum - 1;
+					}
+
+					DWORD color = TextColor;
+					if (Buf1Filled > ByteOffset)
+					{
+						CurrChar = FileBuf1[ByteOffset];
 						_stprintf(buf, _T("%02X"), CurrChar);
-						if (Buf2Filled <= offset + m_WordSize - ByteNum
-							|| CurrChar != FileBuf2[offset + m_WordSize - ByteNum])
+						if (Buf2Filled <= ByteOffset
+							|| CurrChar != FileBuf2[ByteOffset])
 						{
 							color = OtherColor;
 						}
 					}
-					else if (Buf2Filled > offset + m_WordSize - ByteNum)
+					else if (Buf2Filled > ByteOffset)
 					{
-						CurrChar = FileBuf2[offset + m_WordSize - ByteNum];
+						CurrChar = FileBuf2[ByteOffset];
 						_stprintf(buf, _T("%02X"), CurrChar);
 						color = AlternateColor;
 					}
@@ -217,8 +225,8 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 					int chars = 2;
 
 					DWORD BackgroundColor = pApp->m_TextBackgroundColor;
-					if (CurrentAddr + offset < SelEnd
-						&& CurrentAddr + offset >= SelBegin)
+					if (CurrentAddr + ByteOffset < SelEnd
+						&& CurrentAddr + ByteOffset >= SelBegin)
 					{
 						color = pApp->m_SelectedTextColor;
 						BackgroundColor = 0x000000;
@@ -380,9 +388,21 @@ void CBinaryCompareView::CreateAndShowCaret()
 		int ByteOnTheLine = (ULONG(pDoc->m_CaretPos - m_ScreenFilePos) % m_BytesPerLine)
 							& -m_WordSize;
 
-		CPoint p((ByteOnTheLine * 2 + ByteOnTheLine / m_WordSize
-					+ m_AddressMarginWidth + 2) * CharWidth(),
-				ULONG(pDoc->m_CaretPos - m_ScreenFilePos) / m_BytesPerLine * LineHeight());
+		CPoint p;
+
+		if (m_bCaretOnChars)
+		{
+			p.x = (ByteOnTheLine + m_BytesPerLine * 2 + m_BytesPerLine / m_WordSize
+					+ m_AddressMarginWidth + 4) * CharWidth();
+		}
+		else
+		{
+			p.x = (ByteOnTheLine * 2 + ByteOnTheLine / m_WordSize
+					+ m_AddressMarginWidth + 2) * CharWidth();
+		}
+
+		p.y = ULONG(pDoc->m_CaretPos - m_ScreenFilePos) / m_BytesPerLine * LineHeight();
+
 		CreateSolidCaret(2, LineHeight());
 		if (0) TRACE("CBinaryCompareView::CreateAndShowCaret %d %d\n", p.x, p.y);
 		SetCaretPos(p);
@@ -528,6 +548,16 @@ void CBinaryCompareView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		// do VScroll and move cursor, to keep the cursor at the same line
 		DoVScroll(nLinesInView - 1);
 		MoveCaretBy(0, nLinesInView - 1, SelectionFlags | MoveCaretPositionAlways);
+		break;
+
+	case VK_TAB:
+		TRACE("VK_TAB\n");
+
+		if ( ! m_TrackingSelection)
+		{
+			m_bCaretOnChars = ! m_bCaretOnChars;
+			CreateAndShowCaret();
+		}
 		break;
 	}
 	CView::OnKeyDown(nChar, nRepCnt, nFlags);
@@ -1031,10 +1061,10 @@ void CBinaryCompareView::InvalidateRange(LONGLONG begin, LONGLONG end)
 	}
 
 	int BeginLine = int(begin) / m_BytesPerLine;
-	int BeginByte = (int(begin) % m_BytesPerLine) & -m_WordSize;
+	unsigned BeginByte = (int(begin) % m_BytesPerLine) & -m_WordSize;
 
 	int EndLine = int(end) / m_BytesPerLine;
-	int EndByte = ((int(end) % m_BytesPerLine) + m_WordSize - 1) & -m_WordSize;
+	unsigned EndByte = ((int(end) % m_BytesPerLine) + m_WordSize - 1) & -m_WordSize;
 
 	if (BeginLine == EndLine)
 	{
@@ -1055,6 +1085,14 @@ void CBinaryCompareView::InvalidateRange(LONGLONG begin, LONGLONG end)
 		r.left = (m_AddressMarginWidth + 2 + BeginByte * 2 + BeginByte / m_WordSize) * CharWidth();
 		r.right = (m_AddressMarginWidth + 2 + EndByte * 2 + EndByte / m_WordSize) * CharWidth() + m_FontMetric.tmOverhang;
 		InvalidateRect( & r);
+
+		// invalidate text chars
+		r.left = (BeginByte + m_BytesPerLine * 2 + m_BytesPerLine / m_WordSize
+					+ m_AddressMarginWidth + 4) * CharWidth();
+		r.right = (EndByte + m_BytesPerLine * 2 + m_BytesPerLine / m_WordSize
+					+ m_AddressMarginWidth + 4) * CharWidth();
+		InvalidateRect( & r);
+
 	}
 	else
 	{
@@ -1067,7 +1105,7 @@ void CBinaryCompareView::InvalidateRange(LONGLONG begin, LONGLONG end)
 			r.top = BeginLine * LineHeight();
 			r.bottom = r.top + LineHeight();
 			r.left = (m_AddressMarginWidth + 2 + BeginByte * 2 + BeginByte / m_WordSize) * CharWidth();
-			r.right = (m_AddressMarginWidth + 2 + nCharsInView + 1) * CharWidth() + m_FontMetric.tmOverhang;
+			r.right = (nCharsInView + 1) * CharWidth() + m_FontMetric.tmOverhang;
 			InvalidateRect( & r);
 		}
 		if (EndLine <= nLinesInView + 2 && EndByte > 0)
@@ -1081,7 +1119,15 @@ void CBinaryCompareView::InvalidateRange(LONGLONG begin, LONGLONG end)
 			r.right = (m_AddressMarginWidth + 2 + EndByte * 2 + EndByte / m_WordSize) * CharWidth() + m_FontMetric.tmOverhang;
 			r.left = 0;
 			InvalidateRect( & r);
+
+			// invalidate text chars
+			r.left = (m_BytesPerLine * 2 + m_BytesPerLine / m_WordSize
+						+ m_AddressMarginWidth + 4) * CharWidth();
+			r.right = (EndByte + m_BytesPerLine * 2 + m_BytesPerLine / m_WordSize
+						+ m_AddressMarginWidth + 4) * CharWidth();
+			InvalidateRect( & r);
 		}
+
 		if (EndLine > nLinesInView + 2)
 		{
 			EndLine = nLinesInView + 2;
@@ -1201,9 +1247,30 @@ void CBinaryCompareView::OnLButtonDown(UINT nFlags, CPoint point)
 	}
 	else
 	{
-		point.x = (point.x + CharWidth() / 2) / CharWidth();
-		point.x -= point.x / (m_WordSize * 2 + 1);
-		Addr += (point.x / 2) & -m_WordSize;
+		unsigned x = (point.x + CharWidth() / 2) / CharWidth();
+		x -= x / (m_WordSize * 2 + 1);
+		x /= 2;
+
+		if (x >= m_BytesPerLine)
+		{
+			x = (point.x + CharWidth() / 2) / CharWidth() -
+				(m_BytesPerLine * 2 + m_BytesPerLine / m_WordSize + 2);
+
+			if (x >= m_BytesPerLine)
+			{
+				return;
+			}
+
+			m_bCaretOnChars = TRUE;
+		}
+		else
+		{
+			m_bCaretOnChars = FALSE;
+			x &= -m_WordSize;
+		}
+
+		Addr += x;
+
 		if (0 == (nFlags & MK_SHIFT))
 		{
 			flags |= SetPositionCancelSelection;
@@ -1249,9 +1316,31 @@ void CBinaryCompareView::OnMouseMove(UINT nFlags, CPoint point)
 		}
 		else
 		{
-			point.x = (point.x + CharWidth() / 2) / CharWidth();
-			point.x -= point.x / (m_WordSize * 2 + 1);
-			Addr += (point.x / 2) & -m_WordSize;
+			int x = (point.x + CharWidth() / 2) / CharWidth();
+			x -= x / (m_WordSize * 2 + 1);
+			x /= 2;
+
+			if (m_bCaretOnChars)
+			{
+				x = (point.x + CharWidth() / 2) / CharWidth() -
+					(m_BytesPerLine * 2 + m_BytesPerLine / m_WordSize + 2);
+			}
+			else
+			{
+				x &= -m_WordSize;
+			}
+
+			if (x < 0)
+			{
+				x = 0;
+			}
+
+			if (unsigned(x) > m_BytesPerLine)
+			{
+				x = m_BytesPerLine;
+			}
+
+			Addr += x;
 		}
 		SetCaretPosition(Addr, SetPositionMakeVisible);
 	}

@@ -83,6 +83,7 @@ ON_COMMAND(ID_VIEW_RESETCOLUMNS, OnViewResetcolumns)
 //ON_NOTIFY_REFLECT(LVN_GETINFOTIP, OnLvnGetInfoTip)
 ON_COMMAND(ID_FILE_PROPERTIES, OnFileProperties)
 ON_UPDATE_COMMAND_UI(ID_FILE_PROPERTIES, OnUpdateFileProperties)
+ON_NOTIFY_REFLECT(LVN_ITEMCHANGED, OnLvnItemchanged)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -402,7 +403,9 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		}
 		return;
 	}
+	// TODO: keep focus on the same item
 	// fill the list control
+#if 0
 	for (unsigned i = 0; i < m_PairArray.size(); i++)
 	{
 		m_PairArray[i]->m_bSelected = false;
@@ -417,7 +420,7 @@ void CAlegrDiffView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		}
 		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
 	}
-
+#endif
 	LockWindowUpdate();
 	pListCtrl->DeleteAllItems();
 
@@ -1381,4 +1384,17 @@ void CAlegrDiffView::OnFileProperties()
 void CAlegrDiffView::OnUpdateFileProperties(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable(GetListCtrl().GetNextItem(-1, LVNI_SELECTED) != -1);
+}
+
+void CAlegrDiffView::OnLvnItemchanged(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	if (pNMLV->uChanged & LVIF_STATE
+		&& unsigned(pNMLV->iItem) < m_PairArray.size())
+	{
+		m_PairArray[pNMLV->iItem]->m_bSelected =
+			0 != (pNMLV->uNewState & LVIS_SELECTED);
+	}
+	*pResult = 0;
 }

@@ -4,6 +4,8 @@ Refresh list view
 If main window is minimized, save its state before minimization
 Show sort order arrows with comctrl version < 6.0
 make word by word comparison in MatchStrings
+If a file(s) exists only in one directory, don't show "Copy From" for another directory
+Version stamp keywords: $Archive: $Revision: $Date:
 Add "CStringHistory" class
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
 Add Copy 1st file text, copy 2nd file text

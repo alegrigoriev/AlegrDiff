@@ -14,25 +14,25 @@
 
 class CResizableDialog : public CUiUpdatedDlg
 {
-//	DECLARE_DYNAMIC(CResizableDialog)
-// Construction
+	typedef CUiUpdatedDlg BaseClass;
+	// Construction
 protected:
 	CResizableDialog(UINT id, CWnd* pParent);   // standard constructor
 public:
 
-// Dialog Data
+	// Dialog Data
 	//{{AFX_DATA(CResizableDialog)
 	// NOTE: the ClassWizard will add data members here
 	//}}AFX_DATA
 
 
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CResizableDialog)
 	//}}AFX_VIRTUAL
 	virtual INT_PTR DoModal();
 
-// Implementation
+	// Implementation
 protected:
 	CSize m_PrevSize;
 	MINMAXINFO m_mmxi;

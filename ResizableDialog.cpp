@@ -17,7 +17,7 @@ static char THIS_FILE[] = __FILE__;
 //IMPLEMENT_DYNAMIC(CResizableDialog, CUiUpdatedDlg)
 
 CResizableDialog::CResizableDialog(UINT id, CWnd* pParent)
-	: CUiUpdatedDlg(id, pParent)
+	: BaseClass(id, pParent)
 {
 	//{{AFX_DATA_INIT(CResizableDialog)
 	// NOTE: the ClassWizard will add member initialization here
@@ -33,7 +33,7 @@ CResizableDialog::CResizableDialog(UINT id, CWnd* pParent)
 }
 
 
-BEGIN_MESSAGE_MAP(CResizableDialog, CUiUpdatedDlg)
+BEGIN_MESSAGE_MAP(CResizableDialog, BaseClass)
 	//{{AFX_MSG_MAP(CResizableDialog)
 	ON_WM_SIZE()
 	ON_WM_SIZING()
@@ -64,7 +64,7 @@ void CResizableDialog::OnMetricsChange()
 
 void CResizableDialog::OnSize(UINT nType, int cx, int cy)
 {
-	CUiUpdatedDlg::OnSize(nType, cx, cy);
+	BaseClass::OnSize(nType, cx, cy);
 
 	if (m_PrevSize.cx < 0)
 	{
@@ -147,7 +147,7 @@ void CResizableDialog::OnSize(UINT nType, int cx, int cy)
 
 void CResizableDialog::OnSizing(UINT fwSide, LPRECT pRect)
 {
-	CUiUpdatedDlg::OnSizing(fwSide, pRect);
+	BaseClass::OnSizing(fwSide, pRect);
 
 	// invalidate an area currently (before resizing)
 	// occupied by size grip
@@ -167,13 +167,13 @@ void CResizableDialog::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI)
 	}
 	else
 	{
-		CUiUpdatedDlg::OnGetMinMaxInfo(lpMMI);
+		BaseClass::OnGetMinMaxInfo(lpMMI);
 	}
 }
 
 BOOL CResizableDialog::OnEraseBkgnd(CDC* pDC)
 {
-	if (CUiUpdatedDlg::OnEraseBkgnd(pDC))
+	if (BaseClass::OnEraseBkgnd(pDC))
 	{
 		// draw size grip
 		CRect r;
@@ -205,13 +205,13 @@ UINT CResizableDialog::OnNcHitTest(CPoint point)
 		return HTBOTTOMRIGHT;
 	}
 	else
-		return CUiUpdatedDlg::OnNcHitTest(point);
+		return BaseClass::OnNcHitTest(point);
 }
 
 
 BOOL CResizableDialog::OnInitDialog()
 {
-	CUiUpdatedDlg::OnInitDialog();
+	BaseClass::OnInitDialog();
 
 	// init MINMAXINFO
 	OnMetricsChange();
@@ -248,7 +248,7 @@ void CResizableDialog::OnOK()
 	m_DlgWidth = r.Width();
 	m_DlgHeight = r.Height();
 
-	CUiUpdatedDlg::OnOK();
+	BaseClass::OnOK();
 }
 
 INT_PTR CResizableDialog::DoModal()
@@ -257,5 +257,5 @@ INT_PTR CResizableDialog::DoModal()
 	m_PrevSize.cx = -1;
 	memzero(m_mmxi);
 
-	return CUiUpdatedDlg::DoModal();
+	return BaseClass::DoModal();
 }

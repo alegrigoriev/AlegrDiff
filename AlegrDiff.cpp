@@ -13,6 +13,7 @@
 #include "PreferencesDialog.h"
 #include "FolderDialog.h"
 #include <Dlgs.h>
+#include <locale.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -61,6 +62,8 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_bCaseSensitive(true),
 	m_bIgnoreWhitespaces(true),
 	m_bFindBackward(false),
+	m_bShowToolbar(true),
+	m_bShowStatusBar(true),
 	m_MinimalLineLength(2),
 	m_MinMatchingChars(3),
 	m_NumberOfIdenticalLines(5),
@@ -286,6 +289,8 @@ CAlegrDiffApp theApp;
 
 BOOL CAlegrDiffApp::InitInstance()
 {
+	char * Locale = setlocale(LC_ALL, ".ACP");
+	TRACE("Locale set : %s\n", Locale);
 	// Standard initialization
 	// If you are not using these features and wish to reduce the size
 	//  of your final executable, you should remove from the following
@@ -337,6 +342,8 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("IgnoreWhitespaces"), m_bIgnoreWhitespaces, true);
 	Profile.AddItem(_T("Settings"), _T("bShowLineNumbers"), m_bShowLineNumbers, false);
 	Profile.AddItem(_T("Settings"), _T("FindBackward"), m_bFindBackward, false);
+	Profile.AddItem(_T("Settings"), _T("ShowToolbar"), m_bShowToolbar, true);
+	Profile.AddItem(_T("Settings"), _T("ShowStatusBar"), m_bShowStatusBar, true);
 
 	Profile.AddItem(_T("Settings"), _T("MinimalLineLength"), m_MinimalLineLength, 2, 1, 2048);
 	Profile.AddItem(_T("Settings"), _T("NumberOfIdenticalLines"), m_NumberOfIdenticalLines, 5, 1, 50);
@@ -482,10 +489,10 @@ void CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 			&& pDoc->GetFilePair() == pPair)
 		{
 			POSITION viewpos = pDoc->GetFirstViewPosition();
-			if (position)
+			if (viewpos)
 			{
 				CView * pView = pDoc->GetNextView(viewpos);
-				pView->GetParentFrame()->ActivateFrame();
+				((CMDIChildWnd*)pView->GetParentFrame())->MDIActivate();
 			}
 			return;
 		}
@@ -598,7 +605,7 @@ void CAlegrDiffApp::OnFontChanged()
 	m_ErasedFont.DeleteObject();
 	m_ErasedFont.CreateFontIndirect( & m_ErasedLogFont);
 
-	UpdateAllDiffViews(CFilePairDoc::FontChanged);
+	UpdateAllDiffViews(CFilePairDoc::MetricsChanged);
 }
 
 void CAlegrDiffApp::NotifyFilePairChanged(FilePair *pPair)

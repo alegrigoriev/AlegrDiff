@@ -50,6 +50,9 @@ protected:
 	//{{AFX_MSG(CMainFrame)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDropFiles(HDROP hDropInfo);
+	afx_msg BOOL OnBarCheckStatusBar(UINT nID);
+	afx_msg BOOL OnBarCheckToolbar(UINT nID);
+	afx_msg BOOL OnBarCheckRebar(UINT nID);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

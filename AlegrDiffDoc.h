@@ -68,6 +68,7 @@ enum {
 	SetPositionMakeVisible = 1,
 	SetPositionMakeCentered = 2,
 	SetPositionCancelSelection = 4,
+	MoveCaretPositionAlways = 8,
 	OnUpdateAddListViewItem = 0x100,
 };
 
@@ -108,7 +109,6 @@ public:
 		CaretPositionChanged = 1,
 		FileLoaded,
 		InvalidateRange,
-		FontChanged,
 		MetricsChanged,
 	};
 

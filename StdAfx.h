@@ -19,6 +19,12 @@
 #include <afxcmn.h>			// MFC support for Windows Common Controls
 #endif // _AFX_NO_AFXCMN_SUPPORT
 
+#include <limits.h>
+#ifdef _UNICODE
+#define TCHAR_MASK 0xFFFFu
+#else
+#define TCHAR_MASK 0xFFu
+#endif
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

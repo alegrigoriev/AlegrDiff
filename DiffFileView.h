@@ -54,6 +54,7 @@ public:
 	bool m_TrackingSelection;
 	bool m_ShowLineNumbers;
 	int m_LineNumberMarginWidth;
+	int m_WheelAccumulator;
 
 	enum ShownVersion { ShownAllText, ShownFile1Version, ShownFile2Version, ShownMerged, };
 	ShownVersion m_ShownFileVersion;
@@ -81,11 +82,7 @@ public:
 
 	void InvalidateRange(TextPos begin, TextPos end);
 
-	void MoveCaretBy(int dx, int dy, int flags = SetPositionCancelSelection)
-	{
-		SetCaretPosition(GetDocument()->m_CaretPos.pos + dx,
-						GetDocument()->m_CaretPos.line + dy, flags);
-	}
+	void MoveCaretBy(int dx, int dy, int flags = SetPositionCancelSelection);
 	void SetCaretPosition(int pos, int line, int flags = SetPositionCancelSelection);
 	void CreateAndShowCaret();
 	void UpdateVScrollBar();

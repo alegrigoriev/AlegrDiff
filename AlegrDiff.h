@@ -53,6 +53,9 @@ public:
 	bool m_bShowLineNumbers;
 	bool m_bFindBackward;
 
+	bool m_bShowToolbar;
+	bool m_bShowStatusBar;
+
 	CString m_FileDir1;
 	CString m_FileDir2;
 	CString m_LastSaveMergedDir;

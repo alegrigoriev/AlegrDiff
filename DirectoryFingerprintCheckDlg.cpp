@@ -337,8 +337,8 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 	FilePair * pPair;
 	KListEntry<FilePair> * pList;
 
-	for (pList = m_pDocument->GetFilePairList(), pPair = pList->Next();
-		pList->Head() != pPair; pPair = pPair->Next())
+	for (pList = m_pDocument->GetFilePairList(), pPair = pList->First();
+		pList->NotEnd(pPair); pPair = pPair->Next())
 	{
 		if (pPair->pFirstFile != NULL
 			&& NULL != pPair->pSecondFile
@@ -354,8 +354,8 @@ unsigned CDirectoryFingerprintCheckDlg::_ThreadProc()
 	// read files, verify MD5
 	CMd5HashCalculator HashCalc;
 
-	for (pList = m_pDocument->GetFilePairList(), pPair = pList->Next();
-		pList->Head() != pPair; pPair = pPair->Next())
+	for (pList = m_pDocument->GetFilePairList(), pPair = pList->First();
+		pList->NotEnd(pPair); pPair = pPair->Next())
 	{
 		if (pPair->pFirstFile != NULL
 			&& NULL != pPair->pSecondFile

@@ -259,7 +259,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 						LPCTSTR(FileList1.m_BaseDir + pPair->pFirstFile->GetSubdir()),
 						LPCTSTR(FileList2.m_BaseDir + pPair->pSecondFile->GetSubdir()));
 		}
-		while (pInsertBefore != m_PairList.Head())
+		while (m_PairList.NotEnd(pInsertBefore))
 		{
 			// check if we insert ir remove items, or the item is duplicate
 			FileItem * pItem1 = pPair->pFirstFile;
@@ -341,7 +341,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 		}
 	}
 
-	while (pInsertBefore != m_PairList.Head())
+	while (m_PairList.NotEnd(pInsertBefore))
 	{
 		FilePair * tmp = pInsertBefore;
 		pInsertBefore = pInsertBefore->Next();
@@ -384,7 +384,7 @@ void CAlegrDiffDoc::OnUpdateAllViews(CView* pSender,
 			FilePair * const pPairToDelete = pArg->pPair;
 			CSimpleCriticalSectionLock lock(m_FileListCs);
 			// find if it is in the list and remove from the list
-			for (FilePair * pPair = m_PairList.Next(); pPair != m_PairList.Head() && ! m_bStopThread; pPair = pPair->Next())
+			for (FilePair * pPair = m_PairList.First(); m_PairList.NotEnd(pPair) && ! m_bStopThread; pPair = pPair->Next())
 			{
 				if (pPairToDelete == pPair)
 				{
@@ -473,20 +473,16 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 		if (NULL != pPair->pFirstFile)
 		{
 			CString title(pPair->pFirstFile->GetFullName());
-			title += '\\';
 			if (NULL != pPair->pSecondFile)
 			{
 				title += " - ";
 				title += pPair->pSecondFile->GetFullName();
-				title += '\\';
 			}
 			SetTitle(title);
 		}
 		else if (NULL != pPair->pSecondFile)
 		{
-			CString title(pPair->pSecondFile->GetFullName());
-			title += '\\';
-			SetTitle(title);
+			SetTitle(pPair->pSecondFile->GetFullName());
 		}
 		else
 		{
@@ -603,7 +599,8 @@ void CFilePairDoc::CaretToHome(int flags)
 	{
 		int pos = 0;
 
-		for (StringSection * pSection = pLine->pFirstSection; pSection != NULL; pSection = pSection->pNext)
+		for (StringSection * pSection = pLine->StrSections.First();
+			pLine->StrSections.NotEnd(pSection); pSection = pSection->Next())
 		{
 			if ((pSection->Attr & pSection->Whitespace)
 				&& (pSection->Attr & pSection->Erased)
@@ -657,7 +654,8 @@ void CFilePairDoc::CaretToEnd(int flags)
 	int pos = 0;
 	if (NULL != pLine)
 	{
-		for (StringSection * pSection = pLine->pFirstSection; pSection != NULL; pSection = pSection->pNext)
+		for (StringSection * pSection = pLine->StrSections.First();
+			pLine->StrSections.NotEnd(pSection); pSection = pSection->Next())
 		{
 			if ((pSection->Attr & pSection->Whitespace)
 				&& (pSection->Attr & pSection->Erased)
@@ -786,8 +784,8 @@ ULONG CFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen, TextPos pFrom, T
 		int pos = 0;
 		LinePair * pPair = m_pFilePair->m_LinePairs[line];
 
-		StringSection * pSection = pPair->pFirstSection;
-		for ( ; pSection != NULL; pSection = pSection->pNext)
+		for (StringSection * pSection = pPair->StrSections.First();
+			pPair->StrSections.NotEnd(pSection); pSection = pSection->Next())
 		{
 			if ((pSection->Attr & pSection->Whitespace)
 				&& (pSection->Attr & pSection->Erased)
@@ -1253,8 +1251,8 @@ bool CFilePairDoc::GetWordOnPos(TextPos OnPos, TextPos &Start, TextPos &End)
 
 	int nPos = 0;
 	int CaretPos = OnPos.pos;
-	for (StringSection * pSection = pPair->pFirstSection
-		; pSection != NULL; pSection = pSection->pNext)
+	for (StringSection * pSection = pPair->StrSections.First();
+		pPair->StrSections.NotEnd(pSection); pSection = pSection->Next())
 	{
 		if ((pSection->Attr & pSection->Whitespace)
 			&& (pSection->Attr & pSection->Erased)
@@ -1922,9 +1920,9 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 			continue;
 		}
 
-		StringSection * pSection = pPair->pFirstSection;
+		StringSection * pSection = pPair->StrSections.First();
 
-		if (NULL == pPair->pFirstLine && NULL != pSection)
+		if (NULL == pPair->pFirstLine && pPair->StrSections.NotEnd(pSection))
 		{
 			if (pSection->IsDeclined()
 				|| pSection->IsDiscarded()
@@ -1935,7 +1933,7 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 				continue;
 			}
 		}
-		else if (NULL == pPair->pSecondLine && NULL != pSection)
+		else if (NULL == pPair->pSecondLine && pPair->StrSections.NotEnd(pSection))
 		{
 			if (pSection->IsAccepted()
 				|| pSection->IsDiscarded()
@@ -1946,7 +1944,7 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 				continue;
 			}
 		}
-		for ( ; NULL != pSection; pSection = pSection->pNext)
+		for ( ; pPair->StrSections.NotEnd(pSection); pSection = pSection->Next())
 		{
 
 			// check if the string section is all removed
@@ -2152,10 +2150,10 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 
 	{
 		CSimpleCriticalSectionLock lock(m_FileListCs);
-		m_NextPairToRefresh = m_PairList.Next();
-		m_NextPairToCompare = m_PairList.Next();
+		m_NextPairToRefresh = m_PairList.First();
+		m_NextPairToCompare = m_PairList.First();
 	}
-	for (pPair = m_PairList.Next(); pPair != m_PairList.Head() && ! m_bStopThread; pPair = pPair->Next())
+	for (pPair = m_PairList.First(); m_PairList.NotEnd(pPair) && ! m_bStopThread; pPair = pPair->Next())
 	{
 		TRACE("First pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisionResult);
 		if (pPair->m_ComparisionResult != FilePair::ResultUnknown
@@ -2194,7 +2192,7 @@ unsigned CAlegrDiffDoc::CompareThreadFunction()
 		m_NextPairToCompare = m_PairList.Next();
 	}
 
-	for (pPair = m_PairList.Next(); pPair != m_PairList.Head() && ! m_bStopThread; pPair = pPair->Next())
+	for (pPair = m_PairList.First(); m_PairList.NotEnd(pPair) && ! m_bStopThread; pPair = pPair->Next())
 	{
 		TRACE("Second pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisionResult);
 		if (FilePair::ResultUnknown != pPair->m_ComparisionResult)
@@ -2226,7 +2224,8 @@ void CAlegrDiffDoc::OnIdle()
 	FilePair * pPair;
 	{
 		CSimpleCriticalSectionLock lock(m_FileListCs);
-		while (m_PairList.Head() != m_NextPairToRefresh
+
+		while (m_PairList.NotEnd(m_NextPairToRefresh)
 				&& m_NextPairToRefresh != m_NextPairToCompare)
 		{
 			TRACE("Foreground view refresh, pPair=%p, result=%d\n", m_NextPairToRefresh, m_NextPairToRefresh->m_ComparisionResult);
@@ -2242,7 +2241,7 @@ void CAlegrDiffDoc::OnIdle()
 		pPair = m_NextPairToCompare;
 	}
 
-	if (m_PairList.Head() != pPair)
+	if (m_PairList.NotEnd(pPair))
 	{
 		((CFrameWnd*)AfxGetMainWnd())->
 			SetMessageText(pPair->GetComparisionResult());

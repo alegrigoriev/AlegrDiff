@@ -90,6 +90,6 @@ void CChildFrame::OnDestroy()
 	GetWindowPlacement( & wp);
 
 	GetApp()->m_bOpenChildMaximized = 0 != (wp.flags & WPF_RESTORETOMAXIMIZED);
-	//(0 != (GetStyle() & WS_MAXIMIZE));
+
 	CMDIChildWnd::OnDestroy();
 }

@@ -14,6 +14,7 @@ public:
 	}
 	void Set(DWORD error)
 	{
+		SetLastError(error);
 		LastError = error;
 	}
 	operator DWORD() const

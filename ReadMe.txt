@@ -1,6 +1,8 @@
 TODO:
 
+Add "Ignore folders" option
 Find full word only
+Resync file list when compare result changed.
 Use OnActivateApp to refresh the files
 Make radio buttons in file compare dialog: Binary Text Default
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
@@ -11,17 +13,19 @@ Copy binary dump as text
 Add folder picture under the fingerprint picture
 make word by word comparison in MatchStrings
 Make HTML help
+Check that all dialog boxes got HWND, for the correct monitor
+File\Preferences dialog must remeber selected tab for current session.
 
 Maybe different color for selected accepted/declined
 add option to keep the caret on one line during F3 and F7
 
 V1.5:
+Need a hot-key to select current changed block
 Detect moved text blocks
 Compare 3 files for merge
 Consider "signed fingerprint file" (UNICODE only)
 Compare EXE version info for DLL, EXE, SYS
 Show file version (add handler code)
-Make progress dialog for binary comparision
 Add Save differences
 process linux-style MD5 signature files
 // for text editor:
@@ -29,7 +33,9 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-After double click on listview item, the focus moves to the next item
+Zero byte in text file is causing text not shown
+"Length" column On/Off not saved
+Focus after hiding files
 Blank line immediately following difference block is considered separate 
    for "Next Difference" command
 Blank lines prevent from proper line matching inside difference blocks
@@ -38,6 +44,10 @@ Directory dialog allows to select network host. It won't return anything then.
 screen move in two directions may corrupt the image (??)
 
 Fixed:
+"Different only in version stamp" changes to "Files are DIFFERENT" 
+ when the file is opened.
+After double click on listview item, the focus moves to the next item
+In Windows 9x, binary comparison didn't work (FILE_SHARE_DELETE)
 Selection lost when the list view is rebuilt
 Last folder is not selected automatically in FileDialogWithHistory save
 OK doesn't close the directory dialog, if a directory not found
@@ -76,6 +86,9 @@ insufficient space allocated for copying files
 
 Done:
 
+Make progress dialog for binary comparision
+Swap "File 2 Text" (V) "File 1 Text" (X) buttons in toolbar.
+Hide files: Ctrl+H
 Use dotted filenames in the progress dialog
 Remove file result (change to "Ready" when the file window is deactivated)
 Switch from binary view to text view

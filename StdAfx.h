@@ -34,9 +34,6 @@ template<typename T> inline void memzero(T & obj)
 
 #define countof(a) (sizeof (a) / sizeof (a[0]))
 
-size_t MultiSzLen(LPCSTR src);
-size_t MultiSzLen(LPCWSTR src);
-
 static size_t MultiSzLen(LPCSTR src)
 {
 	size_t len = 0;

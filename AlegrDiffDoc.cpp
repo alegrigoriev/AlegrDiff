@@ -1194,7 +1194,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 	{
 		LPCTSTR pStr = NULL;
 		int StrLen = 0;
-		pStr = GetLineText(nSearchLine, line, countof(line), & StrLen);
+		pStr = GetLineText(nSearchLine, line, countof(line), & StrLen, SearchScope);
 
 		int nPatternLen = _tcslen(pStrToFind);
 		if ( ! bBackward)
@@ -1326,7 +1326,7 @@ bool CFilePairDoc::GetWordOnPos(TextPos OnPos, TextPos &Start, TextPos &End)
 			}
 			if (' ' == c)
 			{
-				// if position is on the endo of line or on space, and the previous char is alpha, get the word to the left
+				// if position is on the end of line or on space, and the previous char is alpha, get the word to the left
 				if (CaretPos > nPos)
 				{
 					c = pSection->pBegin[CaretPos - nPos - 1];
@@ -1443,7 +1443,7 @@ bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvok
 		{
 			TCHAR line[2048];
 			int StrLen;
-			LPCTSTR pStr = GetLineText(m_CaretPos.line, line, countof(line), & StrLen);
+			LPCTSTR pStr = GetLineText(m_CaretPos.line, line, countof(line), & StrLen, 0);
 			if (NULL != pStr
 				&& nBeginOffset < StrLen)
 			{
@@ -1502,7 +1502,7 @@ bool CFilePairDoc::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvok
 
 // returns a pointer to a line text
 // buf is used to assembly the string if it is fragmented
-LPCTSTR CFilePairDoc::GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int *pStrLen)
+LPCTSTR CFilePairDoc::GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int *pStrLen, int Scope)
 {
 	if (NULL == m_pFilePair
 		|| nLineNum >= (int)m_pFilePair->m_LinePairs.size())
@@ -1514,9 +1514,11 @@ LPCTSTR CFilePairDoc::GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int
 	LinePair * pPair = m_pFilePair->m_LinePairs[nLineNum];
 	if (NULL == pPair)
 	{
-		return NULL;
+		buf[0] = 0;
+		* pStrLen = 0;
+		return buf;
 	}
-	return pPair->GetText(buf, BufChars, pStrLen, m_bIgnoreWhitespaces);
+	return pPair->GetText(buf, BufChars, pStrLen, m_bIgnoreWhitespaces, Scope);
 }
 
 void CFilePairDoc::CaretLeftToWord(int SelectionFlags)
@@ -1540,7 +1542,7 @@ void CFilePairDoc::CaretLeftToWord(int SelectionFlags)
 		{
 			break;
 		}
-		pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen);
+		pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen, 0);
 		if (NULL == pLine)
 		{
 			break;
@@ -1567,7 +1569,7 @@ void CFilePairDoc::CaretLeftToWord(int SelectionFlags)
 		if (CaretLine > 0)
 		{
 			CaretLine--;
-			pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen);
+			pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen, 0);
 			CaretPos = StrLen;
 		}
 	}
@@ -1622,7 +1624,7 @@ void CFilePairDoc::CaretRightToWord(int SelectionFlags)
 		SetCaretPosition(0, CaretLine, SelectionFlags);
 		return;
 	}
-	pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen);
+	pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen, 0);
 	if (CaretPos > StrLen)
 	{
 		CaretPos = StrLen;
@@ -1642,7 +1644,7 @@ void CFilePairDoc::CaretRightToWord(int SelectionFlags)
 			// go to the next line and skip the spaces
 			CaretLine++;
 			CaretPos = 0;
-			pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen);
+			pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen, 0);
 			while (' ' == pLine[CaretPos])
 			{
 				CaretPos++;
@@ -1926,24 +1928,7 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 	{
 		CString FileName = dlg.GetPathName();
 		pApp->m_LastSaveMergedDir = dlg.GetLastFolder();
-#if 0
-		LPTSTR DirBuf = pApp->m_LastSaveMergedDir.GetBuffer(MAX_PATH + 1);
-		if (DirBuf)
-		{
-			LPTSTR pFilePart = NULL;
-			GetFullPathName(FileName, MAX_PATH + 1, DirBuf, & pFilePart);
-			if (pFilePart != NULL)
-			{
-				*pFilePart = 0;
-			}
-			else
-			{
-				*DirBuf = 0;
-			}
 
-			pApp->m_LastSaveMergedDir.ReleaseBuffer();
-		}
-#endif
 		if (! SaveMergedFile(FileName, DefaultFlags, dlg.m_bUnicode))
 		{
 			AfxMessageBox(IDS_STRING_COULDNT_SAVE_MERGED);

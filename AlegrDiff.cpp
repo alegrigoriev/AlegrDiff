@@ -742,6 +742,7 @@ void OpenFileForEditing(class FileItem * pFile)
 	memzero(shex);
 	shex.cbSize = sizeof shex;
 	shex.hwnd = AfxGetMainWnd()->m_hWnd;
+	// try different verbs. (open first)
 	//shex.lpVerb = _T("Open");
 	shex.lpFile = name;
 	shex.nShow = SW_SHOWDEFAULT;

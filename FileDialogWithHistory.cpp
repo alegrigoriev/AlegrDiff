@@ -6,6 +6,8 @@
 #include "FileDialogWithHistory.h"
 #include <Dlgs.h>
 #include "resource.h"
+#include <shlwapi.h>
+#include <cderr.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -547,7 +549,16 @@ INT_PTR CResizableFileDialog::DoModal()
 
 	}
 #endif
-	return CFileDialog::DoModal();
+	while (1)
+	{
+		UINT result = CFileDialog::DoModal();
+		if (result != 0 || CommDlgExtendedError() != FNERR_INVALIDFILENAME)
+		{
+			return result;
+		}
+		m_ofn.lpstrFile[0] = 0;
+		m_ofn.lpstrInitialDir = NULL;
+	}
 }
 
 INT_PTR CFileDialogWithHistory::DoModal()
@@ -677,8 +688,7 @@ CString CResizableFileDialog::GetNextPathName(POSITION& pos) const
 	}
 
 	// check if the filename is network path
-	if ((lpszFileName[0] == '/' && lpszFileName[1] == '/')
-		|| (lpszFileName[0] == '\\' && lpszFileName[1] == '\\'))
+	if (PathIsUNC(lpszFileName))
 	{
 		return lpszFileName;
 	}

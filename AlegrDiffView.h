@@ -41,7 +41,7 @@ protected:
 
 // Implementation
 public:
-	void AddListViewItem(FilePair * pPair, int item);
+	void SetListViewItem(FilePair * pPair, int item, bool bInsert);
 	BOOL CopySelectedFiles(bool bSecondDir);
 
 	// keeps order of columns (even those non-visible)

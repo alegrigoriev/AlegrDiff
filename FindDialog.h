@@ -25,7 +25,9 @@ public:
 	int		m_FindDown;
 	//}}AFX_DATA
 	CString	m_sFindCombo;
-
+	BOOL m_bNeedUpdateControls;
+	// 0 - both files, 1 - file1, 2 - file2
+	int m_SearchScope;
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CMyFindDialog)
@@ -42,12 +44,13 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 public:
-	// 0 - both files, 1 - file1, 2 - file2
-	int m_SearchScope;
 	afx_msg void OnBnClickedRadio1();
 	afx_msg void OnBnClickedRadio2();
 	afx_msg void OnBnClickedRadio3();
 	afx_msg void OnBnClickedCheckWholeWord();
+	afx_msg LRESULT OnKickIdle(WPARAM, LPARAM);
+	afx_msg void OnUpdateCheckWholeWord(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateOk(CCmdUI* pCmdUI);
 };
 
 //{{AFX_INSERT_LOCATION}}

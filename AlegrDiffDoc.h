@@ -163,7 +163,7 @@ public:
 	BOOL DoSaveMerged(BOOL bOpenResultFile);
 	BOOL SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode);
 
-	LPCTSTR GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int * pStrLen);
+	LPCTSTR GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int * pStrLen, int Scope);
 	// recalculates offset in the raw line to offset in the line with or without whitespaces shown
 	TextPos LinePosToDisplayPos(TextPos position);
 	// recalculates offset in the line with or without whitespaces shown to offset in the raw line

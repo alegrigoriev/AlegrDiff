@@ -286,17 +286,6 @@ void CFolderDialog::Dump(CDumpContext& dc) const
 }
 #endif
 
-#if 0
-LRESULT CFolderDialog::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
-{
-	if (WM_COMMAND == message && 0x3744 == LOWORD(wParam))
-	{
-		TRACE("WM_COMMAND %X\n", HIWORD(wParam));
-	}
-	return CCommonDialog::WindowProc(message, wParam, lParam);
-}
-#endif
-
 void CFolderDialog::OnComboSelendOK()
 {
 	TRACE("CFolderDialog::OnComboSelendOK()\n");

@@ -243,8 +243,7 @@ void FileItem::Unload()
 	}
 	m_Lines.clear();
 	m_NonBlankLines.clear();
-	m_HashSortedLines.clear();
-	m_HashSortedLineGroups.clear();
+
 	m_NormalizedHashSortedLines.clear();
 	m_NormalizedHashSortedLineGroups.clear();
 
@@ -498,17 +497,9 @@ bool FileItem::Load()
 													CalculateHash(NormGroupHash, j * sizeof NormGroupHash[0]));
 	}
 
-	m_HashSortedLines = m_NonBlankLines;
-	std::sort(m_HashSortedLines.begin(), m_HashSortedLines.end(),
-			FileLine::HashAndLineNumberCompareFunc);
-
 	m_NormalizedHashSortedLines = m_NonBlankLines;
 	std::sort(m_NormalizedHashSortedLines.begin(), m_NormalizedHashSortedLines.end(),
 			FileLine::NormalizedHashAndLineNumberCompareFunc);
-
-	m_HashSortedLineGroups = m_NonBlankLines;
-	std::sort(m_HashSortedLineGroups.begin(), m_HashSortedLineGroups.end(),
-			FileLine::GroupHashAndLineNumberCompareFunc);
 
 	m_NormalizedHashSortedLineGroups = m_NonBlankLines;
 	std::sort(m_NormalizedHashSortedLineGroups.begin(), m_NormalizedHashSortedLineGroups.end(),
@@ -517,18 +508,6 @@ bool FileItem::Load()
 	// check if the array is sorted correctly
 	{
 		unsigned i;
-		for (i = 1; i < m_HashSortedLines.size(); i++)
-		{
-			if (m_HashSortedLines[i]->GetHash() < m_HashSortedLines[i - 1]->GetHash()
-				|| (m_HashSortedLines[i]->GetHash() == m_HashSortedLines[i - 1]->GetHash()
-					&& m_HashSortedLines[i]->GetLineNumber() < m_HashSortedLines[i - 1]->GetLineNumber()))
-			{
-				TRACE("Item %d: hash=%x, lineNum=%d, item %d: hash=%x, LineNum=%d\n",
-					i - 1, m_HashSortedLines[i - 1]->GetHash(), m_HashSortedLines[i - 1]->GetLineNumber(),
-					i, m_HashSortedLines[i]->GetHash(), m_HashSortedLines[i]->GetLineNumber());
-				//break;
-			}
-		}
 		for (i = 1; i < m_NormalizedHashSortedLines.size(); i++)
 		{
 			if (m_NormalizedHashSortedLines[i]->GetNormalizedHash() < m_NormalizedHashSortedLines[i - 1]->GetNormalizedHash()
@@ -538,18 +517,6 @@ bool FileItem::Load()
 				TRACE("Item %d: NormHash=%x, lineNum=%d, item %d: NormHash=%x, LineNum=%d\n",
 					i - 1, m_NormalizedHashSortedLines[i - 1]->GetNormalizedHash(), m_NormalizedHashSortedLines[i - 1]->GetLineNumber(),
 					i, m_NormalizedHashSortedLines[i]->GetNormalizedHash(), m_NormalizedHashSortedLines[i]->GetLineNumber());
-				//break;
-			}
-		}
-		for (i = 1; i < m_HashSortedLineGroups.size(); i++)
-		{
-			if (m_HashSortedLineGroups[i]->GetGroupHash() < m_HashSortedLineGroups[i - 1]->GetGroupHash()
-				|| (m_HashSortedLineGroups[i]->GetGroupHash() == m_HashSortedLineGroups[i - 1]->GetGroupHash()
-					&& m_HashSortedLineGroups[i]->GetLineNumber() < m_HashSortedLineGroups[i - 1]->GetLineNumber()))
-			{
-				TRACE("Item %d: GroupHash=%x, lineNum=%d, item %d: GroupHash=%x, LineNum=%d\n",
-					i - 1, m_HashSortedLineGroups[i - 1]->GetGroupHash(), m_HashSortedLineGroups[i - 1]->GetLineNumber(),
-					i, m_HashSortedLineGroups[i]->GetGroupHash(), m_HashSortedLineGroups[i]->GetLineNumber());
 				//break;
 			}
 		}
@@ -813,8 +780,14 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 	{
 		// Open the file with FILE_SHARE_DELETE, to allow other applications
 		// to delete or move the file
+		DWORD ShareMode = FILE_SHARE_READ;
+		if ((GetVersion() & 0xFF) >= 5)
+		{
+			ShareMode = FILE_SHARE_READ | FILE_SHARE_DELETE;
+		}
+
 		m_hFile = CreateFile(GetFullName(), GENERIC_READ,
-							FILE_SHARE_READ | FILE_SHARE_DELETE, NULL,
+							ShareMode, NULL,
 							OPEN_EXISTING, FILE_FLAG_NO_BUFFERING, NULL);
 		if (NULL == m_hFile
 			|| INVALID_HANDLE_VALUE == m_hFile)
@@ -2050,7 +2023,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 	if (NULL != str1VersionBegin
 		&& NULL != str2VersionBegin)
 	{
-		LPCTSTR keywords[] =
+		static LPCTSTR const keywords[] =
 		{
 			_T("Archive:"),
 			_T("Author:"),
@@ -2068,8 +2041,8 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, KListEntry<Stri
 		for (i = 0; i < countof(keywords); i++)
 		{
 			int len = _tcslen(keywords[i]);
-			if (0 == _tcsncmp(str1VersionBegin, keywords[i], len)
-				&& 0 == _tcsncmp(str2VersionBegin, keywords[i], len))
+			if (0 == _tcsncmp(str1VersionBegin + 1, keywords[i], len)
+				&& 0 == _tcsncmp(str2VersionBegin + 1, keywords[i], len))
 			{
 				break;
 			}
@@ -4502,44 +4475,72 @@ BOOL FilePair::EnumStringDiffSections(TextPos & PosFrom, TextPos & PosTo,
 	return TRUE;
 }
 
-LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen, BOOL IgnoreWhitespaces)
+LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen,
+						BOOL IgnoreWhitespaces, int SelectFile)
 {
+	// SelectFile: 1 - first file, 2 - second file, any other: both files
+	if (1 == SelectFile)
+	{
+		if (NULL != pFirstLine)
+		{
+			*pStrLen = pFirstLine->GetLength();
+			return pFirstLine->GetText();
+		}
+		else
+		{
+			*pStrLen = 0;
+			buf[0] = 0;
+			return buf;
+		}
+	}
+	if (2 == SelectFile)
+	{
+		if (NULL != pSecondLine)
+		{
+			*pStrLen = pSecondLine->GetLength();
+			return pSecondLine->GetText();
+		}
+		else
+		{
+			*pStrLen = 0;
+			buf[0] = 0;
+			return buf;
+		}
+	}
+
 	if (NULL == pFirstLine)
 	{
 		*pStrLen = pSecondLine->GetLength();
 		return pSecondLine->GetText();
 	}
-	else if (NULL == pSecondLine)
+
+	if (NULL == pSecondLine)
 	{
 		*pStrLen = pFirstLine->GetLength();
 		return pFirstLine->GetText();
 	}
-	else
+	// make a string of string sections
+	int StrLen = 0;
+	for (StringSection * pSection = StrSections.First();
+		StrSections.NotEnd(pSection) && StrLen + 1u < nBufChars; pSection = pSection->Next())
 	{
-		// make a string of string sections
-		int StrLen = 0;
-		for (StringSection * pSection = StrSections.First();
-			StrSections.NotEnd(pSection) && StrLen + 1u < nBufChars; pSection = pSection->Next())
+		if ((pSection->Attr & pSection->Whitespace)
+			&& (pSection->Attr & pSection->Erased)
+			&& IgnoreWhitespaces)
 		{
-			if ((pSection->Attr & pSection->Whitespace)
-				&& (pSection->Attr & pSection->Erased)
-				&& IgnoreWhitespaces)
-			{
-				continue;   // don't show the section
-			}
-			int len = pSection->Length;
-			if (StrLen + len + 1u > nBufChars)
-			{
-				len = nBufChars - StrLen - 1;
-			}
-			_tcsncpy(buf + StrLen, pSection->pBegin, len);
-			StrLen += len;
+			continue;   // don't show the section
 		}
-		buf[StrLen] = 0;
-		*pStrLen = StrLen;
-		return buf;
+		int len = pSection->Length;
+		if (StrLen + len + 1u > nBufChars)
+		{
+			len = nBufChars - StrLen - 1;
+		}
+		_tcsncpy(buf + StrLen, pSection->pBegin, len);
+		StrLen += len;
 	}
-
+	buf[StrLen] = 0;
+	*pStrLen = StrLen;
+	return buf;
 }
 
 int LinePair::LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces)

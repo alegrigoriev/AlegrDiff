@@ -18,29 +18,34 @@ static char THIS_FILE[] = __FILE__;
 
 CSaveFileListDlg::CSaveFileListDlg(CWnd* pParent /*=NULL*/)
 	: CUiUpdatedDlg(CSaveFileListDlg::IDD, pParent)
+	, m_bEnableSelectedItems(FALSE)
 {
 	//{{AFX_DATA_INIT(CSaveFileListDlg)
 	m_bIncludeComparisonResult = FALSE;
 	m_bIncludeDifferentFiles = FALSE;
 	m_bIncludeDifferentInBlanksFiles = FALSE;
+	m_bIncludeDifferentVersionFiles = FALSE;
 	m_bIncludeFolder1OnlyFiles = FALSE;
 	m_bIncludeFolder2OnlyFiles = FALSE;
 	m_bIncludeIdenticalFiles = FALSE;
 	m_bIncludeSubdirectoryName = FALSE;
 	m_bIncludeTimestamp = FALSE;
+	m_bIncludeLength = FALSE;
 	m_sFilename = _T("");
 	m_IncludeFilesSelect = -1;
 	//}}AFX_DATA_INIT
 
 	m_Profile.AddItem(_T("Settings\\SaveList"), _T("Filename"), m_sFilename, _T(""));
-	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("ComparisonResult"), m_bIncludeComparisonResult, FALSE);
+	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("IncludeComparisonResult"), m_bIncludeComparisonResult, FALSE);
 	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("DifferentFiles"), m_bIncludeDifferentFiles, TRUE);
 	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("DifferentInBlanksFiles"), m_bIncludeDifferentInBlanksFiles, FALSE);
+	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("DifferentInVersionFiles"), m_bIncludeDifferentVersionFiles, FALSE);
 	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("Folder1OnlyFiles"), m_bIncludeFolder1OnlyFiles, FALSE);
 	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("Folder2OnlyFiles"), m_bIncludeFolder2OnlyFiles, FALSE);
 	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("IdenticalFiles"), m_bIncludeIdenticalFiles, FALSE);
-	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("SubdirectoryName"), m_bIncludeSubdirectoryName, TRUE);
-	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("Timestamp"), m_bIncludeTimestamp, FALSE);
+	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("IncludeSubdirectoryName"), m_bIncludeSubdirectoryName, TRUE);
+	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("IncludeTimestamp"), m_bIncludeTimestamp, FALSE);
+	m_Profile.AddBoolItem(_T("Settings\\SaveList"), _T("IncludeLength"), m_bIncludeLength, FALSE);
 	m_Profile.AddItem(_T("Settings\\SaveList"), _T("FilesSelect"), m_IncludeFilesSelect, 2, 0, 2);
 
 }
@@ -54,11 +59,13 @@ void CSaveFileListDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_COMPARISON_RESULT, m_bIncludeComparisonResult);
 	DDX_Check(pDX, IDC_CHECK_DIFFERENT, m_bIncludeDifferentFiles);
 	DDX_Check(pDX, IDC_CHECK_DIFFERENT_IN_BLANKS, m_bIncludeDifferentInBlanksFiles);
+	DDX_Check(pDX, IDC_CHECK_DIFFERENT_IN_VERSION, m_bIncludeDifferentVersionFiles);
 	DDX_Check(pDX, IDC_CHECK_FOLDER1_ONLY, m_bIncludeFolder1OnlyFiles);
 	DDX_Check(pDX, IDC_CHECK_FOLDER2_ONLY, m_bIncludeFolder2OnlyFiles);
 	DDX_Check(pDX, IDC_CHECK_IDENTICAL, m_bIncludeIdenticalFiles);
 	DDX_Check(pDX, IDC_CHECK_SUBDIRECTORY, m_bIncludeSubdirectoryName);
 	DDX_Check(pDX, IDC_CHECK_TIMESTAMP, m_bIncludeTimestamp);
+	DDX_Check(pDX, IDC_CHECK_FILE_LENGTH, m_bIncludeLength);
 	DDX_Text(pDX, IDC_EDIT_FILENAME, m_sFilename);
 	DDX_Radio(pDX, IDC_RADIO_INCLUDE_FILES, m_IncludeFilesSelect);
 	//}}AFX_DATA_MAP
@@ -78,6 +85,7 @@ BEGIN_MESSAGE_MAP(CSaveFileListDlg, CUiUpdatedDlg)
 	ON_UPDATE_COMMAND_UI(IDC_CHECK_IDENTICAL, OnUpdateCheckIncludeGroup)
 	ON_UPDATE_COMMAND_UI(IDC_CHECK_DIFFERENT, OnUpdateCheckIncludeGroup)
 	ON_UPDATE_COMMAND_UI(IDC_CHECK_DIFFERENT_IN_BLANKS, OnUpdateCheckIncludeGroup)
+	ON_UPDATE_COMMAND_UI(IDC_CHECK_DIFFERENT_IN_VERSION, OnUpdateCheckIncludeGroup)
 	ON_UPDATE_COMMAND_UI(IDC_CHECK_FOLDER1_ONLY, OnUpdateCheckIncludeGroup)
 	ON_UPDATE_COMMAND_UI(IDC_CHECK_FOLDER2_ONLY, OnUpdateCheckIncludeGroup)
 END_MESSAGE_MAP()
@@ -146,7 +154,8 @@ BOOL CSaveFileListDlg::OnInitDialog()
 	NeedUpdateControls();
 	CUiUpdatedDlg::OnInitDialog();
 	UpdateDialogControls(this, FALSE);
-	// TODO: Add extra initialization here
+
+	EnableDlgItem(IDC_RADIO_SELECTED_FILES, m_bEnableSelectedItems);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE

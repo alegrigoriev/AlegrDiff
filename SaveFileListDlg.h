@@ -17,20 +17,95 @@ public:
 	CSaveFileListDlg(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
-	//{{AFX_DATA(CSaveFileListDlg)
 	enum { IDD = IDD_DIALOG_SAVE_FILE_LIST };
+protected:
+	//{{AFX_DATA(CSaveFileListDlg)
 	CEdit	m_eFilename;
+	CString	m_sFilename;
 	BOOL	m_bIncludeComparisonResult;
 	BOOL	m_bIncludeDifferentFiles;
 	BOOL	m_bIncludeDifferentInBlanksFiles;
+	BOOL	m_bIncludeDifferentVersionFiles;
 	BOOL	m_bIncludeFolder1OnlyFiles;
 	BOOL	m_bIncludeFolder2OnlyFiles;
 	BOOL	m_bIncludeIdenticalFiles;
 	BOOL	m_bIncludeSubdirectoryName;
 	BOOL	m_bIncludeTimestamp;
-	CString	m_sFilename;
+	BOOL	m_bIncludeLength;
 	int		m_IncludeFilesSelect;
 	//}}AFX_DATA
+	BOOL    m_bEnableSelectedItems;
+public:
+	enum FilesFilter
+	{
+		IncludeAllFiles = 0,
+		IncludeSelectedFiles = 1,
+		IncludeGroups = 2,
+	};
+
+	FilesFilter GetFilesFilter() const
+	{
+		return (FilesFilter) m_IncludeFilesSelect;
+	}
+	LPCTSTR GetFilename() const
+	{
+		return m_sFilename;
+	}
+
+	bool IncludeIdenticalFiles() const
+	{
+		return FALSE != m_bIncludeIdenticalFiles;
+	}
+
+	bool IncludeDifferentFiles() const
+	{
+		return FALSE != m_bIncludeDifferentFiles;
+	}
+
+	bool IncludeDifferentInSpacesFiles() const
+	{
+		return FALSE != m_bIncludeDifferentInBlanksFiles;
+	}
+
+	bool IncludeVersionInfoDifferentFiles() const
+	{
+		return FALSE != m_bIncludeDifferentVersionFiles;
+	}
+
+	bool IncludeFolder1Files() const
+	{
+		return FALSE != m_bIncludeFolder1OnlyFiles;
+	}
+
+	bool IncludeFolder2Files() const
+	{
+		return FALSE != m_bIncludeFolder2OnlyFiles;
+	}
+
+	bool IncludeSubdirectoryName() const
+	{
+		return FALSE != m_bIncludeSubdirectoryName;
+	}
+
+	bool IncludeTimestamp() const
+	{
+		return FALSE != m_bIncludeTimestamp;
+	}
+
+	bool IncludeLength() const
+	{
+		return FALSE != m_bIncludeLength;
+	}
+
+	bool IncludeComparisonResult() const
+	{
+		return FALSE != m_bIncludeComparisonResult;
+	}
+
+	void EnableSelectedItems()
+	{
+		m_bEnableSelectedItems = TRUE;
+	}
 
 	CApplicationProfile m_Profile;
 // Overrides

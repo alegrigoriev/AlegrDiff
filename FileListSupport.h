@@ -242,9 +242,16 @@ public:
 	int GetNumLines() const { return m_Lines.GetSize(); }
 
 	LPCTSTR GetName() const { return m_Name; }
+	int GetNameLength() const { return m_Name.GetLength(); }
+
 	LPCTSTR GetSubdir() const { return m_Subdir; }
+	int GetSubdirLength() const { return m_Subdir.GetLength(); }
+
 	LPCTSTR GetBasedir() const { return m_BaseDir; }
+	int GetBasedirLength() const { return m_BaseDir.GetLength(); }
+
 	CString GetFullName() const { return m_BaseDir + m_Subdir + m_Name; }
+	int GetFullNameLength() const { return m_BaseDir.GetLength() + m_Subdir.GetLength() + m_Name.GetLength(); }
 
 	FILETIME GetLastWriteTime() const { return m_LastWriteTime; }
 	const FileLine * FindMatchingLine(const FileLine * pLine, int nStartLineNum, int nEndLineNum);
@@ -333,6 +340,7 @@ public:
 	enum eFileComparisionResult
 	{
 		ResultUnknown,
+		FileUnaccessible,
 		FilesIdentical,
 		DifferentInSpaces,
 		VersionInfoDifferent,
@@ -361,7 +369,7 @@ public:
 	eFileComparisionResult PreCompareFiles();
 	eFileComparisionResult PreCompareTextFiles();
 
-	eFileComparisionResult ComparisionResult;
+	eFileComparisionResult m_ComparisionResult;
 	CArray<LinePair *, LinePair *> m_LinePairs;
 	CArray<FileDiffSection *, FileDiffSection *> m_DiffSections;
 };

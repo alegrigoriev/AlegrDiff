@@ -196,6 +196,7 @@ CViewPreferencesPage::CViewPreferencesPage() : CPropertyPage(CViewPreferencesPag
 	//}}AFX_DATA_INIT
 	m_FontPointSize = 100;
 	m_bFontChanged = false;
+	m_bColorChanged = false;
 }
 
 CViewPreferencesPage::~CViewPreferencesPage()
@@ -219,6 +220,9 @@ BEGIN_MESSAGE_MAP(CViewPreferencesPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_BUTTON_INSERTED_FONT, OnButtonInsertedFont)
 	ON_BN_CLICKED(IDC_BUTTON_ERASED_FONT, OnButtonErasedFont)
 	ON_WM_CTLCOLOR()
+	ON_BN_CLICKED(IDC_BUTTON_NORMAL_BACKGROUND, OnButtonNormalBackground)
+	ON_BN_CLICKED(IDC_BUTTON_ADDED_BACKGROUND, OnButtonAddedBackground)
+	ON_BN_CLICKED(IDC_BUTTON_ERASED_BACKGROUND, OnButtonErasedBackground)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -375,19 +379,19 @@ HBRUSH CViewPreferencesPage::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 			TRACE("OnCtlColor IDC_BUTTON_NORMAL_FONT\n");
 			pDC->SetTextColor(m_NormalTextColor);
 			hbr = GetSysColorBrush(COLOR_WINDOW);
-			pDC->SetBkColor(GetSysColor(COLOR_WINDOW));
+			pDC->SetBkColor(m_NormalTextBackground);
 			pDC->SetBkMode(OPAQUE);
 			break;
 		case IDC_STATIC_ADDED_TEXT:
 			pDC->SetTextColor(m_AddedTextColor);
 			hbr = GetSysColorBrush(COLOR_WINDOW);
-			pDC->SetBkColor(GetSysColor(COLOR_WINDOW));
+			pDC->SetBkColor(m_AddedTextBackground);
 			pDC->SetBkMode(OPAQUE);
 			break;
 		case IDC_STATIC_DELETED_TEXT:
 			pDC->SetTextColor(m_ErasedTextColor);
 			hbr = GetSysColorBrush(COLOR_WINDOW);
-			pDC->SetBkColor(GetSysColor(COLOR_WINDOW));
+			pDC->SetBkColor(m_ErasedTextBackground);
 			pDC->SetBkMode(OPAQUE);
 			break;
 		}
@@ -404,6 +408,7 @@ IMPLEMENT_DYNAMIC(CPreferencesPropertySheet, CPropertySheet)
 CPreferencesPropertySheet::CPreferencesPropertySheet(UINT nIDCaption, CWnd* pParentWnd, UINT iSelectPage)
 	:CPropertySheet(nIDCaption, pParentWnd, iSelectPage)
 {
+	m_psh.dwFlags |= PSH_NOAPPLYNOW;
 	AddPage( & m_FilesPage);
 	AddPage( & m_ComparisionPage);
 	AddPage( & m_ViewPage);
@@ -428,3 +433,25 @@ BEGIN_MESSAGE_MAP(CPreferencesPropertySheet, CPropertySheet)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
+
+void CViewPreferencesPage::OnButtonNormalBackground()
+{
+	CColorDialog dlg(m_NormalTextBackground, CC_RGBINIT | CC_PREVENTFULLOPEN | CC_SOLIDCOLOR);
+	if (IDOK == dlg.DoModal())
+	{
+		m_NormalTextBackground = dlg.GetColor();
+		m_bColorChanged = true;
+	}
+}
+
+void CViewPreferencesPage::OnButtonAddedBackground()
+{
+	// TODO: Add your control notification handler code here
+
+}
+
+void CViewPreferencesPage::OnButtonErasedBackground()
+{
+	// TODO: Add your control notification handler code here
+
+}

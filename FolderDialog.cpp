@@ -16,11 +16,19 @@ static char THIS_FILE[] = __FILE__;
 IMPLEMENT_DYNAMIC(CFolderDialog, CDialog)
 
 CFolderDialog::CFolderDialog(LPCTSTR lpszTitle, LPCTSTR lpszStartingDirectory,
-							DWORD dwFlags, CWnd* pParentWnd) :
-	CCommonDialog(pParentWnd), szStartupDir(lpszStartingDirectory)
+							bool EnableCreateFolder,
+							DWORD dwFlags, CWnd* pParentWnd)
+	: CCommonDialog(pParentWnd),
+	szStartupDir(lpszStartingDirectory),
+	m_bEnableCreateDir(EnableCreateFolder)
 {
 	memset( & m_bi, 0, sizeof m_bi);
 	m_bi.ulFlags = dwFlags;
+	if (EnableCreateFolder)
+	{
+		m_bi.ulFlags |= BIF_EDITBOX;
+	}
+
 	m_bi.pszDisplayName = szBuffer;
 	szBuffer[0] = 0;
 	m_bi.lpszTitle = lpszTitle;
@@ -34,6 +42,8 @@ BEGIN_MESSAGE_MAP(CFolderDialog, CCommonDialog)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
+void AFXAPI AfxHookWindowCreate(CWnd* pWnd);
+BOOL AFXAPI AfxUnhookWindowCreate();
 int CFolderDialog::DoModal()
 {
 	ASSERT_VALID(this);
@@ -45,22 +55,23 @@ int CFolderDialog::DoModal()
 	HWND hWndFocus = ::GetFocus();
 	BOOL bEnableParent = FALSE;
 	m_bi.hwndOwner = PreModal();
-	//AfxUnhookWindowCreate();
+	AfxUnhookWindowCreate();
 	if (m_bi.hwndOwner != NULL && ::IsWindowEnabled(m_bi.hwndOwner))
 	{
 		bEnableParent = TRUE;
 		::EnableWindow(m_bi.hwndOwner, FALSE);
 	}
 
-#if 0
+	OleInitialize(NULL);
+//#if 0
 	_AFX_THREAD_STATE* pThreadState = AfxGetThreadState();
 	ASSERT(pThreadState->m_pAlternateWndInit == NULL);
 
-	if (m_bi.Flags & OFN_EXPLORER)
+	if (m_bi.ulFlags & BIF_NEWDIALOGSTYLE)
 		pThreadState->m_pAlternateWndInit = this;
 	else
 		AfxHookWindowCreate(this);
-#endif
+//#endif
 
 	ASSERT(m_bi.lParam == (LPARAM) this);
 
@@ -81,12 +92,13 @@ int CFolderDialog::DoModal()
 			pMalloc = NULL;
 		}
 	}
+	OleUninitialize();
 
-#if 0
-	if (lpResult)
-		ASSERT(pThreadState->m_pAlternateWndInit == NULL);
+//#if 0
+	//if (lpResult)
+	//	ASSERT(pThreadState->m_pAlternateWndInit == NULL);
 	pThreadState->m_pAlternateWndInit = NULL;
-#endif
+//#endif
 
 	// WINBUG: Second part of special case for file open/save dialog.
 	if (bEnableParent)
@@ -105,41 +117,65 @@ int CALLBACK CFolderDialog::BrowseCallbackProc(HWND hwnd,
 	switch (uMsg)
 	{
 	case BFFM_INITIALIZED:
-		return pDlg->OnInitDone(hwnd);
+		TRACE("CFolderDialog::BrowseCallbackProc BFFM_INITIALIZED hwnd=%X\n", hwnd);
+		if(pDlg->m_hWnd == NULL)
+		{
+			pDlg->Attach(hwnd);
+		}
+		ASSERT(pDlg->m_hWnd == hwnd);
+		return pDlg->OnInitDone();
 		break;
 	case BFFM_SELCHANGED:
-		return pDlg->OnFolderChange(hwnd, (LPITEMIDLIST) lParam);
+		TRACE("CFolderDialog::BrowseCallbackProc BFFM_SELCHANGED hwnd=%X\n", hwnd);
+		if(pDlg->m_hWnd == NULL)
+		{
+			pDlg->Attach(hwnd);
+		}
+		ASSERT(pDlg->m_hWnd == hwnd);
+		return pDlg->OnFolderChange((LPITEMIDLIST) lParam);
 		break;
-#if 0
+
 	case BFFM_VALIDATEFAILED:
-		return pDlg->OnValidateFailed(hwnd, (LPCTSTR)lParam);
+		TRACE("CFolderDialog::BrowseCallbackProc BFFM_VALIDATEFAILED hwnd=%X\n", hwnd);
+		ASSERT(pDlg->m_hWnd == hwnd);
+		return pDlg->OnValidateFailed((LPCTSTR)lParam);
 		break;
-#endif
+
 	default:
 		return 0;
 		break;
 	}
 }
 
-int CFolderDialog::OnInitDone(HWND hwnd)
+int CFolderDialog::OnInitDone()
 {
+	if ( ! m_bEnableCreateDir)
+	{
+		// disable and hide CreateDir button
+		CWnd * button = GetDlgItem(0x3746);
+		if (button)
+		{
+			button->EnableWindow(FALSE);
+			button->ShowWindow(SW_HIDE);
+		}
+	}
 	if (! szStartupDir.IsEmpty())
 	{
-		::SendMessage(hwnd, BFFM_SETSELECTION, TRUE,
+		::SendMessage(m_hWnd, BFFM_SETSELECTION, TRUE,
 					(LPARAM)(LPCTSTR)szStartupDir);
 	}
 
 	return 0;
 }
 
-int CFolderDialog::OnFolderChange(HWND hwnd, LPITEMIDLIST lpItem)
+int CFolderDialog::OnFolderChange(LPITEMIDLIST lpItem)
 {
 	return 0;
 }
 
-int CFolderDialog::OnValidateFailed(HWND /*hwnd*/, LPCTSTR /*ErrorName*/)
+int CFolderDialog::OnValidateFailed(LPCTSTR /*ErrorName*/)
 {
-	return TRUE;
+	return 0;
 }
 
 CString CFolderDialog::GetFolderDisplayName() const

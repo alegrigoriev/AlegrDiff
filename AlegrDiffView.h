@@ -39,6 +39,7 @@ protected:
 
 // Implementation
 public:
+	BOOL CopySelectedFiles(bool bSecondDir);
 	enum eColumns {ColumnName, ColumnSubdir, ColumnDate1, ColumnDate2, ColumnComparisionResult };
 	eColumns m_SortColumn;
 	bool m_bAscendingOrder;
@@ -66,6 +67,10 @@ protected:
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnListviewOpen();
 	afx_msg void OnUpdateListviewOpen(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateFileCopyFirstDir(CCmdUI* pCmdUI);
+	afx_msg void OnFileCopyFirstDir();
+	afx_msg void OnUpdateFileCopySecondDir(CCmdUI* pCmdUI);
+	afx_msg void OnFileCopySecondDir();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

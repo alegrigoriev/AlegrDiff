@@ -28,6 +28,10 @@ BEGIN_MESSAGE_MAP(CAlegrDiffApp, CWinApp)
 	ON_COMMAND(ID_FILE_COMPAREDIRECTORIES, OnFileComparedirectories)
 	ON_COMMAND(ID_FILE_COMPAREFILES, OnFileComparefiles)
 	ON_COMMAND(ID_FILE_PREFERENCES, OnFilePreferences)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_IGNORE_WHITESPACES, OnUpdateViewIgnoreWhitespaces)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_LINE_NUMBERS, OnUpdateViewShowLineNumbers)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_ACCEPT, OnUpdateEditAccept)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DECLINE, OnUpdateEditDecline)
 	//}}AFX_MSG_MAP
 	// Standard file based document commands
 //	ON_COMMAND(ID_FILE_OPEN, CWinApp::OnFileOpen)
@@ -55,7 +59,7 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_UsedFilenameFilter(0),
 	m_AutoReloadChangedFiles(false),
 	m_bCaseSensitive(true),
-	m_bIgnoreWhitespaces(false),
+	m_bIgnoreWhitespaces(true),
 	m_MinimalLineLength(2),
 	m_NumberOfIdenticalLines(5),
 	m_PercentsOfLookLikeDifference(30),
@@ -313,6 +317,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("InitialDir1"), m_FileDir1, _T(""));
 	Profile.AddItem(_T("Settings"), _T("InitialDir2"), m_FileDir2, _T(""));
 	Profile.AddItem(_T("Settings"), _T("LastSaveMergedDir"), m_LastSaveMergedDir, _T("."));
+	Profile.AddItem(_T("Settings"), _T("CopyFilesDir"), m_CopyFilesDir, _T("."));
 
 	Profile.AddItem(_T("Settings"), _T("FilenameFilter"), m_sFilenameFilter, _T("*"));
 	Profile.AddItem(_T("Settings"), _T("UseBinaryFilesFilter"), m_bUseBinaryFilesFilter, true);
@@ -321,7 +326,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("AdvancedCompareDialog"), m_bAdvancedCompareDialog, false);
 	Profile.AddItem(_T("Settings"), _T("BinaryComparision"), m_BinaryComparision, false);
 	Profile.AddItem(_T("Settings"), _T("AutoReloadChangedFiles"), m_AutoReloadChangedFiles, false);
-	Profile.AddItem(_T("Settings"), _T("IgnoreWhitespaces"), m_bIgnoreWhitespaces, false);
+	Profile.AddItem(_T("Settings"), _T("IgnoreWhitespaces"), m_bIgnoreWhitespaces, true);
 
 	Profile.AddItem(_T("Settings"), _T("MinimalLineLength"), m_MinimalLineLength, 2, 1, 2048);
 	Profile.AddItem(_T("Settings"), _T("NumberOfIdenticalLines"), m_NumberOfIdenticalLines, 5, 1, 50);
@@ -489,6 +494,17 @@ void CAlegrDiffApp::OnFileComparedirectories()
 			return;
 		}
 		pDoc->SetTitle("");
+
+		// make full names from the directories
+		LPTSTR pFilePart;
+		TCHAR buf[MAX_PATH];
+
+		GetFullPathName(dlg.m_sFirstDir, MAX_PATH, buf, & pFilePart);
+		dlg.m_sFirstDir = buf;
+
+		GetFullPathName(dlg.m_sSecondDir, MAX_PATH, buf, & pFilePart);
+		dlg.m_sSecondDir = buf;
+
 		if (pDoc->BuildFilePairList(dlg.m_sFirstDir, dlg.m_sSecondDir, m_bRecurseSubdirs))
 		{
 			pDoc->UpdateAllViews(NULL);
@@ -647,6 +663,9 @@ void CAlegrDiffApp::OnFilePreferences()
 	dlg.m_ViewPage.m_ErasedLogFont = m_ErasedLogFont;
 	dlg.m_ViewPage.m_ErasedTextColor = m_ErasedTextColor;
 	dlg.m_ViewPage.m_FontPointSize = m_FontPointSize;
+	dlg.m_ViewPage.m_NormalTextBackground = m_TextBackgroundColor;
+	dlg.m_ViewPage.m_AddedTextBackground = m_AcceptedTextBackgroundColor;
+	dlg.m_ViewPage.m_ErasedTextBackground = m_DiscardedTextBackgroundColor;
 
 	dlg.m_ComparisionPage.m_MinimalLineLength = m_MinimalLineLength;
 	dlg.m_ComparisionPage.m_NumberOfIdenticalLines = m_NumberOfIdenticalLines;
@@ -683,6 +702,14 @@ void CAlegrDiffApp::OnFilePreferences()
 
 			m_FontPointSize = dlg.m_ViewPage.m_FontPointSize;
 			OnFontChanged();
+		}
+		else if (dlg.m_ViewPage.m_bColorChanged)
+		{
+			m_TextBackgroundColor = dlg.m_ViewPage.m_NormalTextBackground;
+			m_AcceptedTextBackgroundColor = dlg.m_ViewPage.m_AddedTextBackground;
+			m_DiscardedTextBackgroundColor = dlg.m_ViewPage.m_ErasedTextBackground;
+
+			UpdateAllDiffViews();
 		}
 	}
 }
@@ -814,4 +841,32 @@ void CAlegrDiffApp::OpenSingleFile(LPCTSTR pName)
 		// SetFilePair references the pair, we need to compensate it
 		pPair->Dereference();
 	}
+}
+
+void CAlegrDiffApp::OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI)
+{
+	// if there is no handler, disable and uncheck
+	pCmdUI->Enable(FALSE);
+	pCmdUI->SetCheck(0);
+}
+
+void CAlegrDiffApp::OnUpdateViewShowLineNumbers(CCmdUI* pCmdUI)
+{
+	// if there is no handler, disable and uncheck
+	pCmdUI->Enable(FALSE);
+	pCmdUI->SetCheck(0);
+}
+
+void CAlegrDiffApp::OnUpdateEditAccept(CCmdUI* pCmdUI)
+{
+	// if there is no handler, disable and uncheck
+	pCmdUI->Enable(FALSE);
+	pCmdUI->SetCheck(0);
+}
+
+void CAlegrDiffApp::OnUpdateEditDecline(CCmdUI* pCmdUI)
+{
+	// if there is no handler, disable and uncheck
+	pCmdUI->Enable(FALSE);
+	pCmdUI->SetCheck(0);
 }

@@ -19,11 +19,13 @@ class CFolderDialog : public CCommonDialog
 public:
 	CFolderDialog(LPCTSTR lpszTitle = NULL,
 				LPCTSTR lpszStartingDirectory = NULL,
-				DWORD dwFlags = BIF_RETURNONLYFSDIRS,
+				bool EnableCreateFolder = false,
+				DWORD dwFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE,
 				CWnd* pParentWnd = NULL);
 
 	BROWSEINFO m_bi;
 	TCHAR szBuffer[MAX_PATH + 1];
+	bool m_bEnableCreateDir;
 	CString szStartupDir;
 	CString szDisplayName;
 	CString szPath;
@@ -34,9 +36,9 @@ public:
 	CString GetFolderPath() const;
 
 // Overridable callbacks
-	virtual int OnInitDone(HWND hwnd);
-	virtual int OnFolderChange(HWND hwnd, LPITEMIDLIST lpItem);
-	virtual int OnValidateFailed(HWND hwnd, LPCTSTR ErrorName);
+	virtual int OnInitDone();
+	virtual int OnFolderChange(LPITEMIDLIST lpItem);
+	virtual int OnValidateFailed(LPCTSTR ErrorName);
 
 protected:
 	static int CALLBACK BrowseCallbackProc(HWND hwnd,

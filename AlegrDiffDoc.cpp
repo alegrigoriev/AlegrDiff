@@ -78,38 +78,42 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 	m_bRecurseSubdirs = bRecurseSubdirs;
 	FileList FileList1;
 	FileList FileList2;
-	if (! FileList1.LoadFolder(dir1, bRecurseSubdirs,
+
+	m_sFirstDir = dir1;
+	m_sSecondDir = dir2;
+
+	if (! FileList1.LoadFolder(m_sFirstDir, bRecurseSubdirs,
 								m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern))
 	{
 		DWORD error = GetLastError();
 		FreeFilePairList();
 		CString s;
-		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(dir1));
+		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sFirstDir));
 		AfxMessageBox(s);
 		return false;
 	}
-	if (! FileList2.LoadFolder(dir2, bRecurseSubdirs,
+	if (! FileList2.LoadFolder(m_sSecondDir, bRecurseSubdirs,
 								m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern))
 	{
 		FreeFilePairList();
 		CString s;
-		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(dir2));
+		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sSecondDir));
 		AfxMessageBox(s);
 		return false;
 	}
 	{
-		CString title = dir1;
+		CString title = m_sFirstDir;
 		title += _T(" - ");
-		title += dir2;
+		title += m_sSecondDir;
 		SetTitle(title);
 	}
+
 
 	CArray<FileItem *, FileItem *> Files1;
 	CArray<FileItem *, FileItem *> Files2;
 
 	FileList1.GetSortedList(Files1, FileList::SortDirFirst | FileList::SortBackwards);
 	FileList2.GetSortedList(Files2, FileList::SortDirFirst | FileList::SortBackwards);
-
 
 	FreeFilePairList();
 	for (int idx1 = 0, idx2 = 0; idx1 < Files1.GetSize() || idx2 < Files2.GetSize(); )
@@ -122,7 +126,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 		{
 			pPair->pFirstFile = NULL;
 			pPair->pSecondFile = Files2[idx2];
-			pPair->ComparisionResult = FilePair::OnlySecondFile;
+			pPair->m_ComparisionResult = FilePair::OnlySecondFile;
 			idx2++;
 
 			if (0) TRACE("File \"%s\" exists only in dir \"%s\"\n",
@@ -134,7 +138,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 		{
 			pPair->pSecondFile = NULL;
 			pPair->pFirstFile = Files1[idx1];
-			pPair->ComparisionResult = FilePair::OnlyFirstFile;
+			pPair->m_ComparisionResult = FilePair::OnlyFirstFile;
 			idx1++;
 
 			if (0) TRACE("File \"%s\" exists only in dir \"%s\"\n",
@@ -147,7 +151,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 		{
 			pPair->pFirstFile = NULL;
 			pPair->pSecondFile = Files2[idx2];
-			pPair->ComparisionResult = FilePair::OnlySecondFile;
+			pPair->m_ComparisionResult = FilePair::OnlySecondFile;
 			idx2++;
 
 			if (0) TRACE("File \"%s\" exists only in dir \"%s\"\n",
@@ -158,7 +162,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 		{
 			pPair->pSecondFile = NULL;
 			pPair->pFirstFile = Files1[idx1];
-			pPair->ComparisionResult = FilePair::OnlyFirstFile;
+			pPair->m_ComparisionResult = FilePair::OnlyFirstFile;
 			idx1++;
 
 			if (0) TRACE("File \"%s\" exists only in dir \"%s\"\n",
@@ -178,7 +182,7 @@ bool CAlegrDiffDoc::BuildFilePairList(LPCTSTR dir1, LPCTSTR dir2, bool bRecurseS
 					LPCTSTR(pPair->pSecondFile->GetFullName()));
 			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(s);
 
-			pPair->ComparisionResult = pPair->PreCompareFiles();
+			pPair->m_ComparisionResult = pPair->PreCompareFiles();
 			if (0) TRACE("File \"%s\" exists in both \"%s\" and \"%s\"\n",
 						pPair->pFirstFile->GetName(),
 						FileList1.m_BaseDir + pPair->pFirstFile->GetSubdir(),
@@ -569,10 +573,11 @@ ULONG CFilePairDoc::CopyTextToMemory(PUCHAR pBuf, ULONG BufLen, TextPos pFrom, T
 					}
 					TotalChars++;
 				}
-				if (pSection->pBegin[i] == '\t')
-				{
-					pos += pApp->m_TabIndent - (pos % pApp->m_TabIndent + 1);
-				}
+				// tabs are replaced with spaces
+				//if (pSection->pBegin[i] == '\t')
+				//{
+				//pos += pApp->m_TabIndent - (pos % pApp->m_TabIndent + 1);
+				//}
 			}
 		}
 		// add CR LF
@@ -1119,7 +1124,9 @@ void CFilePairDoc::OnEditAccept()
 {
 	if (NULL != m_pFilePair)
 	{
-		int flags = m_pFilePair->GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
+		int flags = m_pFilePair->GetAcceptDeclineFlags(
+						DisplayPosToLinePos(m_SelectionAnchor), DisplayPosToLinePos(m_CaretPos));
+
 		int SetFlags = FileDiffSection::FlagAccept;
 		int ResetFlags = FileDiffSection::FlagDecline;
 		if (flags & FileDiffSection::FlagAccept)
@@ -1130,7 +1137,8 @@ void CFilePairDoc::OnEditAccept()
 		int NumSections = 0;
 		FileDiffSection *const * ppSection = NULL;
 
-		m_pFilePair->ModifyAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos,
+		m_pFilePair->ModifyAcceptDeclineFlags(
+											DisplayPosToLinePos(m_SelectionAnchor), DisplayPosToLinePos(m_CaretPos),
 											SetFlags, ResetFlags, & ppSection, & NumSections);
 		for (int i = 0; i < NumSections; i++)
 		{
@@ -1151,7 +1159,8 @@ void CFilePairDoc::OnUpdateEditAccept(CCmdUI* pCmdUI)
 	int flags = FileDiffSection::FlagNoDifference;
 	if (NULL != m_pFilePair)
 	{
-		flags = m_pFilePair->GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
+		flags = m_pFilePair->GetAcceptDeclineFlags(
+													DisplayPosToLinePos(m_SelectionAnchor), DisplayPosToLinePos(m_CaretPos));
 	}
 	pCmdUI->Enable(0 == (flags & FileDiffSection::FlagNoDifference));
 	pCmdUI->SetCheck(0 != (flags & FileDiffSection::FlagAccept));
@@ -1161,7 +1170,8 @@ void CFilePairDoc::OnEditDecline()
 {
 	if (NULL != m_pFilePair)
 	{
-		int flags = m_pFilePair->GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
+		int flags = m_pFilePair->GetAcceptDeclineFlags(
+						DisplayPosToLinePos(m_SelectionAnchor), DisplayPosToLinePos(m_CaretPos));
 		int SetFlags = FileDiffSection::FlagDecline;
 		int ResetFlags = FileDiffSection::FlagAccept;
 		if (flags & FileDiffSection::FlagDecline)
@@ -1172,7 +1182,8 @@ void CFilePairDoc::OnEditDecline()
 		int NumSections = 0;
 		FileDiffSection *const * ppSection = NULL;
 
-		m_pFilePair->ModifyAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos,
+		m_pFilePair->ModifyAcceptDeclineFlags(
+											DisplayPosToLinePos(m_SelectionAnchor), DisplayPosToLinePos(m_CaretPos),
 											SetFlags, ResetFlags, & ppSection, & NumSections);
 		for (int i = 0; i < NumSections; i++)
 		{
@@ -1193,7 +1204,8 @@ void CFilePairDoc::OnUpdateEditDecline(CCmdUI* pCmdUI)
 	int flags = FileDiffSection::FlagNoDifference;
 	if (NULL != m_pFilePair)
 	{
-		flags = m_pFilePair->GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
+		flags = m_pFilePair->GetAcceptDeclineFlags(
+													DisplayPosToLinePos(m_SelectionAnchor), DisplayPosToLinePos(m_CaretPos));
 	}
 	pCmdUI->Enable(0 == (flags & FileDiffSection::FlagNoDifference));
 	pCmdUI->SetCheck(0 != (flags & FileDiffSection::FlagDecline));

@@ -1,15 +1,12 @@
 TODO:
-Ignore whitespace-only differences
+Add color selection for background.
 CaretRightToWord
 Cancel selection on Accept/Decline commands (to see the result immediately). ???
 Maybe different color for selected accepted/declined
 Add Save differences
 Add save file list
-Add Copy files
 show subdir-only names in the status bar during comparision
-Add color selection for background.
-Hide Apply in the preferences sheet
-Make Word Left, Word Right, Word selection.
+Make Word Left, Word Right.
 Make search dialog
 Make Go To Line to first or second file line number
 in InvalidateRange, add for letter overlap.
@@ -26,6 +23,7 @@ Problems:
 Blank lines are ignored during comparision, but may not be inored when line pair list built
 
 Fixed:
+Go To next differences when whitespaces ignored
 when checking for alpnanum, check also for '_'
 invalidates too much when cursor moved after scroll
 Identical lines in the beginning of the file may be shown different
@@ -36,6 +34,9 @@ File with differences: last lines not drawn
 Wrong status for inserted and removed parts of strings
 
 Done:
+Hide Apply in the preferences sheet
+Add Copy files
+Ignore whitespace-only differences
 Add Merge function
 If a file reloaded and some changes are marked, ask confirmation.
 don't cancel selection if right click inside the selection

@@ -728,6 +728,7 @@ PairCheckResult FilePair::ReloadIfChanged()
 		{
 			delete pFirstFile;
 			pFirstFile = NULL;
+			m_ComparisionResult = OnlySecondFile;
 		}
 	}
 	if (NULL != pSecondFile)
@@ -741,11 +742,13 @@ PairCheckResult FilePair::ReloadIfChanged()
 		{
 			delete pSecondFile;
 			pSecondFile = NULL;
+			m_ComparisionResult = OnlyFirstFile;
 		}
 	}
 	if (FileDeleted == res1
 		&& FileDeleted == res2)
 	{
+		m_ComparisionResult = FileUnaccessible;
 		return FilesDeleted;
 	}
 	return FilesTimeChanged;
@@ -1337,6 +1340,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 	// pDst buffer size must be greater or equal strlen(pSrc)
 	unsigned int SrcIdx = 0;
 	unsigned int DstIdx = 0;
+	unsigned int FirstWhitespaceIndex = 0;
 	bool RemovedWhitespaces = false;
 	bool LeaveOneExtraSpace = false;
 	TCHAR cPrevChar = 0;
@@ -1389,9 +1393,9 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 			pDst[DstIdx] = ' ';
 			DstIdx++;
 			// mark the previous space as non extra whitespace
-			if (SrcIdx != 0 && WhitespaceMaskBits >= SrcIdx)
+			if (FirstWhitespaceIndex != 0 && WhitespaceMaskBits > FirstWhitespaceIndex)
 			{
-				pWhitespaceMask[(SrcIdx - 1) / 8] &= ~(1 << ((SrcIdx - 1) & 7));
+				pWhitespaceMask[FirstWhitespaceIndex / 8] &= ~(1 << (FirstWhitespaceIndex & 7));
 			}
 		}
 		if(c_IsAlpha)
@@ -1404,6 +1408,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 					break;
 				}
 				pDst[DstIdx] = c;
+				cPrevChar = c;
 				SrcIdx++;
 				DstIdx++;
 				c = Src[SrcIdx];
@@ -1413,7 +1418,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 		}
 		else
 		{
-			if( ! PrevCharAlpha)
+			if(c_cpp_file && RemovedWhitespaces)
 			{
 
 				// check if we need to insert a whitespace
@@ -1421,27 +1426,33 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 				{
 					// TODO: process L' and L"
 					'//', '/*', '*/', '++', '--', '!=', '##', '%=',
-					'^=', '&=', '&&', '-=', '==', '::', '<<',
+					'^=', '&=', '&&', '-=', '+=', '==', '::', '<<',
 					'>>', '||', '|=', '<=', '>=', '/=', '\'\'', '""',
+					'L"', 'L\'',
 				};
 				// may be non-portable to big-endian
 				int pair = ((cPrevChar & 0xFF) << 8) | (c & 0xFF);
-				if (c_cpp_file) for (int i = 0; i < sizeof ReservedPairs / sizeof ReservedPairs[0]; i++)
+				for (int i = 0; i < sizeof ReservedPairs / sizeof ReservedPairs[0]; i++)
+				{
+					if (pair == ReservedPairs[i])
 					{
-						if (pair == ReservedPairs[i])
+						if(DstIdx + 1 < DstLen)
 						{
-							if(DstIdx + 1 < DstLen)
+							pDst[DstIdx] = ' ';
+							DstIdx++;
+							// mark the previous space as non extra whitespace
+							if (FirstWhitespaceIndex != 0 && WhitespaceMaskBits > FirstWhitespaceIndex)
 							{
-								pDst[DstIdx] = ' ';
-								DstIdx++;
+								pWhitespaceMask[FirstWhitespaceIndex / 8] &= ~(1 << (FirstWhitespaceIndex & 7));
 							}
-							break;
 						}
+						break;
 					}
+				}
 			}
 			// move all non-alpha non whitespace chars
 			// check for a string or character constant
-			if ('\'' == c)
+			if (c_cpp_file && '\'' == c)
 			{
 				// character constant
 				// skip everything till the next '. Process \'
@@ -1488,7 +1499,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 					}
 				} while (c != 0);
 			}
-			else if ('"' == c)
+			else if (c_cpp_file && '"' == c)
 			{
 				// char string
 				cPrevChar = c;
@@ -1554,6 +1565,7 @@ static int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstLen,
 		}
 		// remove whitespaces
 		RemovedWhitespaces = false;
+		FirstWhitespaceIndex = SrcIdx;
 		while ((c = Src[SrcIdx]) == ' '
 				|| '\t' == c)
 		{
@@ -1624,10 +1636,10 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, StringSection *
 		// difference found, starting from str1, str2
 
 		bool found = false;
-		for (int idx1 = 0, idx2 = 0; (str1[idx1] != 0 || str2[idx2] != 0) && ! found; )
+		for (unsigned idx1 = 0, idx2 = 0; (str1[idx1] != 0 || str2[idx2] != 0) && ! found; )
 		{
 			// check if str1+i ( i < idx1) equal str2+idx2
-			for (int i = 0; i <= idx1; i++)
+			for (unsigned i = 0; i <= idx1; i++)
 			{
 				LPCTSTR tmp1 = str1 + i;
 				LPCTSTR tmp2 = str2 + idx2;
@@ -1886,10 +1898,10 @@ FileLine::~FileLine()
 
 bool FileLine::LooksLike(const FileLine * pOtherLine, int PercentsDifferent) const
 {
-	int nCharsDifferent = MatchStrings(this, pOtherLine, NULL, 3);
+	unsigned nCharsDifferent = MatchStrings(this, pOtherLine, NULL, 3);
 	// nCharsDifferent won't count whitespace difference
 
-	int nLength = GetNormalizedLength();
+	unsigned nLength = GetNormalizedLength();
 	if (nLength < pOtherLine->GetNormalizedLength())
 	{
 		nLength = pOtherLine->GetNormalizedLength();
@@ -1903,7 +1915,7 @@ FilePair::FilePair()
 	pSecondFile(NULL),
 	m_RefCount(1),
 	m_LoadedCount(0),
-	ComparisionResult(ResultUnknown)
+	m_ComparisionResult(ResultUnknown)
 {
 }
 
@@ -2074,23 +2086,25 @@ int FilePair::ComparisionResultPriority()
 	// the following order:
 	// ResultUnknown, FilesDifferent, VersionInfoDifferent, DifferentInSpaces, FilesIdentical,
 	// OnlyFirstFile, OnlySecondFile
-	switch (ComparisionResult)
+	switch (m_ComparisionResult)
 	{
 	default:
 	case ResultUnknown:
 		return 0;
-	case FilesDifferent:
+	case FileUnaccessible:
 		return 1;
-	case VersionInfoDifferent:
+	case FilesDifferent:
 		return 2;
-	case DifferentInSpaces:
+	case VersionInfoDifferent:
 		return 3;
-	case FilesIdentical:
+	case DifferentInSpaces:
 		return 4;
-	case OnlyFirstFile:
+	case FilesIdentical:
 		return 5;
-	case OnlySecondFile:
+	case OnlyFirstFile:
 		return 6;
+	case OnlySecondFile:
+		return 7;
 	}
 }
 
@@ -2119,29 +2133,50 @@ int _cdecl FilePair::ComparisionSortBackwardsFunc(const void * p1, const void * 
 
 CString FilePair::GetComparisionResult()
 {
+	static CString sFilesUnaccessible;
+	static CString sFilesIdentical;
+	static CString sVersionInfoDifferent;
+	static CString sDifferentInSpaces;
+	static CString sFilesDifferent;
+	static CString sOnlyOneExists;
+	static bool bResultStringsLoaded = false;
+
+	if ( ! bResultStringsLoaded)
+	{
+		sFilesUnaccessible.LoadString(IDS_STRING_FILES_UNACCESSIBLE);
+		sFilesIdentical.LoadString(IDS_STRING_FILES_IDENTICAL);
+		sVersionInfoDifferent.LoadString(IDS_VERSION_INFO_DIFFERENT);
+		sDifferentInSpaces.LoadString(IDS_DIFFERENT_IN_SPACES);
+		sFilesDifferent.LoadString(IDS_FILES_DIFFERENT);
+		sOnlyOneExists.LoadString(IDS_STRING_ONLY_ONE_EXISTS);
+		bResultStringsLoaded = true;
+	}
 	CString s;
-	switch(ComparisionResult)
+	switch(m_ComparisionResult)
 	{
 	case ResultUnknown:
 		break;
+	case FileUnaccessible:
+		return sFilesUnaccessible;
+		break;
 	case FilesIdentical:
-		s = "Files are identical";
+		return sFilesIdentical;
 		break;
 	case VersionInfoDifferent:
-		s = "Different only in version stamp";
+		return sVersionInfoDifferent;
 		break;
 	case DifferentInSpaces:
-		s = "Different in spaces only";
+		return sDifferentInSpaces;
 		break;
 	case FilesDifferent:
-		s = "Files are DIFFERENT";
+		return sFilesDifferent;
 		break;
 	case OnlyFirstFile:
-		s.Format("File exists only in \"%s%s\"",
+		s.Format(sOnlyOneExists,
 				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
 		break;
 	case OnlySecondFile:
-		s.Format("File exists only in \"%s%s\"",
+		s.Format(sOnlyOneExists,
 				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
 		break;
 	}
@@ -2247,7 +2282,7 @@ FilePair::eFileComparisionResult FilePair::PreCompareFiles()
 	// TODO: different function for binary comparision
 	if (! LoadFiles())
 	{
-		return ResultUnknown;
+		return FileUnaccessible;
 	}
 #ifdef _DEBUG
 	DWORD BeginTime = timeGetTime();
@@ -2921,6 +2956,7 @@ TextPos FilePair::NextDifference(TextPos PosFrom, BOOL IgnoreWhitespaces)
 			}
 			ppSection++;
 			SectionIdx++;
+			pSection = *ppSection;
 		}
 	}
 	return pSection->m_Begin;
@@ -2942,17 +2978,20 @@ TextPos FilePair::PrevDifference(TextPos PosFrom, BOOL IgnoreWhitespaces)
 	{
 		return TextPos(-1, -1);
 	}
-	const FileDiffSection * pSection = *(ppSection - 1);
-	return pSection->m_Begin;
-	if (PosFrom != pSection->m_End)
+	ppSection--;
+	const FileDiffSection * pSection = *ppSection;
+	if (IgnoreWhitespaces)
 	{
-		SectionIdx--;
-		ppSection--;
-	}
-
-	if (PosFrom == pSection->m_End)
-	{
-		return ppSection[1]->m_Begin;
+		while (pSection->m_Flags & pSection->FlagWhitespace)
+		{
+			if (0 == SectionIdx)
+			{
+				return TextPos(-1, -1);
+			}
+			ppSection--;
+			SectionIdx--;
+			pSection = *ppSection;
+		}
 	}
 	return pSection->m_Begin;
 }

@@ -48,7 +48,10 @@
 #define IDC_STATIC_ADDED_TEXT           1020
 #define IDC_STATIC_DELETED_TEXT         1021
 #define IDC_CHECK_AUTO_RELOAD           1022
+#define IDC_BUTTON_NORMAL_BACKGROUND    1022
 #define IDC_EDIT_LINE_NUMBER            1023
+#define IDC_BUTTON_ADDED_BACKGROUND     1023
+#define IDC_BUTTON_ERASED_BACKGROUND    1024
 #define IDC_EDIT1                       1026
 #define IDC_EDIT2                       1027
 #define IDC_EDIT3                       1028
@@ -78,6 +81,8 @@
 #define ID_FILE_COPY_SECOND_DIR         32802
 #define ID_VIEW_IGNORE_WHITESPACES      32803
 #define ID_FILE_MERGE_SAVE              32805
+#define ID_FILE_COPY_FIRST              32807
+#define ID_FILE_COPY_SECOND             32808
 #define IDS_DIRECTORY_ACCESS_DENIED     32848
 #define IDS_DIRECTORY_NOT_FOUND         32849
 #define IDS_PREFERENCES                 32850
@@ -86,6 +91,16 @@
 #define IDS_ALL_FILES                   32853
 #define IDS_SAVE_MERGED_DIALOG_TITLE    32854
 #define IDS_STRING_COULDNT_SAVE_MERGED  32855
+#define IDS_COPY_FROM_DIR_FORMAT        32856
+#define IDS_STRING_FILES_UNACCESSIBLE   32857
+#define IDS_STRING_FILES_IDENTICAL      32858
+#define IDS_VERSION_INFO_DIFFERENT      32859
+#define IDS_DIFFERENT_IN_SPACES         32860
+#define IDS_FILES_DIFFERENT             32861
+#define IDS_STRING_ONLY_ONE_EXISTS      32862
+#define IDS_COPY_FILES_TITLE            32863
+#define IDS_FIRST_FOLDER_DLG_TITLE      32864
+#define IDS_SECOND_FOLDER_DLG_TITLE     32865
 #define ID_INDICATOR_CARET_POS          0xE705
 
 // Next default values for new objects
@@ -94,7 +109,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        141
-#define _APS_NEXT_COMMAND_VALUE         32806
+#define _APS_NEXT_COMMAND_VALUE         32809
 #define _APS_NEXT_CONTROL_VALUE         1033
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

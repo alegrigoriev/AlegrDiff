@@ -111,18 +111,22 @@ public:
 	LOGFONT m_NormalLogFont;
 	CFont m_NormalFont;
 	DWORD m_NormalTextColor;
+	DWORD m_NormalTextBackground;
 
 	LOGFONT m_ErasedLogFont;
 	CFont m_ErasedFont;
 	DWORD m_ErasedTextColor;
+	DWORD m_ErasedTextBackground;
 
 	LOGFONT m_AddedLogFont;
 	CFont m_AddedFont;
 	DWORD m_AddedTextColor;
+	DWORD m_AddedTextBackground;
 
 	int m_FontPointSize;
 
 	bool m_bFontChanged;
+	bool m_bColorChanged;
 	void FontChanged();
 
 // Overrides
@@ -141,6 +145,9 @@ protected:
 	afx_msg void OnButtonInsertedFont();
 	afx_msg void OnButtonErasedFont();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+	afx_msg void OnButtonNormalBackground();
+	afx_msg void OnButtonAddedBackground();
+	afx_msg void OnButtonErasedBackground();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

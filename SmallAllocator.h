@@ -1,5 +1,6 @@
 #pragma once
 #include "SimpleCriticalSection.h"
+#include "KlistEntry.h"
 // this class allocates small items of fixed size
 #pragma warning(disable:4355)
 class CSmallAllocator
@@ -17,32 +18,29 @@ private:
 		ItemHeader * pNext;
 		BlockHeader * pContainingBlock;
 	};
-	struct BlockHeader
+	struct BlockHeader : public KListEntry<BlockHeader>
 	{
 		BlockHeader(CSmallAllocator * alloc)
 			: m_Signature(eSignature),
 			pAllocator(alloc),
-			pNext(this),
-			pPrev(this),
 			pFreeItems(NULL),
 			NumOfFreeItems(0)
 		{
 		}
 		ULONG m_Signature;
 		enum { eSignature = 'SmAl' };
-		BlockHeader * pNext;
-		BlockHeader * pPrev;
 		ItemHeader * pFreeItems;
 		CSmallAllocator * pAllocator;
 		size_t NumOfFreeItems;
 	};
 	BlockHeader * AllocateBlock();
-	BlockHeader m_Blocks;
-	BlockHeader m_BlocksWithFreeItems;
+	KListEntry<BlockHeader> m_Blocks;
+	KListEntry<BlockHeader> m_BlocksWithFreeItems;
 	CSimpleCriticalSection m_cs;
 	size_t m_ItemSize;  // without header
 	size_t m_BlockSize;
-	size_t m_ItemsInBlock;
+	unsigned m_ItemsInBlock;
+	unsigned m_TotalFreeItems;
 };
 
 #pragma warning(default:4355)

@@ -109,7 +109,7 @@
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
-				WarningLevel="3"
+				WarningLevel="4"
 				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="4"
 				CallingConvention="2"/>
@@ -672,6 +672,9 @@
 				RelativePath="KListEntry.h">
 			</File>
 			<File
+				RelativePath=".\LastError.h">
+			</File>
+			<File
 				RelativePath=".\MainFrm.h">
 			</File>
 			<File
@@ -679,6 +682,9 @@
 			</File>
 			<File
 				RelativePath=".\MessageMapT.h">
+			</File>
+			<File
+				RelativePath=".\PathEx.h">
 			</File>
 			<File
 				RelativePath=".\PreferencesDialog.h">

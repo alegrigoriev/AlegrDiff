@@ -44,6 +44,8 @@ protected:
 	//{{AFX_MSG(CFilesCompareDialog)
 	afx_msg void OnButtonBrowseFirstFile();
 	afx_msg void OnButtonBrowseSecondFile();
+	virtual BOOL OnInitDialog();
+	afx_msg void OnDropFiles(HDROP hDropInfo);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -109,6 +109,7 @@ public:
 	TextPos m_CaretPos;
 	TextPos m_SelectionAnchor;
 	bool m_bIgnoreWhitespaces;
+	TCHAR m_ComparisonResult[MAX_PATH];
 
 // Operations
 public:

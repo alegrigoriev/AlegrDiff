@@ -1,5 +1,7 @@
 #ifndef FILE_LINE_H_INCLUDED
 #define FILE_LINE_H_INCLUDED
+#include "KListEntry.h"
+#include <vector>
 
 class FileLine
 {
@@ -83,5 +85,29 @@ private:
 	// you only need to delete m_pAllocatedBuf
 	static class CSmallAllocator m_Allocator;
 };
+
+struct LinePair
+{
+	static void * operator new(size_t size);
+	static void operator delete(void * ptr);
+
+	const FileLine * pFirstLine;
+	const FileLine * pSecondLine;
+	ListHead<struct StringSection> StrSections;
+private:
+	static class CSmallAllocator m_Allocator;
+public:
+	LinePair(const FileLine * pLine);   // from the same line
+	LinePair(const FileLine * pLine1, const FileLine * pLine2, class FileDiffSection * pDiffSection = NULL);
+	void BuildDiffSectionsList(int nLineIndex, std::vector<class FileDiffSection*> & DiffSections, int MinMatchingChars);
+	// recalculates offset in the raw line to offset in the line with or without whitespaces shown
+	int LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces, int FileScope);
+	// recalculates offset in the line with or without whitespaces shown to offset in the raw line
+	int DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces, int FileScope);
+	LPCTSTR GetText(LPTSTR buf, size_t nBufChars, int * pStrLen, BOOL IgnoreWhitespaces, int SelectFile);
+};
+
+int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<StringSection> * ppSections, int nMinMatchingChars);
+bool LooksLike(const FileLine * pLine1, const FileLine * pLine2, int PercentsDifferent);
 
 #endif  // FILE_LINE_H_INCLUDED

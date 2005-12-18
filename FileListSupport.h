@@ -157,6 +157,31 @@ struct TextToken
 	class FileLine * m_pLine;
 };
 
+class FileDiffSection
+{
+public:
+	FileDiffSection() { m_Flags = 0; }
+	~FileDiffSection() {}
+	TextPosLine m_Begin;
+	TextPosLine m_End;
+	ULONG m_Flags;
+	enum {
+		FlagWhitespace = 0x100,
+		FlagVersionInfoDifferent = 0x200,
+	};
+
+	static void * operator new(size_t size)
+	{
+		return m_Allocator.Allocate(size);
+	}
+	static void operator delete(void * ptr)
+	{
+		m_Allocator.Free(ptr);
+	}
+private:
+	static CSmallAllocator m_Allocator;
+};
+
 struct StringSection : public ListItem<StringSection>
 {
 	static void * operator new(size_t size)
@@ -198,30 +223,6 @@ struct StringSection : public ListItem<StringSection>
 	bool IsWhitespace() const { return 0 != (Attr & Whitespace); }
 private:
 	static class CSmallAllocator m_Allocator;
-};
-
-struct LinePair
-{
-	static void * operator new(size_t size)
-	{
-		return m_Allocator.Allocate(size);
-	}
-	static void operator delete(void * ptr)
-	{
-		m_Allocator.Free(ptr);
-	}
-
-	const FileLine * pFirstLine;
-	const FileLine * pSecondLine;
-	ListHead<StringSection> StrSections;
-private:
-	static class CSmallAllocator m_Allocator;
-public:
-	// recalculates offset in the raw line to offset in the line with or without whitespaces shown
-	int LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces, int FileScope);
-	// recalculates offset in the line with or without whitespaces shown to offset in the raw line
-	int DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces, int FileScope);
-	LPCTSTR GetText(LPTSTR buf, size_t nBufChars, int * pStrLen, BOOL IgnoreWhitespaces, int SelectFile);
 };
 
 enum FileCheckResult { FileDeleted, FileUnchanged, FileTimeChanged, };
@@ -457,8 +458,8 @@ public:
 	ULONG m_FilenameSortOrder;
 	ULONG m_DirectorySortOrder;
 
-	vector<LinePair *> m_LinePairs;
-	vector<FileDiffSection *> m_DiffSections;
+	std::vector<struct LinePair *> m_LinePairs;
+	std::vector<FileDiffSection *> m_DiffSections;
 };
 
 struct FilePairComparePredicate
@@ -520,5 +521,4 @@ bool MatchWildcard(LPCTSTR name, LPCTSTR pattern);
 bool MultiPatternMatches(LPCTSTR name, LPCTSTR sPattern);
 CString MiltiSzToCString(LPCTSTR pMsz);
 CString PatternToMultiCString(LPCTSTR src);
-int MatchStrings(LPCTSTR pStr1, LPCTSTR pStr2, ListHead<StringSection> * ppSections, int nMinMatchingChars);
 #endif

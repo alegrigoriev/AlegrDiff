@@ -13,7 +13,6 @@
 #include "FilesPropertiesDialog.h"
 #include <shlwapi.h>
 #include <atlpath.h>
-#include ".\alegrdiffview.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1713,7 +1712,6 @@ void CAlegrDiffView::OnLvnItemchanged(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CAlegrDiffView::OnEditSelectAll()
 {
-	// TODO: Add your command handler code here
 	CListCtrl * pList = &GetListCtrl();
 	int Count = pList->GetItemCount();
 

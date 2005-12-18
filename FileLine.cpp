@@ -3,6 +3,7 @@
 #include "FileLine.h"
 #include "SmallAllocator.h"
 #include "AlegrDiff.h"
+#include "FileListSupport.h"    // FIXME: StringSection
 
 #define C_CPP_FILE 1
 #define REMOVE_VERSION_INFO 2
@@ -18,6 +19,54 @@ void FileLine::operator delete(void * ptr)
 {
 	m_Allocator.Free(ptr);
 }
+
+// find difference in the strings, and build the array of inserts and
+// and deleted chars
+// returns number of different characters.
+// if ppSections is not NULL, builds a list of sections
+struct StringDiffSection : public ListItem<StringDiffSection>
+{
+public:
+	static void * operator new(size_t size)
+	{
+		return m_Allocator.Allocate(size);
+	}
+	static void operator delete(void * ptr)
+	{
+		m_Allocator.Free(ptr);
+	}
+	StringDiffSection();
+
+	LPCTSTR Str1;
+	unsigned Len1;
+	LPCTSTR Str2;
+	unsigned Len2;
+
+	LPCTSTR Str1ws;
+	unsigned Len1ws;
+	LPCTSTR Str2ws;
+	unsigned Len2ws;
+
+	bool Whitespace;
+	bool Different;
+private:
+	static CSmallAllocator m_Allocator;
+};
+
+StringDiffSection::StringDiffSection()
+{
+	Whitespace = false;
+	Different = false;
+	Str1 = NULL;
+	Str2 = NULL;
+	Len1 = 0;
+	Len2 = 0;
+	Str1ws = NULL;
+	Str2ws = NULL;
+	Len1ws = 0;
+	Len2ws = 0;
+}
+CSmallAllocator StringDiffSection::m_Allocator(sizeof (StringDiffSection));
 
 FileLine::FileLine(LPCTSTR src, int Length, bool /*MakeNormalizedString*/, bool c_cpp_file)
 	: m_Flags(0),
@@ -560,4 +609,1016 @@ void FileLine::CalculateNormalizedGroupHash(DWORD const src[], size_t size)
 	SetNormalizedGroupHash(CalculateHash(src, size));
 }
 
+void * LinePair::operator new(size_t size)
+{
+	return m_Allocator.Allocate(size);
+}
+void LinePair::operator delete(void * ptr)
+{
+	m_Allocator.Free(ptr);
+}
+
+LinePair::LinePair(const FileLine * pLine)
+{
+	pFirstLine = pLine;
+	pSecondLine = pLine;
+
+	StringSection * pSection = new StringSection;
+	pSection->Attr = pSection->Identical;
+	pSection->pDiffSection = NULL;
+	pSection->pBegin = pLine->GetText();
+	pSection->Length = (USHORT)pLine->GetLength();
+
+	StrSections.InsertTail(pSection);
+}
+
+LinePair::LinePair(const FileLine * pLine1, const FileLine * pLine2, FileDiffSection * pDiffSection)
+	: pFirstLine(pLine1)
+	, pSecondLine(pLine2)
+{
+	if (NULL == pLine1 || NULL == pLine2 || pLine1 == pLine2)
+	{
+		StringSection * pSection = new StringSection;
+		const FileLine * pLine = pLine1;
+
+		if (pLine1 == pLine2)
+		{
+			pSection->Attr = StringSection::Identical;
+		}
+		else if (NULL == pLine1)
+		{
+			pSection->Attr = StringSection::Inserted | StringSection::Undefined;
+			pLine = pLine2;
+		}
+		else
+		{
+			pSection->Attr = StringSection::Erased | StringSection::Undefined;
+		}
+
+		pSection->pBegin = pLine->GetText();
+		pSection->Length = (USHORT)pLine->GetLength();
+		pSection->pDiffSection = pDiffSection;
+
+		if (pLine1 != pLine2 && pLine->IsBlank())
+		{
+			pSection->Attr |= StringSection::Whitespace;
+		}
+		else if (NULL != pDiffSection)
+		{
+			pDiffSection->m_Flags &= ~FileDiffSection::FlagWhitespace;
+		}
+
+		StrSections.InsertTail(pSection);
+	}
+	else
+	{
+	}
+}
+
+LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen,
+						BOOL IgnoreWhitespaces, int SelectFile)
+{
+	// SelectFile: 1 - first file, 2 - second file, any other: both files
+	if (1 == SelectFile)
+	{
+		if (NULL != pFirstLine)
+		{
+			*pStrLen = pFirstLine->GetLength();
+			return pFirstLine->GetText();
+		}
+		else
+		{
+			*pStrLen = 0;
+			buf[0] = 0;
+			return buf;
+		}
+	}
+	if (2 == SelectFile)
+	{
+		if (NULL != pSecondLine)
+		{
+			*pStrLen = pSecondLine->GetLength();
+			return pSecondLine->GetText();
+		}
+		else
+		{
+			*pStrLen = 0;
+			buf[0] = 0;
+			return buf;
+		}
+	}
+
+	if (NULL == pFirstLine)
+	{
+		*pStrLen = pSecondLine->GetLength();
+		return pSecondLine->GetText();
+	}
+
+	if (NULL == pSecondLine)
+	{
+		*pStrLen = pFirstLine->GetLength();
+		return pFirstLine->GetText();
+	}
+	// make a string of string sections
+	int StrLen = 0;
+	for (StringSection * pSection = StrSections.First();
+		StrSections.NotEnd(pSection) && StrLen + 1u < nBufChars; pSection = pSection->Next())
+	{
+		if ((pSection->Attr & pSection->Whitespace)
+			&& (pSection->Attr & pSection->Erased)
+			&& IgnoreWhitespaces)
+		{
+			continue;   // don't show the section
+		}
+		int len = pSection->Length;
+		if (StrLen + len + 1u > nBufChars)
+		{
+			len = nBufChars - StrLen - 1;
+		}
+		_tcsncpy(buf + StrLen, pSection->pBegin, len);
+		StrLen += len;
+	}
+	buf[StrLen] = 0;
+	*pStrLen = StrLen;
+	return buf;
+}
+
+int LinePair::LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces, int FileScope)
+{
+	if ( ! bIgnoreWhitespaces && 0 == FileScope)
+	{
+		return position;
+	}
+	int pos = 0;
+	int adj = 0;
+
+	for (StringSection * pSection = StrSections.First();
+		StrSections.NotEnd(pSection); pSection = pSection->Next())
+	{
+		pos += pSection->Length;
+		if ((pSection->Attr & pSection->Erased)
+			&& (((pSection->Attr & pSection->Whitespace)
+					&& bIgnoreWhitespaces && 0 == FileScope)
+				|| 2 == FileScope))
+		{
+			adj += pSection->Length;
+			if (pos >= position)
+			{
+				// return begin of the segment
+				return pos - adj;
+			}
+		}
+		else if (1 == FileScope
+				&& (pSection->Attr & pSection->File2Only))
+		{
+			adj += pSection->Length;
+			if (pos >= position)
+			{
+				// return begin of the segment
+				return pos - adj;
+			}
+		}
+		else
+		{
+			if (pos >= position)
+			{
+				return position - adj;
+			}
+		}
+	}
+	return position - adj;
+}
+
+int LinePair::DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces, int FileScope)
+{
+	if ( ! bIgnoreWhitespaces && 0 == FileScope)
+	{
+		return position;
+	}
+	int pos = 0;
+	int adj = 0;
+
+	for (StringSection * pSection = StrSections.First();
+		StrSections.NotEnd(pSection); pSection = pSection->Next())
+	{
+		if ((pSection->Attr & pSection->Erased)
+			&& (((pSection->Attr & pSection->Whitespace)
+					&& bIgnoreWhitespaces && 0 == FileScope)
+				|| 2 == FileScope))
+		{
+			adj += pSection->Length;
+		}
+		else if ((pSection->Attr & pSection->File2Only)
+				&& 1 == FileScope)
+		{
+			adj += pSection->Length;
+		}
+		else
+		{
+			pos += pSection->Length;
+			if (pos >= position)
+			{
+				return position + adj;
+			}
+		}
+	}
+	return position + adj;
+}
+
+void LinePair::BuildDiffSectionsList(int nLineIndex, std::vector<class FileDiffSection*> & DiffSections, int MinMatchingChars)
+{
+	MatchStrings(pFirstLine, pSecondLine, & StrSections, MinMatchingChars);
+
+	int pos = 0;
+	for (StringSection * pSection = StrSections.First();
+		StrSections.NotEnd(pSection); pSection = pSection->Next())
+	{
+		if (pSection->Identical != pSection->Attr)
+		{
+			FileDiffSection * pDiffSection = new FileDiffSection;
+			pSection->pDiffSection = pDiffSection;
+			if (NULL != pDiffSection)
+			{
+				pDiffSection->m_Begin.line = nLineIndex;
+				pDiffSection->m_Begin.pos = pos;
+				pDiffSection->m_End.line = nLineIndex;
+				pos += pSection->Length;
+				pDiffSection->m_End.pos = pos;
+
+				if (pSection->Attr & pSection->Whitespace)
+				{
+					pDiffSection->m_Flags |= FileDiffSection::FlagWhitespace;
+				}
+				else if (pSection->Attr & pSection->VersionInfo)
+				{
+					pDiffSection->m_Flags |= FileDiffSection::FlagVersionInfoDifferent;
+				}
+
+				if (StrSections.Last() != pSection
+					&& pSection->Next()->Attr != pSection->Identical)
+				{
+					pSection = pSection->Next();
+
+					if (0 == (pSection->Attr & pSection->Whitespace))
+					{
+						pDiffSection->m_Flags &= ~FileDiffSection::FlagWhitespace;
+					}
+					if (0 == (pSection->Attr & pSection->VersionInfo))
+					{
+						pDiffSection->m_Flags &= ~FileDiffSection::FlagVersionInfoDifferent;
+					}
+
+					pSection->pDiffSection = pDiffSection;
+					pos += pSection->Length;
+					pDiffSection->m_End.pos = pos;
+				}
+				DiffSections.push_back(pDiffSection);
+			}
+		}
+		else
+		{
+			pSection->pDiffSection = NULL;
+			pos += pSection->Length;
+		}
+	}
+}
+
+int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<StringSection> * ppSections, int nMinMatchingChars)
+{
+	if (NULL == pStr2 && NULL == pStr1)
+	{
+		return 0;
+	}
+
+	if (NULL == pStr2)
+	{
+		if (NULL == ppSections)
+		{
+			return pStr1->GetLength();
+		}
+		StringSection * pSection = new StringSection;
+		if (NULL != pSection)
+		{
+			pSection->pBegin = pStr1->GetText();
+			pSection->Length = (USHORT)pStr1->GetLength();
+			pSection->Attr = StringSection::Erased | StringSection::Undefined;
+
+			// check if it is whitespace difference
+			if (pStr1->IsBlank())
+			{
+				pSection->Attr |= pSection->Whitespace;
+			}
+			ppSections->InsertTail(pSection);
+		}
+		return pStr1->GetLength();
+	}
+
+	if (NULL == pStr1)
+	{
+		if (NULL == ppSections)
+		{
+			return pStr2->GetLength();
+		}
+		StringSection * pSection = new StringSection;
+		if (NULL != pSection)
+		{
+			pSection->pBegin = pStr2->GetText();
+			pSection->Length = (USHORT)pStr2->GetLength();
+			pSection->Attr = StringSection::Inserted | StringSection::Undefined;
+
+			// check if it is whitespace difference
+			if (pStr2->IsBlank())
+			{
+				pSection->Attr |= pSection->Whitespace;
+			}
+			ppSections->InsertTail(pSection);
+		}
+		return pStr2->GetLength();
+	}
+
+	// text without whitespaces
+	LPCTSTR str1 = pStr1->GetNormalizedText();
+	LPCTSTR str2 = pStr2->GetNormalizedText();
+
+	ASSERT(_tcslen(str1) == pStr1->GetNormalizedLength());
+	ASSERT(_tcslen(str2) == pStr2->GetNormalizedLength());
+
+	ListHead<StringDiffSection> DiffSections;
+
+	// allocate an equal section of zero length and add to the list
+	StringDiffSection * pDiffSection;
+
+	LPCTSTR pEqualStrBegin1 = str1;
+	LPCTSTR pEqualStrBegin2 = str2;
+
+	while (1)
+	{
+		if (str1[0] == str2[0]
+			&& str1[0] != 0)
+		{
+			// next non-blank char is the same
+			// check if we can skip whitespace characters
+			str1++;
+			str2++;
+			continue;
+		}
+
+		if (str1 != pEqualStrBegin1)
+		{
+			StringDiffSection * pDiffSection = new StringDiffSection;
+			if (NULL != pDiffSection)
+			{
+				pDiffSection->Str1 = pEqualStrBegin1;
+				pDiffSection->Len1 = str1 - pEqualStrBegin1;
+				pDiffSection->Str2 = pEqualStrBegin2;
+				pDiffSection->Len2 = str2 - pEqualStrBegin2;
+
+				DiffSections.InsertTail(pDiffSection);
+			}
+		}
+		if (str1[0] == 0
+			&& str2[0] == 0)
+		{
+			break;
+		}
+		// difference found, starting from str1, str2
+
+		bool found = false;
+		for (unsigned idx1 = 0, idx2 = 0; (str1[idx1] != 0 || str2[idx2] != 0) && ! found; )
+		{
+			// check if str1+i ( i < idx1) equal str2+idx2
+			for (unsigned i = 0; i <= idx1; i++)
+			{
+				LPCTSTR tmp1 = str1 + i;
+				LPCTSTR tmp2 = str2 + idx2;
+				int j;
+				for (j = 0; j < nMinMatchingChars; j++)
+				{
+					if (tmp1[j] != tmp2[j]
+						//|| tmp1[j] == 0 // no need to test both, because they are the same
+						|| tmp2[j] == 0)
+					{
+						break;
+					}
+				}
+				if (j == nMinMatchingChars
+					//|| (tmp2[j] == 0 && tmp1[j] == 0)
+					)
+				{
+					// create new section
+					idx1 = i;
+					found = true;
+					break;
+				}
+			}
+			if ( ! found)
+			{
+				// check if str2+i ( i < idx2) equal str1+idx1
+				for (i = 0; i <= idx2; i++)
+				{
+					LPCTSTR tmp1 = str1 + idx1;
+					LPCTSTR tmp2 = str2 + i;
+					int j;
+					for (j = 0; j < nMinMatchingChars; j++)
+					{
+						if (tmp1[j] != tmp2[j]
+							//|| tmp1[j] == 0 // no need to test both, because they are the same
+							|| tmp2[j] == 0)
+						{
+							break;
+						}
+					}
+					if (j == nMinMatchingChars
+						//|| (tmp2[j] == 0 && tmp1[j] == 0)
+						)
+					{
+						// create new section
+						idx2 = i;
+						found = true;
+						break;
+					}
+				}
+			}
+			if (found)
+			{
+				break;
+			}
+			// only increment the distance index, if they don't go beyound the string
+			if (str1[idx1] != 0)
+			{
+				idx1++;
+			}
+			if (str2[idx2] != 0)
+			{
+				idx2++;
+			}
+		}
+		// create new section
+		// if end reached, check if there are identical characters in the end of the line
+		if (0 == str1[idx1]
+			&& 0 == str2[idx2])
+		{
+			for (int i = 0; i < nMinMatchingChars && idx1 > 0 && idx2 > 0; i++)
+			{
+				if (str1[idx1 - 1] == str2[idx2 - 1])
+				{
+					idx1--;
+					idx2--;
+				}
+			}
+		}
+
+//        int nDiffChars1 = 0;
+//        int nDiffChars2 = 0;
+
+		if (idx1 != 0
+			|| idx2 != 0)
+		{
+			StringDiffSection * pDiffSection = new StringDiffSection;
+			if (NULL != pDiffSection)
+			{
+				pDiffSection->Str1 = str1;
+				pDiffSection->Len1 = idx1;
+				if (0 == idx1)
+				{
+					pDiffSection->Str1 = NULL;
+				}
+
+				pDiffSection->Str2 = str2;
+				pDiffSection->Len2 = idx2;
+				if (0 == idx2)
+				{
+					pDiffSection->Str2 = NULL;
+				}
+
+				pDiffSection->Different = true;
+				DiffSections.InsertTail(pDiffSection);
+			}
+		}
+
+		str1 += idx1;
+		str2 += idx2;
+		pEqualStrBegin1 = str1;
+		pEqualStrBegin2 = str2;
+	}
+	// convert a string offsets with whitespaces removed to offsets in a source string
+
+	// text WITH whitespaces
+	LPCTSTR str1ws = pStr1->GetText();
+	LPCTSTR str1VersionBegin = _tcschr(str1ws, '$');
+	LPCTSTR str1VersionEnd = _tcsrchr(str1ws, '$');
+
+	LPCTSTR str2ws = pStr2->GetText();
+
+	LPCTSTR str2VersionBegin = _tcschr(str2ws, '$');
+	LPCTSTR str2VersionEnd = _tcsrchr(str2ws, '$');
+
+	ASSERT(_tcslen(str1ws) == pStr1->GetLength());
+	ASSERT(_tcslen(str2ws) == pStr2->GetLength());
+
+	if (NULL != str1VersionBegin
+		&& NULL != str2VersionBegin)
+	{
+		static LPCTSTR const keywords[] =
+		{
+			_T("Archive:"),
+			_T("Author:"),
+			_T("Date:"),
+			_T("Header:"),
+			_T("History:"),
+			_T("JustDate:"),
+			_T("Log:"),
+			_T("Logfile:"),
+			_T("Modtime:"),
+			_T("Revision:"),
+			_T("Workfile:"),
+		};
+		unsigned i;
+		for (i = 0; i < countof(keywords); i++)
+		{
+			int len = _tcslen(keywords[i]);
+			if (0 == _tcsncmp(str1VersionBegin + 1, keywords[i], len)
+				&& 0 == _tcsncmp(str2VersionBegin + 1, keywords[i], len))
+			{
+				break;
+			}
+		}
+		if (countof(keywords) == i)
+		{
+			// no revision info
+			str1VersionBegin = NULL;
+			str2VersionBegin = NULL;
+			str1VersionEnd = NULL;
+			str2VersionEnd = NULL;
+		}
+	}
+
+	str1 = pStr1->GetNormalizedText();
+	str2 = pStr2->GetNormalizedText();
+
+	for (pDiffSection = DiffSections.First();
+		DiffSections.NotEnd(pDiffSection); pDiffSection = DiffSections.Next(pDiffSection))
+	{
+		if (NULL != pDiffSection->Str1)
+		{
+			while (str1 < pDiffSection->Str1)
+			{
+				while(*str1ws != *str1)
+				{
+					str1ws++;
+				}
+				str1++;
+				str1ws++;
+			}
+			while(*str1ws != *str1)
+			{
+				str1ws++;
+			}
+			pDiffSection->Str1ws = str1ws;
+			for (unsigned i = 0; i < pDiffSection->Len1; i++, str1++, str1ws++)
+			{
+				while(*str1ws != *str1)
+				{
+					str1ws++;
+				}
+			}
+			pDiffSection->Len1ws = str1ws - pDiffSection->Str1ws;
+		}
+
+		if (NULL != pDiffSection->Str2)
+		{
+			while (str2 < pDiffSection->Str2)
+			{
+				while(*str2ws != *str2)
+				{
+					str2ws++;
+				}
+				str2++;
+				str2ws++;
+			}
+			while(*str2ws != *str2)
+			{
+				str2ws++;
+			}
+			pDiffSection->Str2ws = str2ws;
+			for (unsigned i = 0; i < pDiffSection->Len2; i++, str2++, str2ws++)
+			{
+				while(*str2ws != *str2)
+				{
+					str2ws++;
+				}
+			}
+			pDiffSection->Len2ws = str2ws - pDiffSection->Str2ws;
+		}
+	}
+
+	if (0)
+	{
+		for (pDiffSection = DiffSections.First();
+			DiffSections.NotEnd(pDiffSection); pDiffSection = pDiffSection->Next())
+		{
+			// print the diff sections
+			if (0 != pDiffSection->Len1ws)
+			{
+				TRACE(_T("Str1: len=%d, str=\"%.*s\"\n"),
+					pDiffSection->Len1, pDiffSection->Len1, pDiffSection->Str1);
+				TRACE(_T("Str1ws: len=%d, str=\"%.*s\"\n"),
+					pDiffSection->Len1ws, pDiffSection->Len1ws, pDiffSection->Str1ws);
+			}
+			if (0 != pDiffSection->Len2ws)
+			{
+				TRACE(_T("Str2: len=%d, str=\"%.*s\"\n"),
+					pDiffSection->Len2, pDiffSection->Len2, pDiffSection->Str2);
+				TRACE(_T("Str2ws: len=%d, str=\"%.*s\"\n"),
+					pDiffSection->Len2ws, pDiffSection->Len2ws, pDiffSection->Str2ws);
+			}
+		}
+	}
+
+	// allocate an equal section of zero length as the first section and add to the list
+	str1ws = pStr1->GetText();
+	str2ws = pStr2->GetText();
+	pDiffSection = new StringDiffSection;
+
+	pDiffSection->Str1ws = str1ws;
+	pDiffSection->Str2ws = str2ws;
+
+	DiffSections.InsertHead(pDiffSection);
+
+	// allocate an equal section of zero length as the last section and add to the list
+	pDiffSection = new StringDiffSection;
+
+	pDiffSection->Str1ws = str1ws + pStr1->GetLength();
+	pDiffSection->Str2ws = str2ws + pStr2->GetLength();
+
+	DiffSections.InsertTail(pDiffSection);
+
+	// Now expand all "equal" sections to include preceding and trailing blanks
+
+	// first expand them to make number of file1/file2 blanks equal
+	for (pDiffSection = DiffSections.First();
+		DiffSections.NotEnd(pDiffSection); pDiffSection = DiffSections.Next(pDiffSection))
+	{
+		if (! pDiffSection->Different)
+		{
+			// find number of heading blanks
+			unsigned blanks1, blanks2;
+			for (blanks1 = 0;
+				blanks1 < pDiffSection->Len1ws && ' ' == pDiffSection->Str1ws[blanks1];
+				blanks1++)
+			{
+			}
+			for (blanks2 = 0;
+				blanks2 < pDiffSection->Len2ws && ' ' == pDiffSection->Str2ws[blanks2];
+				blanks2++)
+			{
+			}
+
+			while (blanks1 < blanks2
+					&& pDiffSection->Str1ws > str1ws
+					&& ' ' == pDiffSection->Str1ws[-1])
+			{
+				blanks1++;
+				pDiffSection->Str1ws--;
+				pDiffSection->Len1ws++;
+			}
+
+			while (blanks2 < blanks1
+					&& pDiffSection->Str2ws > str2ws
+					&& ' ' == pDiffSection->Str2ws[-1])
+			{
+				blanks2++;
+				pDiffSection->Str2ws--;
+				pDiffSection->Len2ws++;
+			}
+
+			while (pDiffSection->Str1ws > str1ws
+					&& ' ' == pDiffSection->Str1ws[-1]
+					&& pDiffSection->Str2ws > str2ws
+					&& ' ' == pDiffSection->Str2ws[-1])
+			{
+				pDiffSection->Str1ws--;
+				pDiffSection->Len1ws++;
+				pDiffSection->Str2ws--;
+				pDiffSection->Len2ws++;
+			}
+		}
+		if (NULL != pDiffSection->Str1ws)
+		{
+			str1ws = pDiffSection->Str1ws + pDiffSection->Len1ws;
+		}
+		if (NULL != pDiffSection->Str2ws)
+		{
+			str2ws = pDiffSection->Str2ws + pDiffSection->Len2ws;
+		}
+	}
+
+	str1ws = pStr1->GetText() + pStr1->GetLength();
+	str2ws = pStr2->GetText() + pStr2->GetLength();
+
+	for (pDiffSection = DiffSections.Last();
+		DiffSections.NotEnd(pDiffSection); pDiffSection = pDiffSection->Prev())
+	{
+		if (! pDiffSection->Different)
+		{
+			// find number of trailing blanks
+			unsigned blanks1, blanks2;
+			for (blanks1 = 0;
+				blanks1 < pDiffSection->Len1ws
+				&& ' ' == pDiffSection->Str1ws[pDiffSection->Len1ws - 1 - blanks1];
+				blanks1++)
+			{
+			}
+			for (blanks2 = 0;
+				blanks2 < pDiffSection->Len2ws
+				&& ' ' == pDiffSection->Str2ws[pDiffSection->Len2ws - 1 - blanks2];
+				blanks2++)
+			{
+			}
+
+			while (blanks1 < blanks2
+					&& pDiffSection->Str1ws + pDiffSection->Len1ws < str1ws
+					&& ' ' == pDiffSection->Str1ws[pDiffSection->Len1ws])
+			{
+				blanks1++;
+				pDiffSection->Len1ws++;
+			}
+			while (blanks2 < blanks1
+					&& pDiffSection->Str2ws + pDiffSection->Len2ws < str2ws
+					&& ' ' == pDiffSection->Str2ws[pDiffSection->Len2ws])
+			{
+				blanks2++;
+				pDiffSection->Len2ws++;
+			}
+
+			while (pDiffSection->Str1ws + pDiffSection->Len1ws < str1ws
+					&& ' ' == pDiffSection->Str1ws[pDiffSection->Len1ws]
+					&& pDiffSection->Str2ws + pDiffSection->Len2ws < str2ws
+					&& ' ' == pDiffSection->Str2ws[pDiffSection->Len2ws])
+			{
+				pDiffSection->Len1ws++;
+				pDiffSection->Len2ws++;
+			}
+		}
+
+		if (NULL != pDiffSection->Str1ws)
+		{
+			str1ws = pDiffSection->Str1ws;
+		}
+		if (NULL != pDiffSection->Str2ws)
+		{
+			str2ws = pDiffSection->Str2ws;
+		}
+	}
+
+	// then add the remaining blanks
+	for (pDiffSection = DiffSections.First();
+		DiffSections.NotEnd(pDiffSection); pDiffSection = DiffSections.Next(pDiffSection))
+	{
+		if (! pDiffSection->Different)
+		{
+			while (pDiffSection->Str1ws > str1ws
+					&& ' ' == pDiffSection->Str1ws[-1])
+			{
+				pDiffSection->Str1ws--;
+				pDiffSection->Len1ws++;
+			}
+			while (pDiffSection->Str2ws > str2ws
+					&& ' ' == pDiffSection->Str2ws[-1])
+			{
+				pDiffSection->Str2ws--;
+				pDiffSection->Len2ws++;
+			}
+		}
+		if (NULL != pDiffSection->Str1ws)
+		{
+			str1ws = pDiffSection->Str1ws + pDiffSection->Len1ws;
+		}
+		if (NULL != pDiffSection->Str2ws)
+		{
+			str2ws = pDiffSection->Str2ws + pDiffSection->Len2ws;
+		}
+	}
+
+	str1ws = pStr1->GetText() + pStr1->GetLength();
+	str2ws = pStr2->GetText() + pStr2->GetLength();
+
+	for (pDiffSection = DiffSections.Last();
+		DiffSections.NotEnd(pDiffSection); pDiffSection = pDiffSection->Prev())
+	{
+		if (! pDiffSection->Different)
+		{
+			while (pDiffSection->Str1ws + pDiffSection->Len1ws < str1ws
+					&& ' ' == pDiffSection->Str1ws[pDiffSection->Len1ws])
+			{
+				pDiffSection->Len1ws++;
+			}
+			while (pDiffSection->Str2ws + pDiffSection->Len2ws < str2ws
+					&& ' ' == pDiffSection->Str2ws[pDiffSection->Len2ws])
+			{
+				pDiffSection->Len2ws++;
+			}
+		}
+		if (NULL != pDiffSection->Str1ws)
+		{
+			str1ws = pDiffSection->Str1ws;
+		}
+		if (NULL != pDiffSection->Str2ws)
+		{
+			str2ws = pDiffSection->Str2ws;
+		}
+	}
+
+	// now we have all identical sections expanded to fill all the whitespaces around them
+	// merge all adjacent identical sections
+	for (pDiffSection = DiffSections.First();
+		DiffSections.NotEnd(pDiffSection); pDiffSection = pDiffSection->Next())
+	{
+		StringDiffSection * pNextDiff = pDiffSection->Next();
+		if (! pDiffSection->Different
+			&& DiffSections.NotEnd(pNextDiff)
+			&& ! pNextDiff->Different
+			&& pDiffSection->Str1ws + pDiffSection->Len1ws == pNextDiff->Str1ws
+			&& pDiffSection->Str2ws + pDiffSection->Len2ws == pNextDiff->Str2ws)
+		{
+			pDiffSection->Len1ws += pNextDiff->Len1ws;
+			pDiffSection->Len2ws += pNextDiff->Len2ws;
+			pNextDiff->RemoveFromList();
+			delete pNextDiff;
+		}
+	}
+
+	int nDifferentChars = 0;
+
+	// now generate the resulting difference sections
+	for (pDiffSection = DiffSections.First();
+		DiffSections.NotEnd(pDiffSection); pDiffSection = pDiffSection->Next())
+	{
+		StringSection * pNewSection;
+		if (! pDiffSection->Different)
+		{
+			// any difference could only be whitespaces
+			str1 = pDiffSection->Str1ws;
+			str2 = pDiffSection->Str2ws;
+			unsigned len1 = pDiffSection->Len1ws;
+			unsigned len2 = pDiffSection->Len2ws;
+			while (0 != len1 || 0 != len2)
+			{
+				unsigned idx = 0;
+				while (idx < len1
+						&& idx < len2
+						&& str1[idx] == str2[idx])
+				{
+					idx++;
+				}
+				if (0 != idx)
+				{
+					// equal section found
+					if (NULL != ppSections)
+					{
+						pNewSection = new StringSection;
+						if (NULL != pNewSection)
+						{
+							pNewSection->Attr = StringSection::Identical;
+							pNewSection->Length = (USHORT)idx;
+							pNewSection->pBegin = str1;
+							ppSections->InsertTail(pNewSection);
+						}
+					}
+					str1 += idx;
+					str2 += idx;
+					len1 -= idx;
+					len2 -= idx;
+				}
+				// skip the spaces
+				ASSERT(0 == len1 || ' ' != *str1 || 0 == len2 || ' ' != *str2);
+
+				unsigned idx1, idx2;
+				for (idx1 = 0; idx1 < len1 && ' ' == str1[idx1]; idx1++)
+				{
+				}
+				for (idx2 = 0; idx2 < len2 && ' ' == str2[idx2]; idx2++)
+				{
+				}
+
+				ASSERT(0 == idx1 || 0 == idx2);
+				if (0 != idx1)
+				{
+					// insert erased whitespace section
+					if (NULL != ppSections)
+					{
+						pNewSection = new StringSection;
+						if (NULL != pNewSection)
+						{
+							pNewSection->Attr = StringSection::File1Only
+												| StringSection::Undefined
+												| StringSection::Whitespace;
+							pNewSection->Length = (USHORT)idx1;
+							pNewSection->pBegin = str1;
+							ppSections->InsertTail(pNewSection);
+						}
+					}
+					str1 += idx1;
+					len1 -= idx1;
+				}
+				else if (0 != idx2)
+				{
+					// insert added whitespace section
+					if (NULL != ppSections)
+					{
+						pNewSection = new StringSection;
+						if (NULL != pNewSection)
+						{
+							pNewSection->Attr = StringSection::File2Only
+												| StringSection::Undefined
+												| StringSection::Whitespace;
+							pNewSection->Length = (USHORT)idx2;
+							pNewSection->pBegin = str2;
+							ppSections->InsertTail(pNewSection);
+						}
+					}
+					str2 += idx2;
+					len2 -= idx2;
+				}
+			}
+
+		}
+		else
+		{
+			// difference section
+			if (0 != pDiffSection->Len1ws)
+			{
+				if (NULL != ppSections)
+				{
+					// insert erased section
+					pNewSection = new StringSection;
+					if (NULL != pNewSection)
+					{
+						pNewSection->Attr = StringSection::File1Only
+											| StringSection::Undefined;
+						pNewSection->Length = (USHORT)pDiffSection->Len1ws;
+						pNewSection->pBegin = pDiffSection->Str1ws;
+
+						if (pDiffSection->Str1ws > str1VersionBegin
+							&& pDiffSection->Str1ws + pDiffSection->Len1ws <= str1VersionEnd)
+						{
+							pNewSection->Attr |= StringSection::VersionInfo;
+						}
+						ppSections->InsertTail(pNewSection);
+					}
+				}
+			}
+			if (0 != pDiffSection->Len2ws)
+			{
+				if (NULL != ppSections)
+				{
+					// insert added section
+					pNewSection = new StringSection;
+					if (NULL != pNewSection)
+					{
+						pNewSection->Attr = StringSection::File2Only
+											| StringSection::Undefined;
+						pNewSection->Length = (USHORT)pDiffSection->Len2ws;
+						pNewSection->pBegin = pDiffSection->Str2ws;
+						if (pDiffSection->Str2ws > str2VersionBegin
+							&& pDiffSection->Str2ws + pDiffSection->Len2ws <= str2VersionEnd)
+						{
+							pNewSection->Attr |= StringSection::VersionInfo;
+						}
+						ppSections->InsertTail(pNewSection);
+					}
+				}
+			}
+			if (pDiffSection->Len1 > pDiffSection->Len2)
+			{
+				nDifferentChars += pDiffSection->Len1;
+			}
+			else
+			{
+				nDifferentChars += pDiffSection->Len2;
+			}
+		}
+	}
+
+	while ( ! DiffSections.IsEmpty())
+	{
+		delete DiffSections.RemoveHead();
+	}
+	return nDifferentChars;
+}
+
+bool LooksLike(const FileLine * pLine1, const FileLine * pLine2, int PercentsDifferent)
+{
+	unsigned nCharsDifferent = MatchStrings(pLine1, pLine2, NULL, GetApp()->m_MinMatchingChars);
+	// nCharsDifferent won't count whitespace difference
+
+	unsigned nLength = pLine1->GetNormalizedLength();
+	if (nLength < pLine2->GetNormalizedLength())
+	{
+		nLength = pLine2->GetNormalizedLength();
+	}
+	return (nLength * PercentsDifferent / 100) >= nCharsDifferent;
+}
+
 CSmallAllocator FileLine::m_Allocator(sizeof FileLine);
+CSmallAllocator LinePair::m_Allocator(sizeof LinePair);

@@ -157,37 +157,6 @@ struct TextToken
 	class FileLine * m_pLine;
 };
 
-class FileDiffSection
-{
-public:
-	FileDiffSection() { m_Flags = 0; }
-	~FileDiffSection() {}
-	TextPosLine m_Begin;
-	TextPosLine m_End;
-	ULONG m_Flags;
-	enum {
-		FlagWhitespace = 0x100,
-		FlagVersionInfoDifferent = 0x200,
-	};
-
-	static void * operator new(size_t size)
-	{
-		return m_Allocator.Allocate(size);
-	}
-	static void operator delete(void * ptr)
-	{
-		m_Allocator.Free(ptr);
-	}
-private:
-	static CSmallAllocator m_Allocator;
-};
-
-bool less<FileDiffSection *>::operator()
-	(FileDiffSection * const & pS1, FileDiffSection * const & pS2) const
-{
-	return pS1->m_Begin < pS2->m_Begin;
-}
-
 class FileLine
 {
 public:
@@ -535,6 +504,8 @@ public:
 		CalculatingSecondFingerprint,
 		ComparingFiles,
 		MemoryFile,
+		FileFromSubdirInFirstDirOnly,   // file from a subdirectory that exists only in first directory
+		FileFromSubdirInSecondDirOnly,   // file from a subdirectory that exists only in first directory
 	};
 
 	int ComparisionResultPriority() const;

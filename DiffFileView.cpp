@@ -8,6 +8,7 @@
 #include "ChildFrm.h"
 #include "FindDialog.h"
 #include "GdiObjectSave.h"
+#include "FileLine.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

@@ -3,11 +3,11 @@
 #define AFX_FILELISTSUPPORT_H__E1805E7E_66CF_4BE2_A1A1_7C1E818B9987__INCLUDED_
 #pragma once
 #include <afxtempl.h>
-#include "SmallAllocator.h"
 #include <functional>
 #include <vector>
 #include "Md5HashCalculator.h"
 #include "KListEntry.h"
+#include "SmallAllocator.h"
 
 using namespace std;
 
@@ -157,95 +157,6 @@ struct TextToken
 	class FileLine * m_pLine;
 };
 
-class FileLine
-{
-public:
-	enum { eContainsVersionInfo = 1, };
-
-	FileLine(LPCTSTR src, int Length, bool MakeNormalizedString, bool c_cpp_file);
-	~FileLine();
-
-	static void * operator new(size_t size)
-	{
-		return m_Allocator.Allocate(size);
-	}
-	static void operator delete(void * ptr)
-	{
-		m_Allocator.Free(ptr);
-	}
-
-public:
-	DWORD GetHash() const { return m_HashCode; }
-	DWORD GetNormalizedHash() const { return m_NormalizedHashCode; }
-
-	DWORD GetGroupHash() const { return m_GroupHashCode; }
-	DWORD GetNormalizedGroupHash() const { return m_NormalizedGroupHashCode; }
-
-	void SetGroupHash(DWORD hash) { m_GroupHashCode = hash; }
-	void SetNormalizedGroupHash(DWORD hash) { m_NormalizedGroupHashCode = hash; }
-
-	bool IsEqual(const FileLine * pOtherLine) const;
-	bool IsNormalizedEqual(const FileLine * pOtherLine) const;
-	bool LooksLike(const FileLine * pOtherLine, int PercentsDifferent) const;
-	bool IsBlank() const { return 0 == m_NormalizedStringLength; }
-
-	bool IsExtraWhitespace(unsigned pos) const
-	{
-		return 0 != (m_pWhitespaceMask[pos / 8] & (1 << (pos & 7)));
-	}
-
-	bool ContainsVersionInfo() const
-	{
-		return 0 != (m_Flags & eContainsVersionInfo);
-	}
-
-	void SetNext(FileLine * pNext) { m_pNext = pNext; }
-	FileLine * Next() const { return m_pNext; }
-
-	unsigned GetLineNumber() const { return m_Number; }
-	void SetLineNumber(unsigned num) { m_Number = num; }
-
-	LPCTSTR GetText() const { return m_pString; }
-	unsigned GetLength() const { return m_Length; }
-
-	LPCTSTR GetNormalizedText() const { return m_pNormalizedString; }
-	unsigned GetNormalizedLength() const { return m_NormalizedStringLength; }
-
-	static int _cdecl HashCompareFunc(FileLine const * pLine1, FileLine const * pLine2);
-	static int _cdecl HashAndLineNumberCompareFunc(FileLine const * pLine1, FileLine const * pLine2);
-	static int _cdecl NormalizedHashAndLineNumberCompareFunc(FileLine const * pLine1, FileLine const * pLine2);
-
-	static int _cdecl GroupHashAndLineNumberCompareFunc(FileLine const * pLine1, FileLine const * pLine2);
-	static int _cdecl NormalizedGroupHashAndLineNumberCompareFunc(FileLine const * pLine1, FileLine const * pLine2);
-
-protected:
-	int RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstCount,
-								char * pWhitespaceMask, int WhitespaceMaskSize,
-								unsigned Flags);
-private:
-
-	DWORD m_Flags;
-	DWORD m_HashCode;
-	DWORD m_GroupHashCode;
-	DWORD m_NormalizedHashCode;
-	DWORD m_NormalizedGroupHashCode;
-	unsigned m_Number; // line ordinal number in the file
-	FileLine * m_pNext;
-	// length of the source string
-	unsigned m_Length;
-	unsigned m_NormalizedStringLength;
-	//int m_FirstTokenIndex;
-	//FileLine * m_Link;
-	TCHAR * m_pAllocatedBuf;
-	const char * m_pWhitespaceMask;
-	LPCTSTR m_pString;
-	// points to the string with extra spaces removed
-	LPCTSTR m_pNormalizedString;
-	// String, normalized string and whitespace mask share common buffer.
-	// you only need to delete m_pAllocatedBuf
-	static CSmallAllocator m_Allocator;
-};
-
 struct StringSection : public ListItem<StringSection>
 {
 	static void * operator new(size_t size)
@@ -286,7 +197,7 @@ struct StringSection : public ListItem<StringSection>
 	bool IsDiscarded() const { return 0 != (Attr & Discarded); }
 	bool IsWhitespace() const { return 0 != (Attr & Whitespace); }
 private:
-	static CSmallAllocator m_Allocator;
+	static class CSmallAllocator m_Allocator;
 };
 
 struct LinePair
@@ -304,7 +215,7 @@ struct LinePair
 	const FileLine * pSecondLine;
 	ListHead<StringSection> StrSections;
 private:
-	static CSmallAllocator m_Allocator;
+	static class CSmallAllocator m_Allocator;
 public:
 	// recalculates offset in the raw line to offset in the line with or without whitespaces shown
 	int LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces, int FileScope);

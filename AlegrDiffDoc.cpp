@@ -13,6 +13,7 @@
 #include "AcceptDeclineDlg.h"
 #include "FileDialogWithHistory.h"
 #include "ComparisonProgressDlg.h"
+#include "FileLine.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

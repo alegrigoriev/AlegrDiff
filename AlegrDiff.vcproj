@@ -515,6 +515,9 @@
 				RelativePath="FileDialogWithHistory.cpp">
 			</File>
 			<File
+				RelativePath=".\FileLine.cpp">
+			</File>
+			<File
 				RelativePath=".\FileListSupport.cpp">
 			</File>
 			<File
@@ -658,6 +661,9 @@
 			</File>
 			<File
 				RelativePath="FileDialogWithHistory.h">
+			</File>
+			<File
+				RelativePath=".\FileLine.h">
 			</File>
 			<File
 				RelativePath=".\FileListSupport.h">

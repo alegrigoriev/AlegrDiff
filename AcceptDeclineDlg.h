@@ -9,6 +9,7 @@
 
 /////////////////////////////////////////////////////////////////////////////
 // CAcceptDeclineDlg dialog
+#include "resource.h"
 
 class CAcceptDeclineDlg : public CDialog
 {

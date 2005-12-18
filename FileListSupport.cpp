@@ -19,6 +19,38 @@ static DWORD CalculateHash(void const * data, int len);
 #define C_CPP_FILE 1
 #define REMOVE_VERSION_INFO 2
 
+class FileDiffSection
+{
+public:
+	FileDiffSection() { m_Flags = 0; }
+	~FileDiffSection() {}
+	TextPosLine m_Begin;
+	TextPosLine m_End;
+	ULONG m_Flags;
+	enum {
+		FlagWhitespace = 0x100,
+		FlagVersionInfoDifferent = 0x200,
+	};
+
+	static void * operator new(size_t size)
+	{
+		return m_Allocator.Allocate(size);
+	}
+	static void operator delete(void * ptr)
+	{
+		m_Allocator.Free(ptr);
+	}
+private:
+	static CSmallAllocator m_Allocator;
+};
+
+bool less<FileDiffSection *>::operator()
+	(FileDiffSection * const & pS1, FileDiffSection * const & pS2) const
+{
+	return pS1->m_Begin < pS2->m_Begin;
+}
+
+
 CString PatternToMultiCString(LPCTSTR src)
 {
 	// all ';', ',' are replaced with 0, another 0 is appended
@@ -2985,13 +3017,17 @@ int FilePair::ComparisionResultPriority() const
 		return 13;
 	case OnlySecondDirectory:
 		return 14;
-	case ReadingFirstFile:
+	case FileFromSubdirInFirstDirOnly:
 		return 15;
-	case ReadingSecondFile:
+	case FileFromSubdirInSecondDirOnly:
 		return 16;
+	case ReadingFirstFile:
+		return 17;
+	case ReadingSecondFile:
+		return 18;
 	default:
 	case ResultUnknown:
-		return 17;
+		return 100;
 	}
 }
 

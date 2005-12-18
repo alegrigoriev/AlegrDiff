@@ -2,7 +2,6 @@
 //
 
 #include "stdafx.h"
-#include "AlegrDiff.h"
 #include "AcceptDeclineDlg.h"
 
 #ifdef _DEBUG

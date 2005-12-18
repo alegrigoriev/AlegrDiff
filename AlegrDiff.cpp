@@ -314,7 +314,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	// The main window has been initialized, so show and update it.
 	m_pMainWnd->DragAcceptFiles();
 
-	pMainFrame->ShowWindow(SW_SHOWDEFAULT);
+	pMainFrame->InitialShowWindow(SW_SHOWDEFAULT);
 
 	pMainFrame->UpdateWindow();
 	// process names from the command line

@@ -6,7 +6,7 @@
     name="AlegrSoft.AlegrDiff.AlegrDiff"
     type="win32"
 />
-<description>Your application description here.</description>
+<description>AlegrDiff - folder and file compare and merge.</description>
 <dependency>
     <dependentAssembly>
         <assemblyIdentity

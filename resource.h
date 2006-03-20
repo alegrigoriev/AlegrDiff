@@ -6,7 +6,6 @@
 #define IDD_ABOUTBOX                    100
 #define IDD_PROPPAGE_FILE_PREFERENCES   102
 #define IDD_PROGRESSDIALOG              103
-#define IDD_UIUPDATEDDLG                104
 #define IDR_MAINFRAME                   128
 #define IDR_ALEGRDTYPE                  129
 #define IDD_DIALOG_COMPARE_DIRS         130

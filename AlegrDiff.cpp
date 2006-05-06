@@ -57,6 +57,7 @@ BEGIN_MESSAGE_MAP(CAlegrDiffApp, CWinApp)
 	ON_COMMAND(ID_FILE_PRINT_SETUP, CWinApp::OnFilePrintSetup)
 	ON_COMMAND(ID_FILE_CREATEDIRECTORYFINGERPRINT, OnFileCreatedirectoryfingerprint)
 	ON_COMMAND(ID_FILE_CHECK_DIRECTORY_FINGERPRINT, OnFileCheckDirectoryFingerprint)
+	ON_COMMAND(ID_WINDOW_CLOSEALL, OnWindowCloseall)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1630,4 +1631,9 @@ void SetWindowIcons(CWnd * pWnd, UINT id)
 	{
 		pWnd->SetIcon(hIcon, FALSE);			// Set small icon
 	}
+}
+
+void CAlegrDiffApp::OnWindowCloseall()
+{
+	CloseAllDocuments(FALSE);
 }

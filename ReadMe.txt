@@ -28,7 +28,6 @@ Make HTML help
 
 Maybe different color for selected accepted/declined
 add option to keep the caret on one line during F3 and F7
-Add "Window\Close All" menu.
 
 V1.5:
 Need a hot-key to select current changed block
@@ -118,6 +117,7 @@ screen move in two directions may corrupt the image (??)
 
 Done:
 
+Add "Window\Close All" menu.
 Save As UNICODE file: set default TRUE in NT OS.
 Don't show files from sub directories not in other dir (default).
 Read files in alphabetical order (not reverse). 

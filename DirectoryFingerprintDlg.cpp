@@ -154,7 +154,8 @@ BOOL CDirectoryFingerprintDlg::OnInitDialog()
 	m_FingerprintFilenameHistory.Load();
 
 	m_Profile.AddBoolItem(_T("Settings"), _T("IncludeDirsToFingerprint"), m_bIncludeDirectoryStructure, TRUE);
-	m_Profile.AddBoolItem(_T("Settings"), _T("SaveFingerprintAsUnicode"), m_bSaveAsUnicode, FALSE);
+	m_Profile.AddBoolItem(_T("Settings"), _T("SaveFingerprintAsUnicode"),
+						m_bSaveAsUnicode, 0 == (::GetVersion() & 0x80000000));
 
 	m_sSaveFilename = m_FingerprintFilenameHistory[0];
 	m_sIgnoreFiles = m_IgnoreFilterHistory[0];

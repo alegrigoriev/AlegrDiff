@@ -774,7 +774,7 @@ void CAlegrDiffApp::OpenSingleFile(LPCTSTR pName)
 	}
 
 	FilePair * pPair = new FilePair;
-	pPair->pFirstFile = new FileItem( & wfd1, FileDir1, "");
+	pPair->pFirstFile = new FileItem( & wfd1, FileDir1, "", NULL);
 	pPair->pSecondFile = NULL;
 	pPair->pFirstFile->m_C_Cpp = bCppFile;
 	pPair->pFirstFile->m_IsBinary = bBinaryFile;
@@ -1030,10 +1030,10 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 						|| MultiPatternMatches(wfd2.cFileName, sBinFilesPattern);
 	}
 
-	pPair->pFirstFile = new FileItem( & wfd1, FileDir1, _T(""));
+	pPair->pFirstFile = new FileItem( & wfd1, FileDir1, _T(""), NULL);
 	pPair->pFirstFile->m_IsBinary = bFilesBinary;
 
-	pPair->pSecondFile = new FileItem( & wfd2, FileDir2, _T(""));
+	pPair->pSecondFile = new FileItem( & wfd2, FileDir2, _T(""), NULL);
 	pPair->pSecondFile->m_IsBinary = bFilesBinary;
 
 	if ( ! bFilesBinary

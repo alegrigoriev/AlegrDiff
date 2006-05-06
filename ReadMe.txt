@@ -6,7 +6,6 @@ TODO:
 2. Add an option to automatically hide certain files (the same, right-only etc.) 
 3. Can you lower task priority when scanning files - the computer stalls! 
 
-Save As UNICODE file: set default TRUE in NT OS.
 1. If a directory does not exist, no error message is given 
 2. Show number of identical and different files in the status line.
 Show confirmation dialog if file comparision or fingerprint calculation is canceled.
@@ -119,6 +118,7 @@ screen move in two directions may corrupt the image (??)
 
 Done:
 
+Save As UNICODE file: set default TRUE in NT OS.
 Don't show files from sub directories not in other dir (default).
 Read files in alphabetical order (not reverse). 
 File\Preferences dialog must remember selected tab for current session.

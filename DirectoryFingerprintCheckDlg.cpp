@@ -244,7 +244,7 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 			_tcsncpy(wfd.cFileName, NamePart, countof(wfd.cFileName) - 1);
 			wfd.cFileName[countof(wfd.cFileName) - 1] = 0;
 
-			pFile = new FileItem(& wfd, CString(), SubDir);
+			pFile = new FileItem(& wfd, CString(), SubDir, NULL);   // TODO: Parent dir
 
 			pFile->SetMD5(md5);
 
@@ -303,11 +303,11 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 			ULONGLONG Length2 = pPair->pSecondFile->GetFileLength();
 			if (Length1 < Length2)
 			{
-				pPair->m_ComparisonResult = FilePair::SecondFileLonger;
+				pPair->SetComparisonResult(FilePair::SecondFileLonger);
 			}
 			else if (Length1 > Length2)
 			{
-				pPair->m_ComparisonResult = FilePair::FirstFileLonger;
+				pPair->SetComparisonResult(FilePair::FirstFileLonger);
 			}
 			else
 			{
@@ -336,11 +336,11 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 					if (0 == memcmp(pPair->pFirstFile->GetDigest(),
 									pPair->pSecondFile->GetDigest(), pPair->pFirstFile->GetDigestLength()))
 					{
-						pPair->m_ComparisonResult = FilePair::FilesIdentical;
+						pPair->SetComparisonResult(FilePair::FilesIdentical);
 					}
 					else
 					{
-						pPair->m_ComparisonResult = FilePair::FilesDifferent;
+						pPair->SetComparisonResult(FilePair::FilesDifferent);
 					}
 				}
 

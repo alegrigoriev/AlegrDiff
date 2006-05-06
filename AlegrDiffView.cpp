@@ -107,6 +107,10 @@ ON_COMMAND(ID_SHOW_LONGERFILESIN1STDIRECTORY, OnShowLongerfilesin1stdirectory)
 ON_UPDATE_COMMAND_UI(ID_SHOW_LONGERFILESIN1STDIRECTORY, OnUpdateShowLongerfilesin1stdirectory)
 ON_COMMAND(ID_SHOW_LONGERFILESIN2NDDIRECTORY, OnShowLongerfilesin2nddirectory)
 ON_UPDATE_COMMAND_UI(ID_SHOW_LONGERFILESIN2NDDIRECTORY, OnUpdateShowLongerfilesin2nddirectory)
+ON_COMMAND(ID_INFIRSTDIRECTORYONLY_SUBDIRECTORIESCONTENTS, OnInFirstDirectoryOnlySubdirectoriesContents)
+ON_UPDATE_COMMAND_UI(ID_INFIRSTDIRECTORYONLY_SUBDIRECTORIESCONTENTS, OnUpdateInFirstDirectoryOnlySubdirectoriesContents)
+ON_COMMAND(ID_INSECONDDIRECTORY_SUBDIRECTORIESCONTENTS, OnInSecondDirectoryOnlySubdirectoriesContents)
+ON_UPDATE_COMMAND_UI(ID_INSECONDDIRECTORY_SUBDIRECTORIESCONTENTS, OnUpdateInSecondDirectoryOnlySubdirectoriesContents)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -132,7 +136,7 @@ inline void CAlegrDiffView::PrintColumnOrder()
 }
 
 CAlegrDiffView::CAlegrDiffView()
-	: m_ShowFilesMask(0xFFFFFFFF)
+	: m_ShowFilesMask(~(ULONG)(ShowFileFromSubdirInFirstDirOnly | ShowFileFromSubdirInSecondDirOnly))
 	, m_PresentFilesMask(0)
 {
 	CThisApp * pApp = GetApp();
@@ -1723,7 +1727,16 @@ void CAlegrDiffView::OnEditSelectAll()
 
 void CAlegrDiffView::ToggleShowFilesMask(ShowFilesMask mask)
 {
-	m_ShowFilesMask ^= mask;
+	// don't use XOR, because the mask can have two bits.
+	// If one of them gets set (registry screwed), we won't be able to reset them.
+	if (m_ShowFilesMask & mask)
+	{
+		m_ShowFilesMask &= ~mask;
+	}
+	else
+	{
+		m_ShowFilesMask |= mask;
+	}
 	OnUpdate(NULL, OnUpdateRebuildListView, NULL);
 }
 
@@ -1847,3 +1860,24 @@ void CAlegrDiffView::OnUpdateShowLongerfilesin2nddirectory(CCmdUI *pCmdUI)
 {
 	UpdateShowFilesMask(pCmdUI, ShowSecondFileLongerFiles);
 }
+
+void CAlegrDiffView::OnInFirstDirectoryOnlySubdirectoriesContents()
+{
+	ToggleShowFilesMask(ShowFileFromSubdirInFirstDirOnly);
+}
+
+void CAlegrDiffView::OnUpdateInFirstDirectoryOnlySubdirectoriesContents(CCmdUI *pCmdUI)
+{
+	UpdateShowFilesMask(pCmdUI, ShowFileFromSubdirInFirstDirOnly);
+}
+
+void CAlegrDiffView::OnInSecondDirectoryOnlySubdirectoriesContents()
+{
+	ToggleShowFilesMask(ShowFileFromSubdirInSecondDirOnly);
+}
+
+void CAlegrDiffView::OnUpdateInSecondDirectoryOnlySubdirectoriesContents(CCmdUI *pCmdUI)
+{
+	UpdateShowFilesMask(pCmdUI, ShowFileFromSubdirInSecondDirOnly);
+}
+

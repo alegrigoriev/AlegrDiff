@@ -191,110 +191,189 @@ bool CAlegrDiffDoc::RebuildFilePairList(CProgressDialog * pDlg)
 bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2,
 									CProgressDialog * pDlg)
 {
-	vector<FileItem *> Files1;
-	vector<FileItem *> Files2;
+	typedef vector<FileItem *> FilesVector;
+	typedef FilesVector::iterator FilesVectorIterator;
+	FilesVector Files1;
+	FilesVector Files2;
 
-	FileList1.GetSortedList(Files1, FileList::SortDirFirst | FileList::SortBackwards);
-	FileList2.GetSortedList(Files2, FileList::SortDirFirst | FileList::SortBackwards);
+	FileList1.GetSortedList(Files1, FileList::SortDirFirst);
+	FileList2.GetSortedList(Files2, FileList::SortDirFirst);
 
-	// we don't call FreeFilePairList, because we could be performing file list refrech
-	FilePair * pInsertBefore = m_PairList.First();
+	// we don't call FreeFilePairList, because we could be performing file list refresh
 
 	// amount of data to process
 	ULONGLONG TotalFilesSize = 0;
-//    ULONG DirectoryNameIndex = 0;
-//    ULONG FileNameIndex = 0;
+	//    ULONG DirectoryNameIndex = 0;
+	//    ULONG FileNameIndex = 0;
+	// the list is sorted backwards. The folder goes last.
+	ListHead<FilePair> TmpPairList;
 
-	for (unsigned idx1 = 0, idx2 = 0; idx1 < Files1.size() || idx2 < Files2.size(); )
+	for (FilesVectorIterator pf1 = Files1.begin(), pf2 = Files2.begin();
+		pf1 != Files1.end() || pf2 != Files2.end(); )
 	{
 		FilePair * pPair = new FilePair;
 
 		int comparison;
-		if (idx1 >= Files1.size())
+		FileItem * pParentDir;
+		FileItem * pFile1 = NULL;
+		FileItem * pFile2 = NULL;
+		FilePair::eFileComparisionResult result;
+
+		if (pf1 == Files1.end())
 		{
+			pFile2 = *pf2;
 			comparison = -1;
-		}
-		else if (idx2 >= Files2.size())
-		{
-			comparison = 1;
 		}
 		else
 		{
-			comparison = FileItem::DirNameCompare(Files1[idx1], Files2[idx2]);
+			pFile1 = *pf1;
+
+			if (pf2 == Files2.end())
+			{
+				comparison = 1;
+			}
+			else
+			{
+				pFile2 = *pf2;
+				if (NULL != pFile1->m_pParentDir
+					&& pFile1->m_pParentDir->IsAlone())
+				{
+					comparison = 1;
+				}
+				else if (NULL != pFile2->m_pParentDir
+						&& pFile2->m_pParentDir->IsAlone())
+				{
+					comparison = -1;
+				}
+				else
+				{
+					comparison = -FileItem::DirNameCompare(pFile1, pFile2);
+				}
+			}
 		}
 
 		if (comparison < 0)
 		{
 			pPair->pFirstFile = NULL;
-			pPair->pSecondFile = Files2[idx2];
-			if (pPair->pSecondFile->IsFolder())
+			pPair->pSecondFile = pFile2;
+			pParentDir = pFile2->m_pParentDir;
+
+			if (pFile2->IsFolder())
 			{
-				pPair->m_ComparisonResult = FilePair::OnlySecondDirectory;
+				if (pParentDir != NULL
+					&& pParentDir->IsAlone())
+				{
+					result = FilePair::SubdirsParentInSecondDirOnly;
+				}
+				else
+				{
+					result = FilePair::OnlySecondDirectory;
+				}
+
+				pFile2->SetAlone(true);
 			}
 			else
 			{
-				pPair->m_ComparisonResult = FilePair::OnlySecondFile;
+				if (pParentDir != NULL
+					&& pParentDir->IsAlone())
+				{
+					result = FilePair::FileFromSubdirInSecondDirOnly;
+				}
+				else
+				{
+					result = FilePair::OnlySecondFile;
+				}
 			}
-			idx2++;
+			pf2++;
 
-			if (0) TRACE(_T("File \"%s\" exists only in dir \"%s\"\n"),
-						LPCTSTR(pPair->pSecondFile->GetName()),
-						LPCTSTR(FileList2.m_BaseDir + pPair->pSecondFile->GetSubdir()));
+			if (1) TRACE(_T("File \"%s\" exists only in dir \"%s\"\n"),
+						LPCTSTR(pFile2->GetName()),
+						LPCTSTR(FileList2.m_BaseDir + pFile2->GetSubdir()));
 		}
 		else if (comparison > 0)
 		{
+			pPair->pFirstFile = pFile1;
 			pPair->pSecondFile = NULL;
-			pPair->pFirstFile = Files1[idx1];
+			pParentDir = pFile1->m_pParentDir;
 
-			if (pPair->pFirstFile->m_bIsPhantomFile)
+			if (pFile1->m_bIsPhantomFile)
 			{
 				// reading fingerprint
-				if (pPair->pFirstFile->IsFolder())
+				if (pFile1->IsFolder())
 				{
-					pPair->m_ComparisonResult = FilePair::DirectoryInFingerprintFileOnly;
+					result = FilePair::DirectoryInFingerprintFileOnly;
 				}
 				else
 				{
-					pPair->m_ComparisonResult = FilePair::FileInFingerprintFileOnly;
+					result = FilePair::FileInFingerprintFileOnly;
 				}
 			}
 			else
 			{
-				if (pPair->pFirstFile->IsFolder())
+				if (pFile1->IsFolder())
 				{
-					pPair->m_ComparisonResult = FilePair::OnlyFirstDirectory;
+					if (pParentDir != NULL
+						&& pParentDir->IsAlone())
+					{
+						result = FilePair::SubdirsParentInFirstDirOnly;
+					}
+					else
+					{
+						result = FilePair::OnlyFirstDirectory;
+					}
+
+					pFile1->SetAlone(true);
 				}
 				else
 				{
-					pPair->m_ComparisonResult = FilePair::OnlyFirstFile;
+					if (pParentDir != NULL
+						&& pParentDir->IsAlone())
+					{
+						result = FilePair::FileFromSubdirInFirstDirOnly;
+					}
+					else
+					{
+						result = FilePair::OnlyFirstFile;
+					}
 				}
 			}
-			idx1++;
+			pf1++;
 
-			if (0) TRACE(_T("File \"%s\" exists only in dir \"%s\"\n"),
-						LPCTSTR(pPair->pFirstFile->GetName()),
-						LPCTSTR(FileList1.m_BaseDir + pPair->pFirstFile->GetSubdir()));
+			if (1) TRACE(_T("File \"%s\" exists only in dir \"%s\"\n"),
+						LPCTSTR(pFile1->GetName()),
+						LPCTSTR(FileList1.m_BaseDir + pFile1->GetSubdir()));
 		}
 		else
 		{
-			pPair->pFirstFile = Files1[idx1];
-			idx1++;
-			pPair->pSecondFile = Files2[idx2];
-			idx2++;
-			if (pPair->pFirstFile->IsFolder())
+			pPair->pFirstFile = pFile1;
+			pPair->pSecondFile = pFile2;
+			pf1++;
+			pf2++;
+
+			if (pFile1->IsFolder())
 			{
-				pPair->m_ComparisonResult = pPair->FilesIdentical;
+				result = pPair->FilesIdentical;
 			}
 			else
 			{
-				pPair->m_ComparisonResult = pPair->ResultUnknown;
+				result = pPair->ResultUnknown;
 			}
 
-			if (0) TRACE(_T("File \"%s\" exists in both \"%s\" and \"%s\"\n"),
-						LPCTSTR(pPair->pFirstFile->GetName()),
-						LPCTSTR(FileList1.m_BaseDir + pPair->pFirstFile->GetSubdir()),
-						LPCTSTR(FileList2.m_BaseDir + pPair->pSecondFile->GetSubdir()));
+			if (1) TRACE(_T("File \"%s\" exists in both \"%s\" and \"%s\"\n"),
+						LPCTSTR(pFile1->GetName()),
+						LPCTSTR(FileList1.m_BaseDir + pFile1->GetSubdir()),
+						LPCTSTR(FileList2.m_BaseDir + pFile2->GetSubdir()));
 		}
+
+		pPair->SetComparisonResult(result);
+		TmpPairList.InsertTail(pPair);
+	}
+
+	FilePair * pInsertBefore = m_PairList.First();
+
+	while ( ! TmpPairList.IsEmpty())
+	{
+		FilePair * pPair = TmpPairList.RemoveTail();
 
 		while (m_PairList.NotEnd(pInsertBefore))
 		{
@@ -311,7 +390,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 				pItem2 = pInsertBefore->pSecondFile;
 			}
 
-			comparison = FileItem::DirNameCompare(pItem1, pItem2);
+			int comparison = FileItem::DirNameCompare(pItem1, pItem2);
 			if (comparison < 0)
 			{
 				pInsertBefore->m_bDeleted = true;
@@ -340,7 +419,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 				{
 					// files times changed only
 					pInsertBefore->m_bChanged = true;
-					pPair->m_ComparisonResult = pPair->ResultUnknown;
+					pPair->SetComparisonResult(pPair->ResultUnknown);
 					m_bNeedUpdateViews = true;
 				}
 				pPair->Dereference();
@@ -542,7 +621,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(_T("Loading and comparing files..."));
 
 			CWaitCursor WaitCursor;
-			pPair->m_ComparisonResult = pPair->CompareFiles(NULL);
+			pPair->SetComparisonResult(pPair->CompareFiles(NULL));
 		}
 
 		m_TotalLines = pPair->m_LinePairs.size();
@@ -2318,7 +2397,7 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 		m_PairList.NotEnd(pPair) && (NULL == pDlg || ! pDlg->m_StopRunThread);
 		pPair = pPair->Next())
 	{
-		TRACE("First pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisonResult);
+		if (0) TRACE("First pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisonResult);
 		if (pPair->m_ComparisonResult != FilePair::ResultUnknown
 			|| NULL == pPair->pFirstFile
 			|| NULL == pPair->pSecondFile
@@ -2328,7 +2407,7 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 			continue;
 		}
 
-		pPair->m_ComparisonResult = pPair->CalculatingFirstFingerprint;
+		pPair->SetComparisonResult(pPair->CalculatingFirstFingerprint);
 
 		pDlg->SetNextItem(pPair->GetComparisonResultStr(),
 						pPair->pFirstFile->GetFileLength(), FILE_OPEN_OVERHEAD);
@@ -2336,11 +2415,11 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 		if (pPair->pFirstFile->CalculateHashes( & HashCalc, pDlg)
 			|| pDlg->m_StopRunThread)
 		{
-			pPair->m_ComparisonResult = FilePair::ResultUnknown;
+			pPair->SetComparisonResult(FilePair::ResultUnknown);
 		}
 		else
 		{
-			pPair->m_ComparisonResult = FilePair::ErrorReadingFirstFile;
+			pPair->SetComparisonResult(FilePair::ErrorReadingFirstFile);
 		}
 
 		pDlg->AddDoneItem(pPair->pFirstFile->GetFileLength());
@@ -2353,13 +2432,13 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 		m_PairList.NotEnd(pPair) && (NULL == pDlg || ! pDlg->m_StopRunThread);
 		pPair = pPair->Next())
 	{
-		TRACE("Second pass, pPair=%p, result=%d\n", pPair, pPair->GetComparisonResult());
+		if (0) TRACE("Second pass, pPair=%p, result=%d\n", pPair, pPair->GetComparisonResult());
 		if (FilePair::ResultUnknown != pPair->GetComparisonResult())
 		{
 			continue;
 		}
 
-		pPair->m_ComparisonResult = pPair->PreCompareFiles( & HashCalc, pDlg);
+		pPair->SetComparisonResult(pPair->PreCompareFiles( & HashCalc, pDlg));
 		pPair->m_bChanged = true;
 
 	}
@@ -2488,7 +2567,7 @@ void CFilePairDoc::OnViewAsBinary()
 	if (NULL == pPair->pFirstFile
 		|| ! pPair->pFirstFile->m_bIsPhantomFile)
 	{
-		pPair->m_ComparisonResult = pPair->ResultUnknown;
+		pPair->SetComparisonResult(pPair->ResultUnknown);
 	}
 
 	pPair->UnloadFiles(true);

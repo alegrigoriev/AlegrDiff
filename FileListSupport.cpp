@@ -182,33 +182,30 @@ bool MultiPatternMatches(LPCTSTR name, LPCTSTR sPattern)
 	return false;
 }
 
-FileList::FileList()
-	: m_pList(NULL), m_NumFiles(0)
-{
-}
-
 FileItem::FileItem(const WIN32_FIND_DATA * pWfd,
-					const CString & BaseDir, const CString & Dir)
-	:m_Name(pWfd->cFileName),
-	m_Length(pWfd->nFileSizeLow + (LONGLONG(pWfd->nFileSizeHigh) << 32)),
-	m_BaseDir(BaseDir),
-	m_Subdir(Dir),
-	m_C_Cpp(false),
-	m_IsBinary(false),
-	m_IsUnicode(false),
-	m_IsUnicodeBigEndian(false),
-	m_bMd5Calculated(false),
-	m_bIsPhantomFile(false),
-	m_pFileReadBuf(NULL)
+					const CString & BaseDir, const CString & Dir, FileItem * pParentDir)
+	:m_Name(pWfd->cFileName)
+	, m_Length(pWfd->nFileSizeLow + (LONGLONG(pWfd->nFileSizeHigh) << 32))
+	, m_BaseDir(BaseDir)
+	, m_Subdir(Dir)
+	, m_C_Cpp(false)
+	, m_IsBinary(false)
+	, m_IsUnicode(false)
+	, m_IsUnicodeBigEndian(false)
+	, m_bMd5Calculated(false)
+	, m_bIsPhantomFile(false)
+	, m_bIsAlone(false)
+	, m_pFileReadBuf(NULL)
 	, m_FileReadBufSize(0)
 	, m_FileReadPos(0)
 	, m_FileReadFilled(0)
+	, m_Attributes(pWfd->dwFileAttributes)
 	, m_hFile(NULL)
 	, m_pNext(NULL)
+	, m_pParentDir(pParentDir)
 {
 	memzero(m_Md5);
 	m_LastWriteTime = pWfd->ftLastWriteTime;
-	m_bIsFolder = 0 != (pWfd->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 FileItem::FileItem(LPCTSTR name)
@@ -220,22 +217,29 @@ FileItem::FileItem(LPCTSTR name)
 	m_IsUnicodeBigEndian(false),
 	m_bMd5Calculated(false),
 	m_bIsPhantomFile(false),
-	m_bIsFolder(false),
 	m_pFileReadBuf(NULL)
+	, m_bIsAlone(false)
 	, m_FileReadBufSize(0)
+	, m_Attributes(0)
 	, m_FileReadPos(0)
 	, m_FileReadFilled(0)
 	, m_hFile(NULL)
 	, m_pNext(NULL)
+	, m_pParentDir(NULL)
 {
 	memzero(m_Md5);
 	m_LastWriteTime.dwHighDateTime = 0;
 	m_LastWriteTime.dwLowDateTime = 0;
 }
 
+FileItem::~FileItem()
+{
+	Unload();
+}
+
 void FileItem::Unload()
 {
-	TRACE(_T("FileItem %s Unloaded\n"), LPCTSTR(GetFullName()));
+	if (0) TRACE(_T("FileItem %s Unloaded\n"), LPCTSTR(GetFullName()));
 
 	CSimpleCriticalSectionLock lock(m_Cs);
 
@@ -262,11 +266,6 @@ void FileItem::Unload()
 		m_FileReadBufSize = 0;
 		m_FileReadFilled = 0;
 	}
-}
-
-FileItem::~FileItem()
-{
-	Unload();
 }
 
 void FileItem::AddLine(LPCTSTR pLine)
@@ -779,12 +778,13 @@ FileCheckResult FileItem::ReloadIfChanged()
 		m_LastWriteTime = wfd.ftLastWriteTime;
 		m_Length = wfd.nFileSizeLow | ((ULONGLONG) wfd.nFileSizeHigh << 32);
 		m_bMd5Calculated = false;
-		if (m_bIsFolder != (0 != (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)))
+		if ((m_Attributes & FILE_ATTRIBUTE_DIRECTORY) !=
+			(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
-			m_bIsFolder = 0 != (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+			m_Attributes = wfd.dwFileAttributes;
 			return FileDeleted;
 		}
-		m_bIsFolder = 0 != (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+		m_Attributes = wfd.dwFileAttributes;
 
 		if (Load())
 		{
@@ -1084,6 +1084,16 @@ PairCheckResult FilePair::ReloadIfChanged()
 	return FilesTimeChanged;
 }
 
+FileList::FileList()
+	: m_pList(NULL), m_NumFiles(0)
+{
+}
+
+FileList::~FileList()
+{
+	FreeFileList();
+}
+
 void FileList::GetSortedList(vector<FileItem *> & ItemArray, DWORD SortFlags)
 {
 	ItemArray.resize(m_NumFiles);
@@ -1126,12 +1136,12 @@ void FileList::GetSortedList(vector<FileItem *> & ItemArray, DWORD SortFlags)
 		break;
 	}
 	std::sort(ItemArray.begin(), ItemArray.end(), SortFunc);
-#if 0 //def _DEBUG
-	for (i = 0; i < m_NumFiles && NULL != pItems[i]; i++)
-	{
-		if (0) TRACE(_T("Sorted file item: subdir=%s, Name=\"%s\"\n"),
-					pItems[i]->GetSubdir(), pItems[i]->GetName());
-	}
+#ifdef _DEBUG
+	if (1) for (i = 0; i < m_NumFiles && NULL != ItemArray[i]; i++)
+		{
+			TRACE(_T("Sorted file item: subdir=%s, Name=\"%s\"\n"),
+				ItemArray[i]->GetSubdir(), ItemArray[i]->GetName());
+		}
 #endif
 
 }
@@ -1341,40 +1351,40 @@ bool FileList::LoadFolder(const CString & BaseDir, bool bRecurseSubdirs,
 			m_BaseDir += _T("\\");
 		}
 	}
-	return LoadSubFolder(CString(), bRecurseSubdirs, sInclusionMask, sExclusionMask,
-						sC_CPPMask, sBinaryMask, sIgnoreDirs);
+
+	if ( ! bRecurseSubdirs)
+	{
+		sIgnoreDirs = _T("*");
+	}
+
+	return LoadSubFolder(_T(""), sInclusionMask, sExclusionMask,
+						sC_CPPMask, sBinaryMask, sIgnoreDirs, NULL);
 }
 
-bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
-							LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
-							LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask,
-							LPCTSTR sIgnoreDirs)
+bool ReadSubfolder(FileItem ** ppFiles, FileItem ** ppDirs,
+					CString const & SubDirectory, CString const & BaseDirectory,
+					LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
+					LPCTSTR sIgnoreDirs, FileItem * pParentDir)
 {
-	TRACE(_T("LoadSubFolder: scanning %s\n"), LPCTSTR(Subdir));
-//    CThisApp * pApp = GetApp();
+	if (0) TRACE(_T("LoadSubFolder: scanning %s\n"), LPCTSTR(BaseDirectory + SubDirectory));
 
 	WIN32_FIND_DATA wfd;
-	CString SubDirectory(Subdir);
-	// make sure the name contains '\'.
-	if ( ! Subdir.IsEmpty())
-	{
-		SubDirectory += _T("\\");
-	}
-	CString name = m_BaseDir + SubDirectory + _T("*");
-	HANDLE hFind = FindFirstFile(name, & wfd);
+	HANDLE hFind = FindFirstFile(BaseDirectory + SubDirectory + _T("*"), & wfd);
+
 	if (INVALID_HANDLE_VALUE == hFind
 		|| NULL == hFind)
 	{
 		return false;
 	}
+
 	do
 	{
 		FileItem * pFile = NULL;
+
 		if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
 			if (0) TRACE(_T("Found the subdirectory %s\n"), wfd.cFileName);
-			if ( ! bRecurseSubdirs
-				|| 0 == _tcscmp(wfd.cFileName, _T("."))
+			if (0 == _tcscmp(wfd.cFileName, _T("."))
 				|| 0 == _tcscmp(wfd.cFileName, _T(".."))
 				|| MultiPatternMatches(wfd.cFileName, sIgnoreDirs)
 				)
@@ -1383,52 +1393,113 @@ bool FileList::LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
 			}
 			// add the directory item
 			// scan the subdirectory
-			CString NewDir = SubDirectory + wfd.cFileName;
-			LoadSubFolder(NewDir, true,
-						sInclusionMask, sExclusionMask, sC_CPPMask, sBinaryMask, sIgnoreDirs);
 
-			wfd.cFileName[countof(wfd.cFileName) - 2] = 0;
-			_tcscat(wfd.cFileName, _T("\\"));
-			pFile = new FileItem( & wfd, m_BaseDir, SubDirectory);
+			wfd.cFileName[countof(wfd.cFileName) - 1] = 0;
+
+			pFile = new FileItem( & wfd, BaseDirectory, SubDirectory, pParentDir);
 			if (NULL == pFile)
 			{
 				continue;
 			}
+
+			// add to the list
+			pFile->m_pNext = *ppDirs;
+			*ppDirs = pFile;
 		}
 		else
 		{
 			// filter the file and add it to the list, if it matches the pattern.
 			if (0) TRACE(_T("File %s found\n"), wfd.cFileName);
+
 			if (! MultiPatternMatches(wfd.cFileName, sInclusionMask)
 				|| MultiPatternMatches(wfd.cFileName, sExclusionMask))
 			{
 				TRACE("File name does not match\n");
 				continue;
 			}
-			if (0) TRACE(_T("New file item: Name=\"%s\", base dir=%s, subdir=%s\n"),
-						wfd.cFileName, m_BaseDir, SubDirectory);
 
-			pFile = new FileItem( & wfd, m_BaseDir, SubDirectory);
+			if (0) TRACE(_T("New file item: Name=\"%s\", base dir=%s, subdir=%s\n"),
+						wfd.cFileName, BaseDirectory, SubDirectory);
+
+			pFile = new FileItem( & wfd, BaseDirectory, SubDirectory, pParentDir);
 			if (NULL == pFile)
 			{
 				continue;
 			}
-			if (MultiPatternMatches(wfd.cFileName, sBinaryMask))
-			{
-				pFile->m_IsBinary = true;
-			}
-			if ( ! pFile->m_IsBinary)
-			{
-				pFile->m_C_Cpp = MultiPatternMatches(wfd.cFileName, sC_CPPMask);
-			}
+			// add to the list
+			pFile->m_pNext = *ppFiles;
+			*ppFiles = pFile;
 		}
-		// add to the array
+	}
+	while (FindNextFile(hFind, & wfd));
+	FindClose(hFind);
+	return true;
+}
+
+bool FileList::LoadSubFolder(LPCTSTR Subdir,
+							LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
+							LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask,
+							LPCTSTR sIgnoreDirs, FileItem * pParentDir)
+{
+	if (0) TRACE(_T("LoadSubFolder: scanning %s\n"), LPCTSTR(Subdir));
+	FileItem * pFilesList = NULL;
+	FileItem * pDirsList = NULL;
+
+	CString SubDirectory(Subdir);
+	// make sure the name contains '\'.
+	if ( ! SubDirectory.IsEmpty())
+	{
+		SubDirectory += _T("\\");
+	}
+
+	if (! ReadSubfolder(& pFilesList, & pDirsList,
+						SubDirectory, m_BaseDir,
+						sInclusionMask, sExclusionMask, sIgnoreDirs, pParentDir))
+	{
+		return false;
+	}
+
+
+	// files first
+	while (pFilesList)
+	{
+		FileItem * pFile = pFilesList;
+		pFilesList = pFile->m_pNext;
+
+		if (MultiPatternMatches(pFile->GetName(), sBinaryMask))
+		{
+			pFile->m_IsBinary = true;
+		}
+		else
+		{
+			pFile->m_C_Cpp = MultiPatternMatches(pFile->GetName(), sC_CPPMask);
+		}
+		// add to the list
 		pFile->m_pNext = m_pList;
 		m_pList = pFile;
 		m_NumFiles++;
 	}
-	while (FindNextFile(hFind, & wfd));
-	FindClose(hFind);
+
+	while (pDirsList)
+	{
+		FileItem * pDir = pDirsList;
+		pDirsList = pDir->m_pNext;
+
+		// add to the list
+		pDir->m_pNext = m_pList;
+		m_pList = pDir;
+		m_NumFiles++;
+
+		// scan the subdirectory
+		// but don't recurse down reparse point
+
+		if ( ! pDir->IsReparsePoint())
+		{
+			LoadSubFolder(SubDirectory + pDir->GetName(),
+						sInclusionMask, sExclusionMask, sC_CPPMask, sBinaryMask, sIgnoreDirs, pDir);
+		}
+	}
+
 	return true;
 }
 
@@ -1847,11 +1918,14 @@ CString FilePair::GetComparisonResultStr() const
 	static CString sOnlyFingerprintExists(MAKEINTRESOURCE(IDS_STRING_ONLY_FINGERPRINT_EXISTS));
 	static CString sOnlyOneSubdirExists(MAKEINTRESOURCE(IDS_STRING_ONE_SUBDIR_EXISTS));
 	static CString sOnlyFingerprintSubdirExists(MAKEINTRESOURCE(IDS_STRING_ONLY_FINGERPRINT_SUBDIR_EXISTS));
+	static CString sOnlyFingerprintFilesSubdirExists(MAKEINTRESOURCE(IDS_STRING_ONLY_FINGERPRINT_FILES_SUBDIR_EXISTS));
 	static CString sOneFileLonger(MAKEINTRESOURCE(IDS_STRING_FILE_IS_LONGER));
 	static CString sReadingFile(MAKEINTRESOURCE(IDS_STRING_READING_FILE));
 	static CString sErrorReadingFile(MAKEINTRESOURCE(IDS_STRING_ERROR_READING_FILE));
 	static CString sCalculatingFingerprint(MAKEINTRESOURCE(IDS_STRING_CALC_FINGERPRINT));
 	static CString sComparingFiles(MAKEINTRESOURCE(IDS_STRING_COMPARING));
+	static CString sOnlyOneFilesSubdirExists(MAKEINTRESOURCE(IDS_STRING_FILES_ONE_SUBDIR_EXISTS));
+	static CString sOnlyOneSubdirsParentExists(MAKEINTRESOURCE(IDS_STRING_FILES_ONE_SUBDIR_PARENT_EXISTS));
 
 	CString s;
 	TCHAR buf1[MAX_PATH], buf2[MAX_PATH];
@@ -1882,6 +1956,15 @@ CString FilePair::GetComparisonResultStr() const
 		s.Format(sOnlyOneExists,
 				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
 		break;
+	case FileFromSubdirInFirstDirOnly:
+		s.Format(sOnlyOneFilesSubdirExists,
+				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
+		break;
+	case SubdirsParentInFirstDirOnly:
+		s.Format(sOnlyOneSubdirsParentExists,
+				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
+		break;
+
 	case OnlySecondFile:
 		s.Format(sOnlyOneExists,
 				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
@@ -1893,10 +1976,22 @@ CString FilePair::GetComparisonResultStr() const
 	case DirectoryInFingerprintFileOnly:
 		return sOnlyFingerprintSubdirExists;
 		break;
+	case FilesDirectoryInFingerprintFileOnly:
+		return sOnlyFingerprintFilesSubdirExists;
+		break;
 	case OnlySecondDirectory:
 		s.Format(sOnlyOneSubdirExists,
 				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
 		break;
+	case FileFromSubdirInSecondDirOnly:
+		s.Format(sOnlyOneFilesSubdirExists,
+				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
+		break;
+	case SubdirsParentInSecondDirOnly:
+		s.Format(sOnlyOneSubdirsParentExists,
+				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
+		break;
+
 	case FirstFileLonger:
 		s.Format(sOneFileLonger,
 				pFirstFile->GetBasedir(), pFirstFile->GetSubdir(),
@@ -1973,7 +2068,7 @@ void FilePair::UnloadFiles(bool ForceUnload)
 		return;
 	}
 	m_LoadedCount = 0;
-	TRACE("Unloading file pair\n");
+	if (0) TRACE("Unloading file pair\n");
 	FreeLinePairData();
 
 	if (NULL != pFirstFile)

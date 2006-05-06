@@ -148,11 +148,11 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 			if (dlg.BeginAddr == dlg.EndAddr)
 			{
 				dlg.BeginAddr = 0;
-				pPair->m_ComparisonResult = pPair->FilesIdentical;
+				pPair->SetComparisonResult(pPair->FilesIdentical);
 			}
 			else
 			{
-				pPair->m_ComparisonResult = pPair->FilesDifferent;
+				pPair->SetComparisonResult(pPair->FilesDifferent);
 			}
 			SetCaretPosition(dlg.BeginAddr,
 							SetPositionCancelSelection | SetPositionMakeVisible);
@@ -401,7 +401,7 @@ void CBinaryCompareDoc::OnViewViewastextfiles()
 	if (NULL == pPair->pFirstFile
 		|| ! pPair->pFirstFile->m_bIsPhantomFile)
 	{
-		pPair->m_ComparisonResult = pPair->ResultUnknown;
+		pPair->SetComparisonResult(pPair->ResultUnknown);
 	}
 
 	pPair->UnloadFiles(true);

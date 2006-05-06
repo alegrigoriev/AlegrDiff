@@ -20,7 +20,6 @@ public:
 
 protected:
 	class CAlegrDiffDoc * m_pDocument;
-	BOOL m_bSaveAsUnicode;
 	// percents complete
 
 	CString m_sDirectory;

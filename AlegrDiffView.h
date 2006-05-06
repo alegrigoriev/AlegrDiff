@@ -61,7 +61,10 @@ public:
 		ShowOnlySecondDirectory = 1 << FilePair::OnlySecondDirectory,
 		ShowFirstFileLongerFiles = 1 << FilePair::FirstFileLonger,
 		ShowSecondFileLongerFiles = 1 << FilePair::SecondFileLonger,
-//        ShowIdenticalFiles = 1 << FilePair::FilesIdentical,
+		ShowFileFromSubdirInFirstDirOnly =
+			(1 << FilePair::FileFromSubdirInFirstDirOnly) | (1 << FilePair::SubdirsParentInFirstDirOnly),
+		ShowFileFromSubdirInSecondDirOnly =
+			(1 << FilePair::SubdirsParentInSecondDirOnly) | (1 << FilePair::FileFromSubdirInSecondDirOnly),
 	};
 	ULONG m_ShowFilesMask;
 	ULONG m_PresentFilesMask;
@@ -183,6 +186,10 @@ public:
 	afx_msg void OnUpdateShowLongerfilesin1stdirectory(CCmdUI *pCmdUI);
 	afx_msg void OnShowLongerfilesin2nddirectory();
 	afx_msg void OnUpdateShowLongerfilesin2nddirectory(CCmdUI *pCmdUI);
+	afx_msg void OnInFirstDirectoryOnlySubdirectoriesContents();
+	afx_msg void OnUpdateInFirstDirectoryOnlySubdirectoriesContents(CCmdUI *pCmdUI);
+	afx_msg void OnInSecondDirectoryOnlySubdirectoriesContents();
+	afx_msg void OnUpdateInSecondDirectoryOnlySubdirectoriesContents(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp

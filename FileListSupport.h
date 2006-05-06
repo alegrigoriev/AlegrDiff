@@ -231,7 +231,7 @@ class FileItem
 {
 public:
 	FileItem(const WIN32_FIND_DATA * pWfd,
-			const CString & BaseDir, const CString & Dir);
+			const CString & BaseDir, const CString & Dir, FileItem * pParentDir);
 
 	FileItem(LPCTSTR name);
 
@@ -244,9 +244,9 @@ public:
 	bool m_IsUnicode:1;
 	bool m_IsUnicodeBigEndian:1;
 	bool m_bMd5Calculated:1;
-	bool m_bIsFolder:1;
 	bool m_bIsPhantomFile:1;
 	bool m_bUnicodeName:1;
+	bool m_bIsAlone:1;      // this item is inside directory existing on one side only
 
 	BOOL CalculateHashes(CMd5HashCalculator * pMd5Calc,
 						class CProgressDialog * pProgressDialog);
@@ -256,32 +256,92 @@ public:
 
 	// add line from memory. Assuming the file created dynamically by the program
 	void AddLine(LPCTSTR pLine);
-	bool IsFolder() const { return m_bIsFolder; }
+	bool IsFolder() const
+	{
+		return 0 != (m_Attributes & FILE_ATTRIBUTE_DIRECTORY);
+	}
+	bool IsAlone() const
+	{
+		return m_bIsAlone;
+	}
+
+	void SetAlone(bool alone)
+	{
+		m_bIsAlone = alone;
+	}
+	bool IsReparsePoint() const
+	{
+		return 0 != (m_Attributes & FILE_ATTRIBUTE_REPARSE_POINT);
+	}
 
 	size_t GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes);
 	void FreeReadBuffer();
 
 	LPCTSTR GetLineString(int LineNum) const;
-	const FileLine * GetLine(int LineNum) const { return m_Lines[LineNum]; }
-	int GetNumLines() const { return m_Lines.size(); }
+	const FileLine * GetLine(int LineNum) const
+	{
+		return m_Lines[LineNum];
+	}
+	int GetNumLines() const
+	{
+		return m_Lines.size();
+	}
 
-	LPCTSTR GetName() const { return m_Name; }
-	int GetNameLength() const { return m_Name.GetLength(); }
+	// get file name ONLY
+	LPCTSTR GetName() const
+	{
+		return m_Name;
+	}
+	int GetNameLength() const
+	{
+		return m_Name.GetLength();
+	}
 
-	LPCTSTR GetSubdir() const { return m_Subdir; }
-	int GetSubdirLength() const { return m_Subdir.GetLength(); }
+	// get sibdirectory ONLY, with trailing slash
+	LPCTSTR GetSubdir() const
+	{
+		return m_Subdir;
+	}
+	int GetSubdirLength() const
+	{
+		return m_Subdir.GetLength();
+	}
 
-	LPCTSTR GetBasedir() const { return m_BaseDir; }
-	int GetBasedirLength() const { return m_BaseDir.GetLength(); }
+	LPCTSTR GetBasedir() const
+	{
+		return m_BaseDir;
+	}
+	int GetBasedirLength() const
+	{
+		return m_BaseDir.GetLength();
+	}
 
-	CString GetFullName() const { return m_BaseDir + m_Subdir + m_Name; }
-	int GetFullNameLength() const { return m_BaseDir.GetLength() + m_Subdir.GetLength() + m_Name.GetLength(); }
+	CString GetFullName() const
+	{
+		return m_BaseDir + m_Subdir + m_Name;
+	}
+	int GetFullNameLength() const
+	{
+		return m_BaseDir.GetLength() + m_Subdir.GetLength() + m_Name.GetLength();
+	}
 
-	FILETIME GetLastWriteTime() const { return m_LastWriteTime; }
+	FILETIME GetLastWriteTime() const
+	{
+		return m_LastWriteTime;
+	}
 
-	LONGLONG GetFileLength() const { return m_Length; }
-	UINT GetDigest(int idx) const { return m_Md5[idx]; }
-	BYTE const * GetDigest() const { return m_Md5; }
+	LONGLONG GetFileLength() const
+	{
+		return m_Length;
+	}
+	UINT GetDigest(int idx) const
+	{
+		return m_Md5[idx];
+	}
+	BYTE const * GetDigest() const
+	{
+		return m_Md5;
+	}
 
 	const FileLine * FindMatchingLine(const FileLine * pLine,
 									unsigned nStartLineNum, unsigned nEndLineNum);
@@ -295,6 +355,7 @@ public:
 	FileCheckResult ReloadIfChanged();
 
 	FileItem * m_pNext;
+	FileItem* m_pParentDir;
 	static bool NameSortFunc(FileItem const * Item1, FileItem const * Item2);
 	static bool DirNameSortFunc(FileItem const * Item1, FileItem const * Item2);
 	static bool TimeSortFunc(FileItem const * Item1, FileItem const * Item2);
@@ -331,6 +392,7 @@ private:
 	size_t m_FileReadBufSize;
 	LONGLONG m_FileReadPos;
 	DWORD m_FileReadFilled;
+	DWORD m_Attributes;
 	HANDLE m_hFile;
 
 	vector<FileLine *> m_Lines;
@@ -418,6 +480,9 @@ public:
 		MemoryFile,
 		FileFromSubdirInFirstDirOnly,   // file from a subdirectory that exists only in first directory
 		FileFromSubdirInSecondDirOnly,   // file from a subdirectory that exists only in first directory
+		SubdirsParentInFirstDirOnly,   // dir from a subdirectory that exists only in first directory
+		SubdirsParentInSecondDirOnly,   // dir from a subdirectory that exists only in first directory
+		FilesDirectoryInFingerprintFileOnly,
 	};
 
 	int ComparisionResultPriority() const;
@@ -435,6 +500,10 @@ public:
 		int File2LineEnd;
 	};
 
+	void SetComparisonResult(eFileComparisionResult result)
+	{
+		m_ComparisonResult = result;
+	}
 	CString GetComparisonResultStr() const;
 	eFileComparisionResult GetComparisonResult() const
 	{
@@ -496,22 +565,25 @@ class FileList
 {
 public:
 	FileList();
-	~FileList() { FreeFileList(); }
+	~FileList();
 	void Detach()
 	{
 		m_pList = NULL;
 		m_NumFiles = 0;
 	}
+
 	bool LoadFolder(const CString & BaseDir, bool bRecurseSubdirs,
 					LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
 					LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask, LPCTSTR sIgnoreDirs);
-	bool LoadSubFolder(const CString & Subdir, bool bRecurseSubdirs,
+	bool LoadSubFolder(LPCTSTR Subdir,
 						LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
-						LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask, LPCTSTR sIgnoreDirs);
+						LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask, LPCTSTR sIgnoreDirs, FileItem * pParentDir);
 
 	void FreeFileList();
+
 	enum { SortNameFirst = 1, SortDirFirst = 2, SortDataModified = 4, SortBackwards = 8};
 	void GetSortedList(vector<FileItem *> & ItemArray, DWORD SortFlags);
+
 	FileItem * m_pList;
 	CString m_BaseDir;
 	int m_NumFiles;
@@ -521,4 +593,7 @@ bool MatchWildcard(LPCTSTR name, LPCTSTR pattern);
 bool MultiPatternMatches(LPCTSTR name, LPCTSTR sPattern);
 CString MiltiSzToCString(LPCTSTR pMsz);
 CString PatternToMultiCString(LPCTSTR src);
+
+
+
 #endif

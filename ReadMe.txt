@@ -1,6 +1,19 @@
 TODO:
 
-File\Preferences dialog must remember selected tab for current session.
+1. When I hide a file from the comparison list, I expect the current selection to stay near (previous or next file, whatever), not to jump to the first file in the list. 
+2. Add a pop-up menu item to rescan the differences while in file comparison mode. 
+1. Please save viewing preferences. If I select two-pane view for one pair of files, I expect to have the same view when opening the next file pair. 
+2. Add an option to automatically hide certain files (the same, right-only etc.) 
+3. Can you lower task priority when scanning files - the computer stalls! 
+
+Save As UNICODE file: set default TRUE in NT OS.
+1. If a directory does not exist, no error message is given 
+2. Show number of identical and different files in the status line.
+Show confirmation dialog if file comparision or fingerprint calculation is canceled.
+
+Open and read several files (up to one directory) at once
+Make icons for the dialogs
+Copy binary dump as text
 Enable/disable OK in GOTO dialog for binary view
 Add option for file size format (in kilobytes or in bytes).
 Customizable number of MRU items
@@ -9,10 +22,8 @@ Detect Log: (as comment sequence)
 
 Allow doublequotes in the search pattern
 Assign an index to the files during original sort (for faster sorting)
-Make icons for the dialogs
 Use OnActivateApp to refresh the files
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
-Copy binary dump as text
 make word by word comparison in MatchStrings
 Make HTML help
 
@@ -34,6 +45,7 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+Compare after refresh doesn't show progress. If compare was aborted and refresh clicked, estimated time is not shown. The files get read again for an MD5.
 Directory share name cannot be selected if no '\' appended
 If the text comparison got aborted because of read error, this is not shown
 Blank line immediately following difference block is considered separate 
@@ -107,6 +119,9 @@ screen move in two directions may corrupt the image (??)
 
 Done:
 
+Don't show files from sub directories not in other dir (default).
+Read files in alphabetical order (not reverse). 
+File\Preferences dialog must remember selected tab for current session.
 GoTo command for binary view
 Increased number of MRU items to 30
 Show/hide file classes

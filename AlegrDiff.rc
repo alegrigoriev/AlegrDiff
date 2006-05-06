@@ -1786,11 +1786,11 @@ BEGIN
     ID_VIEW_AS_BINARY       "Compare the files as non-text (binary) files\nBinary comparison"
     IDC_VIEW_SIDE_BY_SIDE   "Show two files side by side\nShow side by side"
     IDS_STRING_FILES_ONE_SUBDIR_EXISTS 
-                            "File's subdirectory exists only in ""%s%s"""
+                            "Parent directory exists only in ""%s%s"""
     IDS_STRING_ONLY_FINGERPRINT_FILES_SUBDIR_EXISTS 
-                            "File's subdirectory exists only in the fingerprint list"
+                            "Parent directory exists only in the fingerprint list"
     IDS_STRING_FILES_ONE_SUBDIR_PARENT_EXISTS 
-                            "Subdirectory's parent exists only in ""%s%s"""
+                            "Parent directory exists only in ""%s%s"""
     ID_SHOW_IDENTICALFILES  "Show or hide identical files"
     ID_SHOW_DIFFERENTFILES  "Show or hide files that are different"
     ID_SHOW_DIFFERENTINVERSIONINFO 

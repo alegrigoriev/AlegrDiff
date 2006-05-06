@@ -22,7 +22,6 @@ CDirectoryFingerprintCheckDlg::CDirectoryFingerprintCheckDlg(
 	, m_pFile(NULL)
 	, m_bIncludeSubdirectories(FALSE)
 	, m_bIncludeDirectoryStructure(FALSE)
-	, m_bSaveAsUnicode(FALSE)
 	, m_sDirectory(DirectoryToCheck)
 	, m_FingerprintFilename(FingerprintFilename)
 {
@@ -59,19 +58,13 @@ INT_PTR CDirectoryFingerprintCheckDlg::DoModal()
 
 	clearerr(m_pFile);
 
-	if ((FirstChar & 0xFFFF) == 0xFEFF)
-	{
-		m_bSaveAsUnicode = true;
-	}
-	else
+	if ((FirstChar & 0xFFFF) != 0xFEFF)
 	{
 		rewind(m_pFile);
 		_setmode(_fileno(m_pFile), _O_TEXT);
 	}
 
-	INT_PTR result = BaseClass::DoModal();
-
-	return result;
+	return BaseClass::DoModal();
 }
 
 BOOL CDirectoryFingerprintCheckDlg::OnInitDialog()
@@ -93,11 +86,6 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 
 	// make full names from the directories
 	LPTSTR pFilePart;
-	LPCTSTR crlf = _T("\n");
-	if (m_bSaveAsUnicode)
-	{
-		crlf = _T("\r\n");
-	}
 
 	// load the fingerprint file
 	TCHAR buf[1024];

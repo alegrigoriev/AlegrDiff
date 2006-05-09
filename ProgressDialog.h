@@ -5,8 +5,7 @@
 
 class CProgressDialog : public CDialog
 {
-	DECLARE_DYNAMIC(CProgressDialog)
-
+	typedef CDialog BaseClass;
 public:
 	CProgressDialog(UINT id, CWnd* pParent = NULL);   // standard constructor
 	virtual ~CProgressDialog();
@@ -53,6 +52,7 @@ public:
 	LONGLONG m_LastDone;
 	DWORD m_TickCountStarted;
 	DWORD m_LastTickCount;
+	DWORD m_ShowDelay;
 
 	int m_TotalPercentDoneShown;
 	int m_ItemPercentDoneShown;
@@ -60,7 +60,7 @@ public:
 protected:
 	virtual LRESULT OnKickIdle(WPARAM, LPARAM);
 
-	static UINT AFX_CDECL _ThreadProc(PVOID arg)
+	static UINT AFX_CDECL ThreadProc(PVOID arg)
 	{
 		return ((CProgressDialog *) arg)->ThreadProc();
 	}

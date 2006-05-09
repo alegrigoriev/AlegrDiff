@@ -9,11 +9,10 @@
 
 // CProgressDialog dialog
 
-IMPLEMENT_DYNAMIC(CProgressDialog, CDialog)
 CProgressDialog::CProgressDialog(UINT id, CWnd* pParent /*=NULL*/)
-	: CDialog(id, pParent)
+	: BaseClass(id, pParent)
 	, m_StopRunThread(FALSE)
-	, m_Thread(_ThreadProc, this)
+	, m_Thread(ThreadProc, this)
 	, m_bItemNameChanged(TRUE)
 	, m_TotalDataSize(0)
 	, m_ProcessedItems(0)
@@ -24,6 +23,7 @@ CProgressDialog::CProgressDialog(UINT id, CWnd* pParent /*=NULL*/)
 	, m_TickCountStarted(0)
 	, m_LastTickCount(0)
 	, m_LastDone(0)
+	, m_ShowDelay(0)
 	, m_DialogResult(-1)
 	, m_hThreadEvent(CreateEvent(NULL, FALSE, FALSE, NULL))
 {
@@ -40,7 +40,7 @@ CProgressDialog::~CProgressDialog()
 
 void CProgressDialog::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
+	BaseClass::DoDataExchange(pDX);
 
 	if (NULL != GetDlgItem(IDC_STATIC_FILENAME))
 	{
@@ -73,7 +73,7 @@ void CProgressDialog::DoDataExchange(CDataExchange* pDX)
 }
 
 
-BEGIN_MESSAGE_MAP(CProgressDialog, CDialog)
+BEGIN_MESSAGE_MAP(CProgressDialog, BaseClass)
 	ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
 	ON_COMMAND(IDYES, OnYes)
 	ON_COMMAND(IDABORT, OnAbort)
@@ -81,56 +81,13 @@ END_MESSAGE_MAP()
 
 INT_PTR CProgressDialog::DoModalDelay(int Delay)
 {
-	m_StopRunThread = FALSE;
-
-	m_TickCountStarted = GetTickCount();
-	m_LastTickCount = m_TickCountStarted;
-
-	m_Thread.CreateThread(0, 0x10000);
-	INT_PTR result = IDOK;
-
-	if (NULL == m_Thread.m_hThread)
-	{
-		return -1;
-	}
-
-	if (WAIT_TIMEOUT == WaitForSingleObject(m_Thread.m_hThread, Delay))
-	{
-		result = CDialog::DoModal();
-
-		m_StopRunThread = TRUE;
-		SetEvent(m_hThreadEvent);
-
-		if (WAIT_TIMEOUT == WaitForSingleObject(m_Thread.m_hThread, 5000))
-		{
-			TerminateThread(m_Thread.m_hThread, (unsigned)-1);
-		}
-	}
-	CloseHandle(m_Thread.m_hThread);
-	m_Thread.m_hThread = NULL;
-
-	if (m_DialogResult != -1)
-	{
-		return m_DialogResult;
-	}
-
-	return result;
+	m_ShowDelay = Delay;
+	return DoModal(); // this class
 }
 
 INT_PTR CProgressDialog::DoModal()
 {
-	m_StopRunThread = FALSE;
-
-	m_TickCountStarted = GetTickCount();
-	m_LastTickCount = m_TickCountStarted;
-
-	m_Thread.CreateThread(0, 0x10000);
-
-	if (NULL == m_Thread.m_hThread)
-	{
-		return -1;
-	}
-	INT_PTR result = CDialog::DoModal();
+	INT_PTR result = BaseClass::DoModal();
 
 	m_StopRunThread = TRUE;
 	SetEvent(m_hThreadEvent);
@@ -155,13 +112,25 @@ INT_PTR CProgressDialog::DoModal()
 
 BOOL CProgressDialog::OnInitDialog()
 {
-	CDialog::OnInitDialog();
+	BaseClass::OnInitDialog();
 
 	TRACE("CProgressDialog::OnInitDialog()\n");
 
 	m_Progress.SetRange(0, 100);
+	m_StopRunThread = FALSE;
+
+	m_TickCountStarted = GetTickCount();
+	m_LastTickCount = m_TickCountStarted;
+
+	m_Thread.CreateThread(0, 0x10000);
+
+	if (NULL == m_Thread.m_hThread)
+	{
+		EndDialog(IDABORT);
+		return TRUE;
+	}
 	// if the thread is already completed, or not even started, close the dialog
-	if (WAIT_TIMEOUT != WaitForSingleObject(m_Thread.m_hThread, 0))
+	if (WAIT_TIMEOUT != WaitForSingleObject(m_Thread.m_hThread, m_ShowDelay))
 	{
 		if (-1 == m_DialogResult)
 		{

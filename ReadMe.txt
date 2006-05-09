@@ -1,17 +1,15 @@
 TODO:
 
-1. When I hide a file from the comparison list, I expect the current selection to stay near (previous or next file, whatever), not to jump to the first file in the list. 
 2. Add a pop-up menu item to rescan the differences while in file comparison mode. 
 1. Please save viewing preferences. If I select two-pane view for one pair of files, I expect to have the same view when opening the next file pair. 
 2. Add an option to automatically hide certain files (the same, right-only etc.) 
 3. Can you lower task priority when scanning files - the computer stalls! 
 
-1. If a directory does not exist, no error message is given 
 2. Show number of identical and different files in the status line.
 Show confirmation dialog if file comparision or fingerprint calculation is canceled.
 
 Open and read several files (up to one directory) at once
-Make icons for the dialogs
+Make icons for the resizeable dialogs
 Copy binary dump as text
 Enable/disable OK in GOTO dialog for binary view
 Add option for file size format (in kilobytes or in bytes).
@@ -25,6 +23,7 @@ Use OnActivateApp to refresh the files
 Make sure to report read errors and file unaccessible errors during fingerprint creation.
 make word by word comparison in MatchStrings
 Make HTML help
+Show properties for selected files (total size)
 
 Maybe different color for selected accepted/declined
 add option to keep the caret on one line during F3 and F7
@@ -53,6 +52,8 @@ Directory dialog allows to select network host. It won't return anything then.
 Estimated time left is not shown while calculating a fingerpring of a big file  (???)
 
 Fixed:
+Beta 1.35:
+1. If a directory does not exist, no error message is given 
 Vertical scroll to end on large files: file end may not be shown.
 Ctrl+End on large files: may not go to end.
 Vertical scrollbar may not be shown 
@@ -117,6 +118,8 @@ screen move in two directions may corrupt the image (??)
 
 Done:
 
+Beta 1.35:
+1. When I hide a file from the comparison list, I expect the current selection to stay near (previous or next file, whatever), not to jump to the first file in the list. 
 Add "Window\Close All" menu.
 Save As UNICODE file: set default TRUE in NT OS.
 Don't show files from sub directories not in other dir (default).

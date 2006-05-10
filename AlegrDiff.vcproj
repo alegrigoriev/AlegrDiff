@@ -545,6 +545,12 @@
 				RelativePath="Md5HashCalculator.cpp">
 			</File>
 			<File
+				RelativePath=".\MessageBoxSynch.cpp">
+			</File>
+			<File
+				RelativePath=".\MessageBoxSynch.h">
+			</File>
+			<File
 				RelativePath=".\PreferencesDialog.cpp">
 			</File>
 			<File

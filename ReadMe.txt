@@ -6,7 +6,7 @@ TODO:
 3. Can you lower task priority when scanning files - the computer stalls! 
 
 2. Show number of identical and different files in the status line.
-Show confirmation dialog if file comparision or fingerprint calculation is canceled.
+Show confirmation dialog if fingerprint calculation is canceled.
 
 Open and read several files (up to one directory) at once
 Make icons for the resizeable dialogs
@@ -104,7 +104,7 @@ Binary view: last bytes wrong
 Wrong byte order in text representation, when words are shown
 Crash when openng single binary file
 text files with long lines make it crash (in text mode comparison).
-GetFileData breaks sometimes (when movind data down in the buffer)
+GetFileData breaks sometimes (when moving data down in the buffer)
 Cursor up out of screen
 Click on the selection margin was broken.
 TRACE statements with %s format converted to _T string
@@ -118,6 +118,7 @@ screen move in two directions may corrupt the image (??)
 
 Done:
 
+Show confirmation dialog if file comparision is canceled.
 Beta 1.35:
 1. When I hide a file from the comparison list, I expect the current selection to stay near (previous or next file, whatever), not to jump to the first file in the list. 
 Add "Window\Close All" menu.

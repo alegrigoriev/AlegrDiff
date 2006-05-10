@@ -8,7 +8,6 @@
 
 // CDifferenceProgressDialog dialog
 
-IMPLEMENT_DYNAMIC(CDifferenceProgressDialog, CProgressDialog)
 CDifferenceProgressDialog::CDifferenceProgressDialog(CWnd* pParent /*=NULL*/)
 	: CProgressDialog(CDifferenceProgressDialog::IDD, pParent)
 	, m_pDoc(NULL)

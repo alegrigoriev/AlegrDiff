@@ -1807,8 +1807,8 @@ BEGIN
                             "Show or hide files present in second directory only"
     ID_SHOW_SUBDIRECTORIESIN1STDIRONLY 
                             "Show or hide subdirectories present in first directory only"
-    ID_SHOW_SUBDIRECTORIESIN2NDDIR 
-                            "Show or hide subdirectories present in second directory only"
+    IDS_CAN_CANCEL_COMPARISON_PROMPT 
+                            "Are you sure you want to cancel this process?"
     ID_SHOW_FILESIN1STDIRECTORYONLY 
                             "Show or hide files present in first directory only"
     ID_SHOW_DIFFERENTINSPACESONLY 

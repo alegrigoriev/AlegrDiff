@@ -10,10 +10,18 @@
 #endif // _MSC_VER > 1000
 
 #include "MainFrameEx.h"
+#include "MessageBoxSynch.h"
 
-class CMainFrame : public CMainFrameEx
+typedef FrameExParameters<MainFrameRememberMaximized
+						| MainFrameRememberSize
+						| MainFrameNeatCtrlTab,
+						DialogProxyWnd<CMDIFrameWnd> >
+
+	MainFrameExParameters;
+
+class CMainFrame : public CMainFrameExT<MainFrameExParameters>
 {
-	typedef CMainFrameEx BaseClass;
+	typedef CMainFrameExT<MainFrameExParameters> BaseClass;
 	DECLARE_DYNAMIC(CMainFrame)
 public:
 	CMainFrame();

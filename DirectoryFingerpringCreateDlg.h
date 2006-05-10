@@ -7,8 +7,6 @@
 
 class CDirectoryFingerpringCreateDlg : public CProgressDialog
 {
-	DECLARE_DYNAMIC(CDirectoryFingerpringCreateDlg)
-
 public:
 	CDirectoryFingerpringCreateDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CDirectoryFingerpringCreateDlg();

@@ -6,8 +6,6 @@
 
 class CComparisonProgressDlg : public CProgressDialog
 {
-	DECLARE_DYNAMIC(CComparisonProgressDlg)
-
 public:
 	CComparisonProgressDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CComparisonProgressDlg();
@@ -19,6 +17,6 @@ protected:
 	//virtual LRESULT OnKickIdle(WPARAM, LPARAM);
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	virtual unsigned ThreadProc();
-
+	virtual void OnCancel();
 	DECLARE_MESSAGE_MAP()
 };

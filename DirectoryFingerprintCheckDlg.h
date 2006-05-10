@@ -6,7 +6,6 @@
 class CDirectoryFingerprintCheckDlg : public CProgressDialog
 {
 	typedef CProgressDialog BaseClass;
-	DECLARE_DYNAMIC(CDirectoryFingerprintCheckDlg)
 
 public:
 	CDirectoryFingerprintCheckDlg(class CAlegrDiffDoc * pDoc,

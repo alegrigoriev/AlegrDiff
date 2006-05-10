@@ -7,8 +7,6 @@
 
 class CDifferenceProgressDialog : public CProgressDialog
 {
-	DECLARE_DYNAMIC(CDifferenceProgressDialog)
-
 public:
 	CDifferenceProgressDialog(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CDifferenceProgressDialog();

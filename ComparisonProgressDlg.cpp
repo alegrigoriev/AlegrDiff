@@ -8,7 +8,6 @@
 
 // CComparisonProgressDlg dialog
 
-IMPLEMENT_DYNAMIC(CComparisonProgressDlg, CProgressDialog)
 CComparisonProgressDlg::CComparisonProgressDlg(CWnd* pParent /*=NULL*/)
 	: CProgressDialog(CComparisonProgressDlg::IDD, pParent)
 	, m_pDoc(NULL)
@@ -38,4 +37,12 @@ unsigned CComparisonProgressDlg::ThreadProc()
 		return SignalDialogEnd(result);
 	}
 	return 0;
+}
+
+void CComparisonProgressDlg::OnCancel()
+{
+	if (m_pDoc->CanCancelComparison())
+	{
+		EndDialog(IDCANCEL);
+	}
 }

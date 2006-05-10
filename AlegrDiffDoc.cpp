@@ -14,6 +14,7 @@
 #include "FileDialogWithHistory.h"
 #include "ComparisonProgressDlg.h"
 #include "FileLine.h"
+#include "MessageBoxSynch.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -142,6 +143,15 @@ bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
 	return false;
 }
 
+bool CAlegrDiffDoc::CanCancelComparison(CProgressDialog * pDlg)
+{
+	if (IDYES == AfxMessageBox(IDS_CAN_CANCEL_COMPARISON_PROMPT, MB_YESNO))
+	{
+		return true;
+	}
+	return FALSE;
+}
+
 bool operator ==(const FILETIME & time1, const FILETIME & time2)
 {
 	return time1.dwLowDateTime == time2.dwLowDateTime
@@ -168,7 +178,8 @@ bool CAlegrDiffDoc::RebuildFilePairList(CProgressDialog * pDlg)
 		{
 			CString s;
 			s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sFirstDir));
-			pDlg->SetNextItem(s, 0, 0);
+			MessageBoxSync(s);
+			//pDlg->SetNextItem(s, 0, 0);
 		}
 		return false;
 	}
@@ -180,7 +191,8 @@ bool CAlegrDiffDoc::RebuildFilePairList(CProgressDialog * pDlg)
 		{
 			CString s;
 			s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sSecondDir));
-			pDlg->SetNextItem(s, 0, 0);
+			MessageBoxSync(s);
+			//pDlg->SetNextItem(s, 0, 0);
 		}
 		return false;
 	}
@@ -2386,7 +2398,7 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 	if ( ! RebuildFilePairList(pDlg))
 	{
 		// TODO
-		return IDABORT;
+		return IDCANCEL;
 	}
 	// preload first of binary files in pair (calculate MD5 digest)
 

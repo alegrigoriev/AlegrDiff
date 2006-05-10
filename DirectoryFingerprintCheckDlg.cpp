@@ -11,7 +11,6 @@
 
 // CDirectoryFingerprintCheckDlg dialog
 
-IMPLEMENT_DYNAMIC(CDirectoryFingerprintCheckDlg, CProgressDialog)
 CDirectoryFingerprintCheckDlg::CDirectoryFingerprintCheckDlg(
 															CAlegrDiffDoc * pDoc,
 															LPCTSTR DirectoryToCheck,

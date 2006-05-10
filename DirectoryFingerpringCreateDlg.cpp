@@ -9,7 +9,6 @@
 
 // CDirectoryFingerpringCreateDlg dialog
 
-IMPLEMENT_DYNAMIC(CDirectoryFingerpringCreateDlg, CProgressDialog)
 CDirectoryFingerpringCreateDlg::CDirectoryFingerpringCreateDlg(CWnd* pParent /*=NULL*/)
 	: CProgressDialog(CDirectoryFingerpringCreateDlg::IDD, pParent)
 	, m_pFile(NULL)

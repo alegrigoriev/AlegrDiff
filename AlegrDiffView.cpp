@@ -1382,9 +1382,28 @@ void CAlegrDiffView::OnViewHideselectedfiles()
 			{
 				// move focus on a next item
 				pPair->m_bFocused = false;
-				if (nItem + 1 < m_PairArray.size())
+				FilePairVectorIterator ii;
+				for (ii = m_PairArray.begin() + (nItem + 1); ii != m_PairArray.end(); ++ii)
 				{
-					m_PairArray[nItem + 1]->m_bFocused = true;
+					if ( ! (*ii)->m_bHideFromListView)
+					{
+						(*ii)->m_bFocused = true;
+						(*ii)->m_bSelected = true;
+						break;
+					}
+				}
+				if (ii == m_PairArray.end())
+				{
+					for (ii = m_PairArray.begin() + nItem; ii != m_PairArray.begin(); )
+					{
+						--ii;
+						if ( ! (*ii)->m_bHideFromListView)
+						{
+							(*ii)->m_bFocused = true;
+							(*ii)->m_bSelected = true;
+							break;
+						}
+					}
 				}
 			}
 		}
@@ -1694,21 +1713,21 @@ void CAlegrDiffView::OnLvnItemchanged(NMHDR *pNMHDR, LRESULT *pResult)
 	if ((pNMLV->uChanged & LVIF_STATE)
 		&& unsigned(pNMLV->iItem) < m_PairArray.size())
 	{
-		if (pNMLV->uNewState & LVIS_SELECTED)
-		{
-			m_PairArray[pNMLV->iItem]->m_bSelected = true;
-		}
 		if (pNMLV->uOldState & LVIS_SELECTED)
 		{
 			m_PairArray[pNMLV->iItem]->m_bSelected = false;
 		}
-		if (pNMLV->uNewState & LVIS_FOCUSED)
+		if (pNMLV->uNewState & LVIS_SELECTED)
 		{
-			m_PairArray[pNMLV->iItem]->m_bFocused = true;
+			m_PairArray[pNMLV->iItem]->m_bSelected = true;
 		}
 		if (pNMLV->uOldState & LVIS_FOCUSED)
 		{
 			m_PairArray[pNMLV->iItem]->m_bFocused = false;
+		}
+		if (pNMLV->uNewState & LVIS_FOCUSED)
+		{
+			m_PairArray[pNMLV->iItem]->m_bFocused = true;
 		}
 	}
 	*pResult = 0;

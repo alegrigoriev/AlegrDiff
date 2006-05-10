@@ -41,7 +41,7 @@ unsigned CComparisonProgressDlg::ThreadProc()
 
 void CComparisonProgressDlg::OnCancel()
 {
-	if (m_pDoc->CanCancelComparison())
+	if (m_pDoc->CanCancelComparison(this))
 	{
 		EndDialog(IDCANCEL);
 	}

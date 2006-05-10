@@ -103,7 +103,10 @@ public:
 #endif
 
 protected:
-	vector<FilePair *> m_PairArray;
+	typedef std::vector<FilePair *> FilePairVector;
+	typedef FilePairVector::iterator FilePairVectorIterator;
+	FilePairVector m_PairArray;
+
 	CBitmap m_ArrowDownBitmap;
 	CBitmap m_ArrowUpBitmap;
 

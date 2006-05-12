@@ -6,7 +6,7 @@
 #include "resource.h"
 #include "ProgressDialog.h"
 #include <afxpriv.h>
-
+#include "MessageBoxSynch.h"
 // CProgressDialog dialog
 
 CProgressDialog::CProgressDialog(UINT id, CWnd* pParent /*=NULL*/)
@@ -87,12 +87,13 @@ INT_PTR CProgressDialog::DoModalDelay(int Delay)
 
 INT_PTR CProgressDialog::DoModal()
 {
+	m_StopRunThread = FALSE;
 	INT_PTR result = BaseClass::DoModal();
 
 	m_StopRunThread = TRUE;
 	SetEvent(m_hThreadEvent);
 
-	if (WAIT_TIMEOUT == WaitForSingleObject(m_Thread.m_hThread, 5000))
+	if (WAIT_OBJECT_0 != WaitForSingleObjectAcceptSends(m_Thread.m_hThread, 5000))
 	{
 		TerminateThread(m_Thread.m_hThread, (unsigned)-1);
 	}
@@ -130,7 +131,7 @@ BOOL CProgressDialog::OnInitDialog()
 		return TRUE;
 	}
 	// if the thread is already completed, or not even started, close the dialog
-	if (WAIT_TIMEOUT != WaitForSingleObject(m_Thread.m_hThread, m_ShowDelay))
+	if (WAIT_TIMEOUT != WaitForSingleObjectAcceptSends(m_Thread.m_hThread, m_ShowDelay))
 	{
 		if (-1 == m_DialogResult)
 		{

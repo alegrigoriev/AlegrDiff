@@ -174,26 +174,19 @@ bool CAlegrDiffDoc::RebuildFilePairList(CProgressDialog * pDlg)
 								m_sBinaryFilesPattern, m_sIgnoreDirsPattern))
 	{
 		FreeFilePairList();
-		if (NULL != pDlg)
-		{
-			CString s;
-			s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sFirstDir));
-			MessageBoxSync(s);
-			//pDlg->SetNextItem(s, 0, 0);
-		}
+		CString s;
+		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sFirstDir));
+		MessageBoxSync(s);
 		return false;
 	}
+
 	if (! FileList2.LoadFolder(m_sSecondDir, m_bRecurseSubdirs,
 								m_sInclusionPattern, m_sExclusionPattern,
 								m_sCFilesPattern, m_sBinaryFilesPattern, m_sIgnoreDirsPattern))
 	{
-		if (NULL != pDlg)
-		{
-			CString s;
-			s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sSecondDir));
-			MessageBoxSync(s);
-			//pDlg->SetNextItem(s, 0, 0);
-		}
+		CString s;
+		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sSecondDir));
+		MessageBoxSync(s);
 		return false;
 	}
 

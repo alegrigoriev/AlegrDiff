@@ -109,7 +109,7 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 
 		MessageBoxSync(s);
 
-		SignalDialogEnd(IDCANCEL);
+		SignalDialogEnd(IDOK);
 		return 0;
 	}
 
@@ -207,11 +207,13 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 	fclose(m_pFile);
 
 	m_pFile = NULL;
+	if ( ! m_StopRunThread)
+	{
+		s.Format(IDS_STRING_FINGERPRINT_CREATED, LPCTSTR(m_sDirectory), LPCTSTR(m_FingerprintFilename));
+		MessageBoxSync(s);
 
-	s.Format(IDS_STRING_FINGERPRINT_CREATED, LPCTSTR(m_sDirectory), LPCTSTR(m_FingerprintFilename));
-	MessageBoxSync(s);
-
-	SignalDialogEnd(IDCANCEL);
+		SignalDialogEnd(IDOK);
+	}
 	return 0;
 }
 

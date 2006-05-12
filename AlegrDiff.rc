@@ -1808,7 +1808,9 @@ BEGIN
     ID_SHOW_SUBDIRECTORIESIN1STDIRONLY 
                             "Show or hide subdirectories present in first directory only"
     IDS_CAN_CANCEL_COMPARISON_PROMPT 
-                            "Are you sure you want to cancel this process?"
+                            "Are you sure you want to cancel comparison of two directories?"
+    IDS_CAN_CANCEL_FINGERPRINT_PROMPT 
+                            "Are you sure you want to cancel creation of the directory fingerprint?"
     ID_SHOW_FILESIN1STDIRECTORYONLY 
                             "Show or hide files present in first directory only"
     ID_SHOW_DIFFERENTINSPACESONLY 

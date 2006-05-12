@@ -6,15 +6,30 @@
 #include "DirectoryFingerpringCreateDlg.h"
 #include <io.h>
 #include <fcntl.h>
+#include "MessageBoxSynch.h"
 
 // CDirectoryFingerpringCreateDlg dialog
 
-CDirectoryFingerpringCreateDlg::CDirectoryFingerpringCreateDlg(CWnd* pParent /*=NULL*/)
-	: CProgressDialog(CDirectoryFingerpringCreateDlg::IDD, pParent)
+CDirectoryFingerpringCreateDlg::CDirectoryFingerpringCreateDlg(
+																LPCTSTR sDirectory,
+																LPCTSTR sFingerprintFilename,
+																LPCTSTR sFilenameFilter,
+																LPCTSTR sIgnoreFiles,
+																LPCTSTR sIgnoreFolders,
+																BOOL bIncludeSubdirectories,
+																BOOL bIncludeDirectoryStructure,
+																BOOL bSaveAsUnicode,
+																CWnd* pParent /*=NULL*/)
+	: BaseClass(IDD, pParent)
 	, m_pFile(NULL)
-	, m_bIncludeSubdirectories(FALSE)
-	, m_bIncludeDirectoryStructure(FALSE)
-	, m_bSaveAsUnicode(FALSE)
+	, m_bIncludeSubdirectories(bIncludeSubdirectories)
+	, m_bIncludeDirectoryStructure(bIncludeDirectoryStructure)
+	, m_bSaveAsUnicode(bSaveAsUnicode)
+	, m_sDirectory(sDirectory)
+	, m_FingerprintFilename(sFingerprintFilename)
+	, m_sFilenameFilter(sFilenameFilter)
+	, m_sIgnoreFiles(sIgnoreFiles)
+	, m_sIgnoreFolders(sIgnoreFolders)
 {
 }
 
@@ -24,11 +39,11 @@ CDirectoryFingerpringCreateDlg::~CDirectoryFingerpringCreateDlg()
 
 void CDirectoryFingerpringCreateDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CProgressDialog::DoDataExchange(pDX);
+	BaseClass::DoDataExchange(pDX);
 }
 
 
-BEGIN_MESSAGE_MAP(CDirectoryFingerpringCreateDlg, CProgressDialog)
+BEGIN_MESSAGE_MAP(CDirectoryFingerpringCreateDlg, BaseClass)
 END_MESSAGE_MAP()
 
 
@@ -92,9 +107,9 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 	{
 		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, FullDirectoryName);
 
-		SetNextItem(s, 0, 0);
+		MessageBoxSync(s);
 
-		SignalDialogEnd(IDABORT);
+		SignalDialogEnd(IDCANCEL);
 		return 0;
 	}
 
@@ -194,9 +209,16 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 	m_pFile = NULL;
 
 	s.Format(IDS_STRING_FINGERPRINT_CREATED, LPCTSTR(m_sDirectory), LPCTSTR(m_FingerprintFilename));
-	SetNextItem(s, 0, 0);
+	MessageBoxSync(s);
 
-	SignalDialogEnd(IDYES);
+	SignalDialogEnd(IDCANCEL);
 	return 0;
 }
 
+void CDirectoryFingerpringCreateDlg::OnCancel()
+{
+	if (IDYES == AfxMessageBox(IDS_CAN_CANCEL_FINGERPRINT_PROMPT, MB_YESNO))
+	{
+		EndDialog(IDCANCEL);
+	}
+}

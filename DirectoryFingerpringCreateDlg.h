@@ -7,8 +7,18 @@
 
 class CDirectoryFingerpringCreateDlg : public CProgressDialog
 {
+	typedef CProgressDialog BaseClass;
 public:
-	CDirectoryFingerpringCreateDlg(CWnd* pParent = NULL);   // standard constructor
+	CDirectoryFingerpringCreateDlg(
+									LPCTSTR sDirectory,
+									LPCTSTR sFingerprintFilename,
+									LPCTSTR sFilenameFilter,
+									LPCTSTR sIgnoreFiles,
+									LPCTSTR sIgnoreFolders,
+									BOOL bIncludeSubdirectories,
+									BOOL bIncludeDirectoryStructure,
+									BOOL bSaveAsUnicode,
+									CWnd* pParent = NULL);
 	virtual ~CDirectoryFingerpringCreateDlg();
 
 // Dialog Data
@@ -34,7 +44,8 @@ public:
 
 	virtual INT_PTR DoModal();
 
-	unsigned ThreadProc();
+	virtual unsigned ThreadProc();
+	virtual void OnCancel();
 
 protected:
 };

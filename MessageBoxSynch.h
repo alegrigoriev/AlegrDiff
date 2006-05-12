@@ -68,5 +68,5 @@ INT_PTR MessageBoxSync(UINT nIDPrompt, UINT nType = MB_OK, UINT nIDHelp = 0);
 // use this function to wait for completion of a thread
 // which can call SendMessage to the main thread.
 // To avoid deadlock, this function will schedule messages while waiting
-BOOL WaitForSingleObjectAcceptSends(HANDLE handle, ULONG timeout);
+DWORD WaitForSingleObjectAcceptSends(HANDLE handle, ULONG timeout);
 

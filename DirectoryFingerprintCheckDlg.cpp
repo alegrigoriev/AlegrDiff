@@ -16,7 +16,7 @@ CDirectoryFingerprintCheckDlg::CDirectoryFingerprintCheckDlg(
 															LPCTSTR DirectoryToCheck,
 															LPCTSTR FingerprintFilename,
 															CWnd* pParent /*=NULL*/)
-	: BaseClass(CDirectoryFingerprintCheckDlg::IDD, pParent)
+	: BaseClass(IDD, pParent)
 	, m_pDocument(pDoc)
 	, m_pFile(NULL)
 	, m_bIncludeSubdirectories(FALSE)

@@ -107,7 +107,10 @@ INT_PTR MessageBoxSync(UINT nIDPrompt, UINT nType, UINT nIDHelp)
 	return AfxDialogCallId(nIDPrompt, nType, nIDHelp).Call( & DialogProxyCriticalSection);
 }
 
-BOOL WaitForSingleObjectAcceptSends(HANDLE handle, ULONG timeout)
+// The function returns: WAIT_TIMEOUT if the wait is NOT satisfied
+// WAIT_OBJECT_0 if the wait IS satisfied
+// WAIT_OBJECT_0+1 if WM_QUIT is in the message queue
+DWORD WaitForSingleObjectAcceptSends(HANDLE handle, ULONG timeout)
 {
 	DWORD StartTime = GetTickCount();
 	DWORD WaitTimeout = timeout;
@@ -115,16 +118,15 @@ BOOL WaitForSingleObjectAcceptSends(HANDLE handle, ULONG timeout)
 	BOOL QuitMessageFetched = FALSE;
 	int QuitCode = 0;
 
-	BOOL result = FALSE;
+	DWORD WaitResult;
 
 	while (1)
 	{
-		DWORD WaitResult = MsgWaitForMultipleObjectsEx(1, & handle, WaitTimeout,
-														QS_SENDMESSAGE, MWMO_INPUTAVAILABLE);
+		WaitResult = MsgWaitForMultipleObjectsEx(1, & handle, WaitTimeout,
+												QS_SENDMESSAGE, MWMO_INPUTAVAILABLE);
 
 		if (WAIT_OBJECT_0 == WaitResult)
 		{
-			result = TRUE;
 			break;
 		}
 		else if (//WAIT_TIMEOUT == WaitResult ||
@@ -139,6 +141,7 @@ BOOL WaitForSingleObjectAcceptSends(HANDLE handle, ULONG timeout)
 		{
 			QuitMessageFetched = TRUE;
 			QuitCode = int(msg.wParam);
+			break;
 		}
 
 		if (timeout != INFINITE)
@@ -171,5 +174,5 @@ BOOL WaitForSingleObjectAcceptSends(HANDLE handle, ULONG timeout)
 		PostQuitMessage(QuitCode);
 	}
 
-	return result;
+	return WaitResult;
 }

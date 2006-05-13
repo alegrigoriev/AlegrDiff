@@ -81,6 +81,7 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_NumberOfIdenticalLines(5),
 	m_MinPercentWeakIdenticalLines(10),
 	m_PercentsOfLookLikeDifference(30),
+	m_ShowFilesMask(0xFFFFFFFF),
 
 	m_RecentFolders( & Profile, _T("History"), _T("dir%d"), 20),
 	m_FindHistory( & Profile, _T("History"), _T("find%d"), 15, CStringHistory::CaseSensitive),
@@ -176,6 +177,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("InitialDir2"), m_FileDir2, _T(""));
 	Profile.AddItem(_T("Settings"), _T("LastSaveMergedDir"), m_LastSaveMergedDir, _T("."));
 	Profile.AddItem(_T("Settings"), _T("CopyFilesDir"), m_CopyFilesDir, _T("."));
+	Profile.AddItem(_T("Settings"), _T("ShowFilesMask"), m_ShowFilesMask, 0xFFFFFFFF);
 
 	//Profile.AddItem(_T("Settings"), _T("FilenameFilter"), m_sFilenameFilter, _T(""));
 #if 0

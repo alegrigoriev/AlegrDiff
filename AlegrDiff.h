@@ -133,6 +133,7 @@ public:
 	DWORD	m_NumberOfIdenticalLines;
 	DWORD	m_PercentsOfLookLikeDifference;
 	DWORD	m_MinMatchingChars;
+	DWORD m_ShowFilesMask;
 	int m_MaxSearchDistance;
 	int m_MinIdenticalLines;
 	int m_MinPercentWeakIdenticalLines; // default 10

@@ -152,8 +152,6 @@ CAlegrDiffApp theApp;
 
 BOOL CAlegrDiffApp::InitInstance()
 {
-	//char * Locale = setlocale(LC_ALL, ".ACP");
-	//TRACE("Locale set : %s\n", Locale);
 	InitCommonControls();
 	CWinApp::InitInstance();
 
@@ -179,7 +177,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("LastSaveMergedDir"), m_LastSaveMergedDir, _T("."));
 	Profile.AddItem(_T("Settings"), _T("CopyFilesDir"), m_CopyFilesDir, _T("."));
 
-	//Profile.AddItem(_T("Settings"), _T("FilenameFilter"), m_sFilenameFilter, _T("*"));
+	//Profile.AddItem(_T("Settings"), _T("FilenameFilter"), m_sFilenameFilter, _T(""));
 #if 0
 	Profile.AddItem(_T("Settings"), _T("UsedFilenameFilter"), m_UsedFilenameFilter, 0, 0, 8);
 	Profile.AddItem(_T("Settings"), _T("RecurseSubdirs"), m_bRecurseSubdirs, false);
@@ -216,8 +214,7 @@ BOOL CAlegrDiffApp::InitInstance()
 					_T("*.c;*.cpp;*.h;*.hpp;*.inl;*.rc;*.h++"));
 	Profile.AddItem(_T("Settings"), _T("IgnoreFiles"), m_sIgnoreFilesFilter,
 					_T("*.ncb"));
-	Profile.AddItem(_T("Settings"), _T("IgnoreFolders"), m_sIgnoreFoldersFilter,
-					_T(""));
+	//Profile.AddItem(_T("Settings"), _T("IgnoreFolders"), m_sIgnoreFoldersFilter, _T(""));
 
 	static UCHAR DefaultColumnArray[MaxColumns] =
 	{
@@ -257,16 +254,19 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("SortOrder"), m_ColumnSort,
 					DefaultSortOrder);
 
-	Profile.RemoveFromRegistry(_T("Settings"), _T("FileListSort"));
+	//Profile.RemoveFromRegistry(_T("Settings"), _T("FileListSort"));
 
 	m_RecentFiles.Load();
 	m_FileFilters.Load();
 	m_FindHistory.Load();
 	m_RecentFolders.Load();
 
+	//m_sFilenameFilter = m_FileFilters[0];
+
 	// set the default folder directory to My Documents
 	TCHAR MyDocuments[MAX_PATH] = { 0};
 	char MyDocumentsA[MAX_PATH] = { 0};
+
 	if (SHGetSpecialFolderPath(NULL, MyDocuments, CSIDL_PERSONAL, FALSE))
 	{
 		SetCurrentDirectory(MyDocuments);
@@ -876,7 +876,6 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 	dlg.m_sCppFilesFilter = m_sCppFilesFilter;
 
 	dlg.m_sIgnoreFilesFilter = m_sIgnoreFilesFilter;
-	dlg.m_sIgnoreFoldersFilter = m_sIgnoreFoldersFilter;
 
 	dlg.m_nTabIndent = m_TabIndent;
 
@@ -887,7 +886,7 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 
 	if (NULL != filter)
 	{
-		dlg.m_FilenameFilter = m_sFilenameFilter;
+		dlg.m_FilenameFilter = filter;
 	}
 
 	if (NULL != dir1)
@@ -904,7 +903,6 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 	if ((NULL != dir1 && 0 != dir1[0] && NULL != dir2 && 0 != dir2[0] && 0 == (0x8000 & GetKeyState(VK_SHIFT)))
 		|| IDOK == dlg.DoModal())
 	{
-		m_sFilenameFilter = dlg.m_FilenameFilter;
 		m_bRecurseSubdirs = (1 == dlg.m_bIncludeSubdirs);
 
 		m_sBinaryFilesFilter = dlg.m_sBinaryFilesFilter;
@@ -912,7 +910,6 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 		m_sCppFilesFilter = dlg.m_sCppFilesFilter;
 
 		m_sIgnoreFilesFilter = dlg.m_sIgnoreFilesFilter;
-		m_sIgnoreFoldersFilter = dlg.m_sIgnoreFoldersFilter;
 
 		m_TabIndent = dlg.m_nTabIndent;
 
@@ -931,6 +928,7 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 		pDoc->SetTitle(_T(""));
 
 		if ( ! pDoc->RunDirectoriesComparison(dlg.m_sFirstDir, dlg.m_sSecondDir,
+											dlg.m_FilenameFilter, dlg.m_sIgnoreFoldersFilter,
 											m_bRecurseSubdirs, m_BinaryComparision))
 		{
 			pDoc->OnCloseDocument();
@@ -1521,42 +1519,30 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 
 void CAlegrDiffApp::OnFileCreatedirectoryfingerprint()
 {
-	CDirectoryFingerprintDlg dlg;
-	dlg.m_bIncludeSubdirectories = m_bRecurseSubdirs;
-
-	dlg.m_sIgnoreFiles = m_sIgnoreFilesFilter;
-	dlg.m_sFilenameFilter = m_sFilenameFilter;
+	CDirectoryFingerprintDlg dlg(m_sIgnoreFilesFilter, m_bRecurseSubdirs);
 
 	if (IDOK != dlg.DoModal())
 	{
 		return;
 	}
 
-	m_bRecurseSubdirs = (dlg.m_bIncludeSubdirectories != 0);
-	m_sFilenameFilter = dlg.m_sFilenameFilter;
+	m_bRecurseSubdirs = dlg.DoIncludeSubdirectories();
 
-	m_sIgnoreFilesFilter = dlg.m_sIgnoreFiles;
+	m_sIgnoreFilesFilter = dlg.GetIgnoreFiles();
 
-	CDirectoryFingerpringCreateDlg dlg1;
-
-	dlg1.m_bIncludeDirectoryStructure = dlg.m_bIncludeDirectoryStructure;
-	dlg1.m_bIncludeSubdirectories = dlg.m_bIncludeSubdirectories;
-	dlg1.m_sFilenameFilter = dlg.m_sFilenameFilter;
-
-	dlg1.m_sIgnoreFiles = dlg.m_sIgnoreFiles;
-	dlg1.m_sIgnoreFolders = dlg.m_sIgnoreFolders;
-
-	dlg1.m_sDirectory = dlg.m_sDirectory;
-	dlg1.m_FingerprintFilename = dlg.m_sSaveFilename;
-	dlg1.m_bSaveAsUnicode = dlg.m_bSaveAsUnicode;
-
-	dlg1.DoModal();
+	CDirectoryFingerpringCreateDlg
+	(dlg.GetDirectory(),
+		dlg.GetFingerprintName(), dlg.GetFilenameFilter(),
+		dlg.GetIgnoreFiles(), dlg.GetIgnoreFolders(),
+		dlg.DoIncludeSubdirectories(), dlg.DoIncludeDirectoryStructure(),
+		dlg.DoSaveAsUnicode()).DoModal();
 }
 
 
 void CAlegrDiffApp::OnFileCheckDirectoryFingerprint()
 {
 	CCheckFingerprintDlg dlg;
+
 	if (IDOK != dlg.DoModal())
 	{
 		return;
@@ -1569,7 +1555,8 @@ void CAlegrDiffApp::OnFileCheckDirectoryFingerprint()
 		return;
 	}
 
-	pDoc->SetFingerprintCheckingMode(dlg.GetDirectory(), dlg.GetFingerprintFilename());
+	pDoc->SetFingerprintCheckingMode(dlg.GetDirectory(),
+									dlg.GetFingerprintFilename());
 
 	CDirectoryFingerprintCheckDlg dlg1(pDoc,
 										dlg.GetDirectory(), dlg.GetFingerprintFilename());

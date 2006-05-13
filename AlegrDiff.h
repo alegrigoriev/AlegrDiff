@@ -123,11 +123,9 @@ public:
 	UCHAR m_ColumnSort[MaxColumns];
 	SHORT m_ColumnWidthArray[MaxColumns];
 
-	CString m_sFilenameFilter;
 	CString m_sBinaryFilesFilter;
 	CString m_sCppFilesFilter;
 	CString m_sIgnoreFilesFilter;
-	CString m_sIgnoreFoldersFilter;
 
 	CString m_FindString;
 

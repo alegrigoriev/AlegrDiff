@@ -140,7 +140,7 @@ CAlegrDiffView::CAlegrDiffView()
 	, m_PresentFilesMask(0)
 {
 	CThisApp * pApp = GetApp();
-
+	m_ShowFilesMask = pApp->m_ShowFilesMask;
 	for (int i = 0; i < countof(m_ColumnArray); i++)
 	{
 		m_ColumnArray[i] = pApp->m_ColumnArray[i];
@@ -154,6 +154,8 @@ CAlegrDiffView::CAlegrDiffView()
 
 CAlegrDiffView::~CAlegrDiffView()
 {
+	CThisApp * pApp = GetApp();
+	pApp->m_ShowFilesMask = m_ShowFilesMask;
 }
 
 BOOL CAlegrDiffView::PreCreateWindow(CREATESTRUCT& cs)

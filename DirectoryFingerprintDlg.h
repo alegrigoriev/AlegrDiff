@@ -9,7 +9,7 @@ class CDirectoryFingerprintDlg : public CResizableDialog
 {
 
 public:
-	CDirectoryFingerprintDlg(LPCTSTR sFilenameFilter,
+	CDirectoryFingerprintDlg(
 							LPCTSTR sIgnoreFilesFilter,
 							BOOL bIncludeSubdirectories,
 							CWnd* pParent = NULL);   // standard constructor

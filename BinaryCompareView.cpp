@@ -34,16 +34,17 @@ CBinaryCompareView::CBinaryCompareView()
 	, m_bCaretOnChars(FALSE)
 	, m_AddressMarginWidth(0)
 	, m_MaxAddressChars(0)
-	, m_NumberOfPanes(1)
 	, m_PaneWithFocus(0)
 {
 	m_FontMetric.tmAveCharWidth = 1;
 	m_FontMetric.tmExternalLeading = 1;
 	m_FontMetric.tmHeight = 1;
+	m_NumberOfPanes = GetApp()->m_NumberOfPanes;
 }
 
 CBinaryCompareView::~CBinaryCompareView()
 {
+	GetApp()->m_NumberOfPanes = m_NumberOfPanes;
 }
 
 BEGIN_MESSAGE_MAP(CBinaryCompareView, BaseClass)

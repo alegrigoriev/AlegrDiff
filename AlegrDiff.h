@@ -141,6 +141,7 @@ public:
 	int m_GoToLineFileSelection;
 	int m_SearchScope;
 	int m_ComparisonMode;    // 0 - default, 1 - text, 2 - binary
+	int m_NumberOfPanes;
 
 	LOGFONT m_NormalLogFont;
 	CFont m_NormalFont;

@@ -1137,7 +1137,7 @@ void FileList::GetSortedList(vector<FileItem *> & ItemArray, DWORD SortFlags)
 	}
 	std::sort(ItemArray.begin(), ItemArray.end(), SortFunc);
 #ifdef _DEBUG
-	if (1) for (i = 0; i < m_NumFiles && NULL != ItemArray[i]; i++)
+	if (0) for (i = 0; i < m_NumFiles && NULL != ItemArray[i]; i++)
 		{
 			TRACE(_T("Sorted file item: subdir=%s, Name=\"%s\"\n"),
 				ItemArray[i]->GetSubdir(), ItemArray[i]->GetName());
@@ -1414,7 +1414,7 @@ bool ReadSubfolder(FileItem ** ppFiles, FileItem ** ppDirs,
 			if (! MultiPatternMatches(wfd.cFileName, sInclusionMask)
 				|| MultiPatternMatches(wfd.cFileName, sExclusionMask))
 			{
-				TRACE("File name does not match\n");
+				if (0) TRACE("File name does not match\n");
 				continue;
 			}
 

@@ -294,7 +294,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			}
 			pf2++;
 
-			if (1) TRACE(_T("File \"%s\" exists only in dir \"%s\"\n"),
+			if (0) TRACE(_T("File \"%s\" exists only in dir \"%s\"\n"),
 						LPCTSTR(pFile2->GetName()),
 						LPCTSTR(FileList2.m_BaseDir + pFile2->GetSubdir()));
 		}
@@ -347,7 +347,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			}
 			pf1++;
 
-			if (1) TRACE(_T("File \"%s\" exists only in dir \"%s\"\n"),
+			if (0) TRACE(_T("File \"%s\" exists only in dir \"%s\"\n"),
 						LPCTSTR(pFile1->GetName()),
 						LPCTSTR(FileList1.m_BaseDir + pFile1->GetSubdir()));
 		}

@@ -3,10 +3,8 @@ TODO:
 2. Add an option to automatically hide certain files (the same, right-only etc.) 
 2. Show number of identical and different files in the status line.
 2. Add a pop-up menu item to rescan the differences while in file comparison mode. 
-1. Please save viewing preferences. If I select two-pane view for one pair of files, I expect to have the same view when opening the next file pair. 
 3. Can you lower task priority when scanning files - the computer stalls! 
 
-Show confirmation dialog if fingerprint calculation is canceled.
 
 Open and read several files (up to one directory) at once
 Make icons for the resizeable dialogs
@@ -118,6 +116,8 @@ screen move in two directions may corrupt the image (??)
 
 Done:
 
+Show confirmation dialog if fingerprint calculation is canceled.
+save viewing preferences. If I select two-pane view for one pair of files, I expect to have the same view when opening the next file pair. 
 Save a mask of shown and hidden file types (different, identical, etc)
 Show confirmation dialog if file comparision is canceled.
 Beta 1.35:

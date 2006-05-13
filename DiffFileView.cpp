@@ -34,7 +34,6 @@ CDiffFileView::CDiffFileView()
 	m_CharOverhang(0),
 	m_ShownFileVersion(ShownAllText),
 	m_WheelAccumulator(0),
-	m_NumberOfPanes(1),
 	m_PaneWithFocus(0),
 	m_DrawnSelBegin(0, 0, 0),
 	m_DrawnSelEnd(0, 0, 0)
@@ -44,10 +43,13 @@ CDiffFileView::CDiffFileView()
 	m_FontMetric.tmExternalLeading = 1;
 	m_FontMetric.tmHeight = 1;
 	m_ShowLineNumbers = GetApp()->m_bShowLineNumbers;
+
+	m_NumberOfPanes = GetApp()->m_NumberOfPanes;
 }
 
 CDiffFileView::~CDiffFileView()
 {
+	GetApp()->m_NumberOfPanes = m_NumberOfPanes;
 }
 
 

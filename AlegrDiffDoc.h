@@ -58,7 +58,9 @@ public:
 // Operations
 public:
 	bool RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
+								LPCTSTR FilenameFilter, LPCTSTR IgnoreFolders,
 								bool bRecurseSubdirs, bool BinaryComparison);
+
 	bool CanCancelComparison(CProgressDialog * pDlg);
 	// if returns true, call UpdateAllViews
 	bool BuildFilePairList(FileList & FileList1, FileList & FileList2,

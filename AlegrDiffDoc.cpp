@@ -72,18 +72,21 @@ void CAlegrDiffDoc::SetFingerprintCheckingMode(LPCTSTR DirectoryToCheck,
 }
 
 bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
+											LPCTSTR FilenameFilter,
+											LPCTSTR IgnoreFolders,
 											bool bRecurseSubdirs, bool BinaryComparison)
 {
 	// look through all files in the directory and subdirs
 	CThisApp * pApp = GetApp();
-	m_sInclusionPattern = PatternToMultiCString(pApp->m_sFilenameFilter);
+	m_sInclusionPattern = PatternToMultiCString(FilenameFilter);
+
 	if (m_sInclusionPattern.IsEmpty())
 	{
 		m_sInclusionPattern = "*";
 	}
 
 	m_sExclusionPattern = PatternToMultiCString(pApp->m_sIgnoreFilesFilter);
-	m_sIgnoreDirsPattern = PatternToMultiCString(pApp->m_sIgnoreFoldersFilter);
+	m_sIgnoreDirsPattern = PatternToMultiCString(IgnoreFolders);
 
 	m_sCFilesPattern = PatternToMultiCString(pApp->m_sCppFilesFilter);
 
@@ -364,7 +367,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 				result = pPair->ResultUnknown;
 			}
 
-			if (1) TRACE(_T("File \"%s\" exists in both \"%s\" and \"%s\"\n"),
+			if (0) TRACE(_T("File \"%s\" exists in both \"%s\" and \"%s\"\n"),
 						LPCTSTR(pFile1->GetName()),
 						LPCTSTR(FileList1.m_BaseDir + pFile1->GetSubdir()),
 						LPCTSTR(FileList2.m_BaseDir + pFile2->GetSubdir()));

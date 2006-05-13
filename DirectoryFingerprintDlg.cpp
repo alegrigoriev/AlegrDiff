@@ -9,7 +9,7 @@
 
 // CDirectoryFingerprintDlg dialog
 
-CDirectoryFingerprintDlg::CDirectoryFingerprintDlg(LPCTSTR sFilenameFilter,
+CDirectoryFingerprintDlg::CDirectoryFingerprintDlg(
 													LPCTSTR sIgnoreFilesFilter,
 													BOOL bIncludeSubdirectories,
 													CWnd* pParent /*=NULL*/)
@@ -19,7 +19,6 @@ CDirectoryFingerprintDlg::CDirectoryFingerprintDlg(LPCTSTR sFilenameFilter,
 	, m_bOkToOverwriteFile(FALSE)
 	, m_bSaveAsUnicode(FALSE)
 	, m_sIgnoreFiles(sIgnoreFilesFilter)
-	, m_sFilenameFilter(sFilenameFilter)
 	, m_IgnoreFilterHistory( & m_Profile, _T("History"), _T("IgnoreFiles%d"), 10)
 	, m_IgnoreFolderHistory( & m_Profile, _T("History"), _T("IgnoreFolders%d"), 10)
 	, m_FingerprintFilenameHistory( & m_Profile, _T("History"), _T("FingerprintFile%d"), 15)
@@ -163,15 +162,11 @@ BOOL CDirectoryFingerprintDlg::OnInitDialog()
 						m_bSaveAsUnicode, 0 == (::GetVersion() & 0x80000000));
 
 	m_sSaveFilename = m_FingerprintFilenameHistory[0];
+	m_sFilenameFilter = pApp->m_FileFilters[0];
 	m_sIgnoreFiles = m_IgnoreFilterHistory[0];
 	m_sIgnoreFolders = m_IgnoreFolderHistory[0];
 
 	m_sDirectory = pApp->m_RecentFolders[0];
-
-	if ( ! m_sFilenameFilter.IsEmpty())
-	{
-		m_sFilenameFilter = pApp->m_FileFilters[0];
-	}
 
 	CResizableDialog::OnInitDialog();
 

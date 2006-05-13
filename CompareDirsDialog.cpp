@@ -223,6 +223,16 @@ BOOL CCompareDirsDialog::OnInitDialog()
 	m_IgnoreFilterHistory.Load();
 	m_IgnoreFoldersHistory.Load();
 
+	if (m_FilenameFilter.IsEmpty())
+	{
+		m_FilenameFilter = pApp->m_FileFilters[0];
+	}
+
+	if (m_sIgnoreFoldersFilter.IsEmpty())
+	{
+		m_sIgnoreFoldersFilter = m_IgnoreFoldersHistory[0];
+	}
+
 	CResizableDialog::OnInitDialog();
 
 	// set the filters to combobox

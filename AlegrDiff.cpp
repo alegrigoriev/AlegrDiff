@@ -200,6 +200,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("StatusFlags"), m_StatusFlags, m_StatusFlags, 0, 0xFFFFFFFF);
 #endif
 	Profile.AddItem(_T("Settings"), _T("ComparisionMode"), m_ComparisonMode, 0, 0, 2);
+	Profile.AddItem(_T("Settings"), _T("NumberOfPanes"), m_NumberOfPanes, 1, 1, 2);
 
 
 	Profile.AddItem(_T("Settings"), _T("MinimalLineLength"), m_MinimalLineLength, 2, 1, 2048);

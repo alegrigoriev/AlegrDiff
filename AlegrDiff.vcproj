@@ -557,9 +557,6 @@
 				RelativePath="ProgressDialog.cpp">
 			</File>
 			<File
-				RelativePath="ResizableDialog.cpp">
-			</File>
-			<File
 				RelativePath=".\SaveFileListDlg.cpp">
 			</File>
 			<File
@@ -754,7 +751,13 @@
 				RelativePath=".\res\AlegrDiffDoc.ico">
 			</File>
 			<File
+				RelativePath=".\res\CheckFingerprint.ico">
+			</File>
+			<File
 				RelativePath="res\CompareDirs.ico">
+			</File>
+			<File
+				RelativePath=".\res\CreateFingerprint.ico">
 			</File>
 			<File
 				RelativePath=".\res\cur00002.cur">

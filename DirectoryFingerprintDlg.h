@@ -7,7 +7,7 @@
 
 class CDirectoryFingerprintDlg : public CResizableDialog
 {
-
+	typedef CResizableDialog BaseClass;
 public:
 	CDirectoryFingerprintDlg(
 							LPCTSTR sIgnoreFilesFilter,

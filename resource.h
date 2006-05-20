@@ -77,6 +77,9 @@
 #define IDI_FILES_DIALOG                181
 #define IDI_COMPARE_FILES               181
 #define IDD_DIALOG_GOTO                 181
+#define IDI_CREATE_FINGERPRINT          182
+#define IDI_CREATE_FINGERPRINT1         183
+#define IDI_CHECK_FINGERPRINT           183
 #define IDD_DIALOG_WITH_HISTORY_TEMPLATE_V4 187
 #define IDD_DIALOG_WITH_HISTORY_TEMPLATE_V5 188
 #define IDC_COMBO_FIRST_DIR             1000
@@ -315,7 +318,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        182
+#define _APS_NEXT_RESOURCE_VALUE        183
 #define _APS_NEXT_COMMAND_VALUE         32911
 #define _APS_NEXT_CONTROL_VALUE         1085
 #define _APS_NEXT_SYMED_VALUE           106

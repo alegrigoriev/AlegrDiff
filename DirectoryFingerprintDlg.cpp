@@ -13,7 +13,7 @@ CDirectoryFingerprintDlg::CDirectoryFingerprintDlg(
 													LPCTSTR sIgnoreFilesFilter,
 													BOOL bIncludeSubdirectories,
 													CWnd* pParent /*=NULL*/)
-	: CResizableDialog(CDirectoryFingerprintDlg::IDD, pParent)
+	: BaseClass(CDirectoryFingerprintDlg::IDD, pParent)
 	, m_bIncludeDirectoryStructure(FALSE)
 	, m_bIncludeSubdirectories(bIncludeSubdirectories)
 	, m_bOkToOverwriteFile(FALSE)
@@ -44,7 +44,7 @@ CDirectoryFingerprintDlg::~CDirectoryFingerprintDlg()
 
 void CDirectoryFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CResizableDialog::DoDataExchange(pDX);
+	BaseClass::DoDataExchange(pDX);
 
 	DDX_Control(pDX, IDC_COMBO_FIRST_DIR, m_DirCombo);
 	DDX_CBString(pDX, IDC_COMBO_FIRST_DIR, m_sDirectory);
@@ -89,7 +89,7 @@ void CDirectoryFingerprintDlg::DoDataExchange(CDataExchange* pDX)
 }
 
 
-BEGIN_MESSAGE_MAP(CDirectoryFingerprintDlg, CResizableDialog)
+BEGIN_MESSAGE_MAP(CDirectoryFingerprintDlg, BaseClass)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_FIRST_DIR, OnBnClickedButtonBrowseDir)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_SAVE_FILENAME, OnBnClickedButtonBrowseSaveFilename)
 
@@ -168,7 +168,9 @@ BOOL CDirectoryFingerprintDlg::OnInitDialog()
 
 	m_sDirectory = pApp->m_RecentFolders[0];
 
-	CResizableDialog::OnInitDialog();
+	BaseClass::OnInitDialog();
+
+	SetBigAndSmallIcons(IDI_CREATE_FINGERPRINT);
 
 	m_DirCombo.LimitText(MAX_PATH);
 
@@ -252,12 +254,12 @@ void CDirectoryFingerprintDlg::OnOK()
 		}
 	}
 
-	CResizableDialog::OnOK();
+	BaseClass::OnOK();
 }
 
 void CDirectoryFingerprintDlg::OnMetricsChange()
 {
-	CResizableDialog::OnMetricsChange();
+	BaseClass::OnMetricsChange();
 	m_mmxi.ptMaxTrackSize.y = m_mmxi.ptMinTrackSize.y;
 	m_mmxi.ptMaxSize.y = m_mmxi.ptMinTrackSize.y;
 }

@@ -120,6 +120,8 @@ BOOL CCheckFingerprintDlg::OnInitDialog()
 
 	BaseClass::OnInitDialog();
 
+	SetBigAndSmallIcons(IDI_CHECK_FINGERPRINT);
+
 	m_cbDirectory.LimitText(MAX_PATH);
 	m_cbFilename.LimitText(MAX_PATH);
 

@@ -85,6 +85,8 @@ IDR_ALEGRDTYPE          ICON                    "res\\icon1.ico"
 IDR_ALEGRDTYPE_BIN      ICON                    "res\\idr_aleg.ico"
 IDI_COMPARE_DIRS        ICON                    "res\\CompareDirs.ico"
 IDI_COMPARE_FILES       ICON                    "res\\FilesDialog.ico"
+IDI_CREATE_FINGERPRINT  ICON                    "res\\CreateFingerprint.ico"
+IDI_CHECK_FINGERPRINT   ICON                    "res\\CheckFingerprint.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

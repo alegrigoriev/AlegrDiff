@@ -7,7 +7,6 @@ TODO:
 
 
 Open and read several files (up to one directory) at once
-Make icons for the resizeable dialogs
 Copy binary dump as text
 Enable/disable OK in GOTO dialog for binary view
 Add option for file size format (in kilobytes or in bytes).
@@ -30,7 +29,7 @@ V1.5:
 Need a hot-key to select current changed block
 Detect moved text blocks
 Compare 3 files for merge
-Consider "signed fingerprint file" (UNICODE only)
+//Consider "signed fingerprint file" (UNICODE only) (can use secondary signature)
 Compare EXE version info for DLL, EXE, SYS
 Show file version (add handler code)
 Add Save differences
@@ -116,6 +115,7 @@ screen move in two directions may corrupt the image (??)
 
 Done:
 
+Make icons for the resizeable dialogs
 Show confirmation dialog if fingerprint calculation is canceled.
 save viewing preferences. If I select two-pane view for one pair of files, I expect to have the same view when opening the next file pair. 
 Save a mask of shown and hidden file types (different, identical, etc)

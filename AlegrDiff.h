@@ -218,7 +218,6 @@ void AFXAPI AbbreviateName(LPTSTR lpszCanon, int cchMax, BOOL bAtLeastName);
 CString CreateCustomFilter(LPCTSTR Extension);
 int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 				CStringHistory * pHistory);
-void SetWindowIcons(CWnd * pWnd, UINT id);
 
 /////////////////////////////////////////////////////////////////////////////
 

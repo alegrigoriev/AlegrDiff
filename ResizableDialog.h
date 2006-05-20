@@ -61,6 +61,7 @@ protected:
 		m_pResizeItems = pItems;
 		m_ResizeItemsCount = count;
 	}
+	void SetBigAndSmallIcons(UINT id);
 
 	virtual void OnMetricsChange();
 	// cx, cy - new size, dx, dy - size delta
@@ -109,6 +110,33 @@ CResizableDialogT<Base>::CResizableDialogT(UINT id, CWnd* pParent)
 
 /////////////////////////////////////////////////////////////////////////////
 // CResizableDialogT message handlers
+template<class Base>
+void CResizableDialogT<Base>::SetBigAndSmallIcons(UINT id)
+{
+	HICON hIcon = (HICON) LoadImage(AfxFindResourceHandle
+									(MAKEINTRESOURCE(id), RT_GROUP_ICON),
+									MAKEINTRESOURCE(id),
+									IMAGE_ICON,
+									GetSystemMetrics(SM_CXICON),
+									GetSystemMetrics(SM_CYICON), 0);
+
+	if (NULL != hIcon)
+	{
+		SetIcon(hIcon, TRUE);			// Set big icon
+	}
+
+	hIcon = (HICON) LoadImage(AfxFindResourceHandle
+							(MAKEINTRESOURCE(id), RT_GROUP_ICON),
+							MAKEINTRESOURCE(id),
+							IMAGE_ICON,
+							GetSystemMetrics(SM_CXSMICON),
+							GetSystemMetrics(SM_CYSMICON), 0);
+
+	if (NULL != hIcon)
+	{
+		SetIcon(hIcon, FALSE);			// Set small icon
+	}
+}
 
 template<class Base>
 void CResizableDialogT<Base>::OnMetricsChange()

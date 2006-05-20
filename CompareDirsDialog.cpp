@@ -254,7 +254,7 @@ BOOL CCompareDirsDialog::OnInitDialog()
 	}
 
 	DragAcceptFiles();
-	SetWindowIcons(this, IDI_COMPARE_DIRS);
+	SetBigAndSmallIcons(IDI_COMPARE_DIRS);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE

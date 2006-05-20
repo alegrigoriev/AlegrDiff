@@ -135,7 +135,7 @@ BOOL CFilesCompareDialog::OnInitDialog()
 	pApp->m_RecentFiles.LoadCombo( & m_SecondCombo);
 
 	DragAcceptFiles();
-	SetWindowIcons(this, IDI_COMPARE_FILES);
+	SetBigAndSmallIcons(IDI_COMPARE_FILES);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE

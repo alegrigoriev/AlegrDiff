@@ -178,6 +178,7 @@
 #define IDC_BUTTON1                     1082
 #define IDC_RADIO_SELECTED_FILES        1083
 #define IDC_EDIT1                       1084
+#define IDC_OFFSETS_RANGE               1085
 #define ID_FILE_COMPAREDIRECTORIES      32771
 #define ID_FILE_COMPAREFILES            32772
 #define ID_FILE_PREFERENCES             32777
@@ -311,8 +312,8 @@
 #define ID_WINDOW_CLOSEALL              32910
 #define IDS_NUMBER_OF_FILES_FORMAT      32910
 #define IDS_WRONG_BINARY_OFFSET_FORMAT  32911
-#define IDS_WRONG_BINARY_OFFSET_FORMAT2 32912
 #define IDS_OUT_OF_BOUNDS_OFFSET_FORMAT 32912
+#define IDS_VALID_RANGE_COMMENT_FORMAT  32913
 #define IDS_UNABLE_TO_CREATE_FILE       57608
 #define ID_INDICATOR_CARET_POS          0xE705
 
@@ -323,7 +324,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        183
 #define _APS_NEXT_COMMAND_VALUE         32911
-#define _APS_NEXT_CONTROL_VALUE         1085
+#define _APS_NEXT_CONTROL_VALUE         1086
 #define _APS_NEXT_SYMED_VALUE           106
 #endif
 #endif

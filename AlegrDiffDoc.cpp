@@ -2394,7 +2394,7 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 	if ( ! RebuildFilePairList(pDlg))
 	{
 		// TODO
-		return IDCANCEL;
+		return IDABORT;
 	}
 	// preload first of binary files in pair (calculate MD5 digest)
 

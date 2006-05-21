@@ -112,6 +112,9 @@ protected:
 
 	void BuildSortedPairArray(vector<FilePair *> & PairArray, ListHead<FilePair> * pPairList, int nCount);
 
+	CString GetNumberOfFilesString();
+	void UpdateStatusText(UINT nState);
+
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CAlegrDiffView)
@@ -193,6 +196,8 @@ public:
 	afx_msg void OnUpdateInFirstDirectoryOnlySubdirectoriesContents(CCmdUI *pCmdUI);
 	afx_msg void OnInSecondDirectoryOnlySubdirectoriesContents();
 	afx_msg void OnUpdateInSecondDirectoryOnlySubdirectoriesContents(CCmdUI *pCmdUI);
+protected:
+	virtual void OnActivateFrame(UINT nState, CFrameWnd* pDeactivateFrame);
 };
 
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp

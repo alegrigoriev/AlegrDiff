@@ -1825,6 +1825,7 @@ BEGIN
                             "Show contents of subdirectories of first directory"
     ID_INSECONDDIRECTORY_SUBDIRECTORIESCONTENTS 
                             "Show contents of subdirectories of second directory"
+    IDS_NUMBER_OF_FILES_FORMAT "%d DIFFERENT files out of %d"
 END
 
 #endif    // English (U.S.) resources

@@ -5,9 +5,9 @@
 
 class CBinaryGoToDlg : public CDialog
 {
-
+	typedef CDialog BaseClass;
 public:
-	CBinaryGoToDlg(ULONGLONG FileOffset, CWnd* pParent = NULL);   // standard constructor
+	CBinaryGoToDlg(ULONGLONG FileOffset, ULONGLONG FileLength, CWnd* pParent = NULL);   // standard constructor
 	virtual ~CBinaryGoToDlg();
 	ULONGLONG GetOffset() const
 	{
@@ -23,8 +23,9 @@ protected:
 	virtual BOOL OnInitDialog();
 
 	DECLARE_MESSAGE_MAP()
-public:
-	// edit result
-	CString m_OffsetStr;
+protected:
+	ULONGLONG m_FileLength;
 	ULONGLONG m_FileOffset;
+	ULONGLONG m_InitialOffset;
+	ULONGLONG GetNewOffset(LPCTSTR str);
 };

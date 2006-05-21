@@ -1826,6 +1826,13 @@ BEGIN
     ID_INSECONDDIRECTORY_SUBDIRECTORIESCONTENTS 
                             "Show contents of subdirectories of second directory"
     IDS_NUMBER_OF_FILES_FORMAT "%d DIFFERENT files out of %d"
+    IDS_WRONG_BINARY_OFFSET_FORMAT 
+                            "Offset string ""%s"" is not a valid hexadecimal number"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_OUT_OF_BOUNDS_OFFSET_FORMAT "Offset ""%s"" is out of bounds"
 END
 
 #endif    // English (U.S.) resources

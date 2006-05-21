@@ -436,6 +436,19 @@ public:
 			|| (pSecondFile != NULL && pSecondFile->m_IsBinary);
 	}
 
+	bool FilesAreDifferent() const
+	{
+		return m_ComparisonResult == FilesDifferent
+				|| m_ComparisonResult == DifferentInSpaces
+				|| m_ComparisonResult == VersionInfoDifferent
+				|| m_ComparisonResult == FirstFileLonger
+				|| m_ComparisonResult == SecondFileLonger;
+	}
+	bool FilesAreIdentical() const
+	{
+		return m_ComparisonResult == FilesIdentical;
+	}
+
 	PairCheckResult CheckForFilesChanged();
 	PairCheckResult ReloadIfChanged();
 

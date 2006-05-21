@@ -166,7 +166,6 @@ protected:
 	afx_msg void OnUpdateViewSideBySide(CCmdUI *pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
-public:
 protected:
 	virtual void OnActivateFrame(UINT nState, CFrameWnd* pDeactivateFrame);
 public:

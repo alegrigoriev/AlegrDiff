@@ -1982,7 +1982,7 @@ void CBinaryCompareView::OnEditGoto()
 {
 	ThisDoc * pDoc = GetDocument();
 
-	CBinaryGoToDlg dlg(pDoc->m_CaretPos);
+	CBinaryGoToDlg dlg(pDoc->m_CaretPos, pDoc->GetFileSize());
 
 	if (IDOK == dlg.DoModal())
 	{

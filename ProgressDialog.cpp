@@ -334,6 +334,7 @@ void CProgressDialog::OnAbort()
 {
 	m_StopRunThread = TRUE;
 	OnKickIdle(0, 0);
+#if 0
 	if (NULL != m_Progress.m_hWnd)
 	{
 		m_Progress.ShowWindow(SW_HIDE);
@@ -355,6 +356,7 @@ void CProgressDialog::OnAbort()
 		pCancel->SetWindowText(_T("OK"));
 	}
 	else
+#endif
 	{
 		EndDialog(IDABORT);
 	}

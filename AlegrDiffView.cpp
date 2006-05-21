@@ -447,6 +447,7 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 					break;
 				}
 			}
+			UpdateStatusText(WA_ACTIVE);
 		}
 		return;
 	}
@@ -468,6 +469,7 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 				break;
 			}
 		}
+		UpdateStatusText(WA_ACTIVE);
 		return;
 	}
 	else if (UpdateViewsFilePairChanged == lHint)
@@ -486,6 +488,7 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 				SetListViewItem(pFindPair, item, false);
 			}
 		}
+		UpdateStatusText(WA_ACTIVE);
 		return;
 	}
 	else if (OnUpdateRebuildListView != lHint
@@ -692,6 +695,7 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 		pListCtrl->EnsureVisible(nSel, false);
 	}
 	UnlockWindowUpdate();
+	UpdateStatusText(WA_ACTIVE);
 }
 
 void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
@@ -1902,3 +1906,49 @@ void CAlegrDiffView::OnUpdateInSecondDirectoryOnlySubdirectoriesContents(CCmdUI 
 	UpdateShowFilesMask(pCmdUI, ShowFileFromSubdirInSecondDirOnly);
 }
 
+void CAlegrDiffView::OnActivateFrame(UINT nState, CFrameWnd* pDeactivateFrame)
+{
+	CView::OnActivateFrame(nState, pDeactivateFrame);
+
+	UpdateStatusText(nState);
+}
+
+CString CAlegrDiffView::GetNumberOfFilesString()
+{
+	CString s;
+	unsigned TotalFiles = 0;
+	unsigned DifferentFiles = 0;
+	ListHead<FilePair> * pPairList = & GetDocument()->m_PairList;
+
+	// count number of files
+	for (FilePair * pPair = pPairList->First(); pPairList->NotEnd(pPair); pPair = pPair->Next())
+	{
+		if (pPair->FilesAreDifferent())
+		{
+			DifferentFiles++;
+		}
+
+		TotalFiles++;
+	}
+
+	s.Format(IDS_NUMBER_OF_FILES_FORMAT, DifferentFiles, TotalFiles);
+
+	return s;
+}
+
+void CAlegrDiffView::UpdateStatusText(UINT nState)
+{
+	CFrameWnd * pMainFrm = dynamic_cast<CFrameWnd *>(AfxGetMainWnd());
+	if (NULL != pMainFrm)
+	{
+		if (WA_INACTIVE == nState)
+		{
+			pMainFrm->SetMessageText(AFX_IDS_IDLEMESSAGE);
+		}
+		else if (WA_ACTIVE == nState
+				|| WA_CLICKACTIVE == nState)
+		{
+			pMainFrm->SetMessageText(GetNumberOfFilesString());
+		}
+	}
+}

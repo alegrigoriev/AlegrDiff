@@ -29,6 +29,11 @@ void CBinaryGoToDlg::DoDataExchange(CDataExchange* pDX)
 	CString OffsetStr;
 	if ( ! pDX->m_bSaveAndValidate)
 	{
+		CString s;
+		s.Format(IDS_VALID_RANGE_COMMENT_FORMAT, m_FileLength,
+				m_InitialOffset, m_FileLength - m_InitialOffset);
+		DDX_Text(pDX, IDC_OFFSETS_RANGE, s);
+
 		OffsetStr.Format(_T("%I64X"), m_FileOffset);
 	}
 

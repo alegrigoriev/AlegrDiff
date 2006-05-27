@@ -49,7 +49,7 @@ public:
 	int LinesInView() const;
 	int CharsInView() const;
 	void UpdateVisibleRect();
-
+	void SetFocusPane(int pane);
 
 	struct LONGLONGPoint
 	{

@@ -277,7 +277,9 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 
 					DWORD BackgroundColor = pApp->m_TextBackgroundColor;
 
-					if (ByteOffset < SelEnd
+					if ((1 == m_NumberOfPanes
+							|| pane == m_PaneWithFocus)
+						&& ByteOffset < SelEnd
 						&& ByteOffset >= SelBegin)
 					{
 						color = pApp->m_SelectedTextColor;
@@ -381,7 +383,9 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 				}
 
 				DWORD BackgroundColor = pApp->m_TextBackgroundColor;
-				if (ByteOffset < SelEnd
+				if ((1 == m_NumberOfPanes
+						|| pane == m_PaneWithFocus)
+					&& ByteOffset < SelEnd
 					&& ByteOffset >= SelBegin)
 				{
 					color = pApp->m_SelectedTextColor;
@@ -567,7 +571,7 @@ void CBinaryCompareView::CreateAndShowCaret()
 		&& pDoc->m_CaretPos <= m_ScreenFilePos + (LinesInView() + 1) * int(m_BytesPerLine))
 	{
 
-		p.x += m_AddressMarginWidth;
+		p.x += m_AddressMarginWidth + m_PaneWithFocus * PaneWidth;
 
 		p.y = ULONG(pDoc->m_CaretPos - m_ScreenFilePos) / m_BytesPerLine * LineHeight();
 
@@ -724,7 +728,22 @@ void CBinaryCompareView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 		if ( ! m_TrackingSelection)
 		{
-			m_bCaretOnChars = ! m_bCaretOnChars;
+			if ( ! m_bCaretOnChars)
+			{
+				m_bCaretOnChars = TRUE;
+			}
+			else
+			{
+				m_bCaretOnChars = FALSE;
+				// go to next pane
+				int NewPaneWithFocus = m_PaneWithFocus + 1;
+
+				if (NewPaneWithFocus >= m_NumberOfPanes)
+				{
+					NewPaneWithFocus = 0;
+				}
+				SetFocusPane(NewPaneWithFocus);
+			}
 			CreateAndShowCaret();
 		}
 		break;
@@ -1323,6 +1342,7 @@ void CBinaryCompareView::InvalidateRange(LONGLONG begin, LONGLONG end)
 	ASSERT(end >= begin);
 	CRect r;
 	if (0) TRACE("InvalidateRange((%d, %d), (%d, %d))\n", begin, end);
+
 	int nLinesInView = LinesInView();
 	int nCharsInView = CharsInView() + 1;
 	int nCharsInScreen = nLinesInView * m_BytesPerLine;
@@ -1361,27 +1381,24 @@ void CBinaryCompareView::InvalidateRange(LONGLONG begin, LONGLONG end)
 		BeginLine = -1;
 	}
 
-	for (int pane = 0; pane < m_NumberOfPanes; pane++)
+	if (BeginLine == EndLine)
 	{
-		if (BeginLine == EndLine)
+		InvalidatePaneLine(m_PaneWithFocus, BeginLine, BeginByte, EndByte);
+	}
+	else
+	{
+		if (BeginLine >= 0)
 		{
-			InvalidatePaneLine(pane, BeginLine, BeginByte, EndByte);
+			InvalidatePaneLine(m_PaneWithFocus, BeginLine, BeginByte, nCharsInView);
 		}
-		else
+		if (EndLine <= nLinesInView + 2)
 		{
-			if (BeginLine >= 0)
-			{
-				InvalidatePaneLine(pane, BeginLine, BeginByte, nCharsInView);
-			}
-			if (EndLine <= nLinesInView + 2)
-			{
-				InvalidatePaneLine(pane, EndLine, 0, EndByte);
-			}
+			InvalidatePaneLine(m_PaneWithFocus, EndLine, 0, EndByte);
+		}
 
-			for (int line = BeginLine + 1; line < EndLine; line++)
-			{
-				InvalidatePaneLine(pane, line, 0, nCharsInView);
-			}
+		for (int line = BeginLine + 1; line < EndLine; line++)
+		{
+			InvalidatePaneLine(m_PaneWithFocus, line, 0, nCharsInView);
 		}
 	}
 }
@@ -1450,6 +1467,8 @@ void CBinaryCompareView::OnLButtonDown(UINT nFlags, CPoint point)
 	BaseClass::OnLButtonDown(nFlags, point);
 	m_LButtonDown = true;
 
+	int pane = PointToPaneNumber(point.x);
+
 	point.x = PointToPaneOffset(point.x);
 	LONGLONG Addr = point.y / LineHeight() * m_BytesPerLine + m_ScreenFilePos;
 
@@ -1505,6 +1524,7 @@ void CBinaryCompareView::OnLButtonDown(UINT nFlags, CPoint point)
 		}
 	}
 	SetCaretPosition(Addr, flags);
+	SetFocusPane(pane);
 }
 
 void CBinaryCompareView::OnLButtonUp(UINT nFlags, CPoint point)
@@ -1987,5 +2007,27 @@ void CBinaryCompareView::OnEditGoto()
 	if (IDOK == dlg.DoModal())
 	{
 		SetCaretPosition(dlg.GetOffset(), SetPositionMakeVisible | SetPositionCancelSelection);
+	}
+}
+
+void CBinaryCompareView::SetFocusPane(int pane)
+{
+	if (pane != m_PaneWithFocus)
+	{
+		ThisDoc * pDoc = GetDocument();
+		LONGLONG SelBegin, SelEnd;
+		if (pDoc->m_CaretPos <= pDoc->m_SelectionAnchor)
+		{
+			SelBegin = pDoc->m_CaretPos & - m_WordSize;
+			SelEnd = pDoc->m_SelectionAnchor & - m_WordSize;
+		}
+		else
+		{
+			SelBegin = pDoc->m_SelectionAnchor & - m_WordSize;
+			SelEnd = pDoc->m_CaretPos & - m_WordSize;
+		}
+		InvalidateRange(SelBegin, SelEnd);
+		m_PaneWithFocus = pane;
+		InvalidateRange(SelBegin, SelEnd);
 	}
 }

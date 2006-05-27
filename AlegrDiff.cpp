@@ -90,12 +90,7 @@ CAlegrDiffApp::CAlegrDiffApp()
 
 	m_MinIdenticalLines(5)
 {
-	OSVERSIONINFO vi;
-	ZeroMemory(&vi, sizeof(OSVERSIONINFO));
-	vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	::GetVersionEx(&vi);
-
-	m_bIsWin9x = (vi.dwPlatformId != VER_PLATFORM_WIN32_NT);
+	m_bIsWin9x = (0 != (0x80000000 & ::GetVersion()));
 
 	m_PreferencesFlags = 0;
 	// then init subfields:

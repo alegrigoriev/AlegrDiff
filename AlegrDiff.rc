@@ -155,7 +155,7 @@ BEGIN
     BEGIN
         MENUITEM "Using AlegrDiff...",          ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
-        MENUITEM "&Help Topics",                ID_HELP_INDEX
+        MENUITEM "&Help Topics",                ID_HELP_FINDER
     END
 END
 
@@ -225,7 +225,7 @@ BEGIN
     BEGIN
         MENUITEM "&Using AlegrDiff...",         ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
-        MENUITEM "&Help Topics",                ID_HELP_INDEX
+        MENUITEM "&Help Topics",                ID_HELP_FINDER
     END
 END
 
@@ -351,7 +351,7 @@ BEGIN
     BEGIN
         MENUITEM "&Using AlegrDiff...",         ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
-        MENUITEM "&Help Topics",                ID_HELP_INDEX
+        MENUITEM "&Help Topics",                ID_HELP_FINDER
     END
 END
 
@@ -482,7 +482,7 @@ BEGIN
     BEGIN
         MENUITEM "&Using AlegrDiff...",         ID_HELP_USING
         MENUITEM "&About AlegrDiff...",         ID_APP_ABOUT
-        MENUITEM "&Help Topics",                ID_HELP_INDEX
+        MENUITEM "&Help Topics",                ID_HELP_FINDER
     END
 END
 

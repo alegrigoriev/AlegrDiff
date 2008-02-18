@@ -11,9 +11,7 @@ Language=0x409 English (United States)
 
 
 [FILES]
-afx_hidd_find.htm
-afx_hidd_newtypedlg.htm
-afx_hidd_replace.htm
+;afx_hidd_find.htm
 afx_hidp_default.htm
 afx_hidw_dockbar_top.htm
 afx_hidw_status_bar.htm
@@ -69,12 +67,11 @@ hid_file_print_preview.htm
 hid_file_print_setup.htm
 
 [ALIAS]
-afx_hidd_find						= afx_hidd_find.htm
+;afx_hidd_find						= afx_hidd_find.htm
 afx_hidd_font						= afx_hidd_font.htm
 afx_hidd_print						= afx_hidd_print.htm
 afx_hidd_printdlg					= afx_hidd_printdlg.htm
 afx_hidd_printsetup					= afx_hidd_printsetup.htm
-afx_hidd_replace					= afx_hidd_replace.htm
 AFX_HIDP_ASK_TO_SAVE				= AFX_HIDP_DEFAULT.htm
 AFX_HIDP_ASK_TO_UPDATE				= AFX_HIDP_DEFAULT.htm
 AFX_HIDP_BAD_VERB					= AFX_HIDP_DEFAULT.htm

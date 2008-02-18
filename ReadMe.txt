@@ -1,18 +1,15 @@
 TODO:
 
-2. Add an option to automatically hide certain files (the same, right-only etc.) 
-2. Show number of identical and different files in the status line.
-2. Add a pop-up menu item to rescan the differences while in file comparison mode. 
-3. Can you lower task priority when scanning files - the computer stalls! 
-
+In binary two-pane mode: show selection only on one side
 
 Open and read several files (up to one directory) at once
-Copy binary dump as text
-Enable/disable OK in GOTO dialog for binary view
-Add option for file size format (in kilobytes or in bytes).
+Copy binary dump as text (if cursor on hex)
+Add option for file size format (in kilobytes or in bytes) or a tooltip.
 Customizable number of MRU items
 Make more robust argorithm of version info detection (if it is version line, don't include version data to a normalized CRC).
 Detect Log: (as comment sequence)
+
+2. Add a pop-up menu item to rescan the differences while in file comparison mode. 
 
 Allow doublequotes in the search pattern
 Assign an index to the files during original sort (for faster sorting)
@@ -24,6 +21,7 @@ Show properties for selected files (total size)
 
 Maybe different color for selected accepted/declined
 add option to keep the caret on one line during F3 and F7
+3. Can you lower task priority when scanning files - the computer stalls! 
 
 V1.5:
 Need a hot-key to select current changed block
@@ -115,6 +113,10 @@ screen move in two directions may corrupt the image (??)
 
 Done:
 
+Show allowed range for GOTO offset.
+Validate offset in GOTO dialog for binary view
+Show number of identical and different files in the status line.
+Save viewed files mask.
 Make icons for the resizeable dialogs
 Show confirmation dialog if fingerprint calculation is canceled.
 save viewing preferences. If I select two-pane view for one pair of files, I expect to have the same view when opening the next file pair. 

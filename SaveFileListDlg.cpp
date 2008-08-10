@@ -134,7 +134,7 @@ void CSaveFileListDlg::OnButtonBrowse()
 		if (GetFullPathName(Name, MAX_PATH, FullPath, & FileNamePart)
 			&& NULL != FileNamePart)
 		{
-			_tcsncpy(dlg.m_ofn.lpstrFile, FileNamePart, dlg.m_ofn.nMaxFile - 1);
+			_tcsncpy_s(dlg.m_ofn.lpstrFile, dlg.m_ofn.nMaxFile, FileNamePart, dlg.m_ofn.nMaxFile - 1);
 			*FileNamePart = 0;
 		}
 	}

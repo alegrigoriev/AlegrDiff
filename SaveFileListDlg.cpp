@@ -177,7 +177,8 @@ void CSaveFileListDlg::OnOK()
 		return;
 	}
 	// check if replacing the file
-	FILE * file = _tfopen(m_sFilename, _T("rt"));
+	FILE * file = NULL;
+	_tfopen_s(&file, m_sFilename, _T("rt"));
 	if (NULL != file)
 	{
 		fclose(file);

@@ -44,7 +44,8 @@ END_MESSAGE_MAP()
 
 INT_PTR CDirectoryFingerprintCheckDlg::DoModal()
 {
-	m_pFile = _tfopen(m_FingerprintFilename, _T("rb"));
+	m_pFile = NULL;
+	_tfopen_s(&m_pFile, m_FingerprintFilename, _T("rb"));
 	if (NULL == m_pFile)
 	{
 		CString s;
@@ -228,7 +229,7 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 			&& (SubDir.IsEmpty()
 				|| SubDir[0] != '\\'))
 		{
-			_tcsncpy(wfd.cFileName, NamePart, countof(wfd.cFileName) - 1);
+			_tcsncpy_s(wfd.cFileName, countof(wfd.cFileName), NamePart, countof(wfd.cFileName) - 1);
 			wfd.cFileName[countof(wfd.cFileName) - 1] = 0;
 
 			pFile = new FileItem(& wfd, CString(), SubDir, NULL);   // TODO: Parent dir

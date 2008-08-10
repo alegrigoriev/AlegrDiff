@@ -54,6 +54,9 @@ protected:
 		return m_dlg.DoModal();
 	}
 	CDialog & m_dlg;
+private:
+	CDialogCall & operator =(const CDialogCall&);
+	CDialogCall(const CDialogCall&);
 };
 
 class AfxDialogCall : public MainThreadCall
@@ -71,6 +74,9 @@ protected:
 	LPCTSTR const m_Text;
 	UINT const m_Type;
 	UINT const m_IDHelp;
+private:
+	AfxDialogCall & operator =(const AfxDialogCall&);
+	AfxDialogCall(const AfxDialogCall&);
 };
 
 class AfxDialogCallId : public MainThreadCall
@@ -89,6 +95,9 @@ protected:
 	UINT const m_IDPrompt;
 	UINT const m_Type;
 	UINT const m_IDHelp;
+private:
+	AfxDialogCallId & operator =(const AfxDialogCallId&);
+	AfxDialogCallId(const AfxDialogCallId&);
 };
 }
 

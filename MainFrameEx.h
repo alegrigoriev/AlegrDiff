@@ -1,5 +1,5 @@
 #pragma once
-#include "MessageMapT.h"
+//#include "MessageMapT.h"
 // if you use MainFrameHandlePaletteChange,
 // #include "GdiObjectSave.h" before this file
 #define TRACE_MAINFRAME_EX 0
@@ -136,7 +136,8 @@ protected:
 							{
 								if (m_nRotateChildIndex > 0)
 								{
-									for (int i = 0; i < m_nRotateChildIndex - 1; i++)
+									int i;
+									for (i = 0; i < m_nRotateChildIndex - 1; i++)
 									{
 										pPlaceWnd = pPlaceWnd->GetWindow(GW_HWNDNEXT);
 										if (pPlaceWnd == pBottom)
@@ -164,7 +165,8 @@ protected:
 							}
 							else
 							{
-								for (int i = 0; i < m_nRotateChildIndex; i++)
+								int i;
+								for (i = 0; i < m_nRotateChildIndex; i++)
 								{
 									pPlaceWnd = pPlaceWnd->GetWindow(GW_HWNDNEXT);
 									if (pPlaceWnd == pBottom)
@@ -299,7 +301,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-BEGIN_MESSAGE_MAP_T(CMainFrameExT, BaseClass)
+BEGIN_TEMPLATE_MESSAGE_MAP(CMainFrameExT, Parameters, BaseClass)
 	ON_WM_PALETTECHANGED()
 	ON_WM_QUERYNEWPALETTE()
 	ON_WM_DESTROY()

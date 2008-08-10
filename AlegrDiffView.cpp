@@ -506,7 +506,8 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 
 	CHeaderCtrl * pHeader = pListCtrl->GetHeaderCtrl();
 	// Delete all of the items.
-	for (int i = pHeader->GetItemCount(); i > 0; i--)
+	int i;
+	for (i = pHeader->GetItemCount(); i > 0; i--)
 	{
 		pListCtrl->DeleteColumn(i - 1);
 	}
@@ -904,7 +905,7 @@ void CAlegrDiffView::OnUpdateFileCopyFirstDir(CCmdUI* pCmdUI)
 		if (nItem < m_PairArray.size())
 		{
 			FileItem * pFile = m_PairArray[nItem]->pFirstFile;
-			if (NULL != pFile && ! pFile->IsFolder() && ! pFile->m_bIsPhantomFile)
+			if (NULL != pFile && ! pFile->m_bIsPhantomFile)
 			{
 				CString s;
 				s.Format(IDS_COPY_FROM_DIR_FORMAT, LPCTSTR(GetDocument()->m_sFirstDir));
@@ -937,7 +938,7 @@ void CAlegrDiffView::OnUpdateFileCopySecondDir(CCmdUI* pCmdUI)
 		if (nItem < m_PairArray.size())
 		{
 			FileItem * pFile = m_PairArray[nItem]->pSecondFile;
-			if (NULL != pFile && ! pFile->IsFolder() && ! pFile->m_bIsPhantomFile)
+			if (NULL != pFile && ! pFile->m_bIsPhantomFile)
 			{
 				CString s;
 				s.Format(IDS_COPY_FROM_DIR_FORMAT, LPCTSTR(GetDocument()->m_sSecondDir));
@@ -1093,7 +1094,8 @@ void CAlegrDiffView::OnFileSaveList()
 
 	BOOL GenerateCsv = (0 == DstFile.GetExtension().CompareNoCase(_T(".csv")));
 
-	FILE * file = _tfopen(DstFile, _T("wt"));
+	FILE * file = NULL;
+	_tfopen_s(&file, DstFile, _T("wt"));
 	if (NULL == file)
 	{
 		CString s;

@@ -3,7 +3,7 @@
 // It then runs in the context of the main thread
 // Make sure not to keep any critical sections entered when calling any of those
 #pragma once
-#include "MessageMapT.h"
+//#include "MessageMapT.h"
 
 enum
 {
@@ -54,7 +54,7 @@ private:
 
 };
 
-BEGIN_MESSAGE_MAP_T(DialogProxyWnd, BaseClass)
+BEGIN_TEMPLATE_MESSAGE_MAP(DialogProxyWnd, B, BaseClass)
 	ON_MESSAGE(WM_USER_CALL_MAIN_THREAD, OnCallMainThread)
 END_MESSAGE_MAP()
 

@@ -125,7 +125,8 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 	int ExpandedLinePos = 0;    // position with expanded tabs
 	StringSection * pSection = SectionEntry->First();
 
-	for (int nDrawnChars = 0; SectionEntry->NotEnd(pSection) && nDrawnChars < nVisibleChars; pSection = pSection->Next())
+	int nDrawnChars;
+	for (nDrawnChars = 0; SectionEntry->NotEnd(pSection) && nDrawnChars < nVisibleChars; pSection = pSection->Next())
 	{
 		if ((pSection->Attr & pSection->Erased)
 			&& 2 == nFileSelect)
@@ -148,7 +149,8 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 		}
 		LPCTSTR pText = pSection->pBegin;
 		int Length = pSection->Length;
-		for (int j = 0, k = 0; j < countof(buf) && k < Length; j++, ExpandedLinePos++)
+		int j, k;
+		for (j = 0, k = 0; j < countof(buf) && k < Length; j++, ExpandedLinePos++)
 		{
 			if (pText[k] == '\t')
 			{

@@ -164,7 +164,7 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 
 		TCHAR buf[256];
 
-		int len = _stprintf(buf, _T("%0*I64X "), m_MaxAddressChars, CurrentAddr);
+		int len = _stprintf_s(buf, countof(buf), _T("%0*I64X "), m_MaxAddressChars, CurrentAddr);
 
 		pDC->MoveTo(0, CurrentY);
 		pDC->SetBkColor(pApp->m_TextBackgroundColor);
@@ -253,7 +253,7 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 
 					if (Byte1Valid)
 					{
-						len = _stprintf(buf, _T("%02X"), byte1);
+						len = _stprintf_s(buf, countof(buf), _T("%02X"), byte1);
 
 						if (NULL != pOtherFile && (! Byte2Valid
 								|| byte1 != byte2))
@@ -264,7 +264,7 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 					else if (1 == m_NumberOfPanes
 							&& NULL != pOtherFile && Byte2Valid)
 					{
-						len = _stprintf(buf, _T("%02X"), byte2);
+						len = _stprintf_s(buf, countof(buf), _T("%02X"), byte2);
 						color = AlternateColor;
 					}
 					else
@@ -294,7 +294,7 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 
 						if (offset + m_WordSize == m_BytesPerLine)
 						{
-							_tcscat(buf, _T("  "));
+							_tcscat_s(buf, countof(buf), _T("  "));
 							len += 2;
 						}
 					}

@@ -2,7 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by AlegrDiff.rc
 //
-#define IDR_MANIFEST                    1
 #define IDD_ABOUTBOX                    100
 #define IDD_PROPPAGE_FILE_PREFERENCES   102
 #define IDD_PROGRESSDIALOG              103

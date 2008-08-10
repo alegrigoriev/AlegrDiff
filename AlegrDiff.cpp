@@ -124,7 +124,7 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_NormalLogFont.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
 	m_NormalLogFont.lfQuality = DEFAULT_QUALITY;
 	m_NormalLogFont.lfWeight = FW_NORMAL;
-	_tcsncpy(m_NormalLogFont.lfFaceName, _T("Courier New"), LF_FACESIZE);
+	_tcsncpy_s(m_NormalLogFont.lfFaceName, countof(m_NormalLogFont.lfFaceName), _T("Courier New"), LF_FACESIZE);
 
 	m_AddedLogFont = m_NormalLogFont;
 	m_AddedLogFont.lfUnderline = TRUE;
@@ -1200,28 +1200,28 @@ void CopyFilesToFolder(FileItem **ppFiles, int nCount, bool bAddSubdirToTarget)
 	for (i = 0; i < nCount; i++)
 	{
 		pFile = ppFiles[i];
-		_tcsncpy(pSrcBuf + SrcBufIdx, pFile->GetBasedir(), pFile->GetBasedirLength());
+		_tcsncpy_s(pSrcBuf + SrcBufIdx, SrcBufLen - SrcBufIdx, pFile->GetBasedir(), pFile->GetBasedirLength());
 		SrcBufIdx += pFile->GetBasedirLength();
 
-		_tcsncpy(pSrcBuf + SrcBufIdx, pFile->GetSubdir(), pFile->GetSubdirLength());
+		_tcsncpy_s(pSrcBuf + SrcBufIdx, SrcBufLen - SrcBufIdx, pFile->GetSubdir(), pFile->GetSubdirLength());
 		SrcBufIdx += pFile->GetSubdirLength();
 
-		_tcsncpy(pSrcBuf + SrcBufIdx, pFile->GetName(), pFile->GetNameLength());
+		_tcsncpy_s(pSrcBuf + SrcBufIdx, SrcBufLen - SrcBufIdx, pFile->GetName(), pFile->GetNameLength());
 		SrcBufIdx += pFile->GetNameLength();
 
 		pSrcBuf[SrcBufIdx] = 0;
 		SrcBufIdx++;
 
-		_tcscpy(pDstBuf + DstBufIdx, TargetDir);
+		_tcscpy_s(pDstBuf + DstBufIdx, DstBufLen - DstBufIdx, TargetDir);
 		DstBufIdx += TargetDir.GetLength();
 
 		if (bAddSubdirToTarget)
 		{
-			_tcsncpy(pDstBuf + DstBufIdx, pFile->GetSubdir(), pFile->GetSubdirLength());
+			_tcsncpy_s(pDstBuf + DstBufIdx, DstBufLen - DstBufIdx, pFile->GetSubdir(), pFile->GetSubdirLength());
 			DstBufIdx += pFile->GetSubdirLength();
 		}
 
-		_tcsncpy(pDstBuf + DstBufIdx, pFile->GetName(), pFile->GetNameLength());
+		_tcsncpy_s(pDstBuf + DstBufIdx, DstBufLen - DstBufIdx, pFile->GetName(), pFile->GetNameLength());
 		DstBufIdx += pFile->GetNameLength();
 
 		pDstBuf[DstBufIdx] = 0;
@@ -1573,7 +1573,7 @@ CString UlonglongToStr(ULONGLONG Num, LCID locale)
 	TCHAR str1[NumBufSize] = {0};
 	TCHAR str2[NumBufSize] = {0};
 
-	_stprintf(str1, _T("%I64u"), Num);
+	_stprintf_s(str1, countof(str1), _T("%I64u"), Num);
 
 	GetNumberFormat(locale, 0, str1, NULL, str2, NumBufSize);
 

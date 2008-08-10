@@ -163,7 +163,7 @@ bool MultiPatternMatches(LPCTSTR name, LPCTSTR sPattern)
 	{
 		_tcsncpy_s(TmpBuf, MAX_PATH + 2, name, MAX_PATH);
 		TmpBuf[MAX_PATH] = 0;
-		_tcscat(TmpBuf, _T("."));
+		_tcscat_s(TmpBuf, MAX_PATH, _T("."));
 		name = TmpBuf;
 	}
 
@@ -448,7 +448,8 @@ bool FileItem::Load()
 				break;
 			}
 #ifdef _UNICODE
-			mbstowcs(lineW, lineA, countof(lineW) - 1);
+			size_t chars_converted = 0;
+			mbstowcs_s(& chars_converted, lineW, countof (lineW), lineA, countof(lineW) - 1);
 #endif
 		}
 		// expand tabs

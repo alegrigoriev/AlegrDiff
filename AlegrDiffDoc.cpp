@@ -208,8 +208,6 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 
 	// we don't call FreeFilePairList, because we could be performing file list refresh
 
-	// amount of data to process
-	ULONGLONG TotalFilesSize = 0;
 	//    ULONG DirectoryNameIndex = 0;
 	//    ULONG FileNameIndex = 0;
 	// the list is sorted backwards. The folder goes last.
@@ -426,8 +424,26 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 				{
 					// files times changed only
 					pInsertBefore->m_bChanged = true;
-					pPair->SetComparisonResult(pPair->ResultUnknown);
+					pInsertBefore->SetComparisonResult(pInsertBefore->ResultUnknown);
 					m_bNeedUpdateViews = true;
+
+					if (pPair->pFirstFile != NULL
+						&& pPair->pFirstFile->GetLastWriteTime() !=
+						pInsertBefore->pFirstFile->GetLastWriteTime())
+					{
+						FileItem* tmp = pPair->pFirstFile;
+						pPair->pFirstFile = pInsertBefore->pFirstFile;
+						pInsertBefore->pFirstFile = tmp;
+					}
+
+					if (pPair->pSecondFile != NULL
+						&& pPair->pSecondFile->GetLastWriteTime() !=
+						pInsertBefore->pSecondFile->GetLastWriteTime())
+					{
+						FileItem* tmp = pPair->pSecondFile;
+						pPair->pSecondFile = pInsertBefore->pSecondFile;
+						pInsertBefore->pSecondFile = tmp;
+					}
 				}
 				pPair->Dereference();
 				pPair = NULL;
@@ -449,32 +465,6 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			pInsertBefore->InsertAsPrevItem(pPair);
 			m_nFilePairs++;
 
-			if (pPair->ResultUnknown == pPair->GetComparisonResult())
-			{
-				// add files to the "data to process" size
-				if (pPair->NeedBinaryComparison())
-				{
-					if (pPair->pFirstFile->GetFileLength()
-						== pPair->pSecondFile->GetFileLength())
-					{
-						if ( ! pPair->pFirstFile->m_bMd5Calculated)
-						{
-							// overhead is 0x2000
-							TotalFilesSize += FILE_OPEN_OVERHEAD + pPair->pFirstFile->GetFileLength();
-						}
-						if ( ! pPair->pSecondFile->m_bMd5Calculated)
-						{
-							TotalFilesSize += FILE_OPEN_OVERHEAD + pPair->pSecondFile->GetFileLength();
-						}
-					}
-				}
-				else
-				{
-					// text files
-					TotalFilesSize += FILE_OPEN_OVERHEAD * 2 + 2 * (pPair->pFirstFile->GetFileLength()
-										+ pPair->pSecondFile->GetFileLength());
-				}
-			}
 		}
 	}
 
@@ -482,6 +472,41 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 	{
 		pInsertBefore->m_bDeleted = true;
 		pInsertBefore = m_PairList.Next(pInsertBefore);
+	}
+
+	// amount of data to process
+	ULONGLONG TotalFilesSize = 0;
+
+	for (FilePair *pPair = m_PairList.First(); m_PairList.NotEnd(pPair); pPair = pPair->Next())
+	{
+		if (! pPair->m_bDeleted
+			&& pPair->ResultUnknown == pPair->GetComparisonResult())
+		{
+			// add files to the "data to process" size
+			if (pPair->NeedBinaryComparison())
+			{
+				if (pPair->pFirstFile->GetFileLength()
+					== pPair->pSecondFile->GetFileLength())
+				{
+					if ( ! pPair->pFirstFile->m_bMd5Calculated)
+					{
+						// overhead is 0x2000
+						TotalFilesSize += FILE_OPEN_OVERHEAD + pPair->pFirstFile->GetFileLength();
+					}
+					if ( ! pPair->pSecondFile->m_bMd5Calculated)
+					{
+						TotalFilesSize += FILE_OPEN_OVERHEAD + pPair->pSecondFile->GetFileLength();
+					}
+				}
+			}
+			else
+			{
+				// text files
+				TotalFilesSize += FILE_OPEN_OVERHEAD * 2 + 2 * (pPair->pFirstFile->GetFileLength()
+																+ pPair->pSecondFile->GetFileLength());
+			}
+		}
+
 	}
 	// all files are referenced in FilePair list
 	FileList1.Detach();
@@ -1692,7 +1717,7 @@ void CFilePairDoc::GetWordUnderCursor(CString & Str)
 			LPTSTR StrBuf = Str.GetBuffer(nLength);
 			if (NULL != StrBuf)
 			{
-				_tcsncpy(StrBuf, pStr + nBeginOffset, nLength);
+				_tcsncpy_s(StrBuf, nLength+1, pStr + nBeginOffset, nLength);
 				Str.ReleaseBuffer(nLength);
 			}
 		}
@@ -2400,9 +2425,9 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 	CMd5HashCalculator HashCalc;
 	FilePair * pPair;
 
-	for (pPair = m_PairList.First();
+	for (pPair = m_PairList.Last();
 		m_PairList.NotEnd(pPair) && (NULL == pDlg || ! pDlg->m_StopRunThread);
-		pPair = pPair->Next())
+		pPair = pPair->Prev())
 	{
 		if (0) TRACE("First pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisonResult);
 		if (pPair->m_ComparisonResult != FilePair::ResultUnknown
@@ -2435,9 +2460,9 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 
 	}
 
-	for (pPair = m_PairList.First();
+	for (pPair = m_PairList.Last();
 		m_PairList.NotEnd(pPair) && (NULL == pDlg || ! pDlg->m_StopRunThread);
-		pPair = pPair->Next())
+		pPair = pPair->Prev())
 	{
 		if (0) TRACE("Second pass, pPair=%p, result=%d\n", pPair, pPair->GetComparisonResult());
 		if (FilePair::ResultUnknown != pPair->GetComparisonResult())

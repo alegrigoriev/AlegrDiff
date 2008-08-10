@@ -7,7 +7,7 @@
 class CComparisonProgressDlg : public CProgressDialog
 {
 public:
-	CComparisonProgressDlg(CWnd* pParent = NULL);   // standard constructor
+	CComparisonProgressDlg(class CAlegrDiffDoc * pDoc, CWnd* pParent = NULL);   // standard constructor
 	virtual ~CComparisonProgressDlg();
 	class CAlegrDiffDoc * m_pDoc;
 // Dialog Data

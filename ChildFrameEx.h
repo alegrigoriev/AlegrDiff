@@ -1,5 +1,5 @@
 #pragma once
-#include "MessageMapT.h"
+//#include "MessageMapT.h"
 
 // MainFrameExT template
 enum ChildFrameFeatures
@@ -88,7 +88,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-BEGIN_MESSAGE_MAP_T(CChildFrameExT, BaseClass)
+BEGIN_TEMPLATE_MESSAGE_MAP(CChildFrameExT, Parameters, BaseClass)
 	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 

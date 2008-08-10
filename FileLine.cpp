@@ -735,7 +735,7 @@ LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen,
 		{
 			len = nBufChars - StrLen - 1;
 		}
-		_tcsncpy(buf + StrLen, pSection->pBegin, len);
+		_tcsncpy_s(buf + StrLen, nBufChars-StrLen, pSection->pBegin, len);
 		StrLen += len;
 	}
 	buf[StrLen] = 0;
@@ -984,7 +984,8 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 		// difference found, starting from str1, str2
 
 		bool found = false;
-		for (unsigned idx1 = 0, idx2 = 0; (str1[idx1] != 0 || str2[idx2] != 0) && ! found; )
+		unsigned idx1, idx2;
+		for (idx1 = 0, idx2 = 0; (str1[idx1] != 0 || str2[idx2] != 0) && ! found; )
 		{
 			// check if str1+i ( i < idx1) equal str2+idx2
 			for (unsigned i = 0; i <= idx1; i++)
@@ -1014,7 +1015,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 			if ( ! found)
 			{
 				// check if str2+i ( i < idx2) equal str1+idx1
-				for (i = 0; i <= idx2; i++)
+				for (int i = 0; i <= idx2; i++)
 				{
 					LPCTSTR tmp1 = str1 + idx1;
 					LPCTSTR tmp2 = str2 + i;

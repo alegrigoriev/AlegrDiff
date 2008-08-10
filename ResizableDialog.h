@@ -8,7 +8,7 @@
 // ResizableDialog.h : header file
 //
 #include "UiUpdatedDlg.h"
-#include "MessageMapT.h"
+//#include "MessageMapT.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CResizableDialogT dialog
@@ -75,7 +75,7 @@ protected:
 	afx_msg void OnSizing(UINT fwSide, LPRECT pRect);
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI);
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
-	afx_msg UINT OnNcHitTest(CPoint point);
+	afx_msg LRESULT OnNcHitTest(CPoint point);
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
 	//}}AFX_MSG
@@ -327,7 +327,7 @@ BOOL CResizableDialogT<Base>::OnEraseBkgnd(CDC* pDC)
 }
 
 template<class Base>
-UINT CResizableDialogT<Base>::OnNcHitTest(CPoint point)
+LRESULT CResizableDialogT<Base>::OnNcHitTest(CPoint point)
 {
 	// return HTBOTTOMRIGHT for sizegrip area
 	CRect r;
@@ -399,7 +399,7 @@ INT_PTR CResizableDialogT<Base>::DoModal()
 	return BaseClass::DoModal();
 }
 
-BEGIN_MESSAGE_MAP_T(CResizableDialogT, BaseClass)
+BEGIN_TEMPLATE_MESSAGE_MAP(CResizableDialogT, Base, BaseClass)
 	//{{AFX_MSG_MAP(CResizableDialog)
 	ON_WM_SIZE()
 	ON_WM_SIZING()

@@ -1,6 +1,6 @@
 #pragma once
 #include <Wincrypt.h>
-#include <atlcrypt.h>
+#include "atlcrypt.h"
 
 class CMd5HashCalculator : protected CCryptProv
 {

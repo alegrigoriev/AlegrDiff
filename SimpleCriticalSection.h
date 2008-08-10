@@ -40,6 +40,9 @@ public:
 	{
 		m_cs.Unlock();
 	}
+private:
+	CSimpleCriticalSectionLock & operator =(const CSimpleCriticalSectionLock&);
+	CSimpleCriticalSectionLock(const CSimpleCriticalSectionLock&);
 };
 
 #endif //AFX_SIMPLECRITICALSECTION_H__B7AA7401_4036_11D4_9ADD_00C0F0583C4B__INCLUDED_

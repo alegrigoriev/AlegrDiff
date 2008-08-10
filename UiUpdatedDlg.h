@@ -1,7 +1,7 @@
 // Copyright Alexander Grigoriev, 1997-2002, All Rights Reserved
 #pragma once
 #include <afxpriv.h>
-#include "MessageMapT.h"
+//#include "MessageMapT.h"
 
 // CUiUpdatedDlg dialog
 template<typename B>
@@ -51,7 +51,7 @@ private:
 	BOOL m_bNeedUpdateControls;
 };
 
-BEGIN_MESSAGE_MAP_T(CUiUpdatedDlgT, BaseClass)
+BEGIN_TEMPLATE_MESSAGE_MAP(CUiUpdatedDlgT, B, BaseClass)
 	ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
 END_MESSAGE_MAP()
 

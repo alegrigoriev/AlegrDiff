@@ -161,7 +161,7 @@ bool MultiPatternMatches(LPCTSTR name, LPCTSTR sPattern)
 	if (name[0] != 0
 		&& NULL == _tcschr(name, '.'))
 	{
-		_tcsncpy(TmpBuf, name, MAX_PATH);
+		_tcsncpy_s(TmpBuf, MAX_PATH + 2, name, MAX_PATH);
 		TmpBuf[MAX_PATH] = 0;
 		_tcscat(TmpBuf, _T("."));
 		name = TmpBuf;
@@ -385,7 +385,9 @@ bool FileItem::Load()
 {
 	CThisApp * pApp = GetApp();
 	// check if it is C or CPP file
-	FILE * file = _tfopen(LPCTSTR(GetFullName()), _T("rb"));
+
+	FILE * file = NULL;
+	_tfopen_s(&file, LPCTSTR(GetFullName()), _T("rb"));
 	if (NULL == file)
 	{
 		return false;
@@ -426,7 +428,8 @@ bool FileItem::Load()
 		_setmode(_fileno(file), _O_TEXT);
 	}
 
-	for (unsigned LinNum =0; ; LinNum++)
+	unsigned LinNum;
+	for (LinNum =0; ; LinNum++)
 	{
 		if (m_IsUnicode)
 		{
@@ -449,7 +452,8 @@ bool FileItem::Load()
 #endif
 		}
 		// expand tabs
-		for (int i = 0, pos = 0; line[i] != 0 && pos < countof(TabExpandedLine) - 1; pos++)
+		int pos, i;
+		for (i = 0, pos = 0; line[i] != 0 && pos < countof(TabExpandedLine) - 1; pos++)
 		{
 			if (line[i] == '\t')
 			{
@@ -1137,7 +1141,7 @@ void FileList::GetSortedList(vector<FileItem *> & ItemArray, DWORD SortFlags)
 	}
 	std::sort(ItemArray.begin(), ItemArray.end(), SortFunc);
 #ifdef _DEBUG
-	if (0) for (i = 0; i < m_NumFiles && NULL != ItemArray[i]; i++)
+	if (0) for (int i = 0; i < m_NumFiles && NULL != ItemArray[i]; i++)
 		{
 			TRACE(_T("Sorted file item: subdir=%s, Name=\"%s\"\n"),
 				ItemArray[i]->GetSubdir(), ItemArray[i]->GetName());
@@ -2023,11 +2027,11 @@ CString FilePair::GetComparisonResultStr() const
 		s.Format(sCalculatingFingerprint, LPCTSTR(pSecondFile->GetFullName()));
 		break;
 	case ComparingFiles:
-		_tcsncpy(buf1, pFirstFile->GetFullName(), countof(buf1));
+		_tcsncpy_s(buf1, MAX_PATH, pFirstFile->GetFullName(), countof(buf1));
 		buf1[countof(buf1) - 1] = 0;
 		AbbreviateName(buf1, 50, TRUE);
 
-		_tcsncpy(buf2, pSecondFile->GetFullName(), countof(buf2));
+		_tcsncpy_s(buf2, MAX_PATH, pSecondFile->GetFullName(), countof(buf2));
 		buf2[countof(buf2) - 1] = 0;
 		AbbreviateName(buf2, 50, TRUE);
 

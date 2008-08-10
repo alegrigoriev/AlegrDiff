@@ -114,8 +114,7 @@ bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
 
 	SetTitle(m_sFirstDir + _T(" - ") + m_sSecondDir);
 
-	CComparisonProgressDlg dlg;
-	dlg.m_pDoc = this;
+	CComparisonProgressDlg dlg(this);
 
 	int result = dlg.DoModal();
 	if (IDOK == result)
@@ -146,7 +145,7 @@ bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
 	return false;
 }
 
-bool CAlegrDiffDoc::CanCancelComparison(CProgressDialog * pDlg)
+bool CAlegrDiffDoc::CanCancelComparison(CProgressDialog * /*pDlg*/)
 {
 	if (IDYES == AfxMessageBox(IDS_CAN_CANCEL_COMPARISON_PROMPT, MB_YESNO))
 	{
@@ -633,8 +632,8 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 		}
 
 		m_TotalLines = pPair->m_LinePairs.size();
-		_tcsncpy(m_ComparisonResult, pPair->GetComparisonResultStr(),
-				countof(m_ComparisonResult));
+		_tcsncpy_s(m_ComparisonResult, countof(m_ComparisonResult), pPair->GetComparisonResultStr(),
+					countof(m_ComparisonResult));
 		m_ComparisonResult[countof(m_ComparisonResult) - 1] = 0;
 		((CFrameWnd*)AfxGetMainWnd())->PostMessage(WM_SETMESSAGESTRING_POST, 0, (LPARAM)m_ComparisonResult);
 	}
@@ -1114,10 +1113,9 @@ void CAlegrDiffDoc::OnViewRefresh()
 	// rescan the directories again
 	m_bNeedUpdateViews = false;
 
-	CComparisonProgressDlg dlg;
-	dlg.m_pDoc = this;
+	CComparisonProgressDlg dlg(this);
 
-	// TODO release all open files
+	// release all open files
 	pApp->UpdateAllViews(UpdateViewsCloseOpenFiles);
 
 	dlg.DoModalDelay();
@@ -2163,7 +2161,8 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 		FileMode = _T("wb");
 	}
 #endif
-	FILE * file = _tfopen(Name, FileMode);
+	FILE * file = NULL;
+	_tfopen_s(& file, Name, FileMode);
 	if (NULL == file)
 	{
 		return FALSE;

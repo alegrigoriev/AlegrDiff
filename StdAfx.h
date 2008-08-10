@@ -76,38 +76,6 @@ inline void AssignMultiSz(CStringA & dst, LPCWSTR src)
 #define EnableDlgItem(id, Enable) \
 	::EnableWindow(GetDlgItem(id)->GetSafeHwnd(), Enable)
 
-#if 0
-VOID
-FASTCALL
-KeAcquireInStackQueuedSpinLock (
-								IN PKSPIN_LOCK  SpinLock,
-								IN PKLOCK_QUEUE_HANDLE  LockHandle
-								)
-{
-	KeRaiseIrql(DISPATCH_LEVEL, &LockHandle->OldIrql);
-	LockHandle->LockQueue.Lock = SpinLock;
-
-	do {
-		LockHandle->LockQueue.Next = NULL;
-
-		if (NULL == InterlockedExchangePointer((PVOID*)SpinLock, LockHandle, LockHandle->LockQueue.Next))
-		{
-			return;    // it's mine!!
-		}
-	}
-}
-
-VOID
-FASTCALL
-  KeReleaseInStackQueuedSpinLock (
-								IN PKLOCK_QUEUE_HANDLE  LockHandle
-								)
-{
-
-}
-
-#endif
-
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 

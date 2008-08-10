@@ -1353,12 +1353,13 @@ BOOL CApplicationProfile::WriteProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEn
 
 	// convert to string and write out
 	LPTSTR lpsz = new TCHAR[nBytes*2+1];
+
 	for (UINT i = 0; i < nBytes; i++)
 	{
 		lpsz[i*2] = (TCHAR)((pData[i] & 0x0F) + 'A'); //low nibble
 		lpsz[i*2+1] = (TCHAR)(((pData[i] >> 4) & 0x0F) + 'A'); //high nibble
 	}
-	lpsz[i*2] = 0;
+	lpsz[nBytes*2] = 0;
 
 	ASSERT(GetProfileName() != NULL);
 

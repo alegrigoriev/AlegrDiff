@@ -164,8 +164,8 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 		}
 	}
 
-	_tcsncpy(m_ComparisonResult, pPair->GetComparisonResultStr(),
-			countof(m_ComparisonResult));
+	_tcsncpy_s(m_ComparisonResult, countof(m_ComparisonResult), pPair->GetComparisonResultStr(),
+				countof(m_ComparisonResult));
 	m_ComparisonResult[countof(m_ComparisonResult) - 1] = 0;
 	((CFrameWnd*)AfxGetMainWnd())->PostMessage(WM_SETMESSAGESTRING_POST, 0, (LPARAM)m_ComparisonResult);
 

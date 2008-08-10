@@ -371,6 +371,6 @@ public:
 }; // namespace ATL
 
 
-#include <atlcrypt.inl>
+#include "atlcrypt.inl"
 #pragma pack(pop)
 #endif  // __ATLCRYPT_H__

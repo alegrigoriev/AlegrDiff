@@ -8,9 +8,9 @@
 
 // CComparisonProgressDlg dialog
 
-CComparisonProgressDlg::CComparisonProgressDlg(CWnd* pParent /*=NULL*/)
+CComparisonProgressDlg::CComparisonProgressDlg(class CAlegrDiffDoc * pDoc, CWnd* pParent /*=NULL*/)
 	: CProgressDialog(CComparisonProgressDlg::IDD, pParent)
-	, m_pDoc(NULL)
+	, m_pDoc(pDoc)
 {
 }
 

@@ -51,7 +51,8 @@ END_MESSAGE_MAP()
 
 INT_PTR CDirectoryFingerpringCreateDlg::DoModal()
 {
-	m_pFile = _tfopen(m_FingerprintFilename, _T("wt"));
+	m_pFile = NULL;
+	_tfopen_s(&m_pFile, m_FingerprintFilename, _T("wt"));
 	if (NULL == m_pFile)
 	{
 		CString s;

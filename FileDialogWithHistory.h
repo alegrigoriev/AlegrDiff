@@ -24,7 +24,7 @@ public:
 						CWnd* pParentWnd = NULL)
 		: BaseClass(bOpenFileDialog, lpszDefExt,
 					lpszFileName, dwFlags | OFN_EXPLORER, lpszFilter, pParentWnd,
-					OpenfilenameSize()),
+					OpenfilenameSize(), FALSE),
 		m_pResizeItems(NULL),
 		m_ResizeItemsCount(0)
 	{

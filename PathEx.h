@@ -185,30 +185,15 @@ bool CPathExT<StringType>::GetCurrentDirectory()
 template<typename StringType>
 bool CPathExT<StringType>::GetModuleFileName(HMODULE hModule)
 {
-	typename StringType::XCHAR tmpchar[2];
-
-	DWORD Length = GetModuleFileNameT(hModule, tmpchar, 2);
-
-	if (0 == Length)
-	{
-		return false;
-	}
-
-	typename StringType::XCHAR * pBuf = m_strPath.GetBuffer(Length + 1);
+	typename StringType::XCHAR * pBuf = m_strPath.GetBuffer(MAX_PATH*2);
 
 	if (NULL != pBuf)
 	{
-		DWORD ExpandedLength = GetModuleFileNameT(hModule, pBuf, Length + 1);
+		memset(pBuf, 0, MAX_PATH*2*sizeof *pBuf);
+		DWORD ExpandedLength = GetModuleFileNameT(hModule, pBuf, MAX_PATH*2);
 
-		if (ExpandedLength <= Length)
-		{
-			m_strPath.ReleaseBuffer(ExpandedLength);
-			return true;
-		}
-		else
-		{
-			m_strPath.ReleaseBuffer(0);
-		}
+		m_strPath.ReleaseBuffer(ExpandedLength);
+		return true;
 	}
 	return false;
 }

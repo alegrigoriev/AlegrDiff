@@ -180,13 +180,12 @@ void CFileDialogWithHistory::OnComboSelendOK()
 
 	TRACE("FindFirstFile success\n");
 	FindClose(hFind);
-	CWnd * pParent = GetParent();
-	CWnd * pTmp = pParent->GetDlgItem(edt1);
+	CWnd * pTmp = GetDlgItem(edt1);
 	CString name;
 	if (NULL == pTmp)
 	{
 		// new style dialog
-		pTmp = pParent->GetDlgItem(cmb13);
+		pTmp = GetDlgItem(cmb13);
 	}
 	if (NULL != pTmp
 		&& ! m_bOpenFileDialog)
@@ -205,7 +204,7 @@ void CFileDialogWithHistory::OnComboSelendOK()
 		{
 			pTmp->SetWindowText(str);
 
-			pParent->SendMessage(WM_COMMAND, IDOK, 0);
+			SendMessage(WM_COMMAND, IDOK, 0);
 
 			pTmp->SetWindowText(name);
 		}
@@ -213,10 +212,10 @@ void CFileDialogWithHistory::OnComboSelendOK()
 	else
 #endif
 	{
-		pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(str)));
-		pParent->SendMessage(WM_COMMAND, IDOK, 0);
+		SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(str)));
+		SendMessage(WM_COMMAND, IDOK, 0);
 
-		pParent->SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(name)));
+		SendMessage(CDM_SETCONTROLTEXT, edt1, LPARAM(LPCTSTR(name)));
 	}
 	if (NULL != pTmp)
 	{
@@ -285,7 +284,7 @@ void CFileDialogWithHistory::OnInitDone()
 
 BOOL CFileDialogWithHistory::OnFileNameOK()
 {
-	GetParent()->SendMessage(CDM_GETFOLDERPATH, MAX_PATH, LPARAM(m_LastFolder.GetBuffer(MAX_PATH)));
+	SendMessage(CDM_GETFOLDERPATH, MAX_PATH, LPARAM(m_LastFolder.GetBuffer(MAX_PATH)));
 	m_LastFolder.ReleaseBuffer();
 
 	TRACE(_T("CFileDialogWithHistory::OnFileNameOK Folder Path=%s\n"), m_LastFolder);
@@ -427,7 +426,7 @@ void CResizableFileDialog::OnSize(UINT nType, int cx, int cy)
 	// move dialog items
 	// use _parent_ dialog size
 	CRect r;
-	GetParent()->GetClientRect( & r);
+	GetClientRect( & r);
 	if (-1 == m_PrevSize.cx)
 	{
 		m_PrevSize.cx = r.Width();

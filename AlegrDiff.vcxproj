@@ -1,20 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug non-MSLU|Win32">
-      <Configuration>Debug non-MSLU</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DEMO Debug|Win32">
-      <Configuration>DEMO Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DEMO Release|Win32">
-      <Configuration>DEMO Release</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
@@ -34,17 +22,7 @@
     <Keyword>MFCProj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug non-MSLU|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseOfMfc>Static</UseOfMfc>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseOfMfc>Static</UseOfMfc>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEMO Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>Static</UseOfMfc>
     <CharacterSet>Unicode</CharacterSet>
@@ -54,23 +32,10 @@
     <UseOfMfc>Static</UseOfMfc>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEMO Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseOfMfc>Static</UseOfMfc>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug non-MSLU|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
-  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DEMO Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
   </ImportGroup>
@@ -78,78 +43,16 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DEMO Release|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
-  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='DEMO Release|Win32'">.\AlegrDiff___Win32_DEMO_Release\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='DEMO Release|Win32'">.\AlegrDiff___Win32_DEMO_Release\</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DEMO Release|Win32'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\Debug\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\Debug\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='DEMO Debug|Win32'">.\AlegrDiff___Win32_DEMO_Debug\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='DEMO Debug|Win32'">.\AlegrDiff___Win32_DEMO_Debug\</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DEMO Debug|Win32'">true</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\Release\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug non-MSLU|Win32'">Debug non-MSLU\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug non-MSLU|Win32'">Debug non-MSLU\</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug non-MSLU|Win32'">true</LinkIncremental>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DEMO Release|Win32'">
-    <Midl>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MkTypLibCompatible>true</MkTypLibCompatible>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\AlegrDiff___Win32_DEMO_Release/AlegrDiff.tlb</TypeLibraryName>
-    </Midl>
-    <ClCompile>
-      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <OmitFramePointers>true</OmitFramePointers>
-      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_WIN32_WINNT=0x0501;DEMO_VERSION=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>.\AlegrDiff___Win32_DEMO_Release/AlegrDiff.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>.\AlegrDiff___Win32_DEMO_Release/</AssemblerListingLocation>
-      <ObjectFileName>.\AlegrDiff___Win32_DEMO_Release/</ObjectFileName>
-      <ProgramDataBaseFileName>.\AlegrDiff___Win32_DEMO_Release/</ProgramDataBaseFileName>
-      <WarningLevel>Level3</WarningLevel>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <CallingConvention>StdCall</CallingConvention>
-    </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>NDEBUG;DEMO_VERSION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <Culture>0x0409</Culture>
-    </ResourceCompile>
-    <Link>
-      <AdditionalOptions>/MACHINE:I386 /nodefaultlib:kernel32.lib /nodefaultlib:advapi32.lib /nodefaultlib:user32.lib /nodefaultlib:gdi32.lib /nodefaultlib:shell32.lib /nodefaultlib:comdlg32.lib /nodefaultlib:version.lib /nodefaultlib:mpr.lib /nodefaultlib:rasapi32.lib /nodefaultlib:winmm.lib /nodefaultlib:winspool.lib /nodefaultlib:vfw32.lib /nodefaultlib:secur32.lib /nodefaultlib:oleacc.lib /nodefaultlib:oledlg.lib /nodefaultlib:sensapi.lib %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>unicows.lib;kernel32.lib;advapi32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;version.lib;mpr.lib;rasapi32.lib;winmm.lib;winspool.lib;vfw32.lib;secur32.lib;oleacc.lib;oledlg.lib;sensapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\AlegrDiff___Win32_DEMO_Release/AlegrDiff.exe</OutputFile>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <IgnoreSpecificDefaultLibraries>kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ProgramDatabaseFile>.\AlegrDiff___Win32_DEMO_Release/AlegrDiff.pdb</ProgramDatabaseFile>
-      <GenerateMapFile>true</GenerateMapFile>
-      <MapFileName>.\AlegrDiff___Win32_DEMO_Release/AlegrDiff.map</MapFileName>
-      <SubSystem>Windows</SubSystem>
-      <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <DataExecutionPrevention>
-      </DataExecutionPrevention>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -160,7 +63,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_WIN32_WINNT=0x0501;RETAIL_VERSION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -176,7 +79,7 @@
       <CallingConvention>StdCall</CallingConvention>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>_DEBUG;RETAIL_VERSION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
@@ -188,51 +91,6 @@
       <ProgramDatabaseFile>.\Debug/AlegrDiff.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>.\Debug/AlegrDiff.map</MapFileName>
-      <SubSystem>Windows</SubSystem>
-      <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <DataExecutionPrevention>
-      </DataExecutionPrevention>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DEMO Debug|Win32'">
-    <Midl>
-      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MkTypLibCompatible>true</MkTypLibCompatible>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\AlegrDiff___Win32_DEMO_Debug/AlegrDiff.tlb</TypeLibraryName>
-    </Midl>
-    <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_WIN32_WINNT=0x0501;DEMO_VERSION=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>.\AlegrDiff___Win32_DEMO_Debug/AlegrDiff.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>.\AlegrDiff___Win32_DEMO_Debug/</AssemblerListingLocation>
-      <ObjectFileName>.\AlegrDiff___Win32_DEMO_Debug/</ObjectFileName>
-      <ProgramDataBaseFileName>.\AlegrDiff___Win32_DEMO_Debug/</ProgramDataBaseFileName>
-      <WarningLevel>Level3</WarningLevel>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <CallingConvention>StdCall</CallingConvention>
-    </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>_DEBUG;DEMO_VERSION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <Culture>0x0409</Culture>
-    </ResourceCompile>
-    <Link>
-      <AdditionalOptions>/MACHINE:I386  %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>unicows.lib;winmm.lib;kernel32.lib;advapi32.lib;user32.lib;gdi32.lib;shell32.lib;comdlg32.lib;version.lib;mpr.lib;rasapi32.lib;winspool.lib;vfw32.lib;secur32.lib;oleacc.lib;oledlg.lib;sensapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\AlegrDiff___Win32_DEMO_Debug/AlegrDiff.exe</OutputFile>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <IgnoreSpecificDefaultLibraries>kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>.\AlegrDiff___Win32_DEMO_Debug/AlegrDiff.pdb</ProgramDatabaseFile>
-      <GenerateMapFile>true</GenerateMapFile>
-      <MapFileName>.\AlegrDiff___Win32_DEMO_Debug/AlegrDiff.map</MapFileName>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -252,7 +110,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_WIN32_WINNT=0x0501;RETAIL_VERSION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -270,7 +128,7 @@
       <CallingConvention>StdCall</CallingConvention>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>NDEBUG;RETAIL_VERSION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
@@ -284,51 +142,6 @@
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <DataExecutionPrevention>
-      </DataExecutionPrevention>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug non-MSLU|Win32'">
-    <Midl>
-      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MkTypLibCompatible>true</MkTypLibCompatible>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\Debug/AlegrDiff.tlb</TypeLibraryName>
-    </Midl>
-    <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_WIN32_WINNT=0x0501;RETAIL_VERSION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>.\Debug non-MSLU/AlegrDiff.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>.\Debug non-MSLU/</AssemblerListingLocation>
-      <ObjectFileName>.\Debug non-MSLU/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Debug non-MSLU/</ProgramDataBaseFileName>
-      <WarningLevel>Level3</WarningLevel>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <CallingConvention>StdCall</CallingConvention>
-    </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>_DEBUG;RETAIL_VERSION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <Culture>0x0409</Culture>
-    </ResourceCompile>
-    <Link>
-      <AdditionalOptions>/MACHINE:I386  %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\Debug non-MSLU/AlegrDiff.exe</OutputFile>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>.\Debug non-MSLU/AlegrDiff.pdb</ProgramDatabaseFile>
-      <GenerateMapFile>true</GenerateMapFile>
-      <MapFileName>.\Debug non-MSLU/AlegrDiff.map</MapFileName>
-      <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
@@ -368,9 +181,6 @@
     <ClCompile Include="SaveFileListDlg.cpp" />
     <ClCompile Include="SmallAllocator.cpp" />
     <ClCompile Include="StdAfx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DEMO Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DEMO Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug non-MSLU|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
@@ -419,54 +229,6 @@
     <ClInclude Include="ProgressDialog.h" />
     <ClInclude Include="ResizableDialog.h" />
     <CustomBuild Include="Resource.h">
-      <Message Condition="'$(Configuration)|$(Platform)'=='DEMO Debug|Win32'">Making help include file...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='DEMO Debug|Win32'">makehm /h ID_,HID_,0x10000 IDM_,HIDM_,0x10000 "%(Filename)%(Extension)" &gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Prompts (IDP_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDP_,HIDP_,0x30000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Resources (IDR_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDR_,HIDR_,0x20000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Dialogs (IDD_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDD_,HIDD_,0x20000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Frame Controls (IDW_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h /a afxhh.h IDW_,HIDW_,0x50000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DEMO Debug|Win32'">hlp\HTMLDefines.h;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='DEMO Release|Win32'">Making help include file...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='DEMO Release|Win32'">makehm /h ID_,HID_,0x10000 IDM_,HIDM_,0x10000 "%(Filename)%(Extension)" &gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Prompts (IDP_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDP_,HIDP_,0x30000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Resources (IDR_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDR_,HIDR_,0x20000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Dialogs (IDD_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDD_,HIDD_,0x20000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Frame Controls (IDW_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h /a afxhh.h IDW_,HIDW_,0x50000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DEMO Release|Win32'">hlp\HTMLDefines.h;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug non-MSLU|Win32'">Making help include file...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug non-MSLU|Win32'">makehm /h ID_,HID_,0x10000 IDM_,HIDM_,0x10000 "%(Filename)%(Extension)" &gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Prompts (IDP_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDP_,HIDP_,0x30000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Resources (IDR_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDR_,HIDR_,0x20000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Dialogs (IDD_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDD_,HIDD_,0x20000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Frame Controls (IDW_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h /a afxhh.h IDW_,HIDW_,0x50000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug non-MSLU|Win32'">hlp\HTMLDefines.h;%(Outputs)</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Making help include file...</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">makehm /h ID_,HID_,0x10000 IDM_,HIDM_,0x10000 "%(Filename)%(Extension)" &gt; "hlp\HTMLDefines.h"
 echo. &gt;&gt; "hlp\HTMLDefines.h"
@@ -522,45 +284,6 @@ makehm /h /a afxhh.h IDW_,HIDW_,0x50000 "%(Filename)%(Extension)" &gt;&gt; "hlp\
     <None Include="hlp\AlegrDiff.hhc" />
     <None Include="hlp\AlegrDiff.hhk" />
     <CustomBuild Include="hlp\AlegrDiff.hhp">
-      <Message Condition="'$(Configuration)|$(Platform)'=='DEMO Debug|Win32'">Making help file...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='DEMO Debug|Win32'">start /wait hhc "hlp\AlegrDiff.hhp"
-if not exist "hlp\AlegrDiff.chm" goto :HelpError
-copy "hlp\AlegrDiff.chm" "$(OutDir)AlegrDiff.chm"
-goto :HelpDone
-:HelpError
-echo hlp\AlegrDiff.hhp(1) : error:Problem encountered creating help file
-echo.
-:HelpDone
-echo.
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='DEMO Debug|Win32'">hlp\HTMLDefines.h;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DEMO Debug|Win32'">$(OutDir)$(ProjectName).chm;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='DEMO Release|Win32'">Making help file...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='DEMO Release|Win32'">start /wait hhc "hlp\AlegrDiff.hhp"
-if not exist "hlp\AlegrDiff.chm" goto :HelpError
-copy "hlp\AlegrDiff.chm" "$(OutDir)AlegrDiff.chm"
-goto :HelpDone
-:HelpError
-echo hlp\AlegrDiff.hhp(1) : error:Problem encountered creating help file
-echo.
-:HelpDone
-echo.
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='DEMO Release|Win32'">hlp\HTMLDefines.h;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='DEMO Release|Win32'">$(OutDir)$(ProjectName).chm;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug non-MSLU|Win32'">Making help file...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug non-MSLU|Win32'">start /wait hhc "hlp\AlegrDiff.hhp"
-if not exist "hlp\AlegrDiff.chm" goto :HelpError
-copy "hlp\AlegrDiff.chm" "$(OutDir)AlegrDiff.chm"
-goto :HelpDone
-:HelpError
-echo hlp\AlegrDiff.hhp(1) : error:Problem encountered creating help file
-echo.
-:HelpDone
-echo.
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug non-MSLU|Win32'">hlp\HTMLDefines.h;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug non-MSLU|Win32'">$(OutDir)$(ProjectName).chm;%(Outputs)</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Making help file...</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">start /wait hhc "hlp\AlegrDiff.hhp"
 if not exist "hlp\AlegrDiff.chm" goto :HelpError

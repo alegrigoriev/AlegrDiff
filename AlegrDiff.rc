@@ -1391,8 +1391,6 @@ IDC_CURSOR_LEFT_ARROW   CURSOR                  "res\\cursor1.cur"
 // RT_MANIFEST
 //
 
-IDR_MANIFEST            RT_MANIFEST             "AlegrDiff.manifest"
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // String Table

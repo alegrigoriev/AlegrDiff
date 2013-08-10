@@ -166,7 +166,7 @@ void CCompareDirsDialog::OnButtonAdvanced()
 
 INT_PTR CCompareDirsDialog::DoModal()
 {
-	int Result;
+	INT_PTR Result;
 	CThisApp * pApp = GetApp();
 	if (m_sFirstDir.IsEmpty())
 	{

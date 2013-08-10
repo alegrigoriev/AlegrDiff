@@ -116,7 +116,7 @@ bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
 
 	CComparisonProgressDlg dlg(this);
 
-	int result = dlg.DoModal();
+	INT_PTR result = dlg.DoModal();
 	if (IDOK == result)
 	{
 		bool HasFiles = false;
@@ -1078,7 +1078,7 @@ void CFilePairDoc::OnEditCopy(int FileSelect)
 				if (NULL != pMbcsMem)
 				{
 					if (0 != WideCharToMultiByte(CP_ACP, 0, pMem, Len,
-												pMbcsMem, MbcsBufSize, NULL, 0))
+												pMbcsMem, (int)MbcsBufSize, NULL, 0))
 					{
 						GlobalUnlock(hMbcsMem);
 						SetClipboardData(CF_TEXT, hMbcsMem);
@@ -1305,7 +1305,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 	TextPosDisplay LineCaretPos = m_CaretPos; //DisplayPosToLinePos(m_CaretPos);
 
 	int nSearchPos;
-	unsigned nSearchLine;
+	size_t nSearchLine;
 
 	if (0 == SearchScope)
 	{
@@ -2081,7 +2081,7 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 		dlg.m_File1 = m_pFilePair->pFirstFile->GetFullName();
 		dlg.m_File2 = m_pFilePair->pSecondFile->GetFullName();
 
-		int result = dlg.DoModal();
+		INT_PTR result = dlg.DoModal();
 		if (IDOK == result)
 		{
 			DefaultFlags = StringSection::Accepted;

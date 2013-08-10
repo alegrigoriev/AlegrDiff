@@ -1014,14 +1014,14 @@ void CDiffFileView::UpdateHScrollBar()
 	SetScrollInfo(SB_HORZ, & sci);
 }
 
-void CDiffFileView::MakePositionVisible(int line, int pos)
+void CDiffFileView::MakePositionVisible(size_t line, int pos)
 {
 	ThisDoc * pDoc = GetDocument();
 	BringPositionsToBounds(TextPosDisplay(line, pos, pDoc->m_CaretPos.scope),
 							TextPosDisplay(line, pos, pDoc->m_CaretPos.scope), m_VisibleRect, m_VisibleRect);
 }
 
-void CDiffFileView::MakePositionCentered(int line, int pos)
+void CDiffFileView::MakePositionCentered(size_t line, int pos)
 {
 	ThisDoc * pDoc = GetDocument();
 	BringPositionsToBounds(TextPosDisplay(line, pos, pDoc->m_CaretPos.scope),
@@ -1902,7 +1902,7 @@ void CDiffFileView::OnEditGotoline()
 	}
 
 	dlg.m_CombinedFileLine = pDoc->m_CaretPos.line;
-	dlg.m_CombinedFileNumLines = pFilePair->m_LinePairs.size();
+	dlg.m_CombinedFileNumLines = (UINT)pFilePair->m_LinePairs.size();
 	dlg.m_GoToLineFileSelection = pApp->m_GoToLineFileSelection;
 
 	if (NULL == pFilePair->pFirstFile
@@ -2063,7 +2063,7 @@ void CDiffFileView::OnEditSelectAll()
 	CreateAndShowCaret();
 }
 
-void CDiffFileView::OnTimer(UINT nIDEvent)
+void CDiffFileView::OnTimer(UINT_PTR nIDEvent)
 {
 	if (1 == nIDEvent)
 	{

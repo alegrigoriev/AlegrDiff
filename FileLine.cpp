@@ -8,7 +8,7 @@
 #define C_CPP_FILE 1
 #define REMOVE_VERSION_INFO 2
 
-static DWORD CalculateHash(void const * pData, int len);
+static DWORD CalculateHash(void const * pData, size_t len);
 
 void * FileLine::operator new(size_t size)
 {
@@ -68,9 +68,9 @@ StringDiffSection::StringDiffSection()
 }
 CSmallAllocator StringDiffSection::m_Allocator(sizeof (StringDiffSection));
 
-FileLine::FileLine(LPCTSTR src, int Length, bool /*MakeNormalizedString*/, bool c_cpp_file)
+FileLine::FileLine(LPCTSTR src, size_t Length, bool /*MakeNormalizedString*/, bool c_cpp_file)
 	: m_Flags(0),
-	m_Length(Length),
+	m_Length((unsigned)Length),
 	m_pNext(NULL),
 	m_Number((unsigned)-1),
 //m_Link(NULL),
@@ -240,14 +240,14 @@ static DWORD CRC32_Table[256] =
 	0xbcb4666d, 0xb8757bda, 0xb5365d03, 0xb1f740b4
 };
 
-static DWORD CalculateHash(void const * pData, int len)
+static DWORD CalculateHash(void const * pData, size_t len)
 {
 	// CRC32
 	DWORD	crc32_val = 0xFFFFFFFF;
 	const unsigned char * data = (const unsigned char *) pData;
 
 	// Calculate a CRC32 value
-	for (int i = 0 ; i < len; i++)
+	for (size_t i = 0 ; i < len; i++)
 	{
 		char c = data[i];
 		crc32_val = ( crc32_val << 8 ) ^ CRC32_Table[(( crc32_val >> 24) ^ c) & 0xff];
@@ -329,7 +329,7 @@ int FileLine::RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstCount
 			if (NULL != VersionEnd)
 				for (i = 0; i < countof(keywords); i++)
 				{
-					int len = _tcslen(keywords[i]);
+					size_t len = _tcslen(keywords[i]);
 
 					if (0 == _tcsncmp(VersionBegin + 1, keywords[i], len))
 					{
@@ -339,7 +339,7 @@ int FileLine::RemoveExtraWhitespaces(LPTSTR pDst, LPCTSTR Src, unsigned DstCount
 						for (VersionBegin += len + 1 ; VersionBegin < VersionEnd;
 							VersionBegin++)
 						{
-							unsigned index = VersionBegin - Src;
+							unsigned index = (unsigned)(VersionBegin - Src);
 							if (index < WhitespaceMaskBits)
 							{
 								pWhitespaceMask[index / 8] |= 1 << (index & 7);
@@ -720,7 +720,7 @@ LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen,
 		return pFirstLine->GetText();
 	}
 	// make a string of string sections
-	int StrLen = 0;
+	size_t StrLen = 0;
 	for (StringSection * pSection = StrSections.First();
 		StrSections.NotEnd(pSection) && StrLen + 1u < nBufChars; pSection = pSection->Next())
 	{
@@ -730,7 +730,7 @@ LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen,
 		{
 			continue;   // don't show the section
 		}
-		int len = pSection->Length;
+		size_t len = pSection->Length;
 		if (StrLen + len + 1u > nBufChars)
 		{
 			len = nBufChars - StrLen - 1;
@@ -739,7 +739,7 @@ LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen,
 		StrLen += len;
 	}
 	buf[StrLen] = 0;
-	*pStrLen = StrLen;
+	*pStrLen = (unsigned)StrLen;
 	return buf;
 }
 
@@ -883,7 +883,7 @@ void LinePair::BuildDiffSectionsList(int nLineIndex, std::vector<class FileDiffS
 	}
 }
 
-int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<StringSection> * ppSections, int nMinMatchingChars)
+int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<StringSection> * ppSections, unsigned nMinMatchingChars)
 {
 	if (NULL == pStr2 && NULL == pStr1)
 	{
@@ -969,9 +969,9 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 			if (NULL != pDiffSection)
 			{
 				pDiffSection->Str1 = pEqualStrBegin1;
-				pDiffSection->Len1 = str1 - pEqualStrBegin1;
+				pDiffSection->Len1 = (unsigned)(str1 - pEqualStrBegin1);
 				pDiffSection->Str2 = pEqualStrBegin2;
-				pDiffSection->Len2 = str2 - pEqualStrBegin2;
+				pDiffSection->Len2 = (unsigned)(str2 - pEqualStrBegin2);
 
 				DiffSections.InsertTail(pDiffSection);
 			}
@@ -992,7 +992,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 			{
 				LPCTSTR tmp1 = str1 + i;
 				LPCTSTR tmp2 = str2 + idx2;
-				int j;
+				unsigned j;
 				for (j = 0; j < nMinMatchingChars; j++)
 				{
 					if (tmp1[j] != tmp2[j]
@@ -1015,11 +1015,11 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 			if ( ! found)
 			{
 				// check if str2+i ( i < idx2) equal str1+idx1
-				for (int i = 0; i <= idx2; i++)
+				for (unsigned i = 0; i <= idx2; i++)
 				{
 					LPCTSTR tmp1 = str1 + idx1;
 					LPCTSTR tmp2 = str2 + i;
-					int j;
+					unsigned j;
 					for (j = 0; j < nMinMatchingChars; j++)
 					{
 						if (tmp1[j] != tmp2[j]
@@ -1059,7 +1059,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 		if (0 == str1[idx1]
 			&& 0 == str2[idx2])
 		{
-			for (int i = 0; i < nMinMatchingChars && idx1 > 0 && idx2 > 0; i++)
+			for (unsigned i = 0; i < nMinMatchingChars && idx1 > 0 && idx2 > 0; i++)
 			{
 				if (str1[idx1 - 1] == str2[idx2 - 1])
 				{
@@ -1137,7 +1137,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 		unsigned i;
 		for (i = 0; i < countof(keywords); i++)
 		{
-			int len = _tcslen(keywords[i]);
+			size_t len = _tcslen(keywords[i]);
 			if (0 == _tcsncmp(str1VersionBegin + 1, keywords[i], len)
 				&& 0 == _tcsncmp(str2VersionBegin + 1, keywords[i], len))
 			{
@@ -1183,7 +1183,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 					str1ws++;
 				}
 			}
-			pDiffSection->Len1ws = str1ws - pDiffSection->Str1ws;
+			pDiffSection->Len1ws = (unsigned)(str1ws - pDiffSection->Str1ws);
 		}
 
 		if (NULL != pDiffSection->Str2)
@@ -1209,7 +1209,7 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 					str2ws++;
 				}
 			}
-			pDiffSection->Len2ws = str2ws - pDiffSection->Str2ws;
+			pDiffSection->Len2ws = (unsigned)(str2ws - pDiffSection->Str2ws);
 		}
 	}
 

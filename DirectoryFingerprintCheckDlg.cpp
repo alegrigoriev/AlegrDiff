@@ -221,7 +221,7 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 
 		if (DirEnd != FileName)
 		{
-			SubDir = CString(FileName, DirEnd - FileName + 1);
+			SubDir = CString(FileName, (int)(DirEnd - FileName + 1));
 		}
 
 		if (NamePart[0] != 0

@@ -1701,7 +1701,7 @@ BEGIN
     IDS_DIRECTORY_NOT_FOUND2 "Directory ""%s"" not found"
     IDS_TIME_LEFT_SECONDS   "%d seconds left"
     IDS_TIME_LEFT_MINUTES   "%d minutes left"
-    IDS_STRING_LOADING_DIRECTORY "Loading dirrectory ""%s"""
+    IDS_STRING_LOADING_DIRECTORY "Loading directory ""%s"""
     IDS_STRING_NO_FILES_TO_COMPARE 
                             "Both directories are empty or no files match the filter pattern"
     IDS_STRING_PERCENTS_DONE "%d%% done"

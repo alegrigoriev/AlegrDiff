@@ -664,7 +664,7 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 
 	BuildSortedPairArray(m_PairArray, & pDoc->m_PairList, pDoc->m_nFilePairs);
 
-	pListCtrl->SetItemCount(m_PairArray.size());
+	pListCtrl->SetItemCount((int)m_PairArray.size());
 
 	int nSel = -1;
 
@@ -994,7 +994,7 @@ BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 		return FALSE;
 	}
 
-	CopyFilesToFolder(& FilesArray.front(), FilesArray.size(), true);
+	CopyFilesToFolder(& FilesArray.front(), (int)FilesArray.size(), true);
 	return TRUE;
 }
 

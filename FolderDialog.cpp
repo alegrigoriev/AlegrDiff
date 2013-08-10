@@ -84,7 +84,7 @@ END_MESSAGE_MAP()
 
 void AFXAPI AfxHookWindowCreate(CWnd* pWnd);
 BOOL AFXAPI AfxUnhookWindowCreate();
-int CFolderDialog::DoModal()
+INT_PTR CFolderDialog::DoModal()
 {
 	ASSERT_VALID(this);
 	ASSERT(m_bi.lpfn != NULL); // can still be a user hook

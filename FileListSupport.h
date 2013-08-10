@@ -37,11 +37,11 @@ struct TextPosLine
 
 struct TextPosDisplay
 {
-	int line;
+	size_t line;
 	int pos;
 	int scope; // 0 - combined file, 1 - left pane, 2 - right pane
 	TextPosDisplay() {}
-	TextPosDisplay(int l, int p, int s)
+	TextPosDisplay(size_t l, int p, int s)
 		: line(l), pos(p), scope(s)
 	{
 	}
@@ -248,8 +248,7 @@ public:
 	bool m_bUnicodeName:1;
 	bool m_bIsAlone:1;      // this item is inside directory existing on one side only
 
-	BOOL CalculateHashes(CMd5HashCalculator * pMd5Calc,
-						class CProgressDialog * pProgressDialog);
+	BOOL CalculateHashes(CMd5HashCalculator * pMd5Calc, class CProgressDialog * pProgressDialog);
 	static size_t GetDigestLength() { return 16; }
 
 	void SetMD5(BYTE md5[16]);
@@ -274,7 +273,7 @@ public:
 		return 0 != (m_Attributes & FILE_ATTRIBUTE_REPARSE_POINT);
 	}
 
-	size_t GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes);
+	unsigned GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes);
 	void FreeReadBuffer();
 
 	LPCTSTR GetLineString(int LineNum) const;
@@ -282,9 +281,9 @@ public:
 	{
 		return m_Lines[LineNum];
 	}
-	int GetNumLines() const
+	unsigned GetNumLines() const
 	{
-		return m_Lines.size();
+		return (unsigned)m_Lines.size();
 	}
 
 	// get file name ONLY
@@ -292,9 +291,9 @@ public:
 	{
 		return m_Name;
 	}
-	int GetNameLength() const
+	unsigned GetNameLength() const
 	{
-		return m_Name.GetLength();
+		return (unsigned)m_Name.GetLength();
 	}
 
 	// get sibdirectory ONLY, with trailing slash
@@ -506,11 +505,11 @@ public:
 	struct FileSection
 	{
 		FileSection * pNext;
-		int File1LineBegin;
-		int File1LineEnd;
+		unsigned File1LineBegin;
+		unsigned File1LineEnd;
 
-		int File2LineBegin;
-		int File2LineEnd;
+		unsigned File2LineBegin;
+		unsigned File2LineEnd;
 	};
 
 	void SetComparisonResult(eFileComparisionResult result)

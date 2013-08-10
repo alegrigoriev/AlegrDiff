@@ -16,7 +16,6 @@
 
 #undef tolower
 #undef toupper
-static DWORD CalculateHash(void const * data, int len);
 
 bool less<FileDiffSection *>::operator()
 	(FileDiffSection * const & pS1, FileDiffSection * const & pS2) const
@@ -805,7 +804,7 @@ FileCheckResult FileItem::ReloadIfChanged()
 
 CSimpleCriticalSection FileItem::m_Cs;
 
-size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
+unsigned FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes)
 {
 	CLastError err;
 	err.Set(0);
@@ -859,7 +858,7 @@ size_t FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, size_t bytes)
 		m_FileReadPos = 0;
 	}
 
-	if (FileOffset + bytes > m_Length)
+	if ((LONGLONG)(FileOffset + bytes) > m_Length)
 	{
 		bytes = size_t(m_Length - FileOffset);
 	}
@@ -1220,7 +1219,7 @@ const FileLine * FileItem::FindMatchingLine(const FileLine * pLine, unsigned nSt
 					pLine->GetNormalizedHash(), nStartLineNum,
 					pFoundLine->GetNormalizedHash(),
 					pFoundLine->GetLineNumber());
-				__asm int 3
+				DebugBreak();
 			}
 		}
 		if (ppLine > m_NormalizedHashSortedLines.begin())
@@ -1236,7 +1235,7 @@ const FileLine * FileItem::FindMatchingLine(const FileLine * pLine, unsigned nSt
 					pLine->GetNormalizedHash(), nStartLineNum,
 					pPrevLine->GetNormalizedHash(),
 					pPrevLine->GetLineNumber());
-				__asm int 3
+				DebugBreak();
 			}
 		}
 	}
@@ -1254,7 +1253,7 @@ const FileLine * FileItem::FindMatchingLine(const FileLine * pLine, unsigned nSt
 		{
 			TRACE("Found line num=%d, required: %d\n",
 				pFoundLine->GetLineNumber(), nStartLineNum);
-			__asm int 3
+			DebugBreak();
 		}
 #endif
 		return pFoundLine;
@@ -1295,7 +1294,7 @@ const FileLine * FileItem::FindMatchingLineGroupLine(const FileLine * pLine, uns
 					pLine->GetNormalizedGroupHash(), nStartLineNum,
 					pFoundLine->GetNormalizedGroupHash(),
 					pFoundLine->GetLineNumber());
-				__asm int 3
+				DebugBreak();
 			}
 		}
 		if (ppLine > m_NormalizedHashSortedLineGroups.begin())
@@ -1311,7 +1310,7 @@ const FileLine * FileItem::FindMatchingLineGroupLine(const FileLine * pLine, uns
 					pLine->GetNormalizedGroupHash(), nStartLineNum,
 					pPrevLine->GetNormalizedGroupHash(),
 					pPrevLine->GetLineNumber());
-				__asm int 3
+				DebugBreak();
 			}
 		}
 	}
@@ -1330,7 +1329,7 @@ const FileLine * FileItem::FindMatchingLineGroupLine(const FileLine * pLine, uns
 		{
 			TRACE("Found line num=%d, required: %d\n",
 				pFoundLine->GetLineNumber(), nStartLineNum);
-			__asm int 3
+			DebugBreak();
 		}
 #endif
 		return pFoundLine;
@@ -2693,6 +2692,12 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles(CProgressDialog * /*
 				else
 				{
 					// free them
+					while (pMoreSection != NULL)
+					{
+						FileSection * tmp = pMoreSection->pNext;
+						delete pMoreSection;
+						pMoreSection = tmp;
+					}
 				}
 			}
 		}

@@ -214,7 +214,7 @@ class CApplicationProfileItemBinary: public CApplicationProfileItem
 	void * const m_Pointer;
 	std::vector<UCHAR> m_InitialData;
 	std::vector<UCHAR> m_Default;
-	size_t const m_Size;
+	unsigned const m_Size;
 
 protected:
 	virtual void WriteData(BOOL bForceWrite=FALSE);
@@ -269,7 +269,7 @@ void CApplicationProfileItemBinary::WriteData(BOOL bForceWrite)
 {
 	if (bForceWrite || memcmp(m_Pointer, & m_InitialData.front(), m_Size))
 	{
-		m_pProfile->WriteProfileBinary(Section, Name, LPBYTE(m_Pointer), m_Size);
+		m_pProfile->WriteProfileBinary(Section, Name, LPBYTE(m_Pointer), (unsigned)m_Size);
 	}
 }
 

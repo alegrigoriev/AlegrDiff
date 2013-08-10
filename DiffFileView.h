@@ -71,14 +71,14 @@ public:
 	int LineHeight() const { return m_FontMetric.tmHeight + m_FontMetric.tmExternalLeading; }
 	int LinesInView() const { return m_VisibleRect.bottom - m_VisibleRect.top; }
 	int CharsInView() const { return m_VisibleRect.right - m_VisibleRect.left; }
-	void MakePositionVisible(int line, int pos);
+	void MakePositionVisible(size_t line, int pos);
 	void MakeCaretCenteredRangeVisible(TextPosDisplay NewPos, TextPosDisplay EndPos);
 	void MakeCaretVisible()
 	{
 		CFilePairDoc * pDoc = GetDocument();
 		MakePositionVisible(pDoc->m_CaretPos.line, pDoc->m_CaretPos.pos);
 	}
-	void MakePositionCentered(int line, int pos);
+	void MakePositionCentered(size_t line, int pos);
 	void MakeCaretCentered()
 	{
 		CFilePairDoc * pDoc = GetDocument();
@@ -159,7 +159,7 @@ protected:
 	afx_msg void OnEditGotoline();
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnEditSelectAll();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnEditCopy();
 	afx_msg void OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI);
 	afx_msg void OnViewSideBySide();

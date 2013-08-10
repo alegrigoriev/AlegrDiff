@@ -18,7 +18,7 @@ CSmallAllocator::CSmallAllocator(size_t ItemSize, size_t BlockSize)
 	, m_BlockSize(BlockSize)
 {
 	size_t RoundedItemSize = (ItemSize + 3) & ~3;
-	m_ItemsInBlock = (BlockSize - sizeof BlockHeader) / (RoundedItemSize + sizeof ItemHeader);
+	m_ItemsInBlock = (unsigned)((BlockSize - sizeof BlockHeader) / (RoundedItemSize + sizeof ItemHeader));
 }
 
 CSmallAllocator::~CSmallAllocator()

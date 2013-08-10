@@ -8,7 +8,7 @@ class FileLine
 public:
 	enum { eContainsVersionInfo = 1, };
 
-	FileLine(LPCTSTR src, int Length, bool MakeNormalizedString, bool c_cpp_file);
+	FileLine(LPCTSTR src, size_t Length, bool MakeNormalizedString, bool c_cpp_file);
 	~FileLine();
 
 	static void * operator new(size_t size);
@@ -107,7 +107,7 @@ public:
 	LPCTSTR GetText(LPTSTR buf, size_t nBufChars, int * pStrLen, BOOL IgnoreWhitespaces, int SelectFile);
 };
 
-int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<StringSection> * ppSections, int nMinMatchingChars);
+int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<StringSection> * ppSections, unsigned nMinMatchingChars);
 bool LooksLike(const FileLine * pLine1, const FileLine * pLine2, int PercentsDifferent);
 
 #endif  // FILE_LINE_H_INCLUDED

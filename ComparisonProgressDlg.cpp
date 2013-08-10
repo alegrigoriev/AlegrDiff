@@ -34,7 +34,7 @@ unsigned CComparisonProgressDlg::ThreadProc()
 	if (NULL != m_pDoc)
 	{
 		UINT result = m_pDoc->CompareDirectoriesFunction(this);
-		return SignalDialogEnd(result);
+		return (unsigned)SignalDialogEnd(result);
 	}
 	return 0;
 }

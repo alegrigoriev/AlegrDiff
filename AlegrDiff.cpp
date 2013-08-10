@@ -606,7 +606,8 @@ UINT AFXAPI AfxGetFileName(LPCTSTR lpszPathName, LPTSTR lpszTitle, UINT nMax);
 // from _AfxAbbreviateName
 void AFXAPI AbbreviateName(LPTSTR lpszCanon, int cchMax, BOOL bAtLeastName)
 {
-	int cchFullPath, cchFileName, cchVolName;
+	int cchFullPath, cchFileName;
+	ptrdiff_t cchVolName;
 	const TCHAR* lpszCur;
 	const TCHAR* lpszBase;
 	const TCHAR* lpszFileName;

@@ -45,7 +45,7 @@ public:
 	CString m_sTitle;
 	CComboBox m_HistoryCombo;
 // Operations
-	virtual int DoModal();
+	virtual INT_PTR DoModal();
 
 	CString GetFolderDisplayName() const;
 	CString GetFolderPath() const;

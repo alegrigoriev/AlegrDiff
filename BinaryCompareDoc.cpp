@@ -141,7 +141,7 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 		dlg.BeginAddr = m_CaretPos;
 		dlg.EndAddr = GetFileSize();
 
-		int result = dlg.DoModalDelay(200);
+		INT_PTR result = dlg.DoModalDelay(200);
 
 		if (IDOK == result)
 		{

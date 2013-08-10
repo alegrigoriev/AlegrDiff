@@ -1753,7 +1753,7 @@ void CBinaryCompareView::OnEditGotonextdiff()
 	dlg.BeginAddr = pDoc->m_CaretPos;
 	dlg.EndAddr = pDoc->GetFileSize();
 
-	int result = dlg.DoModalDelay(200);
+	INT_PTR result = dlg.DoModalDelay(200);
 
 	if (IDOK == result)
 	{
@@ -1770,7 +1770,7 @@ void CBinaryCompareView::OnEditGotoprevdiff()
 	dlg.BeginAddr = pDoc->m_CaretPos;
 	dlg.EndAddr = 0;
 
-	int result = dlg.DoModalDelay(200);
+	INT_PTR result = dlg.DoModalDelay(200);
 
 	if (IDOK == result)
 	{

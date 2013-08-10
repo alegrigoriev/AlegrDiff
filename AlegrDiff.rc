@@ -604,12 +604,7 @@ END
 // Dialog
 //
 
-#if defined(APSTUDIO_INVOKED) || defined(RETAIL_VERSION)
-#if defined(APSTUDIO_INVOKED)
-IDD_ABOUTBOX$(RETAIL_VERSION) DIALOGEX 0, 0, 235, 68
-#else
 IDD_ABOUTBOX DIALOGEX 0, 0, 235, 68
-#endif
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
     WS_SYSMENU
 CAPTION "About AlegrDiff"
@@ -624,7 +619,6 @@ BEGIN
     PUSHBUTTON      "&mailto: alegr@earthlink.net",IDC_BUTTON_MAILTO,46,47,
                     105,14
 END
-#endif
 
 IDR_MAINFRAME DIALOG  0, 0, 330, 16
 STYLE DS_SETFONT | WS_CHILD
@@ -952,27 +946,6 @@ BEGIN
                     WS_TABSTOP,13,98,93,10
 END
 
-#if defined(APSTUDIO_INVOKED) || defined(DEMO_VERSION)
-#if defined(APSTUDIO_INVOKED)
-IDD_ABOUTBOX$(DEMO_VERSION) DIALOGEX 0, 0, 235, 68
-#else
-IDD_ABOUTBOX DIALOGEX 0, 0, 235, 68
-#endif
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About AlegrDiff"
-FONT 8, "MS Sans Serif", 0, 0, 0x0
-BEGIN
-    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version %s DEMO",IDC_STATIC_VERSION,35,14,128,
-                    8,SS_NOPREFIX
-    CTEXT           "Copyright (C) Alexandre Grigoriev, 2001",IDC_STATIC,35,
-                    29,128,8
-    DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
-    PUSHBUTTON      "&mailto: alegr@earthlink.net",IDC_BUTTON_MAILTO,46,47,
-                    105,14
-END
-#endif
-
 IDD_DIALOG_DIR_FINGERPRINT DIALOGEX 0, 0, 230, 193
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | 
     WS_THICKFRAME
@@ -1164,12 +1137,7 @@ END
 // Version
 //
 
-#if defined(APSTUDIO_INVOKED) || defined(RETAIL_VERSION)
-#if defined(APSTUDIO_INVOKED)
-VS_VERSION_INFO$(RETAIL_VERSION) VERSIONINFO
-#else
 VS_VERSION_INFO VERSIONINFO
-#endif
  FILEVERSION 1,0,34,0
  PRODUCTVERSION 1,0,34,0
  FILEFLAGSMASK 0x3fL
@@ -1202,49 +1170,6 @@ BEGIN
         VALUE "Translation", 0x409, 1200
     END
 END
-#endif
-
-#if defined(APSTUDIO_INVOKED) || defined(DEMO_VERSION)
-#if defined(APSTUDIO_INVOKED)
-VS_VERSION_INFO$(DEMO_VERSION) VERSIONINFO
-#else
-VS_VERSION_INFO VERSIONINFO
-#endif
- FILEVERSION 1,0,34,0
- PRODUCTVERSION 1,0,34,0
- FILEFLAGSMASK 0x3fL
-#ifdef _DEBUG
- FILEFLAGS 0x29L
-#else
- FILEFLAGS 0x28L
-#endif
- FILEOS 0x4L
- FILETYPE 0x1L
- FILESUBTYPE 0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904b0"
-        BEGIN
-            VALUE "Comments", "DEMO Version"
-            VALUE "CompanyName", "AleGr Software"
-            VALUE "FileDescription", "AlegrDiff: file comparison and merging application"
-            VALUE "FileVersion", "1, 0, 34, 0"
-            VALUE "InternalName", "AlegrDiff"
-            VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001-2004"
-            VALUE "OriginalFilename", "AlegrDiff.EXE"
-            VALUE "PrivateBuild", "Beta 1.34"
-            VALUE "ProductName", "AlegrDiff Application"
-            VALUE "ProductVersion", "1, 0, 34, 0"
-            VALUE "SpecialBuild", "DEMO Version"
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1200
-    END
-END
-#endif
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1255,7 +1180,7 @@ END
 #ifdef APSTUDIO_INVOKED
 GUIDELINES DESIGNINFO 
 BEGIN
-    "IDD_ABOUTBOX$(RETAIL_VERSION)", DIALOG
+    IDD_ABOUTBOX, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 228
@@ -1357,14 +1282,6 @@ BEGIN
         RIGHTMARGIN, 240
         TOPMARGIN, 7
         BOTTOMMARGIN, 189
-    END
-
-    "IDD_ABOUTBOX$(DEMO_VERSION)", DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 228
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 61
     END
 
     IDD_DIALOG_DIR_FINGERPRINT, DIALOG

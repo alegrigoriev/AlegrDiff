@@ -2161,11 +2161,7 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 		SetModifiedFlag(FALSE);
 		if (bOpenResultFile)
 		{
-#ifndef DEMO_VERSION
 			pApp->OpenSingleFile(FileName);
-#else
-			AfxMessageBox("DEMO version doesn't save the merged file. You can only view it\n", MB_OK);
-#endif
 		}
 		return TRUE;
 	}
@@ -2178,7 +2174,6 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 {
 	// save ANSI or UNICODE
-#ifndef DEMO_VERSION
 	LPCTSTR FileMode = _T("wt");
 #ifdef _UNICODE
 	if (bUnicode)
@@ -2192,11 +2187,6 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 	{
 		return FALSE;
 	}
-#else
-	FilePair * pNewFilePair = new FilePair;
-	pNewFilePair->pFirstFile = new FileItem(Name);
-	pNewFilePair->SetMemoryFile();
-#endif
 
 	if (bUnicode)
 	{
@@ -2271,7 +2261,6 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 				break;
 			}
 		}
-#ifndef DEMO_VERSION
 #ifdef _UNICODE
 		if (bUnicode)
 		{
@@ -2285,26 +2274,12 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 			fclose(file);
 			return FALSE;
 		}
-#else
-		pNewFilePair->pFirstFile->AddLine(LineBuf);
-#endif
 	}
-#ifndef DEMO_VERSION
 	if (fflush(file))
 	{
 		result = FALSE;
 	}
 	fclose(file);
-#else
-	CFilePairDoc * pDoc = dynamic_cast<CFilePairDoc *>
-						(GetApp()->OpenFilePairView(pNewFilePair));
-	if (NULL != pDoc)
-	{
-		pDoc->m_CopyDisabled = true;
-	}
-	// remove extra reference and forget about it
-	pNewFilePair->Dereference();
-#endif
 	return result;
 }
 

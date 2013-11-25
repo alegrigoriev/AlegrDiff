@@ -483,11 +483,6 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="AlegrDiff.manifest">
-      <Filter>Resource Files</Filter>
-    </Manifest>
-  </ItemGroup>
-  <ItemGroup>
     <CustomBuild Include="Resource.h">
       <Filter>Header Files</Filter>
     </CustomBuild>

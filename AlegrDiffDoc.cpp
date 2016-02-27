@@ -656,7 +656,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 			pPair->SetComparisonResult(pPair->CompareFiles(NULL));
 		}
 
-		m_TotalLines = pPair->m_LinePairs.size();
+		m_TotalLines = (int)pPair->m_LinePairs.size();
 		_tcsncpy_s(m_ComparisonResult, countof(m_ComparisonResult), pPair->GetComparisonResultStr(),
 					countof(m_ComparisonResult));
 		m_ComparisonResult[countof(m_ComparisonResult) - 1] = 0;
@@ -671,7 +671,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 void CFilePairDoc::SetSelection(TextPosDisplay CaretPos, TextPosDisplay AnchorPos, int flags)
 {
 	m_SelectionAnchor = AnchorPos;
-	SetCaretPosition(CaretPos.pos, CaretPos.line, flags & ~SetPositionCancelSelection);
+	SetCaretPosition(CaretPos.pos, (int)CaretPos.line, flags & ~SetPositionCancelSelection);
 }
 
 void CFilePairDoc::SetCaretPosition(int pos, int line, int flags)
@@ -745,7 +745,7 @@ void CFilePairDoc::SetCaretPosition(TextPosDisplay pos, int flags)
 
 void CFilePairDoc::CaretToHome(int flags)
 {
-	int NewLine = m_CaretPos.line;
+	size_t NewLine = m_CaretPos.line;
 	int NewPos = m_CaretPos.pos;
 	if ((flags & SetPositionCancelSelection)
 		&& m_CaretPos > m_SelectionAnchor)
@@ -758,7 +758,7 @@ void CFilePairDoc::CaretToHome(int flags)
 	// if the cursor is on this position, go to pos 0, otherwise to this pos.
 	if (NewLine >= m_TotalLines)
 	{
-		SetCaretPosition(0, NewLine, flags);
+		SetCaretPosition(0, (int)NewLine, flags);
 		return;
 	}
 	LinePair * pLine = m_pFilePair->m_LinePairs[NewLine];
@@ -793,19 +793,19 @@ void CFilePairDoc::CaretToHome(int flags)
 					{
 						SetToPos = 0;
 					}
-					SetCaretPosition(SetToPos, NewLine, flags);
+					SetCaretPosition(SetToPos, (int)NewLine, flags);
 					return;
 				}
 				i++;
 			}
 		}
 	}
-	SetCaretPosition(0, NewLine, flags);
+	SetCaretPosition(0, (int)NewLine, flags);
 }
 
 void CFilePairDoc::CaretToEnd(int flags)
 {
-	int NewLine = m_CaretPos.line;
+	size_t NewLine = m_CaretPos.line;
 	if ((flags & SetPositionCancelSelection)
 		&& m_CaretPos < m_SelectionAnchor)
 	{
@@ -814,7 +814,7 @@ void CFilePairDoc::CaretToEnd(int flags)
 
 	if (NewLine >= m_TotalLines)
 	{
-		SetCaretPosition(0, NewLine, flags);
+		SetCaretPosition(0, (int)NewLine, flags);
 		return;
 	}
 	LinePair * pLine = m_pFilePair->m_LinePairs[NewLine];
@@ -840,7 +840,7 @@ void CFilePairDoc::CaretToEnd(int flags)
 			}
 		}
 	}
-	SetCaretPosition(pos, NewLine, flags);
+	SetCaretPosition(pos, (int)NewLine, flags);
 }
 
 BEGIN_MESSAGE_MAP(CFilePairDoc, CAlegrDiffBaseDoc)
@@ -943,7 +943,7 @@ ULONG CFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen,
 		end.line = m_TotalLines - 1;
 	}
 
-	for (int line = begin.line; line <= end.line; line++)
+	for (size_t line = begin.line; line <= end.line; line++)
 	{
 		int startpos = 0;
 		if (line == begin.line)
@@ -1360,8 +1360,8 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 	}
 
 	int nStartSearchPos = nSearchPos;
-	unsigned nStartSearchLine = nSearchLine;
-	int nPatternLen = _tcslen(pStrToFind);
+	size_t nStartSearchLine = nSearchLine;
+	size_t nPatternLen = _tcslen(pStrToFind);
 
 	if (0 == nPatternLen)
 	{
@@ -1372,7 +1372,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 	{
 		LPCTSTR pStr = NULL;
 		int StrLen = 0;
-		pStr = GetLineText(nSearchLine, line, countof(line), & StrLen, SearchScope);
+		pStr = GetLineText((int)nSearchLine, line, countof(line), & StrLen, SearchScope);
 
 		if ( ! bBackward)
 		{
@@ -1409,7 +1409,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 					if (0 == _tcsncmp(pStr + nSearchPos, pStrToFind, nPatternLen))
 					{
 						// found
-						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, SearchScope),
+						SetSelection(TextPosDisplay((int)nSearchLine, nSearchPos + nPatternLen, SearchScope),
 									TextPosDisplay(nSearchLine, nSearchPos, SearchScope));
 						return true;
 					}
@@ -1448,7 +1448,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 			{
 				nSearchPos = StrLen;
 			}
-			for (nSearchPos -= nPatternLen; nSearchPos >= 0; nSearchPos--)
+			for (nSearchPos -= (int)nPatternLen; nSearchPos >= 0; nSearchPos--)
 			{
 				if (WholeWord)
 				{
@@ -1481,7 +1481,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 					if (0 == _tcsncmp(pStr + nSearchPos, pStrToFind, nPatternLen))
 					{
 						// found
-						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, SearchScope),
+						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + (int)nPatternLen, SearchScope),
 									TextPosDisplay(nSearchLine, nSearchPos, SearchScope));
 						return true;
 					}
@@ -1491,7 +1491,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 					if (0 ==_tcsnicmp(pStr + nSearchPos, pStrToFind, nPatternLen))
 					{
 						// found
-						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, SearchScope),
+						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + (int)nPatternLen, SearchScope),
 									TextPosDisplay(nSearchLine, nSearchPos, SearchScope));
 						return true;
 					}
@@ -1706,7 +1706,7 @@ void CFilePairDoc::GetWordUnderCursor(CString & Str)
 	{
 		TCHAR line[2048];
 		int StrLen;
-		LPCTSTR pStr = GetLineText(m_CaretPos.line, line, countof(line), & StrLen, m_CaretPos.scope);
+		LPCTSTR pStr = GetLineText((int)m_CaretPos.line, line, countof(line), & StrLen, m_CaretPos.scope);
 		if (NULL != pStr
 			&& nBeginOffset < StrLen)
 		{
@@ -1751,11 +1751,11 @@ void CFilePairDoc::CaretLeftToWord(int SelectionFlags)
 	TCHAR linebuf[2048];
 	int StrLen;
 	int CaretPos = m_CaretPos.pos;
-	int CaretLine = m_CaretPos.line;
+	int CaretLine = (int)m_CaretPos.line;
 	if ((SelectionFlags & SetPositionCancelSelection)
 		&& m_CaretPos > m_SelectionAnchor)
 	{
-		CaretLine = m_SelectionAnchor.line;
+		CaretLine = (int)m_SelectionAnchor.line;
 		CaretPos = m_SelectionAnchor.pos;
 	}
 
@@ -1833,7 +1833,7 @@ void CFilePairDoc::CaretRightToWord(int SelectionFlags)
 	TCHAR linebuf[2048];
 	int StrLen;
 	int CaretPos = m_CaretPos.pos;
-	int CaretLine = m_CaretPos.line;
+	size_t CaretLine = m_CaretPos.line;
 	if ((SelectionFlags & SetPositionCancelSelection)
 		&& m_CaretPos < m_SelectionAnchor)
 	{
@@ -1845,10 +1845,10 @@ void CFilePairDoc::CaretRightToWord(int SelectionFlags)
 
 	if (CaretLine >= GetTotalLines())
 	{
-		SetCaretPosition(0, CaretLine, SelectionFlags);
+		SetCaretPosition(0, (int)CaretLine, SelectionFlags);
 		return;
 	}
-	pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen, m_CaretPos.scope);
+	pLine = GetLineText((int)CaretLine, linebuf, 2048, & StrLen, m_CaretPos.scope);
 	if (CaretPos > StrLen)
 	{
 		CaretPos = StrLen;
@@ -1868,7 +1868,7 @@ void CFilePairDoc::CaretRightToWord(int SelectionFlags)
 			// go to the next line and skip the spaces
 			CaretLine++;
 			CaretPos = 0;
-			pLine = GetLineText(CaretLine, linebuf, 2048, & StrLen, m_CaretPos.scope);
+			pLine = GetLineText((int)CaretLine, linebuf, 2048, & StrLen, m_CaretPos.scope);
 			while (' ' == pLine[CaretPos])
 			{
 				CaretPos++;
@@ -1902,7 +1902,7 @@ void CFilePairDoc::CaretRightToWord(int SelectionFlags)
 		}
 	}
 
-	SetCaretPosition(CaretPos, CaretLine, SelectionFlags);
+	SetCaretPosition(CaretPos, (int)CaretLine, SelectionFlags);
 }
 
 void CFilePairDoc::OnEditAccept()
@@ -2150,7 +2150,7 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 
 	if (IDOK == dlg.DoModal())
 	{
-		CString FileName = dlg.GetPathName();
+		FileName = dlg.GetPathName();
 		pApp->m_LastSaveMergedDir = dlg.GetLastFolder();
 
 		if (! SaveMergedFile(FileName, DefaultFlags, dlg.m_bUnicode))
@@ -2315,7 +2315,7 @@ TextPosLine CFilePairDoc::DisplayPosToLinePos(TextPosDisplay position)
 {
 	if (NULL == m_pFilePair)
 	{
-		return TextPosLine(position.line, position.pos);
+		return TextPosLine((int)position.line, position.pos);
 	}
 	return m_pFilePair->DisplayPosToLinePos(position, m_bIgnoreWhitespaces);
 }

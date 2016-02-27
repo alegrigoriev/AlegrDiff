@@ -388,7 +388,7 @@ private:
 	BYTE m_Md5[16];
 
 	BYTE * m_pFileReadBuf;
-	size_t m_FileReadBufSize;
+	ULONG m_FileReadBufSize;
 	LONGLONG m_FileReadPos;
 	DWORD m_FileReadFilled;
 	DWORD m_Attributes;

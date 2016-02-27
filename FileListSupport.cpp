@@ -16,9 +16,9 @@
 
 #undef tolower
 #undef toupper
-
-bool less<FileDiffSection *>::operator()
-	(FileDiffSection * const & pS1, FileDiffSection * const & pS2) const
+typedef FileDiffSection * FileDiffSectionPtr;
+constexpr bool less<FileDiffSectionPtr>::operator()
+	(FileDiffSectionPtr const & pS1, FileDiffSectionPtr const & pS2) const
 {
 	return pS1->m_Begin < pS2->m_Begin;
 }
@@ -272,7 +272,7 @@ void FileItem::AddLine(LPCTSTR pLine)
 	FileLine * pFileLine = new FileLine(pLine, _tcslen(pLine), true, m_C_Cpp);
 	if (pLine)
 	{
-		pFileLine->SetLineNumber(m_Lines.size());
+		pFileLine->SetLineNumber((unsigned)m_Lines.size());
 		m_Lines.insert(m_Lines.end(), pFileLine);
 	}
 }
@@ -538,28 +538,28 @@ bool FileItem::Load()
 #ifdef _DEBUG
 	// check if the array is sorted correctly
 	{
-		unsigned i;
-		for (i = 1; i < m_NormalizedHashSortedLines.size(); i++)
+		unsigned k;
+		for (k = 1; k < m_NormalizedHashSortedLines.size(); k++)
 		{
-			if (m_NormalizedHashSortedLines[i]->GetNormalizedHash() < m_NormalizedHashSortedLines[i - 1]->GetNormalizedHash()
-				|| (m_NormalizedHashSortedLines[i]->GetNormalizedHash() == m_NormalizedHashSortedLines[i - 1]->GetNormalizedHash()
-					&& m_NormalizedHashSortedLines[i]->GetLineNumber() < m_NormalizedHashSortedLines[i - 1]->GetLineNumber()))
+			if (m_NormalizedHashSortedLines[k]->GetNormalizedHash() < m_NormalizedHashSortedLines[k - 1]->GetNormalizedHash()
+				|| (m_NormalizedHashSortedLines[k]->GetNormalizedHash() == m_NormalizedHashSortedLines[k - 1]->GetNormalizedHash()
+					&& m_NormalizedHashSortedLines[k]->GetLineNumber() < m_NormalizedHashSortedLines[k - 1]->GetLineNumber()))
 			{
 				TRACE("Item %d: NormHash=%x, lineNum=%d, item %d: NormHash=%x, LineNum=%d\n",
-					i - 1, m_NormalizedHashSortedLines[i - 1]->GetNormalizedHash(), m_NormalizedHashSortedLines[i - 1]->GetLineNumber(),
-					i, m_NormalizedHashSortedLines[i]->GetNormalizedHash(), m_NormalizedHashSortedLines[i]->GetLineNumber());
+					k - 1, m_NormalizedHashSortedLines[k - 1]->GetNormalizedHash(), m_NormalizedHashSortedLines[k - 1]->GetLineNumber(),
+					k, m_NormalizedHashSortedLines[k]->GetNormalizedHash(), m_NormalizedHashSortedLines[k]->GetLineNumber());
 				//break;
 			}
 		}
-		for (i = 1; i < m_NormalizedHashSortedLineGroups.size(); i++)
+		for (k = 1; k < m_NormalizedHashSortedLineGroups.size(); k++)
 		{
-			if (m_NormalizedHashSortedLineGroups[i]->GetNormalizedGroupHash() < m_NormalizedHashSortedLineGroups[i - 1]->GetNormalizedGroupHash()
-				|| (m_NormalizedHashSortedLineGroups[i]->GetNormalizedGroupHash() == m_NormalizedHashSortedLineGroups[i - 1]->GetNormalizedGroupHash()
-					&& m_NormalizedHashSortedLineGroups[i]->GetLineNumber() < m_NormalizedHashSortedLineGroups[i - 1]->GetLineNumber()))
+			if (m_NormalizedHashSortedLineGroups[k]->GetNormalizedGroupHash() < m_NormalizedHashSortedLineGroups[k - 1]->GetNormalizedGroupHash()
+				|| (m_NormalizedHashSortedLineGroups[k]->GetNormalizedGroupHash() == m_NormalizedHashSortedLineGroups[k - 1]->GetNormalizedGroupHash()
+					&& m_NormalizedHashSortedLineGroups[k]->GetLineNumber() < m_NormalizedHashSortedLineGroups[k - 1]->GetLineNumber()))
 			{
 				TRACE("Item %d: GroupNormHash=%x, lineNum=%d, item %d: GroupNormHash=%x, LineNum=%d\n",
-					i - 1, m_NormalizedHashSortedLineGroups[i - 1]->GetNormalizedGroupHash(), m_NormalizedHashSortedLineGroups[i - 1]->GetLineNumber(),
-					i, m_NormalizedHashSortedLineGroups[i]->GetNormalizedGroupHash(), m_NormalizedHashSortedLineGroups[i]->GetLineNumber());
+					k - 1, m_NormalizedHashSortedLineGroups[k - 1]->GetNormalizedGroupHash(), m_NormalizedHashSortedLineGroups[k - 1]->GetLineNumber(),
+					k, m_NormalizedHashSortedLineGroups[k]->GetNormalizedGroupHash(), m_NormalizedHashSortedLineGroups[k]->GetLineNumber());
 				//break;
 			}
 		}
@@ -860,7 +860,7 @@ unsigned FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes)
 
 	if ((LONGLONG)(FileOffset + bytes) > m_Length)
 	{
-		bytes = size_t(m_Length - FileOffset);
+		bytes = unsigned(m_Length - FileOffset);
 	}
 	// beginning address rounded on the page boundary
 	LONGLONG NeedBegin = FileOffset & ~0xFFFi64;
@@ -876,7 +876,7 @@ unsigned FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes)
 	{
 		NeedEnd = NeedBegin + m_FileReadBufSize;
 		NeedEndBuffer = NeedEnd;
-		bytes = size_t(NeedEnd - FileOffset);
+		bytes = unsigned(NeedEnd - FileOffset);
 	}
 
 	DWORD BytesRead;
@@ -886,9 +886,9 @@ unsigned FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes)
 		if (NeedEnd > m_FileReadPos && NeedEnd <= m_FileReadPos + m_FileReadFilled)
 		{
 			TRACE("move data up, read some to the end of buffer\n");
-			ULONG_PTR MoveBy = ULONG_PTR(m_FileReadPos - NeedBegin);
-			ULONG_PTR NewFilled = m_FileReadFilled + MoveBy;
-			ULONG_PTR ToMove = m_FileReadFilled;
+			ULONG MoveBy = ULONG(m_FileReadPos - NeedBegin);
+			ULONG NewFilled = m_FileReadFilled + MoveBy;
+			ULONG ToMove = m_FileReadFilled;
 
 			if (NewFilled > m_FileReadBufSize)
 			{
@@ -916,7 +916,7 @@ unsigned FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes)
 		{
 			SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
 			TRACE("Reading %d bytes at %X\n", m_FileReadBufSize, NeedBeginLow);
-			if ( ! ReadFile(m_hFile, m_pFileReadBuf, m_FileReadBufSize, & BytesRead, NULL))
+			if ( ! ReadFile(m_hFile, m_pFileReadBuf, (DWORD)m_FileReadBufSize, & BytesRead, NULL))
 			{
 				err.Get();
 				m_FileReadFilled = 0;
@@ -933,13 +933,13 @@ unsigned FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes)
 		if (NeedEnd > m_FileReadPos + m_FileReadFilled)
 		{
 			TRACE("move data down, read some more data\n");
-			ULONG_PTR MoveBy = ULONG_PTR(NeedEndBuffer - (m_FileReadPos + m_FileReadFilled));
+			ULONG MoveBy = ULONG(NeedEndBuffer - (m_FileReadPos + m_FileReadFilled));
 			if (0 != MoveBy)
 			{
 				if (m_FileReadFilled > MoveBy)
 				{
-					ULONG_PTR NewFilled = m_FileReadFilled - MoveBy;
-					ULONG_PTR ToMove = NewFilled;
+					ULONG NewFilled = m_FileReadFilled - MoveBy;
+					ULONG ToMove = NewFilled;
 					memmove(m_pFileReadBuf, m_pFileReadBuf + MoveBy, ToMove);
 
 					m_FileReadFilled = NewFilled;
@@ -959,7 +959,7 @@ unsigned FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes)
 			SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
 
 			TRACE("Reading %d bytes at %X\n", m_FileReadBufSize - m_FileReadFilled, NeedBeginLow);
-			if ( ! ReadFile(m_hFile, m_pFileReadBuf, m_FileReadBufSize - m_FileReadFilled, & BytesRead, NULL))
+			if ( ! ReadFile(m_hFile, m_pFileReadBuf, (DWORD)m_FileReadBufSize - m_FileReadFilled, & BytesRead, NULL))
 			{
 				err.Get();
 				m_FileReadFilled = 0;
@@ -2648,8 +2648,8 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles(CProgressDialog * /*
 		}
 	}
 	// try to match single lines inside the difference areas, but limit the lookup
-	int nPrevSectionEnd1 = 0;
-	int nPrevSectionEnd2 = 0;
+	unsigned nPrevSectionEnd1 = 0;
+	unsigned nPrevSectionEnd2 = 0;
 	FileSection * pPrevSection = NULL;
 	for (pSection = pFirstSection; pSection != NULL; pPrevSection = pSection, pSection = pSection->pNext)
 	{
@@ -2747,24 +2747,24 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles(CProgressDialog * /*
 	// concatenate adjacent sections
 	for (pSection = pFirstSection; pSection != NULL && pSection->pNext != NULL; )
 	{
-		FileSection * pNext = pSection->pNext;
-		if (pSection->File1LineEnd != pNext->File1LineBegin
-			|| pSection->File2LineEnd != pNext->File2LineBegin)
+		FileSection * pNext1 = pSection->pNext;
+		if (pSection->File1LineEnd != pNext1->File1LineBegin
+			|| pSection->File2LineEnd != pNext1->File2LineBegin)
 		{
-			pSection = pNext;
+			pSection = pNext1;
 			continue;
 		}
-		pSection->File1LineEnd = pNext->File1LineEnd;
-		pSection->File2LineEnd = pNext->File2LineEnd;
-		pSection->pNext = pNext->pNext;
-		delete pNext;
+		pSection->File1LineEnd = pNext1->File1LineEnd;
+		pSection->File2LineEnd = pNext1->File2LineEnd;
+		pSection->pNext = pNext1->pNext;
+		delete pNext1;
 	}
 
 	// scan list of sections and try to expand them upwards with looking like lines
 	for (pSection = pFirstSection; pSection != NULL && pSection->pNext != NULL; pSection = pSection->pNext)
 	{
-		int nNextSectionBegin1 = pSection->pNext->File1LineBegin;
-		int nNextSectionBegin2 = pSection->pNext->File2LineBegin;
+		unsigned nNextSectionBegin1 = pSection->pNext->File1LineBegin;
+		unsigned nNextSectionBegin2 = pSection->pNext->File2LineBegin;
 
 		while (1)
 		{
@@ -2817,7 +2817,7 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles(CProgressDialog * /*
 	unsigned nLineIndex = 0;
 	for (pSection = pFirstSection; pSection != NULL; pSection = pSection->pNext)
 	{
-		int i;
+		unsigned i;
 		LinePair * pPair;
 		// add lines from first file (mark as removed)
 		if (pSection->File1LineBegin > nPrevSectionEnd1)
@@ -2876,8 +2876,8 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles(CProgressDialog * /*
 
 		}
 
-		int line1 = pSection->File1LineBegin;
-		int line2 = pSection->File2LineBegin;
+		unsigned line1 = pSection->File1LineBegin;
+		unsigned line2 = pSection->File2LineBegin;
 		for ( ; line1 < pSection->File1LineEnd || line2 < pSection->File2LineEnd; nLineIndex++)
 		{
 			const FileLine * pLine1 = NULL;
@@ -3095,9 +3095,9 @@ TextPosLine FilePair::DisplayPosToLinePos(TextPosDisplay position, BOOL IgnoreWh
 {
 	if (unsigned(position.line) >= m_LinePairs.size())
 	{
-		return TextPosLine(position.line, position.pos);
+		return TextPosLine((int)position.line, position.pos);
 	}
-	return TextPosLine(position.line,
+	return TextPosLine((int)position.line,
 						m_LinePairs[position.line]->DisplayPosToLinePos(position.pos, IgnoreWhitespaces, position.scope));
 }
 

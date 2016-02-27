@@ -1426,14 +1426,14 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 	{
 		for (int i = 0; i < pHistory->Size(); i++)
 		{
-			TCHAR FullPath[MAX_PATH];
-			LPTSTR FileNamePart;
+			TCHAR HistoryFullPath[MAX_PATH];
+			LPTSTR HistoryFileNamePart;
 			if ( ! (*pHistory)[i].IsEmpty()
-				&& GetFullPathName((*pHistory)[i], MAX_PATH, FullPath, & FileNamePart)
-				&& NULL != FileNamePart)
+				&& GetFullPathName((*pHistory)[i], MAX_PATH, HistoryFullPath, &HistoryFileNamePart)
+				&& NULL != HistoryFileNamePart)
 			{
 				// find extension
-				LPCTSTR pExt = _tcsrchr(FileNamePart, '.');
+				LPCTSTR pExt = _tcsrchr(HistoryFileNamePart, '.');
 				if (pExt)
 				{
 					CurrentCustomFilterString = CreateCustomFilter(pExt);
@@ -1492,7 +1492,7 @@ int BrowseForFile(int TitleID, CString & Name, CString & BrowseFolder,
 	if (0 != _tcscmp(pFilter, _T("*"))
 		&& 0 != _tcscmp(pFilter, _T("*.*")))
 	{
-		int len = _tcslen(pFilter);
+		size_t len = _tcslen(pFilter);
 		// file open dialog adds an asterisk to the filter:
 		// *.c becomes *.c*
 		// we want to remove it

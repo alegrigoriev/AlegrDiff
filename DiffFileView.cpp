@@ -758,14 +758,14 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 void CDiffFileView::MoveCaretBy(int dx, int dy, int flags)
 {
 	CFilePairDoc * pDoc = GetDocument();
-	int NewLine = pDoc->m_CaretPos.line;
+	int NewLine = (int)pDoc->m_CaretPos.line;
 	int NewPos = pDoc->m_CaretPos.pos;
 	if ((flags & SetPositionCancelSelection)
 		&& 0 == (flags & MoveCaretPositionAlways))
 	{
 		if ((dx < 0 || dy < 0) == (pDoc->m_CaretPos > pDoc->m_SelectionAnchor))
 		{
-			NewLine = pDoc->m_SelectionAnchor.line;
+			NewLine = (int)pDoc->m_SelectionAnchor.line;
 			NewPos = pDoc->m_SelectionAnchor.pos;
 		}
 		if (pDoc->m_CaretPos != pDoc->m_SelectionAnchor)
@@ -1071,7 +1071,7 @@ void CDiffFileView::InvalidateRange(TextPosDisplay begin, TextPosDisplay end)
 	begin.pos = begin.pos - m_FirstPosSeen;
 	begin.line = begin.line - m_FirstLineSeen;
 
-	if (begin.line < -1)
+	if ((int)begin.line < -1)
 	{
 		begin.line = -1;
 	}
@@ -1086,7 +1086,7 @@ void CDiffFileView::InvalidateRange(TextPosDisplay begin, TextPosDisplay end)
 
 	if (begin.line == end.line)
 	{
-		r.top = begin.line * LineHeight();
+		r.top = (LONG)begin.line * LineHeight();
 		r.bottom = r.top + LineHeight();
 
 		if (end.pos <= 0 || begin.pos > nCharsInView)
@@ -1115,7 +1115,7 @@ void CDiffFileView::InvalidateRange(TextPosDisplay begin, TextPosDisplay end)
 			{
 				begin.pos = 0;
 			}
-			r.top = begin.line * LineHeight();
+			r.top = (LONG)begin.line * LineHeight();
 			r.bottom = r.top + LineHeight();
 			r.left = begin.pos * CharWidth() + nViewOffset;
 			r.right = (nCharsInView + 1) * CharWidth() + nViewOffset + m_FontMetric.tmOverhang;
@@ -1128,7 +1128,7 @@ void CDiffFileView::InvalidateRange(TextPosDisplay begin, TextPosDisplay end)
 			{
 				end.pos = nCharsInView + 1;
 			}
-			r.top = end.line * LineHeight();
+			r.top = (LONG)end.line * LineHeight();
 			r.bottom = r.top + LineHeight();
 			r.right = end.pos * CharWidth() + nViewOffset + m_FontMetric.tmOverhang;
 			r.left = nViewOffset;
@@ -1144,8 +1144,8 @@ void CDiffFileView::InvalidateRange(TextPosDisplay begin, TextPosDisplay end)
 		{
 			r.left = nViewOffset;
 			r.right = (nCharsInView + 1) * CharWidth() + nViewOffset + m_FontMetric.tmOverhang;
-			r.top = (begin.line + 1) * LineHeight();
-			r.bottom = end.line * LineHeight();
+			r.top = (LONG)(begin.line + 1) * LineHeight();
+			r.bottom = (LONG)end.line * LineHeight();
 			InvalidateRect( & r);
 		}
 	}
@@ -1210,7 +1210,7 @@ void CDiffFileView::CreateAndShowCaret()
 
 	CPoint p((pDoc->m_CaretPos.pos - m_FirstPosSeen) * CharWidth()
 			+ m_LineNumberMarginWidth + m_PaneWithFocus * GetPaneWidth(),
-			(pDoc->m_CaretPos.line - m_FirstLineSeen) * LineHeight());
+			(int)(pDoc->m_CaretPos.line - m_FirstLineSeen) * LineHeight());
 
 	if (pDoc->m_CaretPos.pos >= m_FirstPosSeen
 		&& pDoc->m_CaretPos.line >= m_FirstLineSeen
@@ -1651,8 +1651,8 @@ void CDiffFileView::MakeCaretCenteredRangeVisible(TextPosDisplay NewPos, TextPos
 void CDiffFileView::BringPositionsToBounds(TextPosDisplay textpos, TextPosDisplay endpos, const CRect & AllowedBounds, const CRect & BringToBounds)
 {
 	// if caret position is inside bounds, it doesn't need to change
-	int CaretLine = textpos.line - m_FirstLineSeen;
-	int EndLine = endpos.line - m_FirstLineSeen;
+	int CaretLine = (int)textpos.line - m_FirstLineSeen;
+	int EndLine = (int)endpos.line - m_FirstLineSeen;
 	int CaretPos =  textpos.pos - m_FirstPosSeen;
 	int EndPos =  endpos.pos - m_FirstPosSeen;
 
@@ -1901,7 +1901,7 @@ void CDiffFileView::OnEditGotoline()
 		return;
 	}
 
-	dlg.m_CombinedFileLine = pDoc->m_CaretPos.line;
+	dlg.m_CombinedFileLine = (UINT)pDoc->m_CaretPos.line;
 	dlg.m_CombinedFileNumLines = (UINT)pFilePair->m_LinePairs.size();
 	dlg.m_GoToLineFileSelection = pApp->m_GoToLineFileSelection;
 
@@ -1933,7 +1933,7 @@ void CDiffFileView::OnEditGotoline()
 		dlg.m_SecondFileLine = 0;
 		if (dlg.m_CombinedFileLine < dlg.m_CombinedFileNumLines)
 		{
-			for (int i = pDoc->m_CaretPos.line
+			for (int i = (int)pDoc->m_CaretPos.line
 				; i >= 0
 				&& (0 == dlg.m_FirstFileLine
 					|| 0 == dlg.m_SecondFileLine); i--)

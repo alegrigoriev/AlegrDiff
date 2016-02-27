@@ -147,6 +147,7 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 		ULONG MD5[16];
 		BYTE md5[16];
 
+		ULARGE_INTEGER uli;
 		int NumScannedItems = _stscanf(buf,
 										_T("\"%511[^\"]\" %I64u %I64x ")
 										_T("%2x%2x%2x%2x")
@@ -155,7 +156,7 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 										_T("%2x%2x%2x%2x")
 										_T("\n")
 										,
-										FileName, & FileLength, & wfd.ftLastWriteTime,
+										FileName, & FileLength, &uli.QuadPart,
 
 										& MD5[0], & MD5[1], & MD5[2], & MD5[3],
 										& MD5[4], & MD5[5], & MD5[6], & MD5[7],
@@ -167,6 +168,9 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 			// error
 			continue;
 		}
+
+		wfd.ftLastWriteTime.dwHighDateTime = uli.HighPart;
+		wfd.ftLastWriteTime.dwLowDateTime = uli.LowPart;
 
 		for (int i = 0; i < 16; i++)
 		{

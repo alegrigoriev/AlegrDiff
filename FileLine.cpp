@@ -965,15 +965,15 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 
 		if (str1 != pEqualStrBegin1)
 		{
-			StringDiffSection * pDiffSection = new StringDiffSection;
-			if (NULL != pDiffSection)
+			StringDiffSection * pDiffSection1 = new StringDiffSection;
+			if (NULL != pDiffSection1)
 			{
-				pDiffSection->Str1 = pEqualStrBegin1;
-				pDiffSection->Len1 = (unsigned)(str1 - pEqualStrBegin1);
-				pDiffSection->Str2 = pEqualStrBegin2;
-				pDiffSection->Len2 = (unsigned)(str2 - pEqualStrBegin2);
+				pDiffSection1->Str1 = pEqualStrBegin1;
+				pDiffSection1->Len1 = (unsigned)(str1 - pEqualStrBegin1);
+				pDiffSection1->Str2 = pEqualStrBegin2;
+				pDiffSection1->Len2 = (unsigned)(str2 - pEqualStrBegin2);
 
-				DiffSections.InsertTail(pDiffSection);
+				DiffSections.InsertTail(pDiffSection1);
 			}
 		}
 		if (str1[0] == 0
@@ -1075,25 +1075,25 @@ int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<String
 		if (idx1 != 0
 			|| idx2 != 0)
 		{
-			StringDiffSection * pDiffSection = new StringDiffSection;
-			if (NULL != pDiffSection)
+			StringDiffSection * pDiffSection2 = new StringDiffSection;
+			if (NULL != pDiffSection2)
 			{
-				pDiffSection->Str1 = str1;
-				pDiffSection->Len1 = idx1;
+				pDiffSection2->Str1 = str1;
+				pDiffSection2->Len1 = idx1;
 				if (0 == idx1)
 				{
-					pDiffSection->Str1 = NULL;
+					pDiffSection2->Str1 = NULL;
 				}
 
-				pDiffSection->Str2 = str2;
-				pDiffSection->Len2 = idx2;
+				pDiffSection2->Str2 = str2;
+				pDiffSection2->Len2 = idx2;
 				if (0 == idx2)
 				{
-					pDiffSection->Str2 = NULL;
+					pDiffSection2->Str2 = NULL;
 				}
 
-				pDiffSection->Different = true;
-				DiffSections.InsertTail(pDiffSection);
+				pDiffSection2->Different = true;
+				DiffSections.InsertTail(pDiffSection2);
 			}
 		}
 

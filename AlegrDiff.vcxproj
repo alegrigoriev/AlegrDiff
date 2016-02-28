@@ -20,9 +20,6 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0EB4547D-98C6-492C-A45A-42E4A6002F33}</ProjectGuid>
-    <SccProjectName>"$/AlegrDiff", QOAAAAAA</SccProjectName>
-    <SccLocalPath>.</SccLocalPath>
-    <SccProvider>MSSCCI:Microsoft Visual SourceSafe</SccProvider>
     <Keyword>MFCProj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

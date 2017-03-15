@@ -395,10 +395,7 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 				// convert the byte to unicode
 				char tmp = CurrChar;
 				if ( ! isprint(CurrChar)
-#ifdef _UNICODE
-					|| 1 != mbtowc(buf, & tmp, 1)
-#endif
-					)
+					|| 1 != mbtowc(buf, & tmp, 1))
 				{
 					buf[0] = '.';
 					buf[1] = 0;

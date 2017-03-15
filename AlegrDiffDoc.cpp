@@ -1054,10 +1054,6 @@ void CFilePairDoc::OnEditCopy(int FileSelect)
 	{
 		EmptyClipboard();
 		CopyTextToMemory(pMem, Len, m_SelectionAnchor, m_CaretPos, FileSelect);
-#ifndef _UNICODE
-		GlobalUnlock(hMem);
-		SetClipboardData(CF_TEXT, hMem);
-#else
 
 		if ( ! GetApp()->IsWindows9x())
 		{
@@ -1097,7 +1093,6 @@ void CFilePairDoc::OnEditCopy(int FileSelect)
 			GlobalUnlock(hMem);
 			GlobalFree(hMem);
 		}
-#endif
 		// set text to clipboard
 		CloseClipboard();
 	}
@@ -2175,12 +2170,11 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 {
 	// save ANSI or UNICODE
 	LPCTSTR FileMode = _T("wt");
-#ifdef _UNICODE
 	if (bUnicode)
 	{
 		FileMode = _T("wt,ccs=UTF-16");
 	}
-#endif
+
 	FILE * file = NULL;
 	_tfopen_s(& file, Name, FileMode);
 	if (NULL == file)
@@ -2265,10 +2259,7 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 			return FALSE;
 		}
 	}
-	if (fflush(file))
-	{
-		result = FALSE;
-	}
+
 	fclose(file);
 	return result;
 }

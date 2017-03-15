@@ -399,11 +399,9 @@ bool FileItem::Load()
 	DWORD BeginTime = timeGetTime();
 #endif
 	LPCTSTR line;
-#ifdef _UNICODE
+
 	line = lineW;
-#else
-	line = lineA;
-#endif
+
 	TCHAR TabExpandedLine[4096];
 
 	FileLine * pLineList = NULL;
@@ -436,9 +434,6 @@ bool FileItem::Load()
 			{
 				break;
 			}
-#ifndef _UNICODE
-			wcstombs(lineA, lineW, countof(lineA)  - 1);
-#endif
 		}
 		else
 		{
@@ -446,10 +441,8 @@ bool FileItem::Load()
 			{
 				break;
 			}
-#ifdef _UNICODE
 			size_t chars_converted = 0;
 			mbstowcs_s(& chars_converted, lineW, countof (lineW), lineA, countof(lineW) - 1);
-#endif
 		}
 		// expand tabs
 		int pos, i;

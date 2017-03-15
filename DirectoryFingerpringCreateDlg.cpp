@@ -167,6 +167,11 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 
 		if (pFile->CalculateHashes( & HashCalc, this))
 		{
+			FILETIME LastWriteTime = pFile->GetLastWriteTime();
+			LARGE_INTEGER LastWriteTime64;
+			LastWriteTime64.LowPart = LastWriteTime.dwLowDateTime;
+			LastWriteTime64.HighPart = LastWriteTime.dwHighDateTime;
+
 			_ftprintf(m_pFile,
 					_T("\"%s%s\" %I64d %016I64X ")
 					_T("%02X%02X%02X%02X")
@@ -177,7 +182,7 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 					pFile->GetSubdir(),
 					pFile->GetName(),
 					pFile->GetFileLength(),
-					pFile->GetLastWriteTime(),
+					LastWriteTime64.QuadPart,
 					pFile->GetDigest(0), pFile->GetDigest(1), pFile->GetDigest(2), pFile->GetDigest(3),
 					pFile->GetDigest(4), pFile->GetDigest(5), pFile->GetDigest(6), pFile->GetDigest(7),
 					pFile->GetDigest(8), pFile->GetDigest(9), pFile->GetDigest(10), pFile->GetDigest(11),

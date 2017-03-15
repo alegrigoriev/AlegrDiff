@@ -1416,7 +1416,7 @@ bool ReadSubfolder(FileItem ** ppFiles, FileItem ** ppDirs,
 			}
 
 			if (0) TRACE(_T("New file item: Name=\"%s\", base dir=%s, subdir=%s\n"),
-						wfd.cFileName, BaseDirectory, SubDirectory);
+						wfd.cFileName, (LPCTSTR)BaseDirectory, (LPCTSTR)SubDirectory);
 
 			pFile = new FileItem( & wfd, BaseDirectory, SubDirectory, pParentDir);
 			if (NULL == pFile)

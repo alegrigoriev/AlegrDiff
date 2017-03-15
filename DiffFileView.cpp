@@ -1017,15 +1017,15 @@ void CDiffFileView::UpdateHScrollBar()
 void CDiffFileView::MakePositionVisible(size_t line, int pos)
 {
 	ThisDoc * pDoc = GetDocument();
-	BringPositionsToBounds(TextPosDisplay(line, pos, pDoc->m_CaretPos.scope),
-							TextPosDisplay(line, pos, pDoc->m_CaretPos.scope), m_VisibleRect, m_VisibleRect);
+	BringPositionsToBounds(TextPosDisplay((int)line, pos, pDoc->m_CaretPos.scope),
+							TextPosDisplay((int)line, pos, pDoc->m_CaretPos.scope), m_VisibleRect, m_VisibleRect);
 }
 
 void CDiffFileView::MakePositionCentered(size_t line, int pos)
 {
 	ThisDoc * pDoc = GetDocument();
-	BringPositionsToBounds(TextPosDisplay(line, pos, pDoc->m_CaretPos.scope),
-							TextPosDisplay(line, pos, pDoc->m_CaretPos.scope), m_VisibleRect, m_PreferredRect);
+	BringPositionsToBounds(TextPosDisplay((int)line, pos, pDoc->m_CaretPos.scope),
+							TextPosDisplay((int)line, pos, pDoc->m_CaretPos.scope), m_VisibleRect, m_PreferredRect);
 }
 
 void CDiffFileView::InvalidateRangeLine(TextPosLine begin, TextPosLine end)

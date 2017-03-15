@@ -138,7 +138,9 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 		BYTE md5[16];
 
 		ULARGE_INTEGER uli;
-		int NumScannedItems = _stscanf(buf,
+#pragma warning(push)
+#pragma warning(disable:4477;disable:4473)
+		int NumScannedItems = _stscanf_s(buf,
 										_T("\"%511[^\"]\" %I64u %I64x ")
 										_T("%2x%2x%2x%2x")
 										_T("%2x%2x%2x%2x")
@@ -152,6 +154,7 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 										& MD5[4], & MD5[5], & MD5[6], & MD5[7],
 										& MD5[8], & MD5[9], & MD5[10], & MD5[11],
 										& MD5[12], & MD5[13], & MD5[14], & MD5[15]);
+#pragma warning(pop)
 
 		if (NumScannedItems < 1)
 		{

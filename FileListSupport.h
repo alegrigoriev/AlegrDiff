@@ -37,11 +37,11 @@ struct TextPosLine
 
 struct TextPosDisplay
 {
-	size_t line;
+	int line;
 	int pos;
 	int scope; // 0 - combined file, 1 - left pane, 2 - right pane
 	TextPosDisplay() {}
-	TextPosDisplay(size_t l, int p, int s)
+	TextPosDisplay(int l, int p, int s)
 		: line(l), pos(p), scope(s)
 	{
 	}

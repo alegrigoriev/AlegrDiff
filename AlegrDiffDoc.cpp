@@ -1404,8 +1404,8 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 					if (0 == _tcsncmp(pStr + nSearchPos, pStrToFind, nPatternLen))
 					{
 						// found
-						SetSelection(TextPosDisplay((int)nSearchLine, nSearchPos + nPatternLen, SearchScope),
-									TextPosDisplay(nSearchLine, nSearchPos, SearchScope));
+						SetSelection(TextPosDisplay((int)nSearchLine, (int)(nSearchPos + nPatternLen), SearchScope),
+									TextPosDisplay((int)nSearchLine, nSearchPos, SearchScope));
 						return true;
 					}
 				}
@@ -1414,8 +1414,8 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 					if (0 ==_tcsnicmp(pStr + nSearchPos, pStrToFind, nPatternLen))
 					{
 						// found
-						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + nPatternLen, SearchScope),
-									TextPosDisplay(nSearchLine, nSearchPos, SearchScope));
+						SetSelection(TextPosDisplay((int)nSearchLine, (int)(nSearchPos + nPatternLen), SearchScope),
+									TextPosDisplay((int)nSearchLine, nSearchPos, SearchScope));
 						return true;
 					}
 				}
@@ -1476,8 +1476,8 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 					if (0 == _tcsncmp(pStr + nSearchPos, pStrToFind, nPatternLen))
 					{
 						// found
-						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + (int)nPatternLen, SearchScope),
-									TextPosDisplay(nSearchLine, nSearchPos, SearchScope));
+						SetSelection(TextPosDisplay((int)nSearchLine, nSearchPos + (int)nPatternLen, SearchScope),
+									TextPosDisplay((int)nSearchLine, nSearchPos, SearchScope));
 						return true;
 					}
 				}
@@ -1486,8 +1486,8 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 					if (0 ==_tcsnicmp(pStr + nSearchPos, pStrToFind, nPatternLen))
 					{
 						// found
-						SetSelection(TextPosDisplay(nSearchLine, nSearchPos + (int)nPatternLen, SearchScope),
-									TextPosDisplay(nSearchLine, nSearchPos, SearchScope));
+						SetSelection(TextPosDisplay((int)nSearchLine, nSearchPos + (int)nPatternLen, SearchScope),
+									TextPosDisplay((int)nSearchLine, nSearchPos, SearchScope));
 						return true;
 					}
 				}

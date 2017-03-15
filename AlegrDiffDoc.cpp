@@ -2178,7 +2178,7 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 #ifdef _UNICODE
 	if (bUnicode)
 	{
-		FileMode = _T("wb");
+		FileMode = _T("wt,ccs=UTF-16");
 	}
 #endif
 	FILE * file = NULL;
@@ -2188,10 +2188,6 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 		return FALSE;
 	}
 
-	if (bUnicode)
-	{
-		fputwc(0xFEFF, file);
-	}
 	BOOL result = TRUE;
 	for (int LineNum = 0; LineNum < GetTotalLines(); LineNum++)
 	{
@@ -2261,12 +2257,6 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 				break;
 			}
 		}
-#ifdef _UNICODE
-		if (bUnicode)
-		{
-			LineBuf[nUsedChars++] = '\r';
-		}
-#endif
 		LineBuf[nUsedChars ++] = '\n';
 		LineBuf[nUsedChars ++] = 0;
 		if (EOF == _fputts(LineBuf, file))

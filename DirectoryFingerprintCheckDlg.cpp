@@ -45,23 +45,13 @@ END_MESSAGE_MAP()
 INT_PTR CDirectoryFingerprintCheckDlg::DoModal()
 {
 	m_pFile = NULL;
-	_tfopen_s(&m_pFile, m_FingerprintFilename, _T("rb"));
+	_tfopen_s(&m_pFile, m_FingerprintFilename, _T("rt"));
 	if (NULL == m_pFile)
 	{
 		CString s;
 		s.Format(IDS_STRING_CANT_OPEN_FILE, LPCTSTR(m_FingerprintFilename));
 		AfxMessageBox(s, MB_OK | MB_ICONSTOP);
 		return -1;
-	}
-
-	wchar_t FirstChar = fgetwc(m_pFile);
-
-	clearerr(m_pFile);
-
-	if ((FirstChar & 0xFFFF) != 0xFEFF)
-	{
-		rewind(m_pFile);
-		_setmode(_fileno(m_pFile), _O_TEXT);
 	}
 
 	return BaseClass::DoModal();

@@ -1533,8 +1533,7 @@ void CAlegrDiffApp::OnFileCreatedirectoryfingerprint()
 	(dlg.GetDirectory(),
 		dlg.GetFingerprintName(), dlg.GetFilenameFilter(),
 		dlg.GetIgnoreFiles(), dlg.GetIgnoreFolders(),
-		dlg.DoIncludeSubdirectories(), dlg.DoIncludeDirectoryStructure(),
-		dlg.DoSaveAsUnicode()).DoModal();
+		dlg.DoIncludeSubdirectories(), dlg.DoIncludeDirectoryStructure()).DoModal();
 }
 
 

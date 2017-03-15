@@ -17,7 +17,6 @@ public:
 									LPCTSTR sIgnoreFolders,
 									BOOL bIncludeSubdirectories,
 									BOOL bIncludeDirectoryStructure,
-									BOOL bSaveAsUnicode,
 									CWnd* pParent = NULL);
 	virtual ~CDirectoryFingerpringCreateDlg();
 
@@ -30,7 +29,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	// Name of the currently processed file
-	BOOL m_bSaveAsUnicode;
 
 	CString m_sDirectory;
 	BOOL m_bIncludeSubdirectories;

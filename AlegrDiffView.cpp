@@ -1095,7 +1095,7 @@ void CAlegrDiffView::OnFileSaveList()
 	BOOL GenerateCsv = (0 == DstFile.GetExtension().CompareNoCase(_T(".csv")));
 
 	FILE * file = NULL;
-	_tfopen_s(&file, DstFile, _T("wt"));
+	_tfopen_s(&file, DstFile, _T("wt,ccs=UTF-8"));
 	if (NULL == file)
 	{
 		CString s;
@@ -1134,37 +1134,37 @@ void CAlegrDiffView::OnFileSaveList()
 			{
 				switch (pFilePair->GetComparisonResult())
 				{
-				case pFilePair->FilesIdentical:
+				case FilePair::FilesIdentical:
 					if ( ! dlg.IncludeIdenticalFiles())
 					{
 						continue;
 					}
 					break;
-				case pFilePair->DifferentInSpaces:
+				case FilePair::DifferentInSpaces:
 					if ( ! dlg.IncludeDifferentInSpacesFiles())
 					{
 						continue;
 					}
 					break;
-				case pFilePair->VersionInfoDifferent:
+				case FilePair::VersionInfoDifferent:
 					if ( ! dlg.IncludeVersionInfoDifferentFiles())
 					{
 						continue;
 					}
 					break;
-				case pFilePair->FilesDifferent:
+				case FilePair::FilesDifferent:
 					if ( ! dlg.IncludeDifferentFiles())
 					{
 						continue;
 					}
 					break;
-				case pFilePair->OnlyFirstFile:
+				case FilePair::OnlyFirstFile:
 					if ( ! dlg.IncludeFolder1Files())
 					{
 						continue;
 					}
 					break;
-				case pFilePair->OnlySecondFile:
+				case FilePair::OnlySecondFile:
 					if ( ! dlg.IncludeFolder2Files())
 					{
 						continue;

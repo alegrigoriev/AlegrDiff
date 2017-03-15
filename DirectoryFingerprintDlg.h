@@ -43,10 +43,6 @@ public:
 	{
 		return m_sIgnoreFolders;
 	}
-	bool DoSaveAsUnicode() const
-	{
-		return m_bSaveAsUnicode != 0;
-	}
 	bool DoIncludeSubdirectories() const
 	{
 		return m_bIncludeSubdirectories != 0;
@@ -58,7 +54,6 @@ public:
 protected:
 	BOOL m_bIncludeDirectoryStructure;
 	BOOL m_bIncludeSubdirectories;
-	BOOL m_bSaveAsUnicode;
 
 	CComboBox m_DirCombo;
 	CString m_sDirectory;

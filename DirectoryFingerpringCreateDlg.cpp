@@ -18,13 +18,11 @@ CDirectoryFingerpringCreateDlg::CDirectoryFingerpringCreateDlg(
 																LPCTSTR sIgnoreFolders,
 																BOOL bIncludeSubdirectories,
 																BOOL bIncludeDirectoryStructure,
-																BOOL bSaveAsUnicode,
 																CWnd* pParent /*=NULL*/)
 	: BaseClass(IDD, pParent)
 	, m_pFile(NULL)
 	, m_bIncludeSubdirectories(bIncludeSubdirectories)
 	, m_bIncludeDirectoryStructure(bIncludeDirectoryStructure)
-	, m_bSaveAsUnicode(bSaveAsUnicode)
 	, m_sDirectory(sDirectory)
 	, m_FingerprintFilename(sFingerprintFilename)
 	, m_sFilenameFilter(sFilenameFilter)
@@ -52,19 +50,13 @@ END_MESSAGE_MAP()
 INT_PTR CDirectoryFingerpringCreateDlg::DoModal()
 {
 	m_pFile = NULL;
-	_tfopen_s(&m_pFile, m_FingerprintFilename, _T("wt"));
+	_tfopen_s(&m_pFile, m_FingerprintFilename, _T("wt,ccs=UTF-8"));
 	if (NULL == m_pFile)
 	{
 		CString s;
 		s.Format(IDS_STRING_UNABLE_TO_CREATE_FILE, LPCTSTR(m_FingerprintFilename));
 		AfxMessageBox(s, MB_OK | MB_ICONSTOP);
 		return -1;
-	}
-
-	if (m_bSaveAsUnicode)
-	{
-		_setmode(_fileno(m_pFile), _O_BINARY);
-		fputwc(0xFEFF, m_pFile);
 	}
 
 	return CProgressDialog::DoModal();
@@ -80,11 +72,6 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 	// make full names from the directories
 	LPTSTR pFilePart;
 	TCHAR FullDirectoryName[MAX_PATH];
-	LPCTSTR crlf = _T("\n");
-	if (m_bSaveAsUnicode)
-	{
-		crlf = _T("\r\n");
-	}
 
 	GetFullPathName(m_sDirectory, MAX_PATH, FullDirectoryName, & pFilePart);
 
@@ -148,19 +135,19 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 	GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, & LocalTime, NULL, time, TimeBufSize - 1);
 
 	_ftprintf(m_pFile,
-			_T("; Fingerprint of \"%s\", created %s %s%s")
-			_T("IncludeFiles=%s%s")
-			_T("ExcludeFiles=%s%s")
-			_T("ExcludeFolders=%s%s")
-			_T("IncludeSubdirs=%d%s")
-			_T("IncludeDirInfo=%d%s%s"),
+			_T("; Fingerprint of \"%s\", created %s %s\n")
+			_T("IncludeFiles=%s\n")
+			_T("ExcludeFiles=%s\n")
+			_T("ExcludeFolders=%s\n")
+			_T("IncludeSubdirs=%d\n")
+			_T("IncludeDirInfo=%d\n\n"),
 			FullDirectoryName,
-			date, time, crlf,
-			LPCTSTR(m_sFilenameFilter), crlf,
-			LPCTSTR(m_sIgnoreFiles), crlf,
-			LPCTSTR(m_sIgnoreFolders), crlf,
-			m_bIncludeSubdirectories, crlf,
-			m_bIncludeDirectoryStructure, crlf, crlf);
+			date, time,
+			LPCTSTR(m_sFilenameFilter),
+			LPCTSTR(m_sIgnoreFiles),
+			LPCTSTR(m_sIgnoreFolders),
+			m_bIncludeSubdirectories,
+			m_bIncludeDirectoryStructure);
 
 
 	for (i = 0; i < Files1.size() && ! m_StopRunThread; i++)
@@ -172,8 +159,7 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 			{
 				continue;
 			}
-			_ftprintf(m_pFile, _T("\"%s%s\"%s"), pFile->GetSubdir(),
-					pFile->GetName(), crlf);
+			_ftprintf(m_pFile, _T("\"%s%s\"\n"), pFile->GetSubdir(), pFile->GetName());
 			continue;
 		}
 
@@ -187,7 +173,7 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 					_T("%02X%02X%02X%02X")
 					_T("%02X%02X%02X%02X")
 					_T("%02X%02X%02X%02X")
-					_T("%s"),
+					_T("\n"),
 					pFile->GetSubdir(),
 					pFile->GetName(),
 					pFile->GetFileLength(),
@@ -195,11 +181,7 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 					pFile->GetDigest(0), pFile->GetDigest(1), pFile->GetDigest(2), pFile->GetDigest(3),
 					pFile->GetDigest(4), pFile->GetDigest(5), pFile->GetDigest(6), pFile->GetDigest(7),
 					pFile->GetDigest(8), pFile->GetDigest(9), pFile->GetDigest(10), pFile->GetDigest(11),
-					pFile->GetDigest(12), pFile->GetDigest(13), pFile->GetDigest(14), pFile->GetDigest(15),
-					crlf);
-		}
-		else
-		{
+					pFile->GetDigest(12), pFile->GetDigest(13), pFile->GetDigest(14), pFile->GetDigest(15));
 		}
 
 		AddDoneItem(pFile->GetFileLength());

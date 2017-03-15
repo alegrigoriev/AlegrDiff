@@ -54,7 +54,6 @@ public:
 
 class CAlegrDiffApp : public CWinApp
 {
-	bool m_bIsWin9x;
 public:
 
 	void OpenPairOfPathnames(LPTSTR path1, LPTSTR path2);
@@ -65,8 +64,6 @@ public:
 	void NotifyFilePairChanged(FilePair * pPair);
 	CAlegrDiffApp();
 	~CAlegrDiffApp();
-
-	bool IsWindows9x() const { return m_bIsWin9x; }
 
 	CApplicationProfile Profile;
 

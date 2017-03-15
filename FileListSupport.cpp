@@ -808,14 +808,9 @@ unsigned FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes)
 	{
 		// Open the file with FILE_SHARE_DELETE, to allow other applications
 		// to delete or move the file
-		DWORD ShareMode = FILE_SHARE_READ;
-		if ((GetVersion() & 0xFF) >= 5)
-		{
-			ShareMode = FILE_SHARE_READ | FILE_SHARE_DELETE;
-		}
 
 		m_hFile = CreateFile(GetFullName(), GENERIC_READ,
-							ShareMode, NULL,
+							FILE_SHARE_READ | FILE_SHARE_DELETE, NULL,
 							OPEN_EXISTING, FILE_FLAG_NO_BUFFERING, NULL);
 		if (NULL == m_hFile
 			|| INVALID_HANDLE_VALUE == m_hFile)

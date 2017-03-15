@@ -90,8 +90,6 @@ CAlegrDiffApp::CAlegrDiffApp()
 
 	m_MinIdenticalLines(5)
 {
-	m_bIsWin9x = (0 != (0x80000000 & ::GetVersion()));
-
 	m_PreferencesFlags = 0;
 	// then init subfields:
 	m_bRecurseSubdirs = false;

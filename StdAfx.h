@@ -10,6 +10,10 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#ifndef _UNICODE
+#error _UNICODE needs to be defined. Not supporting non-UNICODE build
+#endif
+
 #define ISOLATION_AWARE_ENABLED 1
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
 

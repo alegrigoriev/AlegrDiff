@@ -745,7 +745,7 @@ void CFilePairDoc::SetCaretPosition(TextPosDisplay pos, int flags)
 
 void CFilePairDoc::CaretToHome(int flags)
 {
-	size_t NewLine = m_CaretPos.line;
+	int NewLine = m_CaretPos.line;
 	int NewPos = m_CaretPos.pos;
 	if ((flags & SetPositionCancelSelection)
 		&& m_CaretPos > m_SelectionAnchor)
@@ -805,7 +805,7 @@ void CFilePairDoc::CaretToHome(int flags)
 
 void CFilePairDoc::CaretToEnd(int flags)
 {
-	size_t NewLine = m_CaretPos.line;
+	int NewLine = m_CaretPos.line;
 	if ((flags & SetPositionCancelSelection)
 		&& m_CaretPos < m_SelectionAnchor)
 	{
@@ -943,7 +943,7 @@ ULONG CFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen,
 		end.line = m_TotalLines - 1;
 	}
 
-	for (size_t line = begin.line; line <= end.line; line++)
+	for (int line = begin.line; line <= end.line; line++)
 	{
 		int startpos = 0;
 		if (line == begin.line)
@@ -1320,7 +1320,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 
 	int nStartSearchPos = nSearchPos;
 	size_t nStartSearchLine = nSearchLine;
-	size_t nPatternLen = _tcslen(pStrToFind);
+	int nPatternLen = (int)_tcslen(pStrToFind);
 
 	if (0 == nPatternLen)
 	{
@@ -1792,7 +1792,7 @@ void CFilePairDoc::CaretRightToWord(int SelectionFlags)
 	TCHAR linebuf[2048];
 	int StrLen;
 	int CaretPos = m_CaretPos.pos;
-	size_t CaretLine = m_CaretPos.line;
+	int CaretLine = m_CaretPos.line;
 	if ((SelectionFlags & SetPositionCancelSelection)
 		&& m_CaretPos < m_SelectionAnchor)
 	{

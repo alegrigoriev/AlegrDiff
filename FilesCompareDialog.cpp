@@ -17,7 +17,7 @@ static char THIS_FILE[] = __FILE__;
 
 CFilesCompareDialog::CFilesCompareDialog(CWnd* pParent /*=NULL*/)
 	: CResizableDialog(CFilesCompareDialog::IDD, pParent)
-	, m_ComparisonMode(0)
+	, m_ComparisonMode(CAlegrDiffApp::FileComparisonModeDefault)
 {
 	//{{AFX_DATA_INIT(CFilesCompareDialog)
 	//}}AFX_DATA_INIT

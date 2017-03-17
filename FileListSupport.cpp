@@ -187,12 +187,10 @@ FileItem::FileItem(const WIN32_FIND_DATA * pWfd,
 	, m_Length(pWfd->nFileSizeLow + (LONGLONG(pWfd->nFileSizeHigh) << 32))
 	, m_BaseDir(BaseDir)
 	, m_Subdir(Dir)
-	, m_C_Cpp(false)
-	, m_IsBinary(false)
-	, m_IsUnicode(false)
-	, m_IsUnicodeBigEndian(false)
+	, m_FileType(FileTypeUnknown)
+	, m_FileEncoding(FileEncodingUnknown)
+	, m_bHasExtendedCharacters(false)
 	, m_bMd5Calculated(false)
-	, m_bIsPhantomFile(false)
 	, m_bIsAlone(false)
 	, m_pFileReadBuf(NULL)
 	, m_FileReadBufSize(0)
@@ -208,15 +206,13 @@ FileItem::FileItem(const WIN32_FIND_DATA * pWfd,
 }
 
 FileItem::FileItem(LPCTSTR name)
-	:m_Name(name),
-	m_Length(0),
-	m_C_Cpp(false),
-	m_IsBinary(false),
-	m_IsUnicode(false),
-	m_IsUnicodeBigEndian(false),
-	m_bMd5Calculated(false),
-	m_bIsPhantomFile(false),
-	m_pFileReadBuf(NULL)
+	:m_Name(name)
+	, m_Length(0)
+	, m_FileType(FileTypeUnknown)
+	, m_FileEncoding(FileEncodingUnknown)
+	, m_bHasExtendedCharacters(false)
+	, m_bMd5Calculated(false)
+	, m_pFileReadBuf(NULL)
 	, m_bIsAlone(false)
 	, m_FileReadBufSize(0)
 	, m_Attributes(0)
@@ -269,7 +265,7 @@ void FileItem::Unload()
 
 void FileItem::AddLine(LPCTSTR pLine)
 {
-	FileLine * pFileLine = new FileLine(pLine, _tcslen(pLine), true, m_C_Cpp);
+	FileLine * pFileLine = new FileLine(pLine, _tcslen(pLine), true, IsCCpp());
 	if (pLine)
 	{
 		pFileLine->SetLineNumber((unsigned)m_Lines.size());
@@ -468,7 +464,7 @@ bool FileItem::Load()
 			}
 		}
 		TabExpandedLine[pos] = 0;
-		FileLine * pLine = new FileLine(TabExpandedLine, pos, true, m_C_Cpp);
+		FileLine * pLine = new FileLine(TabExpandedLine, pos, true, IsCCpp());
 		if (pLine)
 		{
 			pLine->SetNext(pLineList);
@@ -1460,11 +1456,11 @@ bool FileList::LoadSubFolder(LPCTSTR Subdir,
 
 		if (MultiPatternMatches(pFile->GetName(), sBinaryMask))
 		{
-			pFile->m_IsBinary = true;
+			pFile->SetBinary();
 		}
-		else
+		else if (MultiPatternMatches(pFile->GetName(), sC_CPPMask))
 		{
-			pFile->m_C_Cpp = MultiPatternMatches(pFile->GetName(), sC_CPPMask);
+			pFile->SetCCpp();
 		}
 		// add to the list
 		pFile->m_pNext = m_pList;
@@ -2039,7 +2035,7 @@ bool FilePair::LoadFiles()
 	bool result = true;
 	if (NULL != pFirstFile)
 	{
-		result = pFirstFile->m_bIsPhantomFile || (pFirstFile->Load() && result);
+		result = pFirstFile->IsPhantomFile() || (pFirstFile->Load() && result);
 	}
 	if (NULL != pSecondFile)
 	{
@@ -2153,8 +2149,8 @@ FilePair::eFileComparisionResult FilePair::CompareFiles(class CProgressDialog * 
 		return ResultUnknown;
 	}
 	eFileComparisionResult result = ResultUnknown;
-	if (NULL != pFirstFile && ! pFirstFile->m_bIsPhantomFile
-		&& NULL != pSecondFile && ! pFirstFile->m_bIsPhantomFile)
+	if (NULL != pFirstFile && !pFirstFile->IsPhantomFile()
+		&& NULL != pSecondFile && !pFirstFile->IsPhantomFile())
 	{
 		result = CompareTextFiles(pProgressDialog);
 	}
@@ -2168,7 +2164,7 @@ FilePair::eFileComparisionResult FilePair::CompareFiles(class CProgressDialog * 
 			pFile = pSecondFile;
 			result = OnlySecondFile;
 		}
-		else if (pFile->m_bIsPhantomFile)
+		else if (pFile->IsPhantomFile())
 		{
 			pFile = pSecondFile;
 			// keep previous result
@@ -3363,15 +3359,12 @@ BOOL FileItem::CalculateHashes(CMd5HashCalculator * pMd5Calc,
 	return res;
 }
 
-void FileItem::SetMD5(BYTE md5[16])
+void FileItem::SetMD5(BYTE const md5[16])
 {
 	memcpy(m_Md5, md5, sizeof m_Md5);
+	m_FileType = FileTypeHashOnly;
 	m_bMd5Calculated = true;
-	m_bIsPhantomFile = true;
-	m_IsBinary = true;
 }
 
 CSmallAllocator StringSection::m_Allocator(sizeof StringSection);
 CSmallAllocator FileDiffSection::m_Allocator(sizeof FileDiffSection);
-
-//CSimpleCriticalSection FileItem::m_Cs;

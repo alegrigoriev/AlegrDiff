@@ -147,7 +147,10 @@ CAlegrDiffApp theApp;
 BOOL CAlegrDiffApp::InitInstance()
 {
 	InitCommonControls();
+
 	CWinApp::InitInstance();
+
+	setlocale(LC_CTYPE, ".ACP");
 
 	SetRegistryKey(_T("AleGr SoftWare"));
 
@@ -192,7 +195,7 @@ BOOL CAlegrDiffApp::InitInstance()
 	Profile.AddItem(_T("Settings"), _T("PreferencesFlags"), m_PreferencesFlags, m_PreferencesFlags, 0, 0xFFFFFFFF);
 	Profile.AddItem(_T("Settings"), _T("StatusFlags"), m_StatusFlags, m_StatusFlags, 0, 0xFFFFFFFF);
 #endif
-	Profile.AddItem(_T("Settings"), _T("ComparisionMode"), m_ComparisonMode, 0, 0, 2);
+	Profile.AddItem(_T("Settings"), _T("ComparisionMode"), m_ComparisonMode, FileComparisonModeDefault, FileComparisonModeMin, FileComparisonModeMax);
 	Profile.AddItem(_T("Settings"), _T("NumberOfPanes"), m_NumberOfPanes, 1, 1, 2);
 
 
@@ -401,7 +404,7 @@ CDocument * CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 {
 	if ((pPair->pFirstFile != NULL && pPair->pFirstFile->IsFolder())
 		|| (pPair->pSecondFile != NULL && pPair->pSecondFile->IsFolder())
-		|| (pPair->pSecondFile == NULL && pPair->pFirstFile != NULL && pPair->pFirstFile->m_bIsPhantomFile))
+		|| (pPair->pSecondFile == NULL && pPair->pFirstFile != NULL && pPair->pFirstFile->IsPhantomFile()))
 	{
 		// the file is not a real file, can't open
 		return NULL;
@@ -692,7 +695,7 @@ void AFXAPI AbbreviateName(LPTSTR lpszCanon, int cchMax, BOOL bAtLeastName)
 
 void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, UINT FormatID, UINT DisabledItemID)
 {
-	if (NULL == pFile || pFile->IsFolder() || pFile->m_bIsPhantomFile)
+	if (NULL == pFile || pFile->IsFolder() || pFile->IsPhantomFile())
 	{
 		CString s;
 		s.LoadString(DisabledItemID);
@@ -757,46 +760,39 @@ void CAlegrDiffApp::OpenSingleFile(LPCTSTR pName)
 		*pFileName1 = 0;
 	}
 
-	bool bCppFile = false;
-	bool bBinaryFile = false;
-	if ( ! m_sBinaryFilesFilter.IsEmpty())
-	{
-		bBinaryFile = MultiPatternMatches(wfd1.cFileName,
-										PatternToMultiCString(m_sBinaryFilesFilter));
-	}
-	if ( ! bBinaryFile
-		&& ! m_sCppFilesFilter.IsEmpty())
-	{
-		bCppFile = MultiPatternMatches(wfd1.cFileName,
-										PatternToMultiCString(m_sCppFilesFilter));
-	}
-
 	FilePair * pPair = new FilePair;
 	pPair->pFirstFile = new FileItem( & wfd1, FileDir1, "", NULL);
 	pPair->pSecondFile = NULL;
-	pPair->pFirstFile->m_C_Cpp = bCppFile;
-	pPair->pFirstFile->m_IsBinary = bBinaryFile;
 
-	if (bBinaryFile)
+	if (MultiPatternMatches(wfd1.cFileName, PatternToMultiCString(m_sBinaryFilesFilter)))
 	{
+		pPair->pFirstFile->SetBinary();
+
 		CBinaryCompareDoc * pDoc = (CBinaryCompareDoc *)m_pBinaryDiffTemplate->OpenDocumentFile(NULL);
 		if (NULL != pDoc)
 		{
 			pDoc->SetFilePair(pPair);
-			// SetFilePair references the pair, we need to compensate it
 		}
-		pPair->Dereference();
 	}
 	else
 	{
+		if (MultiPatternMatches(wfd1.cFileName, PatternToMultiCString(m_sCppFilesFilter)))
+		{
+			pPair->pFirstFile->SetCCpp();
+		}
+		else
+		{
+			pPair->pFirstFile->SetText();
+		}
+
 		CFilePairDoc * pDoc = (CFilePairDoc *)m_pFileDiffTemplate->OpenDocumentFile(NULL);
 		if (NULL != pDoc)
 		{
 			pDoc->SetFilePair(pPair);
-			// SetFilePair references the pair, we need to compensate it
 		}
-		pPair->Dereference();
 	}
+	// SetFilePair references the pair
+	pPair->Dereference();
 }
 
 void CAlegrDiffApp::OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI)
@@ -1010,57 +1006,51 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 	CString sCFilesPattern(PatternToMultiCString(m_sCppFilesFilter));
 	CString sBinFilesPattern(PatternToMultiCString(m_sBinaryFilesFilter));
 
-	bool bFilesBinary = false;
+	pPair->pFirstFile = new FileItem(&wfd1, FileDir1, _T(""), NULL);
+	pPair->pSecondFile = new FileItem(&wfd2, FileDir2, _T(""), NULL);
 
-	if (2 == m_ComparisonMode)
+	if (FileComparisonModeBinary == m_ComparisonMode
+		|| (FileComparisonModeDefault == m_ComparisonMode
+			&& (MultiPatternMatches(wfd1.cFileName, sBinFilesPattern)
+				|| MultiPatternMatches(wfd2.cFileName, sBinFilesPattern))))
 	{
-		bFilesBinary = true;
-	}
-	else if (1 == m_ComparisonMode)
-	{
-		bFilesBinary = false;
-	}
-	else if ( ! m_sBinaryFilesFilter.IsEmpty())
-	{
-		bFilesBinary = MultiPatternMatches(wfd1.cFileName, sBinFilesPattern)
-						|| MultiPatternMatches(wfd2.cFileName, sBinFilesPattern);
-	}
+		pPair->pFirstFile->SetBinary();
+		pPair->pSecondFile->SetBinary();
 
-	pPair->pFirstFile = new FileItem( & wfd1, FileDir1, _T(""), NULL);
-	pPair->pFirstFile->m_IsBinary = bFilesBinary;
-
-	pPair->pSecondFile = new FileItem( & wfd2, FileDir2, _T(""), NULL);
-	pPair->pSecondFile->m_IsBinary = bFilesBinary;
-
-	if ( ! bFilesBinary
-		&& ! m_sCppFilesFilter.IsEmpty())
-	{
-		pPair->pFirstFile->m_C_Cpp =
-			MultiPatternMatches(wfd1.cFileName, sCFilesPattern);
-		pPair->pSecondFile->m_C_Cpp =
-			MultiPatternMatches(wfd2.cFileName, sCFilesPattern);
-	}
-
-	if (bFilesBinary)
-	{
 		CBinaryCompareDoc * pDoc = (CBinaryCompareDoc *)m_pBinaryDiffTemplate->OpenDocumentFile(NULL);
 		if (NULL != pDoc)
 		{
 			pDoc->SetFilePair(pPair);
-			// SetFilePair references the pair, we need to compensate it
 		}
-		pPair->Dereference();
 	}
 	else
 	{
+		if (MultiPatternMatches(wfd1.cFileName, sCFilesPattern))
+		{
+			pPair->pFirstFile->SetCCpp();
+		}
+		else
+		{
+			pPair->pFirstFile->SetText();
+		}
+
+		if (MultiPatternMatches(wfd2.cFileName, sCFilesPattern))
+		{
+			pPair->pSecondFile->SetCCpp();
+		}
+		else
+		{
+			pPair->pSecondFile->SetText();
+		}
+
 		CFilePairDoc * pDoc = (CFilePairDoc *)m_pFileDiffTemplate->OpenDocumentFile(NULL);
 		if (NULL != pDoc)
 		{
 			pDoc->SetFilePair(pPair);
-			// SetFilePair references the pair, we need to compensate it
 		}
-		pPair->Dereference();
 	}
+	// SetFilePair references the pair, we need to compensate it
+	pPair->Dereference();
 }
 
 void CAlegrDiffApp::OpenPairOfPathnames(LPTSTR Arg1, LPTSTR Arg2)

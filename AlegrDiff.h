@@ -137,7 +137,16 @@ public:
 	int m_TabIndent;
 	int m_GoToLineFileSelection;
 	int m_SearchScope;
-	int m_ComparisonMode;    // 0 - default, 1 - text, 2 - binary
+	enum FileComparisonMode
+	{
+		FileComparisonModeDefault = 0,
+		FileComparisonModeText = 1,
+		FileComparisonModeBinary = 2,
+
+		FileComparisonModeMin = FileComparisonModeDefault,
+		FileComparisonModeMax = FileComparisonModeBinary,
+	};
+	int m_ComparisonMode;
 	int m_NumberOfPanes;
 
 	LOGFONT m_NormalLogFont;

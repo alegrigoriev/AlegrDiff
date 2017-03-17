@@ -1825,9 +1825,9 @@ bool CDiffFileView::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvo
 
 		FilePair * pPair = pDoc->GetFilePair();
 		if (NULL == pPair->pFirstFile
-			|| pPair->pFirstFile->m_bIsPhantomFile
+			|| pPair->pFirstFile->IsPhantomFile()
 			|| NULL == pPair->pSecondFile
-			|| pPair->pSecondFile->m_bIsPhantomFile)
+			|| pPair->pSecondFile->IsPhantomFile())
 		{
 			dlg.m_SearchScope = -1;
 		}

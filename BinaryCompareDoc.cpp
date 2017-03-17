@@ -107,7 +107,7 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 	{
 		pPair->Reference();
 
-		if (NULL != pPair->pFirstFile && ! pPair->pFirstFile->m_bIsPhantomFile)
+		if (NULL != pPair->pFirstFile && !pPair->pFirstFile->IsPhantomFile())
 		{
 			CString title(pPair->pFirstFile->GetFullName());
 			if (NULL != pPair->pSecondFile)
@@ -399,20 +399,38 @@ void CBinaryCompareDoc::OnViewViewastextfiles()
 	OnCloseDocument();
 
 	if (NULL == pPair->pFirstFile
-		|| ! pPair->pFirstFile->m_bIsPhantomFile)
+		|| !pPair->pFirstFile->IsPhantomFile())
 	{
 		pPair->SetComparisonResult(pPair->ResultUnknown);
 	}
 
 	pPair->UnloadFiles(true);
 
-	if (NULL != pPair->pFirstFile)
+	CString sCFilesPattern(PatternToMultiCString(GetApp()->m_sCppFilesFilter));
+
+	if (NULL != pPair->pFirstFile
+		&& !pPair->pFirstFile->IsPhantomFile())
 	{
-		pPair->pFirstFile->m_IsBinary = false;
+		if (MultiPatternMatches(pPair->pFirstFile->GetName(), sCFilesPattern))
+		{
+			pPair->pFirstFile->SetCCpp();
+		}
+		else
+		{
+			pPair->pFirstFile->SetText();
+		}
 	}
+
 	if (NULL != pPair->pSecondFile)
 	{
-		pPair->pSecondFile->m_IsBinary = false;
+		if (MultiPatternMatches(pPair->pSecondFile->GetName(), sCFilesPattern))
+		{
+			pPair->pSecondFile->SetCCpp();
+		}
+		else
+		{
+			pPair->pSecondFile->SetText();
+		}
 	}
 
 	GetApp()->OpenFilePairView(pPair);

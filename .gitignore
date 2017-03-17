@@ -7,5 +7,6 @@ HTMLDefines.h
 Debug/
 Release/
 x64/
+Build/
 *.obj
 *.user

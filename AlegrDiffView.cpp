@@ -875,7 +875,7 @@ void CAlegrDiffView::OnUpdateListviewOpen(CCmdUI* pCmdUI)
 		FilePair * pPair = m_PairArray[nItem];
 		if ((pPair->pFirstFile != NULL && pPair->pFirstFile->IsFolder())
 			|| (pPair->pSecondFile != NULL && pPair->pSecondFile->IsFolder())
-			|| (pPair->pSecondFile == NULL && pPair->pFirstFile != NULL && pPair->pFirstFile->m_bIsPhantomFile))
+			|| (pPair->pSecondFile == NULL && pPair->pFirstFile != NULL && pPair->pFirstFile->IsPhantomFile()))
 		{
 			nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
 			continue;
@@ -905,7 +905,7 @@ void CAlegrDiffView::OnUpdateFileCopyFirstDir(CCmdUI* pCmdUI)
 		if (nItem < m_PairArray.size())
 		{
 			FileItem * pFile = m_PairArray[nItem]->pFirstFile;
-			if (NULL != pFile && ! pFile->m_bIsPhantomFile)
+			if (NULL != pFile && !pFile->IsPhantomFile())
 			{
 				CString s;
 				s.Format(IDS_COPY_FROM_DIR_FORMAT, LPCTSTR(GetDocument()->m_sFirstDir));
@@ -938,7 +938,7 @@ void CAlegrDiffView::OnUpdateFileCopySecondDir(CCmdUI* pCmdUI)
 		if (nItem < m_PairArray.size())
 		{
 			FileItem * pFile = m_PairArray[nItem]->pSecondFile;
-			if (NULL != pFile && ! pFile->m_bIsPhantomFile)
+			if (NULL != pFile && !pFile->IsPhantomFile())
 			{
 				CString s;
 				s.Format(IDS_COPY_FROM_DIR_FORMAT, LPCTSTR(GetDocument()->m_sSecondDir));

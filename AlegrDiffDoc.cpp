@@ -301,7 +301,7 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			pPair->pSecondFile = NULL;
 			pParentDir = pFile1->m_pParentDir;
 
-			if (pFile1->m_bIsPhantomFile)
+			if (pFile1->IsPhantomFile())
 			{
 				// reading fingerprint
 				if (pFile1->IsFolder())
@@ -628,7 +628,7 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 	if (NULL != pPair)
 	{
 		pPair->Reference();
-		if (NULL != pPair->pFirstFile && ! pPair->pFirstFile->m_bIsPhantomFile)
+		if (NULL != pPair->pFirstFile && !pPair->pFirstFile->IsPhantomFile())
 		{
 			CString title(pPair->pFirstFile->GetFullName());
 			if (NULL != pPair->pSecondFile)
@@ -2061,12 +2061,12 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 	if (DefaultFlags == StringSection::Declined)
 	{
 		FileName = m_pFilePair->pFirstFile->GetName();
-		bUnicode = m_pFilePair->pFirstFile->m_IsUnicode;
+		bUnicode = m_pFilePair->pFirstFile->IsUnicode();
 	}
 	else
 	{
 		FileName = m_pFilePair->pSecondFile->GetName();
-		bUnicode = m_pFilePair->pSecondFile->m_IsUnicode;
+		bUnicode = m_pFilePair->pSecondFile->IsUnicode();
 	}
 
 	for (int pos = FileName.GetLength(); pos > 0; pos--)
@@ -2517,20 +2517,21 @@ void CFilePairDoc::OnViewAsBinary()
 	OnCloseDocument();
 
 	if (NULL == pPair->pFirstFile
-		|| ! pPair->pFirstFile->m_bIsPhantomFile)
+		|| !pPair->pFirstFile->IsPhantomFile())
 	{
 		pPair->SetComparisonResult(pPair->ResultUnknown);
 	}
 
 	pPair->UnloadFiles(true);
 
-	if (NULL != pPair->pFirstFile)
+	if (NULL != pPair->pFirstFile
+		&& !pPair->pFirstFile->IsPhantomFile())
 	{
-		pPair->pFirstFile->m_IsBinary = true;
+		pPair->pFirstFile->SetBinary();
 	}
 	if (NULL != pPair->pSecondFile)
 	{
-		pPair->pSecondFile->m_IsBinary = true;
+		pPair->pSecondFile->SetBinary();
 	}
 
 	GetApp()->OpenFilePairView(pPair);

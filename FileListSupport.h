@@ -239,26 +239,85 @@ public:
 	bool Load();
 	void Unload();
 
-	bool m_C_Cpp:1;
-	bool m_IsBinary:1;
-	bool m_IsUnicode:1;
-	bool m_IsUnicodeBigEndian:1;
-	bool m_bMd5Calculated:1;
-	bool m_bIsPhantomFile:1;
-	bool m_bUnicodeName:1;
-	bool m_bIsAlone:1;      // this item is inside directory existing on one side only
+	bool m_bMd5Calculated;
+	bool m_bHasExtendedCharacters;
+	bool m_bIsAlone;      // this item is inside directory existing on one side only
+
+	enum FileEncoding
+	{
+		FileEncodingBinary = 0,
+		FileEncodingASCII = 1, // all read characters are under 0x7F
+		FileEncodingMBCS  = 2, // all read characters are under 0x7F
+		FileEncodingUTF16BE = 3,    // big-endian UTF-16
+		FileEncodingUTF16LE = 4,    // low-endian UTF-16
+		FileEncodingUTF8 = 5,
+		FileEncodingUnknown = 0xFF
+	} m_FileEncoding;
+
+	enum eFileType
+	{
+		FileTypeUnknown,
+		FileTypeDirectory,
+		FileTypeHashOnly,   // This file item represents a line from MD5 hash file
+		FileTypeBinary,
+		FileTypeText,
+		FileTypeCCpp,
+	} m_FileType;
 
 	BOOL CalculateHashes(CMd5HashCalculator * pMd5Calc, class CProgressDialog * pProgressDialog);
 	static size_t GetDigestLength() { return 16; }
 
-	void SetMD5(BYTE md5[16]);
+	void SetMD5(BYTE const md5[16]);
 
 	// add line from memory. Assuming the file created dynamically by the program
 	void AddLine(LPCTSTR pLine);
 	bool IsFolder() const
 	{
-		return 0 != (m_Attributes & FILE_ATTRIBUTE_DIRECTORY);
+		return m_FileType == FileTypeDirectory;
 	}
+
+	bool IsUnicode() const
+	{
+		return m_FileEncoding == FileEncodingUTF8 || m_FileEncoding == FileEncodingUTF16LE || m_FileEncoding == FileEncodingUTF16BE;
+	}
+	bool IsText() const
+	{
+		return m_FileType == FileTypeText || m_FileType == FileTypeCCpp;
+	}
+	void SetText()
+	{
+		m_FileType = FileTypeText;
+	}
+
+	bool IsCCpp() const
+	{
+		return m_FileType == FileTypeCCpp;
+	}
+	void SetCCpp()
+	{
+		m_FileType = FileTypeCCpp;
+	}
+
+	bool HasExtendedCharacters() const
+	{
+		return m_bHasExtendedCharacters;
+	}
+
+	bool IsBinary() const
+	{
+		return m_FileType == FileTypeBinary;
+	}
+	void SetBinary()
+	{
+		m_FileType = FileTypeBinary;
+		m_FileEncoding = FileEncodingBinary;
+	}
+
+	bool IsPhantomFile() const
+	{
+		return m_FileType == FileTypeHashOnly;
+	}
+
 	bool IsAlone() const
 	{
 		return m_bIsAlone;
@@ -268,8 +327,19 @@ public:
 	{
 		m_bIsAlone = alone;
 	}
+
 	bool IsReparsePoint() const
 	{
+		return 0 != (m_Attributes & FILE_ATTRIBUTE_REPARSE_POINT);
+	}
+
+	bool IsSymbolicLink() const
+	{//FIXME
+		return 0 != (m_Attributes & FILE_ATTRIBUTE_REPARSE_POINT);
+	}
+
+	bool IsHardLink() const
+	{//FIXME
 		return 0 != (m_Attributes & FILE_ATTRIBUTE_REPARSE_POINT);
 	}
 
@@ -398,7 +468,7 @@ private:
 	vector<FileLine *> m_NonBlankLines;
 	vector<FileLine *> m_NormalizedHashSortedLines;   // non-blank only
 	vector<FileLine *> m_NormalizedHashSortedLineGroups;   // non-blank only
-	//vector<TextToken> m_Tokens;
+
 	friend class FilePair;
 	static CSimpleCriticalSection m_Cs;
 };
@@ -431,8 +501,8 @@ public:
 
 	bool NeedBinaryComparison() const
 	{
-		return (pFirstFile != NULL && pFirstFile->m_IsBinary)
-			|| (pSecondFile != NULL && pSecondFile->m_IsBinary);
+		return (pFirstFile != NULL && pFirstFile->IsBinary())
+			|| (pSecondFile != NULL && pSecondFile->IsBinary());
 	}
 
 	bool FilesAreDifferent() const
@@ -602,6 +672,7 @@ public:
 };
 
 bool MatchWildcard(LPCTSTR name, LPCTSTR pattern);
+// Empty pattern never matches
 bool MultiPatternMatches(LPCTSTR name, LPCTSTR sPattern);
 CString MiltiSzToCString(LPCTSTR pMsz);
 CString PatternToMultiCString(LPCTSTR src);

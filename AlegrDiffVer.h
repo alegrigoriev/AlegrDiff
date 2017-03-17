@@ -1,1 +1,1 @@
-#define ALEGR_DIFF_VERSION _T("Beta 1.40")
+#define ALEGR_DIFF_VERSION _T("2.00")

@@ -2138,6 +2138,17 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 	{
 		FileMode = _T("wt,ccs=UTF-16");
 	}
+	else if ((m_pFilePair->pFirstFile != NULL
+				&& m_pFilePair->pFirstFile->IsUnicode() && m_pFilePair->pFirstFile->HasExtendedCharacters())
+			|| (m_pFilePair->pSecondFile != NULL
+				&& m_pFilePair->pSecondFile->IsUnicode() && m_pFilePair->pSecondFile->HasExtendedCharacters()))
+	{
+		FileMode = _T("wt,ccs=UTF-8");
+	}
+	else
+	{
+		FileMode = _T("wt");
+	}
 
 	FILE * file = NULL;
 	_tfopen_s(& file, Name, FileMode);

@@ -273,78 +273,6 @@ void FileItem::AddLine(LPCTSTR pLine)
 	}
 }
 
-int fngets(char *string, int count, FILE *str)
-{
-	int i;
-	if (0 == count)
-	{
-		return 0;
-	}
-	for (i = 0; i < count - 1; i++)
-	{
-		int ch = getc(str);
-		if (ch == EOF)
-		{
-			break;
-		}
-
-		if (0 == ch)
-		{
-			ch = 0x01;
-		}
-
-		string[i] = char(ch);
-
-		if (ch == '\n')
-		{
-			i++;
-			break;
-		}
-	}
-
-	string[i] = 0;
-	return i;
-}
-
-int fngetws(wchar_t *string, int count, FILE *str, BOOL bBigEndian)
-{
-	int i;
-	if (0 == count)
-	{
-		return 0;
-	}
-
-	for (i = 0; i < count - 1; i++)
-	{
-		int ch = getwc(str);
-		if (ch == WEOF)
-		{
-			break;
-		}
-
-		if (bBigEndian)
-		{
-			ch = ((ch & 0xFF) << 8) | ((ch >> 8) & 0xFF);
-		}
-
-		if (0 == ch)
-		{
-			ch = 0x0001;
-		}
-
-		string[i] = wchar_t(ch);
-
-		if (ch == '\n')
-		{
-			i++;
-			break;
-		}
-	}
-
-	string[i] = 0;
-	return i;
-}
-
 static int NormalizedHashAndLineNumberCompareFunc(FileLine const * pLine1, FileLine const * pLine2)
 {
 	if (pLine1->GetNormalizedHash() < pLine2->GetNormalizedHash())
@@ -376,47 +304,58 @@ static int NormalizedGroupHashAndLineNumberCompareFunc(FileLine const * pLine1, 
 }
 
 #undef new
+#include <mbctype.h>
+
 bool FileItem::Load()
 {
 	CThisApp * pApp = GetApp();
 	// check if it is C or CPP file
 
 	FILE * file = NULL;
+
 	_tfopen_s(&file, LPCTSTR(GetFullName()), _T("rb"));
 	if (NULL == file)
 	{
 		return false;
 	}
-	char lineA[4096];
-	wchar_t lineW[4096];
-	char buf[512];
+
+	char buf[4096];
 	setvbuf(file, buf, _IOFBF, sizeof buf);
 #ifdef _DEBUG
 	DWORD BeginTime = timeGetTime();
 #endif
-	LPCTSTR line;
 
-	line = lineW;
-
-	TCHAR TabExpandedLine[4096];
+	wchar_t TabExpandedLine[4096];
 
 	FileLine * pLineList = NULL;
-	// peek two first bytes, to see if it is UNICODE file
-	wchar_t FirstChar = fgetwc(file);
+	// peek three first bytes, to see if it is UNICODE file
+	bool IsUnicode = false;
+	bool IsUtf8 = false;
+	bool HasExtendedCharacters = false;     // any characters over 0x7F
+	UCHAR BOM[3];
 
-	clearerr(file);
-
-	if ((FirstChar & 0xFFFF) == 0xFEFF)
+	if (2 == fread_s(BOM, 2, 1, 2, file)
+		&& BOM[0] == 0xFF && BOM[1] == 0xFE)
 	{
-		m_IsUnicode = true;
+		IsUnicode = true;
+		m_FileEncoding = FileEncodingUTF16LE;
+		fclose(file);
+		_tfopen_s(&file, LPCTSTR(GetFullName()), _T("rt,ccs=UTF-16LE"));
 	}
-	else if ((FirstChar & 0xFFFF) == 0xFFFE)
+	else if (BOM[0] == 0xEF && BOM[1] == 0xBB
+			&& 1 == fread_s(BOM+2, 1, 1, 1, file)
+			&& BOM[2] == 0xBF)
 	{
-		m_IsUnicode = true;
-		m_IsUnicodeBigEndian = true;
+		IsUnicode = true;
+		IsUtf8 = true;
+		m_FileEncoding = FileEncodingUTF8;
+		fclose(file);
+		_tfopen_s(&file, LPCTSTR(GetFullName()), _T("rt,ccs=UTF-8"));
 	}
 	else
 	{
+		m_FileEncoding = FileEncodingMBCS;
+		// Workaround: Have to use single-byte functions, because CRT is not using the right codepage for translation
 		rewind(file);
 		_setmode(_fileno(file), _O_TEXT);
 	}
@@ -424,27 +363,31 @@ bool FileItem::Load()
 	unsigned LinNum;
 	for (LinNum =0; ; LinNum++)
 	{
-		if (m_IsUnicode)
+		wchar_t lineW[4096];
+		if (!IsUnicode)
 		{
-			if (0 == fngetws(lineW, countof(lineW), file, m_IsUnicodeBigEndian))
+			char lineA[4096];
+			if (0 == fgets(lineA, countof(lineA), file))
 			{
 				break;
 			}
+			int ReturnValue = MultiByteToWideChar(
+												CP_ACP, MB_PRECOMPOSED,
+												lineA,
+												countof(lineA),
+												lineW,
+												countof(lineW));
 		}
-		else
+		else if (0 == fgetws(lineW, countof(lineW), file))
 		{
-			if (0 == fngets(lineA, countof(lineA), file))
-			{
-				break;
-			}
-			size_t chars_converted = 0;
-			mbstowcs_s(& chars_converted, lineW, countof (lineW), lineA, countof(lineW) - 1);
+			break;
 		}
+
 		// expand tabs
 		int pos, i;
-		for (i = 0, pos = 0; line[i] != 0 && pos < countof(TabExpandedLine) - 1; pos++)
+		for (i = 0, pos = 0; lineW[i] != 0 && pos < countof(TabExpandedLine) - 1; pos++)
 		{
-			if (line[i] == '\t')
+			if (lineW[i] == '\t')
 			{
 				TabExpandedLine[pos] = ' ';
 				if ((pos + 1) % pApp->m_TabIndent == 0)
@@ -452,14 +395,18 @@ bool FileItem::Load()
 					i++;
 				}
 			}
-			else if (line[i] == '\n' || line[i] == '\r')
+			else if (lineW[i] == '\n' || lineW[i] == '\r')
 			{
 				i++;
 				pos--;
 			}
 			else
 			{
-				TabExpandedLine[pos] = line[i];
+				TabExpandedLine[pos] = lineW[i];
+				if (lineW[i] > 0x7F)
+				{
+					HasExtendedCharacters = true;
+				}
 				i++;
 			}
 		}
@@ -472,6 +419,16 @@ bool FileItem::Load()
 		}
 	}
 	fclose(file);
+
+	if (HasExtendedCharacters)
+	{
+		m_bHasExtendedCharacters = true;
+	}
+	else if (!IsUnicode)
+	{
+		m_FileEncoding = FileEncodingASCII;
+	}
+
 #ifdef _DEBUG
 	TRACE(_T("File %s loaded in %d ms\n"), LPCTSTR(GetFullName()), timeGetTime() - BeginTime);
 	BeginTime = timeGetTime();

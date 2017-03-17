@@ -26,8 +26,9 @@ public:
 	BOOL	    m_bIncludeSubdirs;
 	CComboBox   m_cFilenameFilter;
 	BOOL	m_BinaryComparision;
-	//}}AFX_DATA
 	BOOL    m_bUseMd5;
+	BOOL    m_bDoNotCompareFileContents;
+	//}}AFX_DATA
 	CSpinButtonCtrl	m_Spin;
 
 	CString	m_FilenameFilter;
@@ -76,10 +77,13 @@ protected:
 	afx_msg void OnButtonAdvanced();
 	afx_msg void OnCheckBinary();
 	afx_msg void OnCheckIncludeSubdirs();
+	afx_msg void OnCheckDoNotCompareFileContents();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnDropFiles(HDROP hDropInfo);
 	afx_msg void OnUpdateIgnoreDirs(CCmdUI * pCmdUI);
 	afx_msg void OnUpdateEditBinaryFiles(CCmdUI * pCmdUI);
+	afx_msg void OnUpdateUseMd5(CCmdUI * pCmdUI);
+	afx_msg void OnUpdateBinaryComparisonOnly(CCmdUI * pCmdUI);
 	afx_msg void OnUpdateEditCCpp(CCmdUI * pCmdUI);
 	afx_msg void OnUpdateTabIndent(CCmdUI * pCmdUI);
 	//}}AFX_MSG

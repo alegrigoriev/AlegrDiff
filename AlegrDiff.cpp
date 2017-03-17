@@ -882,6 +882,7 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 
 	dlg.m_bAdvanced = m_bAdvancedCompareDialog;
 	dlg.m_bUseMd5 = m_bUseMd5;
+	dlg.m_bDoNotCompareFileContents = m_bDoNotCompareFileContents;
 
 	if (NULL != filter)
 	{
@@ -917,6 +918,7 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 		m_bAdvancedCompareDialog = dlg.m_bAdvanced;
 
 		m_bUseMd5 = dlg.m_bUseMd5 != 0;
+		m_bDoNotCompareFileContents = dlg.m_bDoNotCompareFileContents != 0;
 
 		CAlegrDiffDoc * pDoc = (CAlegrDiffDoc *)
 								m_pListDiffTemplate->OpenDocumentFile(NULL);
@@ -928,7 +930,7 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 
 		if ( ! pDoc->RunDirectoriesComparison(dlg.m_sFirstDir, dlg.m_sSecondDir,
 											dlg.m_FilenameFilter, dlg.m_sIgnoreFoldersFilter,
-											m_bRecurseSubdirs, m_BinaryComparision))
+											m_bRecurseSubdirs, m_BinaryComparision, m_bDoNotCompareFileContents))
 		{
 			pDoc->OnCloseDocument();
 		}

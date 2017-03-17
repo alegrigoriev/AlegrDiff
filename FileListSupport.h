@@ -515,7 +515,7 @@ public:
 	}
 	bool FilesAreIdentical() const
 	{
-		return m_ComparisonResult == FilesIdentical;
+		return m_ComparisonResult == FilesIdentical || m_ComparisonResult == FilesAttributesIdentical;
 	}
 
 	PairCheckResult CheckForFilesChanged();
@@ -565,6 +565,7 @@ public:
 		SubdirsParentInFirstDirOnly,   // dir from a subdirectory that exists only in first directory
 		SubdirsParentInSecondDirOnly,   // dir from a subdirectory that exists only in first directory
 		FilesDirectoryInFingerprintFileOnly,
+		FilesAttributesIdentical,
 	};
 
 	int ComparisionResultPriority() const;

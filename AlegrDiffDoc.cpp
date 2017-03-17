@@ -48,6 +48,7 @@ CAlegrDiffDoc::CAlegrDiffDoc()
 	: m_nFilePairs(0),
 	m_bRecurseSubdirs(false),
 	m_bCheckingFingerprint(false)
+	, m_bDoNotCompareFileContents(false)
 	, m_bNeedUpdateViews(false)
 {
 }
@@ -74,7 +75,8 @@ void CAlegrDiffDoc::SetFingerprintCheckingMode(LPCTSTR DirectoryToCheck,
 bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
 											LPCTSTR FilenameFilter,
 											LPCTSTR IgnoreFolders,
-											bool bRecurseSubdirs, bool BinaryComparison)
+											bool bRecurseSubdirs, bool BinaryComparison,
+											bool DoNotCompareFileContents)
 {
 	// look through all files in the directory and subdirs
 	CThisApp * pApp = GetApp();
@@ -100,6 +102,7 @@ bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
 	}
 
 	m_bRecurseSubdirs = bRecurseSubdirs;
+	m_bDoNotCompareFileContents = DoNotCompareFileContents;
 
 	UpdateAllViews(NULL, OnUpdateRebuildListView);
 	// make full names from the directories
@@ -124,8 +127,8 @@ bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
 		for (FilePair * pPair = m_PairList.First();
 			m_PairList.NotEnd(pPair); pPair = pPair->Next())
 		{
-			if (pPair->FilesIdentical != pPair->GetComparisonResult()
-				|| ! pPair->pFirstFile->IsFolder())
+			if (!pPair->pFirstFile->IsFolder()
+				|| ! pPair->FilesAreIdentical())
 			{
 				HasFiles = true;
 				break;
@@ -358,6 +361,12 @@ bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2
 			if (pFile1->IsFolder())
 			{
 				result = pPair->FilesIdentical;
+			}
+			else if (m_bDoNotCompareFileContents
+					&& pFile1->GetFileLength() == pFile2->GetFileLength()
+					&& pFile1->GetLastWriteTime() == pFile2->GetLastWriteTime())
+			{
+				result = pPair->FilesAttributesIdentical;
 			}
 			else
 			{
@@ -1124,10 +1133,11 @@ void CAlegrDiffDoc::OnViewRefresh()
 		}
 		else
 		{
-			if (pPair->FilesIdentical != pPair->GetComparisonResult()
-				|| ! pPair->pFirstFile->IsFolder())
+			if (!pPair->pFirstFile->IsFolder()
+				|| !pPair->FilesAreIdentical())
 			{
 				HasFiles = true;
+				break;
 			}
 
 			if (pPair->m_bChanged)

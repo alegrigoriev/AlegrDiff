@@ -49,6 +49,7 @@ public:
 	int m_nFilePairs;
 	bool m_bRecurseSubdirs;
 	bool m_bCheckingFingerprint;
+	bool m_bDoNotCompareFileContents;
 	bool m_bNeedUpdateViews;
 
 	ListHead<FilePair> * GetFilePairList()
@@ -59,7 +60,8 @@ public:
 public:
 	bool RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
 								LPCTSTR FilenameFilter, LPCTSTR IgnoreFolders,
-								bool bRecurseSubdirs, bool BinaryComparison);
+								bool bRecurseSubdirs, bool BinaryComparison,
+								bool DoNotCompareFileContents);
 
 	bool CanCancelComparison(CProgressDialog * pDlg);
 	// if returns true, call UpdateAllViews

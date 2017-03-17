@@ -1135,7 +1135,8 @@ void CAlegrDiffView::OnFileSaveList()
 				switch (pFilePair->GetComparisonResult())
 				{
 				case FilePair::FilesIdentical:
-					if ( ! dlg.IncludeIdenticalFiles())
+				case FilePair::FilesAttributesIdentical:
+					if (!dlg.IncludeIdenticalFiles())
 					{
 						continue;
 					}

@@ -33,6 +33,7 @@ CCompareDirsDialog::CCompareDirsDialog(CWnd* pParent /*=NULL*/)
 	m_BinaryComparision = FALSE;
 	//}}AFX_DATA_INIT
 	m_bUseMd5 = TRUE;
+	m_bDoNotCompareFileContents = FALSE;
 
 	static const ResizableDlgItem items[] =
 	{
@@ -70,6 +71,7 @@ void CCompareDirsDialog::DoDataExchange(CDataExchange* pDX)
 	if (m_bAdvanced)
 	{
 		DDX_Check(pDX, IDC_CHECK_USE_MD5, m_bUseMd5);
+		DDX_Check(pDX, IDC_CHECK_DO_NOT_COMPARE_CONTENTS, m_bDoNotCompareFileContents);
 		DDX_Control(pDX, IDC_SPIN1, m_Spin);
 		DDX_Control(pDX, IDC_EDIT_BINARY_FILES, m_cbBinaryFilesFilter);
 		DDX_Control(pDX, IDC_EDIT_C_CPP, m_cbCppFilesFilter);
@@ -116,12 +118,15 @@ BEGIN_MESSAGE_MAP(CCompareDirsDialog, CResizableDialog)
 	ON_BN_CLICKED(IDC_BUTTON_ADVANCED, OnButtonAdvanced)
 	ON_BN_CLICKED(IDC_CHECK_BINARY, OnCheckBinary)
 	ON_BN_CLICKED(IDC_CHECK_INCLUDE_SUBDIRS, OnCheckIncludeSubdirs)
+	ON_BN_CLICKED(IDC_CHECK_DO_NOT_COMPARE_CONTENTS, OnCheckDoNotCompareFileContents)
 	ON_WM_DROPFILES()
-	//}}AFX_MSG_MAP
 	ON_UPDATE_COMMAND_UI(IDC_EDIT_IGNORE_DIRS, OnUpdateIgnoreDirs)
 	ON_UPDATE_COMMAND_UI(IDC_EDIT_BINARY_FILES, OnUpdateEditBinaryFiles)
+	ON_UPDATE_COMMAND_UI(IDC_CHECK_BINARY, OnUpdateBinaryComparisonOnly)
 	ON_UPDATE_COMMAND_UI(IDC_EDIT_C_CPP, OnUpdateEditCCpp)
+	ON_UPDATE_COMMAND_UI(IDC_CHECK_USE_MD5, OnUpdateUseMd5)
 	ON_UPDATE_COMMAND_UI(IDC_EDIT_TAB_INDENT, OnUpdateTabIndent)
+	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -208,6 +213,11 @@ void CCompareDirsDialog::OnCheckBinary()
 }
 
 void CCompareDirsDialog::OnCheckIncludeSubdirs()
+{
+	NeedUpdateControls();
+}
+
+void CCompareDirsDialog::OnCheckDoNotCompareFileContents()
 {
 	NeedUpdateControls();
 }
@@ -322,17 +332,27 @@ void CCompareDirsDialog::OnUpdateIgnoreDirs(CCmdUI * pCmdUI)
 
 void CCompareDirsDialog::OnUpdateEditBinaryFiles(CCmdUI * pCmdUI)
 {
-	pCmdUI->Enable(! IsDlgButtonChecked(IDC_CHECK_BINARY));
+	pCmdUI->Enable(!IsDlgButtonChecked(IDC_CHECK_BINARY) && !IsDlgButtonChecked(IDC_CHECK_DO_NOT_COMPARE_CONTENTS));
+}
+
+void CCompareDirsDialog::OnUpdateUseMd5(CCmdUI * pCmdUI)
+{
+	pCmdUI->Enable(!IsDlgButtonChecked(IDC_CHECK_DO_NOT_COMPARE_CONTENTS));
+}
+
+void CCompareDirsDialog::OnUpdateBinaryComparisonOnly(CCmdUI * pCmdUI)
+{
+	pCmdUI->Enable(!IsDlgButtonChecked(IDC_CHECK_DO_NOT_COMPARE_CONTENTS));
 }
 
 void CCompareDirsDialog::OnUpdateEditCCpp(CCmdUI * pCmdUI)
 {
-	pCmdUI->Enable(! IsDlgButtonChecked(IDC_CHECK_BINARY));
+	pCmdUI->Enable(!IsDlgButtonChecked(IDC_CHECK_BINARY) && !IsDlgButtonChecked(IDC_CHECK_DO_NOT_COMPARE_CONTENTS));
 }
 
 void CCompareDirsDialog::OnUpdateTabIndent(CCmdUI * pCmdUI)
 {
-	pCmdUI->Enable(! IsDlgButtonChecked(IDC_CHECK_BINARY));
+	pCmdUI->Enable(!IsDlgButtonChecked(IDC_CHECK_BINARY) && !IsDlgButtonChecked(IDC_CHECK_DO_NOT_COMPARE_CONTENTS));
 }
 
 void CCompareDirsDialog::OnMetricsChange()

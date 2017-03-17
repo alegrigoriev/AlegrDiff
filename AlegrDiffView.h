@@ -50,7 +50,7 @@ public:
 	bool m_AscendingSortOrder[MaxColumns];
 	enum ShowFilesMask
 	{
-		ShowIdenticalFiles = 1 << FilePair::FilesIdentical,
+		ShowIdenticalFiles = (1 << FilePair::FilesIdentical) | (1 << FilePair::FilesAttributesIdentical),
 		ShowDifferentFiles = 1 << FilePair::FilesDifferent,
 		ShowDifferentInSpacesFiles = 1 << FilePair::DifferentInSpaces,
 		ShowVersionInfoDifferentFiles = 1 << FilePair::VersionInfoDifferent,

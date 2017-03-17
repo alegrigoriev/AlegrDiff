@@ -1681,6 +1681,7 @@ int FilePair::ComparisionResultPriority() const
 	case VersionInfoDifferent:
 		return 7;
 	case FilesIdentical:
+	case FilesAttributesIdentical:
 		return 8;
 	case DirectoryInFingerprintFileOnly:
 		return 9;
@@ -1832,6 +1833,7 @@ CString FilePair::GetComparisonResultStr() const
 {
 	static CString sFilesUnaccessible(MAKEINTRESOURCE(IDS_STRING_FILES_UNACCESSIBLE));
 	static CString sFilesIdentical(MAKEINTRESOURCE(IDS_STRING_FILES_IDENTICAL));
+	static CString sFilesAttributesIdentical(MAKEINTRESOURCE(IDS_STRING_FILES_ATTRIBUTES_IDENTICAL));
 	static CString sVersionInfoDifferent(MAKEINTRESOURCE(IDS_VERSION_INFO_DIFFERENT));
 	static CString sDifferentInSpaces(MAKEINTRESOURCE(IDS_DIFFERENT_IN_SPACES));
 	static CString sFilesDifferent(MAKEINTRESOURCE(IDS_FILES_DIFFERENT));
@@ -1860,6 +1862,9 @@ CString FilePair::GetComparisonResultStr() const
 		break;
 	case FilesIdentical:
 		return sFilesIdentical;
+		break;
+	case FilesAttributesIdentical:
+		return sFilesAttributesIdentical;
 		break;
 	case VersionInfoDifferent:
 		return sVersionInfoDifferent;

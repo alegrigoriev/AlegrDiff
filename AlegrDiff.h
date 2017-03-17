@@ -80,17 +80,18 @@ public:
 		DWORD m_PreferencesFlags;
 		struct
 		{
-			bool m_bRecurseSubdirs:1;
-			bool m_bAdvancedCompareDialog:1;
-			bool m_BinaryComparision:1;
-			bool m_AutoReloadChangedFiles:1;
-			bool m_bIgnoreWhitespaces:1;
-			bool m_bShowLineNumbers:1;
-			bool m_bFindBackward:1;
-			bool m_bCaseSensitive:1;
-			bool m_bCancelSelectionOnMerge:1;
-			bool m_bUseMd5:1;
-			bool m_bFindWholeWord:1;
+			bool m_bRecurseSubdirs : 1;
+			bool m_bAdvancedCompareDialog : 1;
+			bool m_BinaryComparision : 1;
+			bool m_AutoReloadChangedFiles : 1;
+			bool m_bIgnoreWhitespaces : 1;
+			bool m_bShowLineNumbers : 1;
+			bool m_bFindBackward : 1;
+			bool m_bCaseSensitive : 1;
+			bool m_bCancelSelectionOnMerge : 1;
+			bool m_bUseMd5 : 1;
+			bool m_bFindWholeWord : 1;
+			bool m_bDoNotCompareFileContents : 1;
 		};
 	};
 	union
@@ -160,8 +161,6 @@ public:
 	void UpdateAllViews(LPARAM lHint = 0L, CObject* pHint = NULL);
 
 	CDocument * OpenFilePairView(FilePair * pPair);
-	void CloseFilePairView(FilePair * pPair);
-	void ReloadFilePairView(FilePair * pPair);
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CAlegrDiffApp)

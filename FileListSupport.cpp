@@ -304,7 +304,6 @@ static int NormalizedGroupHashAndLineNumberCompareFunc(FileLine const * pLine1, 
 }
 
 #undef new
-#include <mbctype.h>
 
 bool FileItem::Load()
 {
@@ -313,7 +312,7 @@ bool FileItem::Load()
 
 	FILE * file = NULL;
 
-	_tfopen_s(&file, LPCTSTR(GetFullName()), _T("rb"));
+	_tfopen_s(&file, LPCTSTR(GetFullName()), _T("rt,ccs=UNICODE"));
 	if (NULL == file)
 	{
 		return false;
@@ -332,53 +331,30 @@ bool FileItem::Load()
 	bool IsUnicode = false;
 	bool IsUtf8 = false;
 	bool HasExtendedCharacters = false;     // any characters over 0x7F
-	UCHAR BOM[3];
 
-	if (2 == fread_s(BOM, 2, 1, 2, file)
-		&& BOM[0] == 0xFF && BOM[1] == 0xFE)
+	unsigned __int64 fpos = _telli64(_fileno(file));
+
+	if (2 == fpos)
 	{
 		IsUnicode = true;
 		m_FileEncoding = FileEncodingUTF16LE;
-		fclose(file);
-		_tfopen_s(&file, LPCTSTR(GetFullName()), _T("rt,ccs=UTF-16LE"));
 	}
-	else if (BOM[0] == 0xEF && BOM[1] == 0xBB
-			&& 1 == fread_s(BOM+2, 1, 1, 1, file)
-			&& BOM[2] == 0xBF)
+	else if (3 == fpos)
 	{
 		IsUnicode = true;
 		IsUtf8 = true;
 		m_FileEncoding = FileEncodingUTF8;
-		fclose(file);
-		_tfopen_s(&file, LPCTSTR(GetFullName()), _T("rt,ccs=UTF-8"));
 	}
 	else
 	{
 		m_FileEncoding = FileEncodingMBCS;
-		// Workaround: Have to use single-byte functions, because CRT is not using the right codepage for translation
-		rewind(file);
-		_setmode(_fileno(file), _O_TEXT);
 	}
 
 	unsigned LinNum;
 	for (LinNum =0; ; LinNum++)
 	{
 		wchar_t lineW[4096];
-		if (!IsUnicode)
-		{
-			char lineA[4096];
-			if (0 == fgets(lineA, countof(lineA), file))
-			{
-				break;
-			}
-			int ReturnValue = MultiByteToWideChar(
-												CP_ACP, MB_PRECOMPOSED,
-												lineA,
-												countof(lineA),
-												lineW,
-												countof(lineW));
-		}
-		else if (0 == fgetws(lineW, countof(lineW), file))
+		if (0 == fgetws(lineW, countof(lineW), file))
 		{
 			break;
 		}

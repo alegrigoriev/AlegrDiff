@@ -27,6 +27,7 @@
 #include "PathEx.h"
 #include <Shlwapi.h>
 #include <atlbase.h>
+#include <locale.h>
 
 #include "FileDialogWithHistory.h"
 
@@ -150,7 +151,12 @@ BOOL CAlegrDiffApp::InitInstance()
 
 	CWinApp::InitInstance();
 
-	setlocale(LC_CTYPE, ".ACP");
+	WCHAR CodePageStr[64] = L".";
+	// Fetch CP_ACP (system default code page) because it's what Notepad uses to read and write text files
+	if (GetLocaleInfoW(LOCALE_SYSTEM_DEFAULT, LOCALE_IDEFAULTANSICODEPAGE, CodePageStr+1, sizeof CodePageStr / sizeof CodePageStr[0] - 1))
+	{
+		_wsetlocale(LC_CTYPE, CodePageStr);
+	}
 
 	SetRegistryKey(_T("AleGr SoftWare"));
 

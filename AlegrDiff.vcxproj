@@ -331,7 +331,7 @@
     <ClInclude Include="PreferencesDialog.h" />
     <ClInclude Include="CommonSources\UI\ProgressDialog.h" />
     <ClInclude Include="CommonSources\UI\ResizableDialog.h" />
-    <CustomBuild Include="Resource.h">
+    <CustomBuild Include="resource.h">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Making help include file...</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">makehm /h ID_,HID_,0x10000 IDM_,HIDM_,0x10000 "%(Filename)%(Extension)" &gt; "hlp\HTMLDefines.h"
 echo. &gt;&gt; "hlp\HTMLDefines.h"

@@ -159,7 +159,7 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 			{
 				continue;
 			}
-			_ftprintf(m_pFile, _T("\"%s%s\"\n"), pFile->GetSubdir(), pFile->GetName());
+			_ftprintf(m_pFile, _T("\"%s%s\\\"\n"), pFile->GetSubdir(), pFile->GetName());
 			continue;
 		}
 

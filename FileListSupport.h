@@ -233,8 +233,6 @@ public:
 	FileItem(const WIN32_FIND_DATA * pWfd,
 			const CString & BaseDir, const CString & Dir, FileItem * pParentDir);
 
-	FileItem(LPCTSTR name);
-
 	~FileItem();
 	bool Load();
 	void Unload();

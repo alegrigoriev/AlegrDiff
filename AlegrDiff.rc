@@ -560,10 +560,10 @@ CAPTION "About AlegrDiff"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    CTEXT           "AlegrDiff Version %s",IDC_STATIC_VERSION,35,14,128,8,SS_NOPREFIX
-    CTEXT           "Copyright (C) Alexandre Grigoriev, 2001",IDC_STATIC,35,29,128,8
+    CTEXT           "AlegrDiff Version %s",IDC_STATIC_VERSION,41,14,128,8,SS_NOPREFIX
+    CTEXT           "Copyright (C) Alexandre Grigoriev, 2017",IDC_STATIC,35,29,165,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
-    PUSHBUTTON      "&mailto: alegr@earthlink.net",IDC_BUTTON_MAILTO,46,47,105,14
+    PUSHBUTTON      "&mailto: alegrigoriev@gmail.com",IDC_BUTTON_MAILTO,38,47,159,14
 END
 
 IDR_MAINFRAME DIALOG 0, 0, 330, 16
@@ -962,46 +962,6 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Version
-//
-
-VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,0,0,0
- PRODUCTVERSION 2,0,0,0
- FILEFLAGSMASK 0x3fL
-#ifdef _DEBUG
- FILEFLAGS 0x9L
-#else
- FILEFLAGS 0x8L
-#endif
- FILEOS 0x4L
- FILETYPE 0x1L
- FILESUBTYPE 0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904b0"
-        BEGIN
-            VALUE "CompanyName", "AleGr Software"
-            VALUE "FileDescription", "AlegrDiff: file comparison and merging application"
-            VALUE "FileVersion", "2.0.0.0"
-            VALUE "InternalName", "AlegrDiff"
-            VALUE "LegalCopyright", "Copyright (C) Alexandre Grigoriev, 2001-2017"
-            VALUE "OriginalFilename", "AlegrDiff.EXE"
-            VALUE "PrivateBuild", "2.00"
-            VALUE "ProductName", "AlegrDiff Application"
-            VALUE "ProductVersion", "2.0.0.0"
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1200
-    END
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // DESIGNINFO
 //
 
@@ -1227,6 +1187,11 @@ BEGIN
 END
 
 IDD_DIALOG_COMPARE_DIRS_ADVANCED AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_ABOUTBOX AFX_DIALOG_LAYOUT
 BEGIN
     0
 END

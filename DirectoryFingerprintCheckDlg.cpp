@@ -8,6 +8,7 @@
 #include <io.h>
 #include <fcntl.h>
 #include <afxpriv.h>
+#include "MessageBoxSynch.h"
 
 // CDirectoryFingerprintCheckDlg dialog
 
@@ -18,7 +19,6 @@ CDirectoryFingerprintCheckDlg::CDirectoryFingerprintCheckDlg(
 															CWnd* pParent /*=NULL*/)
 	: BaseClass(IDD, pParent)
 	, m_pDocument(pDoc)
-	, m_pFile(NULL)
 	, m_bIncludeSubdirectories(FALSE)
 	, m_bIncludeDirectoryStructure(FALSE)
 	, m_sDirectory(DirectoryToCheck)
@@ -42,21 +42,6 @@ END_MESSAGE_MAP()
 
 // CDirectoryFingerprintCheckDlg message handlers
 
-INT_PTR CDirectoryFingerprintCheckDlg::DoModal()
-{
-	m_pFile = NULL;
-	_tfopen_s(&m_pFile, m_FingerprintFilename, _T("rt"));
-	if (NULL == m_pFile)
-	{
-		CString s;
-		s.Format(IDS_STRING_CANT_OPEN_FILE, LPCTSTR(m_FingerprintFilename));
-		AfxMessageBox(s, MB_OK | MB_ICONSTOP);
-		return -1;
-	}
-
-	return BaseClass::DoModal();
-}
-
 BOOL CDirectoryFingerprintCheckDlg::OnInitDialog()
 {
 	BaseClass::OnInitDialog();
@@ -67,48 +52,57 @@ BOOL CDirectoryFingerprintCheckDlg::OnInitDialog()
 	// EXCEPTION: OCX Property Pages should return FALSE
 }
 
-unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
-{
-	//SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
-	// load the directory
-	FileList FileList1;
-	FileList FileList2;
+static const TCHAR sIncludeFiles[] = _T("IncludeFiles=");
+static const TCHAR sExcludeFiles[] = _T("ExcludeFiles=");
+static const TCHAR sExcludeFolders[] = _T("ExcludeFolders=");
+static const TCHAR sIncludeSubdirs[] = _T("IncludeSubdirs=");
+static const TCHAR sIncludeDirInfo[] = _T("IncludeDirInfo=");
 
-	// make full names from the directories
-	LPTSTR pFilePart;
+BOOL CDirectoryFingerprintCheckDlg::LoadFingerprintFile(LPCTSTR Filename, FileList & Files)
+{
+	FILE * pFile = NULL;
+	_tfopen_s(&pFile, Filename, _T("rt,ccs=UNICODE"));
+	if (NULL == pFile)
+	{
+		CString s;
+		s.Format(IDS_STRING_CANT_OPEN_FILE, Filename);
+		MessageBoxSync(s, MB_OK | MB_ICONSTOP);
+		SignalDialogEnd(IDABORT);
+		return FALSE;
+	}
 
 	// load the fingerprint file
 	TCHAR buf[1024];
-	while(NULL != _fgetts(buf, 1023, m_pFile))
+	while (NULL != _fgetts(buf, 1023, pFile))
 	{
 		if (';' == buf[0])
 		{
 			continue;
 		}
-		if (0 == _tcsnicmp(buf, _T("IncludeFiles="), 13))
+		if (0 == _tcsnicmp(buf, sIncludeFiles, countof(sIncludeFiles) - 1))
 		{
-			m_sFilenameFilter = buf + 13;
+			m_sFilenameFilter = buf + countof(sIncludeFiles) - 1;
 			m_sFilenameFilter.Trim();
 		}
-		else if (0 == _tcsnicmp(buf, _T("ExcludeFiles="), 13))
+		else if (0 == _tcsnicmp(buf, sExcludeFiles, countof(sExcludeFiles) - 1))
 		{
-			m_sIgnoreFiles = buf + 13;
+			m_sIgnoreFiles = buf + countof(sExcludeFiles) - 1;
 			m_sIgnoreFiles.Trim();
 		}
-		else if (0 == _tcsnicmp(buf, _T("ExcludeFolders="), 15))
+		else if (0 == _tcsnicmp(buf, sExcludeFolders, countof(sExcludeFolders) - 1))
 		{
-			m_sIgnoreFolders = buf + 13;
+			m_sIgnoreFolders = buf + countof(sExcludeFolders) - 1;
 			m_sIgnoreFolders.Trim();
 		}
-		else if (0 == _tcsnicmp(buf, _T("IncludeSubdirs="), 15))
+		else if (0 == _tcsnicmp(buf, sIncludeSubdirs, countof(sIncludeSubdirs) - 1))
 		{
 			TCHAR * Endptr;
-			m_bIncludeSubdirectories = _tcstol(buf + 15, & Endptr, 10);
+			m_bIncludeSubdirectories = (0 != _tcstol(buf + countof(sIncludeSubdirs) - 1, &Endptr, 10));
 		}
-		else if (0 == _tcsnicmp(buf, _T("IncludeDirInfo="), 15))
+		else if (0 == _tcsnicmp(buf, sIncludeDirInfo, countof(sIncludeDirInfo) - 1))
 		{
 			TCHAR * Endptr;
-			m_bIncludeDirectoryStructure = _tcstol(buf + 15, & Endptr, 10);
+			m_bIncludeDirectoryStructure = (0 != _tcstol(buf + countof(sIncludeDirInfo) - 1, &Endptr, 10));
 		}
 		else
 		{
@@ -116,12 +110,8 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 		}
 	}
 
-	CString ExclusionPattern(PatternToMultiCString(m_sIgnoreFiles));
-	CString InclusionPattern(PatternToMultiCString(m_sFilenameFilter));
-	CString IgnoreDirsPattern(PatternToMultiCString(m_sIgnoreFolders));
-
-	TCHAR FileName[512];
-	while(NULL != _fgetts(buf, 1023, m_pFile))
+	TCHAR FileName[4096];
+	while (NULL != _fgetts(buf, 1023, pFile))
 	{
 		if (';' == buf[0])
 		{
@@ -132,29 +122,25 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 
 		LONGLONG FileLength;
 
-		WIN32_FIND_DATA wfd;
-		memzero(wfd);
-		ULONG MD5[16];
+		WIN32_FIND_DATA wfd = { 0 };
 		BYTE md5[16];
 
 		ULARGE_INTEGER uli;
-#pragma warning(push)
-#pragma warning(disable:4477;disable:4473)
+
 		int NumScannedItems = _stscanf_s(buf,
-										_T("\"%511[^\"]\" %I64u %I64x ")
-										_T("%2x%2x%2x%2x")
-										_T("%2x%2x%2x%2x")
-										_T("%2x%2x%2x%2x")
-										_T("%2x%2x%2x%2x")
+										_T("\"%[^\"]\" %I64u %I64x ")
+										_T("%2hhx%2hhx%2hhx%2hhx")
+										_T("%2hhx%2hhx%2hhx%2hhx")
+										_T("%2hhx%2hhx%2hhx%2hhx")
+										_T("%2hhx%2hhx%2hhx%2hhx")
 										_T("\n")
 										,
-										FileName, & FileLength, &uli.QuadPart,
+										FileName, (unsigned)_countof(FileName), &FileLength, &uli.QuadPart,
 
-										& MD5[0], & MD5[1], & MD5[2], & MD5[3],
-										& MD5[4], & MD5[5], & MD5[6], & MD5[7],
-										& MD5[8], & MD5[9], & MD5[10], & MD5[11],
-										& MD5[12], & MD5[13], & MD5[14], & MD5[15]);
-#pragma warning(pop)
+										&md5[0], &md5[1], &md5[2], &md5[3],
+										&md5[4], &md5[5], &md5[6], &md5[7],
+										&md5[8], &md5[9], &md5[10], &md5[11],
+										&md5[12], &md5[13], &md5[14], &md5[15]);
 
 		if (NumScannedItems < 1)
 		{
@@ -165,16 +151,11 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 		wfd.ftLastWriteTime.dwHighDateTime = uli.HighPart;
 		wfd.ftLastWriteTime.dwLowDateTime = uli.LowPart;
 
-		for (int i = 0; i < 16; i++)
-		{
-			md5[i] = BYTE(MD5[i]);
-		}
-
 		// find the last '\'
 		LPTSTR DirEnd = _tcsrchr(FileName, '\\');
+		// NamePart is the last component of the path
 		LPTSTR NamePart = FileName;
 		CString SubDir;
-		FileItem * pFile;
 
 		if (NULL != DirEnd && 0 == DirEnd[1])
 		{
@@ -191,6 +172,7 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 				DirEnd--;
 				if ('\\' == *DirEnd)
 				{
+					// NamePart is the last directory component of the path
 					NamePart = DirEnd + 1;
 					break;
 				}
@@ -200,15 +182,17 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 		{
 			if (NumScannedItems != 19)
 			{
-				// error
+				// error, skip this line
 				continue;
 			}
 			if (NULL != DirEnd)
 			{
+				// NamePart is the filename component of the path
 				NamePart = DirEnd + 1;
 			}
 			else
 			{
+				// there was no subdirectory component
 				DirEnd = FileName;
 			}
 
@@ -229,15 +213,40 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 			_tcsncpy_s(wfd.cFileName, countof(wfd.cFileName), NamePart, countof(wfd.cFileName) - 1);
 			wfd.cFileName[countof(wfd.cFileName) - 1] = 0;
 
-			pFile = new FileItem(& wfd, CString(), SubDir, NULL);   // TODO: Parent dir
+			FileItem * pFileItem;
+			pFileItem = new FileItem(&wfd, CString(), SubDir, NULL);   // FIXME: Base directory and Parent dir
 
-			pFile->SetMD5(md5);
+			pFileItem->SetMD5(md5);
 
-			pFile->m_pNext = FileList1.m_pList;
-			FileList1.m_pList = pFile;
-			FileList1.m_NumFiles++;
+			pFileItem->m_pNext = Files.m_pList;
+			Files.m_pList = pFileItem;
+			Files.m_NumFiles++;
 		}
 	}
+	fclose(pFile);
+
+	return TRUE;
+}
+
+unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
+{
+	//SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
+	// load the directory
+	TCHAR buf[1024];
+	FileList FileList1;
+	FileList FileList2;
+
+	if (!LoadFingerprintFile(m_FingerprintFilename, FileList1))
+	{
+		return 1;
+	}
+
+	// make full names from the directories
+	LPTSTR pFilePart;
+
+	CString ExclusionPattern(PatternToMultiCString(m_sIgnoreFiles));
+	CString InclusionPattern(PatternToMultiCString(m_sFilenameFilter));
+	CString IgnoreDirsPattern(PatternToMultiCString(m_sIgnoreFolders));
 
 	GetFullPathName(m_sDirectory, MAX_PATH, buf, & pFilePart);
 
@@ -245,9 +254,6 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 	{
 		InclusionPattern = '*';
 	}
-
-	fclose(m_pFile);
-	m_pFile = NULL;
 
 	m_pDocument->m_bRecurseSubdirs = (m_bIncludeSubdirectories != 0);
 
@@ -260,11 +266,12 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 								PatternToMultiCString(_T("*")), IgnoreDirsPattern))
 	{
 		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, buf);
+		MessageBoxSync(s, MB_OK | MB_ICONSTOP);
 
-		SetNextItem(s, 0, 0);
+		SetNextItem(__T(""), 0, 0);
 
 		SignalDialogEnd(IDABORT);
-		return 0;
+		return 1;
 	}
 
 	m_pDocument->BuildFilePairList(FileList1, FileList2, this);
@@ -326,6 +333,21 @@ unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 					else
 					{
 						pPair->SetComparisonResult(FilePair::FilesDifferent);
+					}
+				}
+				else
+				{
+					if (GetLastError() == ERROR_ACCESS_DENIED)
+					{
+						pPair->SetComparisonResult(FilePair::FileUnaccessible);
+					}
+					else if (GetLastError() != ERROR_CANCELLED)
+					{
+						pPair->SetComparisonResult(FilePair::ErrorReadingSecondFile);
+					}
+					else
+					{
+						break;
 					}
 				}
 

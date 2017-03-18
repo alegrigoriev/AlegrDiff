@@ -29,11 +29,10 @@ protected:
 	CString m_sIgnoreFiles;
 	CString m_sIgnoreFolders;
 
-	FILE * m_pFile;
 	virtual unsigned ThreadProc();
+	BOOL LoadFingerprintFile(LPCTSTR Filename, FileList & Files);
 public:
 	virtual BOOL OnInitDialog();
-	virtual INT_PTR DoModal();
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 

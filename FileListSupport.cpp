@@ -1036,10 +1036,10 @@ void FileList::GetSortedList(vector<FileItem *> & ItemArray, DWORD SortFlags)
 	}
 	std::sort(ItemArray.begin(), ItemArray.end(), SortFunc);
 #ifdef _DEBUG
-	if (0) for (int i = 0; i < m_NumFiles && NULL != ItemArray[i]; i++)
+	if (0) for (int i = 0; i < m_NumFiles && i < 20 && NULL != ItemArray[i]; i++)
 		{
-			TRACE(_T("Sorted file item: subdir=%s, Name=\"%s\"\n"),
-				ItemArray[i]->GetSubdir(), ItemArray[i]->GetName());
+			TRACE(_T("Sorted file item %d: subdir=%s, Name=\"%s\", IsFolder=%d\n"),
+				i, ItemArray[i]->GetSubdir(), ItemArray[i]->GetName(), ItemArray[i]->IsFolder());
 		}
 #endif
 

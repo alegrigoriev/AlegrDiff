@@ -164,6 +164,7 @@ BOOL CDirectoryFingerprintCheckDlg::LoadFingerprintFile(LPCTSTR Filename, FileLi
 			{
 				continue;
 			}
+			*DirEnd = 0;
 
 			wfd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 			// find another backslash
@@ -216,7 +217,10 @@ BOOL CDirectoryFingerprintCheckDlg::LoadFingerprintFile(LPCTSTR Filename, FileLi
 			FileItem * pFileItem;
 			pFileItem = new FileItem(&wfd, CString(), SubDir, NULL);   // FIXME: Base directory and Parent dir
 
-			pFileItem->SetMD5(md5);
+			if (!pFileItem->IsFolder())
+			{
+				pFileItem->SetMD5(md5);
+			}
 
 			pFileItem->m_pNext = Files.m_pList;
 			Files.m_pList = pFileItem;
@@ -230,7 +234,7 @@ BOOL CDirectoryFingerprintCheckDlg::LoadFingerprintFile(LPCTSTR Filename, FileLi
 
 unsigned CDirectoryFingerprintCheckDlg::ThreadProc()
 {
-	//SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 	// load the directory
 	TCHAR buf[1024];
 	FileList FileList1;

@@ -141,6 +141,12 @@ CAlegrDiffView::CAlegrDiffView()
 {
 	CThisApp * pApp = GetApp();
 	m_ShowFilesMask = pApp->m_ShowFilesMask;
+	if (m_ShowFilesMask & ShowIdenticalFiles)
+	{
+		// add missing bit in this mask
+		m_ShowFilesMask |= ShowIdenticalFiles;
+	}
+
 	for (int i = 0; i < countof(m_ColumnArray); i++)
 	{
 		m_ColumnArray[i] = pApp->m_ColumnArray[i];

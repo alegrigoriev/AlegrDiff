@@ -187,7 +187,7 @@ FileItem::FileItem(const WIN32_FIND_DATA * pWfd,
 	, m_Length(pWfd->nFileSizeLow + (LONGLONG(pWfd->nFileSizeHigh) << 32))
 	, m_BaseDir(BaseDir)
 	, m_Subdir(Dir)
-	, m_FileType(FileTypeUnknown)
+	, m_FileType((pWfd->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? FileTypeDirectory : FileTypeUnknown)
 	, m_FileEncoding(FileEncodingUnknown)
 	, m_bHasExtendedCharacters(false)
 	, m_bMd5Calculated(false)
@@ -203,28 +203,6 @@ FileItem::FileItem(const WIN32_FIND_DATA * pWfd,
 {
 	memzero(m_Md5);
 	m_LastWriteTime = pWfd->ftLastWriteTime;
-}
-
-FileItem::FileItem(LPCTSTR name)
-	:m_Name(name)
-	, m_Length(0)
-	, m_FileType(FileTypeUnknown)
-	, m_FileEncoding(FileEncodingUnknown)
-	, m_bHasExtendedCharacters(false)
-	, m_bMd5Calculated(false)
-	, m_pFileReadBuf(NULL)
-	, m_bIsAlone(false)
-	, m_FileReadBufSize(0)
-	, m_Attributes(0)
-	, m_FileReadPos(0)
-	, m_FileReadFilled(0)
-	, m_hFile(NULL)
-	, m_pNext(NULL)
-	, m_pParentDir(NULL)
-{
-	memzero(m_Md5);
-	m_LastWriteTime.dwHighDateTime = 0;
-	m_LastWriteTime.dwLowDateTime = 0;
 }
 
 FileItem::~FileItem()

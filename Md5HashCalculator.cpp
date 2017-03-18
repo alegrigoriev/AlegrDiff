@@ -24,6 +24,7 @@ BOOL CMd5HashCalculator::CalculateFileMd5Hash(LPCTSTR Filename,
 	if (NULL == m_HashBuf
 		|| NULL == m_hProv)
 	{
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return FALSE;
 	}
 

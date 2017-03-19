@@ -30,8 +30,7 @@ protected: // create from serialization only
 	CAlegrDiffDoc();
 	DECLARE_DYNCREATE(CAlegrDiffDoc)
 
-// Attributes
-	CSimpleCriticalSection m_FileListCs;
+	// Attributes
 
 	unsigned CompareDirectoriesFunction(class CComparisonProgressDlg * pDlg);
 
@@ -45,16 +44,23 @@ public:
 	CString	m_sFirstDir;
 	CString	m_sSecondDir;
 
-	ListHead<FilePair> m_PairList;
-	int m_nFilePairs;
+	FilePairList m_PairList;
+
 	bool m_bRecurseSubdirs;
 	bool m_bCheckingFingerprint;
 	bool m_bDoNotCompareFileContents;
-	bool m_bNeedUpdateViews;
 
-	ListHead<FilePair> * GetFilePairList()
+	FilePair* GetFirstFilePair()
 	{
-		return & m_PairList;
+		return m_PairList.First();
+	}
+	FilePair* GetNextFilePair(FilePair *Pair)
+	{
+		return m_PairList.Next(Pair);
+	}
+	bool FilePairNotEnd(FilePair *Pair)
+	{
+		return m_PairList.NotEnd(Pair);
 	}
 // Operations
 public:
@@ -65,9 +71,7 @@ public:
 
 	bool CanCancelComparison(CProgressDialog * pDlg);
 	// if returns true, call UpdateAllViews
-	bool BuildFilePairList(FileList & FileList1, FileList & FileList2,
-							CProgressDialog * pDlg);
-	bool RebuildFilePairList(CProgressDialog * pDlg);
+	bool BuildFilePairList(OPTIONAL LPCTSTR FirstDirOrFingerprint, LPCTSTR SecondDir);
 	void FreeFilePairList();
 	void SetFingerprintCheckingMode(LPCTSTR DirectoryToCheck,
 									LPCTSTR FingerprintFilename);

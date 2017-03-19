@@ -66,8 +66,7 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 {
 	//SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 	// load the directory
-	FileList FileList1;
-	unsigned i;
+	FileList list;
 
 	// make full names from the directories
 	LPTSTR pFilePart;
@@ -89,9 +88,11 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 	s.Format(IDS_STRING_LOADING_DIRECTORY, FullDirectoryName);
 	SetNextItem(s, 0, 0);
 
-	if (! FileList1.LoadFolder(FullDirectoryName, m_bIncludeSubdirectories != 0,
-								InclusionPattern, ExclusionPattern, PatternToMultiCString(_T("")),
-								PatternToMultiCString(_T("")), IgnoreDirsPattern))
+	eLoadFolderResult result = list.LoadFolder(FullDirectoryName, m_bIncludeSubdirectories != 0,
+												InclusionPattern, ExclusionPattern, PatternToMultiCString(_T("")),
+												PatternToMultiCString(_T("")), IgnoreDirsPattern);
+
+	if (result != eLoadFolderResultSuccess)
 	{
 		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, FullDirectoryName);
 
@@ -101,15 +102,10 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 		return 0;
 	}
 
-	vector<FileItem *> Files1;
-
-	FileList1.GetSortedList(Files1, FileList::SortDirFirst);
-
 	ULONGLONG TotalDataSize = 0;
-	for (i = 0; i < Files1.size(); i++)
+	for (FileItem * pFile = list.m_pList; pFile != nullptr; pFile = pFile->m_pNext)
 	{
-		FileItem * pFile = Files1[i];
-		if ( ! pFile->IsFolder())
+		if (!pFile->IsFolder())
 		{
 			// a file open is taken as equivalent of 8K
 			TotalDataSize += pFile->GetFileLength() + FILE_OPEN_OVERHEAD;
@@ -149,17 +145,14 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 			m_bIncludeSubdirectories,
 			m_bIncludeDirectoryStructure);
 
-
-	for (i = 0; i < Files1.size() && ! m_StopRunThread; i++)
+	for (FileItem * pFile = list.m_pList; pFile != nullptr && !m_StopRunThread; pFile = pFile->m_pNext)
 	{
-		FileItem * pFile = Files1[i];
 		if (pFile->IsFolder())
 		{
-			if ( ! m_bIncludeDirectoryStructure)
+			if (m_bIncludeDirectoryStructure)
 			{
-				continue;
+				_ftprintf(m_pFile, _T("\"%s%s\\\"\n"), (LPCTSTR)pFile->GetSubdir(), (LPCTSTR)pFile->GetName());
 			}
-			_ftprintf(m_pFile, _T("\"%s%s\\\"\n"), pFile->GetSubdir(), pFile->GetName());
 			continue;
 		}
 
@@ -167,11 +160,6 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 
 		if (pFile->CalculateHashes( & HashCalc, this))
 		{
-			FILETIME LastWriteTime = pFile->GetLastWriteTime();
-			LARGE_INTEGER LastWriteTime64;
-			LastWriteTime64.LowPart = LastWriteTime.dwLowDateTime;
-			LastWriteTime64.HighPart = LastWriteTime.dwHighDateTime;
-
 			_ftprintf(m_pFile,
 					_T("\"%s%s\" %I64d %016I64X ")
 					_T("%02X%02X%02X%02X")
@@ -179,10 +167,10 @@ unsigned CDirectoryFingerpringCreateDlg::ThreadProc()
 					_T("%02X%02X%02X%02X")
 					_T("%02X%02X%02X%02X")
 					_T("\n"),
-					pFile->GetSubdir(),
-					pFile->GetName(),
+					(LPCTSTR)pFile->GetSubdir(),
+					(LPCTSTR)pFile->GetName(),
 					pFile->GetFileLength(),
-					LastWriteTime64.QuadPart,
+					pFile->GetLastWriteTime(),
 					pFile->GetDigest(0), pFile->GetDigest(1), pFile->GetDigest(2), pFile->GetDigest(3),
 					pFile->GetDigest(4), pFile->GetDigest(5), pFile->GetDigest(6), pFile->GetDigest(7),
 					pFile->GetDigest(8), pFile->GetDigest(9), pFile->GetDigest(10), pFile->GetDigest(11),

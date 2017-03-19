@@ -9,15 +9,23 @@
 #include <algorithm>
 #include "ProgressDialog.h"
 #include "LastError.h"
+#include <atlpath.h>
 
 #ifdef _DEBUG
 #include <mmsystem.h>
 #endif
 
+#define DEBUG_FILE_PAIR_LIST 0
+#define DEBUG_BUILD_SECTION_LIST 0
+#define DEBUG_FILE_ITEM 0
+#define DEBUG_GET_FILE_DATA 0
+#define DEBUG_GET_SORTED_LIST 0
+#define DEBUG_LOAD_FOLDER 0
+
 #undef tolower
 #undef toupper
 typedef FileDiffSection * FileDiffSectionPtr;
-constexpr bool less<FileDiffSectionPtr>::operator()
+constexpr bool std::less<FileDiffSectionPtr>::operator()
 	(FileDiffSectionPtr const & pS1, FileDiffSectionPtr const & pS2) const
 {
 	return pS1->m_Begin < pS2->m_Begin;
@@ -182,27 +190,47 @@ bool MultiPatternMatches(LPCTSTR name, LPCTSTR sPattern)
 }
 
 FileItem::FileItem(const WIN32_FIND_DATA * pWfd,
-					const CString & BaseDir, const CString & Dir, FileItem * pParentDir)
-	:m_Name(pWfd->cFileName)
-	, m_Length(pWfd->nFileSizeLow + (LONGLONG(pWfd->nFileSizeHigh) << 32))
+					const CString & BaseDir, const CString & Dir, OPTIONAL FileItem * pParentDir)
+	:m_Length(pWfd->nFileSizeLow + (LONGLONG(pWfd->nFileSizeHigh) << 32))
+	, m_LastWriteTime(pWfd->ftLastWriteTime.dwLowDateTime + (ULONGLONG(pWfd->ftLastWriteTime.dwHighDateTime) << 32))
 	, m_BaseDir(BaseDir)
 	, m_Subdir(Dir)
+	, m_Name(pWfd->cFileName)
 	, m_FileType((pWfd->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? FileTypeDirectory : FileTypeUnknown)
 	, m_FileEncoding(FileEncodingUnknown)
 	, m_bHasExtendedCharacters(false)
 	, m_bMd5Calculated(false)
 	, m_bIsAlone(false)
-	, m_pFileReadBuf(NULL)
+	, m_pFileReadBuf(nullptr)
 	, m_FileReadBufSize(0)
 	, m_FileReadPos(0)
 	, m_FileReadFilled(0)
 	, m_Attributes(pWfd->dwFileAttributes)
 	, m_hFile(NULL)
-	, m_pNext(NULL)
+	, m_pNext(nullptr)
+	, m_NameSortNum(ULONG_MAX)
+	, m_FullDirSortNum(ULONG_MAX)
 	, m_pParentDir(pParentDir)
 {
+	if (pWfd->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	{
+		m_Name += _T("\\");
+
+		m_MultiStrDir = Dir + m_Name;
+		int length = m_MultiStrDir.GetLength();
+		LPTSTR str = m_MultiStrDir.GetBuffer(length);
+		while (*str)
+		{
+			if (*str == _T('\\'))
+			{
+				*str = 0;
+			}
+			str++;
+		}
+		m_MultiStrDir.ReleaseBufferSetLength(length);
+	}
+
 	memzero(m_Md5);
-	m_LastWriteTime = pWfd->ftLastWriteTime;
 }
 
 FileItem::~FileItem()
@@ -212,7 +240,7 @@ FileItem::~FileItem()
 
 void FileItem::Unload()
 {
-	if (0) TRACE(_T("FileItem %s Unloaded\n"), LPCTSTR(GetFullName()));
+	if (DEBUG_FILE_ITEM) TRACE(_T("FileItem %s Unloaded\n"), LPCTSTR(GetFullName()));
 
 	CSimpleCriticalSectionLock lock(m_Cs);
 
@@ -384,7 +412,7 @@ bool FileItem::Load()
 	}
 
 #ifdef _DEBUG
-	TRACE(_T("File %s loaded in %d ms\n"), LPCTSTR(GetFullName()), timeGetTime() - BeginTime);
+	if (DEBUG_FILE_ITEM) TRACE(_T("File %s loaded in %d ms\n"), LPCTSTR(GetFullName()), timeGetTime() - BeginTime);
 	BeginTime = timeGetTime();
 #endif
 	m_Lines.resize(LinNum);
@@ -445,7 +473,7 @@ bool FileItem::Load()
 				|| (m_NormalizedHashSortedLines[k]->GetNormalizedHash() == m_NormalizedHashSortedLines[k - 1]->GetNormalizedHash()
 					&& m_NormalizedHashSortedLines[k]->GetLineNumber() < m_NormalizedHashSortedLines[k - 1]->GetLineNumber()))
 			{
-				TRACE("Item %d: NormHash=%x, lineNum=%d, item %d: NormHash=%x, LineNum=%d\n",
+				if (DEBUG_FILE_ITEM) TRACE("Item %d: NormHash=%x, lineNum=%d, item %d: NormHash=%x, LineNum=%d\n",
 					k - 1, m_NormalizedHashSortedLines[k - 1]->GetNormalizedHash(), m_NormalizedHashSortedLines[k - 1]->GetLineNumber(),
 					k, m_NormalizedHashSortedLines[k]->GetNormalizedHash(), m_NormalizedHashSortedLines[k]->GetLineNumber());
 				//break;
@@ -457,7 +485,7 @@ bool FileItem::Load()
 				|| (m_NormalizedHashSortedLineGroups[k]->GetNormalizedGroupHash() == m_NormalizedHashSortedLineGroups[k - 1]->GetNormalizedGroupHash()
 					&& m_NormalizedHashSortedLineGroups[k]->GetLineNumber() < m_NormalizedHashSortedLineGroups[k - 1]->GetLineNumber()))
 			{
-				TRACE("Item %d: GroupNormHash=%x, lineNum=%d, item %d: GroupNormHash=%x, LineNum=%d\n",
+				if (DEBUG_FILE_ITEM) TRACE("Item %d: GroupNormHash=%x, lineNum=%d, item %d: GroupNormHash=%x, LineNum=%d\n",
 					k - 1, m_NormalizedHashSortedLineGroups[k - 1]->GetNormalizedGroupHash(), m_NormalizedHashSortedLineGroups[k - 1]->GetLineNumber(),
 					k, m_NormalizedHashSortedLineGroups[k]->GetNormalizedGroupHash(), m_NormalizedHashSortedLineGroups[k]->GetLineNumber());
 				//break;
@@ -467,7 +495,7 @@ bool FileItem::Load()
 #endif
 	// make sorted array of the normalized string hash values
 #ifdef _DEBUG
-	TRACE("Lines sorted in %d ms\n", timeGetTime() - BeginTime);
+	if (DEBUG_FILE_ITEM) TRACE("Lines sorted in %d ms\n", timeGetTime() - BeginTime);
 #endif
 
 	return true;
@@ -476,50 +504,52 @@ bool FileItem::Load()
 // sort directories first then names
 bool FileItem::DirNameSortFunc(FileItem const * Item1, FileItem const * Item2)
 {
-	return DirNameCompare(Item1, Item2) < 0;
+	return DirNameCompare(Item1, Item2) > 0;
 }
 
 bool FileItem::DirNameSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2)
 {
-	return DirNameCompare(Item1, Item2) > 0;
+	return DirNameCompare(Item1, Item2) < 0;
 }
 
+// These functions return 1 if Item1 is greater than Item2, -1 if Item1 is less than Item2,
 int FileItem::DirNameCompare(FileItem const * Item1, FileItem const * Item2)
 {
-	if (NULL == Item1)
+	if (nullptr == Item2)
 	{
-		return NULL != Item2;
+		return nullptr != Item1;
 	}
-	if (NULL == Item2)
+	if (nullptr == Item1)
 	{
 		return -1;
 	}
-	// compare subdirs
-	// compare pointers to dir name buffers
-	if (Item1->GetSubdir() != Item2->GetSubdir())
+
+	if (Item1->m_FullDirSortNum < Item2->m_FullDirSortNum)
 	{
-		if (0 == Item1->m_Subdir.GetLength()
-			&& 0 != Item2->m_Subdir.GetLength())
-		{
-			return -1;
-		}
-		if (0 == Item2->m_Subdir.GetLength()
-			&& 0 != Item1->m_Subdir.GetLength())
-		{
-			return 1;
-		}
-		int result = Item1->m_Subdir.CollateNoCase(Item2->m_Subdir);
-		if (0 != result)
-		{
-			return result;
-		}
+		return -1;
 	}
+
+	if (Item1->m_FullDirSortNum > Item2->m_FullDirSortNum)
+	{
+		return 1;
+	}
+
 	// directory name is the same
 	// compare file name. Subdirectories go first
 	if (Item1->IsFolder() == Item2->IsFolder())
 	{
-		return Item1->m_Name.CollateNoCase(Item2->m_Name);
+		if (Item1->m_NameSortNum < Item2->m_NameSortNum)
+		{
+			return -1;
+		}
+
+		if (Item1->m_NameSortNum > Item2->m_NameSortNum)
+		{
+			return 1;
+		}
+		return 0;
 	}
+
 	if (Item1->IsFolder())
 	{
 		return -1;
@@ -540,14 +570,15 @@ bool FileItem::NameSortBackwardsFunc(FileItem const * Item1, FileItem const * It
 
 int FileItem::NameCompare(FileItem const * Item1, FileItem const * Item2)
 {
-	if (NULL == Item1)
+	if (nullptr == Item2)
 	{
-		return NULL != Item2;
+		return nullptr != Item1;
 	}
-	if (NULL == Item2)
+	if (nullptr == Item1)
 	{
 		return -1;
 	}
+
 	if (Item1->IsFolder() != Item2->IsFolder())
 	{
 		if (Item1->IsFolder())
@@ -557,25 +588,27 @@ int FileItem::NameCompare(FileItem const * Item1, FileItem const * Item2)
 		return 1;
 	}
 
-	int result = Item1->m_Name.CollateNoCase(Item2->m_Name);
-	if (0 != result)
-	{
-		return result;
-	}
-	// compare subdirs
-
-	if (0 == Item1->m_Subdir.GetLength()
-		&& 0 != Item2->m_Subdir.GetLength())
-	{
-		return 1;
-	}
-	if (0 == Item2->m_Subdir.GetLength()
-		&& 0 != Item1->m_Subdir.GetLength())
+	if (Item1->m_NameSortNum < Item2->m_NameSortNum)
 	{
 		return -1;
 	}
 
-	return Item1->m_Subdir.CollateNoCase(Item2->m_Subdir);
+	if (Item1->m_NameSortNum > Item2->m_NameSortNum)
+	{
+		return 1;
+	}
+
+	if (Item1->m_FullDirSortNum < Item2->m_FullDirSortNum)
+	{
+		return -1;
+	}
+
+	if (Item1->m_FullDirSortNum > Item2->m_FullDirSortNum)
+	{
+		return 1;
+	}
+
+	return 0;
 }
 
 
@@ -591,32 +624,11 @@ bool FileItem::TimeSortBackwardsFunc(FileItem const * Item1, FileItem const * It
 
 int FileItem::TimeCompare(FileItem const * Item1, FileItem const * Item2)
 {
-	if (NULL == Item1)
-	{
-		return NULL != Item2;
-	}
-	if (NULL == Item2)
-	{
-		return -1;
-	}
-	if (Item1->m_LastWriteTime.dwLowDateTime == Item2->m_LastWriteTime.dwLowDateTime
-		&& Item1->m_LastWriteTime.dwHighDateTime == Item2->m_LastWriteTime.dwHighDateTime)
-	{
-		return NameCompare(Item1, Item2);
-	}
-	if (Item1->m_LastWriteTime.dwHighDateTime > Item2->m_LastWriteTime.dwHighDateTime)
+	if (Item1->m_LastWriteTime > Item2->m_LastWriteTime)
 	{
 		return 1;
 	}
-	if (Item1->m_LastWriteTime.dwHighDateTime < Item2->m_LastWriteTime.dwHighDateTime)
-	{
-		return -1;
-	}
-	if (Item1->m_LastWriteTime.dwLowDateTime > Item2->m_LastWriteTime.dwLowDateTime)
-	{
-		return 1;
-	}
-	if (Item1->m_LastWriteTime.dwLowDateTime < Item2->m_LastWriteTime.dwLowDateTime)
+	if (Item1->m_LastWriteTime < Item2->m_LastWriteTime)
 	{
 		return -1;
 	}
@@ -625,14 +637,6 @@ int FileItem::TimeCompare(FileItem const * Item1, FileItem const * Item2)
 
 int FileItem::LengthCompare(FileItem const * Item1, FileItem const * Item2)
 {
-	if (NULL == Item1)
-	{
-		return NULL != Item2;
-	}
-	if (NULL == Item2)
-	{
-		return -1;
-	}
 	if (Item1->m_Length > Item2->m_Length)
 	{
 		return 1;
@@ -655,8 +659,11 @@ FileCheckResult FileItem::CheckForFileChanged()
 		return FileDeleted;
 	}
 	FindClose(hFind);
-	if (wfd.ftLastWriteTime.dwHighDateTime != m_LastWriteTime.dwHighDateTime
-		|| wfd.ftLastWriteTime.dwLowDateTime != m_LastWriteTime.dwLowDateTime)
+	ULARGE_INTEGER wfdLastWriteTime;
+	wfdLastWriteTime.LowPart = wfd.ftLastWriteTime.dwLowDateTime;
+	wfdLastWriteTime.HighPart = wfd.ftLastWriteTime.dwHighDateTime;
+
+	if (wfdLastWriteTime.QuadPart != m_LastWriteTime)
 	{
 		return FileTimeChanged;
 	}
@@ -675,12 +682,15 @@ FileCheckResult FileItem::ReloadIfChanged()
 		return FileDeleted;
 	}
 	FindClose(hFind);
-	if (wfd.ftLastWriteTime.dwHighDateTime != m_LastWriteTime.dwHighDateTime
-		|| wfd.ftLastWriteTime.dwLowDateTime != m_LastWriteTime.dwLowDateTime)
+	ULARGE_INTEGER wfdLastWriteTime;
+	wfdLastWriteTime.LowPart = wfd.ftLastWriteTime.dwLowDateTime;
+	wfdLastWriteTime.HighPart = wfd.ftLastWriteTime.dwHighDateTime;
+
+	if (wfdLastWriteTime.QuadPart != m_LastWriteTime)
 	{
 		Unload();
-		m_LastWriteTime = wfd.ftLastWriteTime;
-		m_Length = wfd.nFileSizeLow | ((ULONGLONG) wfd.nFileSizeHigh << 32);
+		m_LastWriteTime = wfdLastWriteTime.QuadPart;
+		m_Length = wfd.nFileSizeLow | ((ULONGLONG)wfd.nFileSizeHigh << 32);
 		m_bMd5Calculated = false;
 		if ((m_Attributes & FILE_ATTRIBUTE_DIRECTORY) !=
 			(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
@@ -780,7 +790,7 @@ unsigned FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes)
 		// need data before the buffer begin, but some of the data is in the buffer
 		if (NeedEnd > m_FileReadPos && NeedEnd <= m_FileReadPos + m_FileReadFilled)
 		{
-			TRACE("move data up, read some to the end of buffer\n");
+			if (DEBUG_GET_FILE_DATA) TRACE("move data up, read some to the end of buffer\n");
 			ULONG MoveBy = ULONG(m_FileReadPos - NeedBegin);
 			ULONG NewFilled = m_FileReadFilled + MoveBy;
 			ULONG ToMove = m_FileReadFilled;
@@ -795,9 +805,9 @@ unsigned FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes)
 				memmove(m_pFileReadBuf + MoveBy,
 						m_pFileReadBuf, ToMove);
 
-				SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
-				TRACE("Reading %d bytes at %X\n", MoveBy, NeedBeginLow);
-				if ( ! ReadFile(m_hFile, m_pFileReadBuf, MoveBy, & BytesRead, NULL))
+				SetFilePointer(m_hFile, NeedBeginLow, &NeedBeginHigh, FILE_BEGIN);
+				if (DEBUG_GET_FILE_DATA) TRACE("Reading %d bytes at %X\n", MoveBy, NeedBeginLow);
+				if (!ReadFile(m_hFile, m_pFileReadBuf, MoveBy, &BytesRead, NULL))
 				{
 					err.Get();
 					m_FileReadFilled = 0;
@@ -809,9 +819,9 @@ unsigned FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes)
 		}
 		else
 		{
-			SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
-			TRACE("Reading %d bytes at %X\n", m_FileReadBufSize, NeedBeginLow);
-			if ( ! ReadFile(m_hFile, m_pFileReadBuf, (DWORD)m_FileReadBufSize, & BytesRead, NULL))
+			SetFilePointer(m_hFile, NeedBeginLow, &NeedBeginHigh, FILE_BEGIN);
+			if (DEBUG_GET_FILE_DATA) TRACE("Reading %d bytes at %X\n", m_FileReadBufSize, NeedBeginLow);
+			if (!ReadFile(m_hFile, m_pFileReadBuf, (DWORD)m_FileReadBufSize, &BytesRead, NULL))
 			{
 				err.Get();
 				m_FileReadFilled = 0;
@@ -827,7 +837,7 @@ unsigned FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes)
 		// may need data after the buffer end, but some of the data is in the buffer
 		if (NeedEnd > m_FileReadPos + m_FileReadFilled)
 		{
-			TRACE("move data down, read some more data\n");
+			if (DEBUG_GET_FILE_DATA) TRACE("move data down, read some more data\n");
 			ULONG MoveBy = ULONG(NeedEndBuffer - (m_FileReadPos + m_FileReadFilled));
 			if (0 != MoveBy)
 			{
@@ -853,8 +863,8 @@ unsigned FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes)
 
 			SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
 
-			TRACE("Reading %d bytes at %X\n", m_FileReadBufSize - m_FileReadFilled, NeedBeginLow);
-			if ( ! ReadFile(m_hFile, m_pFileReadBuf, (DWORD)m_FileReadBufSize - m_FileReadFilled, & BytesRead, NULL))
+			if (DEBUG_GET_FILE_DATA) TRACE("Reading %d bytes at %X\n", m_FileReadBufSize - m_FileReadFilled, NeedBeginLow);
+			if (!ReadFile(m_hFile, m_pFileReadBuf, (DWORD)m_FileReadBufSize - m_FileReadFilled, &BytesRead, NULL))
 			{
 				err.Get();
 				m_FileReadFilled = 0;
@@ -865,9 +875,9 @@ unsigned FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes)
 	}
 	else
 	{
-		SetFilePointer(m_hFile, NeedBeginLow, & NeedBeginHigh, FILE_BEGIN);
-		TRACE("Reading %d bytes at %X\n", m_FileReadBufSize, NeedBeginLow);
-		if ( ! ReadFile(m_hFile, m_pFileReadBuf, m_FileReadBufSize, & BytesRead, NULL))
+		SetFilePointer(m_hFile, NeedBeginLow, &NeedBeginHigh, FILE_BEGIN);
+		if (DEBUG_GET_FILE_DATA) TRACE("Reading %d bytes at %X\n", m_FileReadBufSize, NeedBeginLow);
+		if (!ReadFile(m_hFile, m_pFileReadBuf, m_FileReadBufSize, &BytesRead, NULL))
 		{
 			err.Get();
 			m_FileReadFilled = 0;
@@ -993,59 +1003,6 @@ FileList::~FileList()
 	FreeFileList();
 }
 
-void FileList::GetSortedList(vector<FileItem *> & ItemArray, DWORD SortFlags)
-{
-	ItemArray.resize(m_NumFiles);
-	if (0 == m_NumFiles)
-	{
-		return;
-	}
-	// sort the file lists by subdirs and names
-
-	FileItem * pCurItem = m_pList;
-	for (int i = 0; i < m_NumFiles; i++)
-	{
-		ItemArray[i] = pCurItem;
-		if (NULL != pCurItem)
-		{
-			pCurItem = pCurItem->m_pNext;
-		}
-	}
-	bool (* SortFunc)(FileItem const * Item1, FileItem const * Item2);
-	switch (SortFlags)
-	{
-	case SortNameFirst:
-		SortFunc = FileItem::NameSortFunc;
-		break;
-	default:
-	case SortDirFirst:
-		SortFunc = FileItem::DirNameSortFunc;
-		break;
-	case SortDataModified:
-		SortFunc = FileItem::TimeSortFunc;
-		break;
-	case SortNameFirst | SortBackwards:
-		SortFunc = FileItem::NameSortBackwardsFunc;
-		break;
-	case SortDirFirst | SortBackwards:
-		SortFunc = FileItem::DirNameSortBackwardsFunc;
-		break;
-	case SortDataModified | SortBackwards:
-		SortFunc = FileItem::TimeSortBackwardsFunc;
-		break;
-	}
-	std::sort(ItemArray.begin(), ItemArray.end(), SortFunc);
-#ifdef _DEBUG
-	if (0) for (int i = 0; i < m_NumFiles && i < 20 && NULL != ItemArray[i]; i++)
-		{
-			TRACE(_T("Sorted file item %d: subdir=%s, Name=\"%s\", IsFolder=%d\n"),
-				i, ItemArray[i]->GetSubdir(), ItemArray[i]->GetName(), ItemArray[i]->IsFolder());
-		}
-#endif
-
-}
-
-
 struct LineHashComparison
 {
 	LineHashComparison(unsigned n) : LineNum(n) {}
@@ -1085,7 +1042,7 @@ struct LineGroupHashComparison
 // find the line with the same hash and same and greater number, return -1 if not found
 const FileLine * FileItem::FindMatchingLine(const FileLine * pLine, unsigned nStartLineNum, unsigned nEndLineNum)
 {
-	vector<FileLine *>::iterator ppLine =
+	std::vector<FileLine *>::iterator ppLine =
 		lower_bound(m_NormalizedHashSortedLines.begin(),
 					m_NormalizedHashSortedLines.end(), pLine,
 					LineHashComparison(nStartLineNum));
@@ -1160,7 +1117,7 @@ const FileLine * FileItem::FindMatchingLine(const FileLine * pLine, unsigned nSt
 // find the line with the same hash and same and greater number, return -1 if not found
 const FileLine * FileItem::FindMatchingLineGroupLine(const FileLine * pLine, unsigned nStartLineNum, unsigned nEndLineNum)
 {
-	vector<FileLine *>::iterator ppLine =
+	std::vector<FileLine *>::iterator ppLine =
 		lower_bound(m_NormalizedHashSortedLineGroups.begin(),
 					m_NormalizedHashSortedLineGroups.end(), pLine,
 					LineGroupHashComparison(nStartLineNum));
@@ -1233,39 +1190,35 @@ const FileLine * FileItem::FindMatchingLineGroupLine(const FileLine * pLine, uns
 		return NULL;
 }
 
-bool FileList::LoadFolder(const CString & BaseDir, bool bRecurseSubdirs,
-						LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
-						LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask, LPCTSTR sIgnoreDirs)
+eLoadFolderResult FileList::LoadFolder(LPCTSTR BaseDir, bool bRecurseSubdirs,
+										LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
+										LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask, LPCTSTR sIgnoreDirs)
 {
 	// make sure the directory is appended with '\', or ends with ':'
 	m_BaseDir = BaseDir;
-	if ( ! BaseDir.IsEmpty())
-	{
-		TCHAR c;
-		c = BaseDir[BaseDir.GetLength() - 1];
-		if (':' != c
-			&& '\\' != c
-			&& '/' != c)
-		{
-			m_BaseDir += _T("\\");
-		}
-	}
+	((CString&)m_BaseDir).Replace(_T('/'), _T('\\'));
+
+	((CString&)m_BaseDir).Replace(_T("\\\\"), _T("\\"));
+
+	m_BaseDir.Canonicalize();
+	m_BaseDir.MakeFullPath(BaseDir);
+	// canonicalize the directory
+	m_BaseDir.AddBackslash();
 
 	if ( ! bRecurseSubdirs)
 	{
 		sIgnoreDirs = _T("*");
 	}
-
 	return LoadSubFolder(_T(""), sInclusionMask, sExclusionMask,
 						sC_CPPMask, sBinaryMask, sIgnoreDirs, NULL);
 }
 
-bool ReadSubfolder(FileItem ** ppFiles, FileItem ** ppDirs,
-					CString const & SubDirectory, CString const & BaseDirectory,
-					LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
-					LPCTSTR sIgnoreDirs, FileItem * pParentDir)
+eLoadFolderResult ReadSubfolder(FileItem ** ppFiles, FileItem ** ppDirs,
+								CString const & SubDirectory, CString const & BaseDirectory,
+								LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
+								LPCTSTR sIgnoreDirs, FileItem * pParentDir)
 {
-	if (0) TRACE(_T("LoadSubFolder: scanning %s\n"), LPCTSTR(BaseDirectory + SubDirectory));
+	if (DEBUG_LOAD_FOLDER) TRACE(_T("LoadSubFolder: scanning %s\n"), LPCTSTR(BaseDirectory + SubDirectory));
 
 	WIN32_FIND_DATA wfd;
 	HANDLE hFind = FindFirstFile(BaseDirectory + SubDirectory + _T("*"), & wfd);
@@ -1273,7 +1226,15 @@ bool ReadSubfolder(FileItem ** ppFiles, FileItem ** ppDirs,
 	if (INVALID_HANDLE_VALUE == hFind
 		|| NULL == hFind)
 	{
-		return false;
+		if (GetLastError() == ERROR_FILE_NOT_FOUND)
+		{
+			return eLoadFolderResultNotFound;
+		}
+		if (GetLastError() == ERROR_ACCESS_DENIED)
+		{
+			return eLoadFolderResultAccessDenied;
+		}
+		return eLoadFolderResultFailure;
 	}
 
 	do
@@ -1282,7 +1243,7 @@ bool ReadSubfolder(FileItem ** ppFiles, FileItem ** ppDirs,
 
 		if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
-			if (0) TRACE(_T("Found the subdirectory %s\n"), wfd.cFileName);
+			if (DEBUG_LOAD_FOLDER) TRACE(_T("Found the subdirectory %s\n"), wfd.cFileName);
 			if (0 == _tcscmp(wfd.cFileName, _T("."))
 				|| 0 == _tcscmp(wfd.cFileName, _T(".."))
 				|| MultiPatternMatches(wfd.cFileName, sIgnoreDirs)
@@ -1295,20 +1256,18 @@ bool ReadSubfolder(FileItem ** ppFiles, FileItem ** ppDirs,
 
 			wfd.cFileName[countof(wfd.cFileName) - 1] = 0;
 
-			pFile = new FileItem( & wfd, BaseDirectory, SubDirectory, pParentDir);
-			if (NULL == pFile)
+			pFile = new FileItem(&wfd, BaseDirectory, SubDirectory, pParentDir);
+			if (NULL != pFile)
 			{
-				continue;
+				// add to the list
+				pFile->m_pNext = *ppDirs;
+				*ppDirs = pFile;
 			}
-
-			// add to the list
-			pFile->m_pNext = *ppDirs;
-			*ppDirs = pFile;
 		}
 		else
 		{
 			// filter the file and add it to the list, if it matches the pattern.
-			if (0) TRACE(_T("File %s found\n"), wfd.cFileName);
+			if (DEBUG_LOAD_FOLDER) TRACE(_T("File %s found\n"), wfd.cFileName);
 
 			if (! MultiPatternMatches(wfd.cFileName, sInclusionMask)
 				|| MultiPatternMatches(wfd.cFileName, sExclusionMask))
@@ -1317,49 +1276,92 @@ bool ReadSubfolder(FileItem ** ppFiles, FileItem ** ppDirs,
 				continue;
 			}
 
-			if (0) TRACE(_T("New file item: Name=\"%s\", base dir=%s, subdir=%s\n"),
-						wfd.cFileName, (LPCTSTR)BaseDirectory, (LPCTSTR)SubDirectory);
+			if (DEBUG_LOAD_FOLDER) TRACE(_T("New file item: Name=\"%s\", base dir=%s, subdir=%s\n"),
+										wfd.cFileName, (LPCTSTR)BaseDirectory, (LPCTSTR)SubDirectory);
 
-			pFile = new FileItem( & wfd, BaseDirectory, SubDirectory, pParentDir);
-			if (NULL == pFile)
+			pFile = new FileItem(&wfd, BaseDirectory, SubDirectory, pParentDir);
+			if (NULL != pFile)
 			{
-				continue;
+				// add to the list
+				pFile->m_pNext = *ppFiles;
+				*ppFiles = pFile;
 			}
-			// add to the list
-			pFile->m_pNext = *ppFiles;
-			*ppFiles = pFile;
 		}
-	}
-	while (FindNextFile(hFind, & wfd));
+	} while (FindNextFile(hFind, &wfd));
+
+	DWORD last_error = GetLastError();
 	FindClose(hFind);
-	return true;
+
+	if (last_error != ERROR_NO_MORE_FILES)
+	{
+		return eLoadFolderResultSubdirReadError;
+	}
+
+	// The names are returned in the lists in the reverse sort order
+	return eLoadFolderResultSuccess;
 }
 
-bool FileList::LoadSubFolder(LPCTSTR Subdir,
-							LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
-							LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask,
-							LPCTSTR sIgnoreDirs, FileItem * pParentDir)
+eLoadFolderResult FileList::LoadSubFolder(LPCTSTR Subdir,
+										LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
+										LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask,
+										LPCTSTR sIgnoreDirs, FileItem * pParentDir)
 {
-	if (0) TRACE(_T("LoadSubFolder: scanning %s\n"), LPCTSTR(Subdir));
+	if (DEBUG_LOAD_FOLDER) TRACE(_T("LoadSubFolder: scanning %s\n"), Subdir);
 	FileItem * pFilesList = NULL;
 	FileItem * pDirsList = NULL;
 
-	CString SubDirectory(Subdir);
-	// make sure the name contains '\'.
-	if ( ! SubDirectory.IsEmpty())
+	eLoadFolderResult result = ReadSubfolder(&pFilesList, &pDirsList,
+											Subdir, m_BaseDir,
+											sInclusionMask, sExclusionMask, sIgnoreDirs, pParentDir);
+
+	if (result != eLoadFolderResultSuccess
+		&& result != eLoadFolderResultSubdirReadError)
 	{
-		SubDirectory += _T("\\");
+		return result;
 	}
 
-	if (! ReadSubfolder(& pFilesList, & pDirsList,
-						SubDirectory, m_BaseDir,
-						sInclusionMask, sExclusionMask, sIgnoreDirs, pParentDir))
+	// The list goes in the following order:
+	// Files first, then subdirectories. Files (and subdirectories) for a subdirectory follow the subdirectory
+	// The names are sorted
+
+	// The names are returned in the lists in the reverse sort order
+	// The loop reorders them back into direct sort order
+	// Process directories first, so they will go after files in the result list
+	while (pDirsList)
 	{
-		return false;
+		FileItem * pDir = pDirsList;
+		pDirsList = pDir->m_pNext;
+
+		// scan the subdirectory
+		// but don't recurse down reparse point
+
+		if (!pDir->IsReparsePoint())
+		{
+			eLoadFolderResult SubdirResult = LoadSubFolder(CString(Subdir) + pDir->GetName(),
+												sInclusionMask, sExclusionMask, sC_CPPMask, sBinaryMask, sIgnoreDirs, pDir);
+			if (SubdirResult == eLoadFolderResultAccessDenied
+				&& result == eLoadFolderResultSuccess)
+			{
+				result = eLoadFolderResultSubdirAccessDenied;
+			}
+			if (SubdirResult == eLoadFolderResultSubdirReadError
+				&& result == eLoadFolderResultSuccess)
+			{
+				result = eLoadFolderResultSubdirReadError;
+			}
+			if (SubdirResult == eLoadFolderResultFailure
+				&& result == eLoadFolderResultSuccess)
+			{
+				result = eLoadFolderResultFailure;
+			}
+		}
+
+		// add to the list now, so it will go before the subdir members
+		pDir->m_pNext = m_pList;
+		m_pList = pDir;
+		m_NumFiles++;
 	}
 
-
-	// files first
 	while (pFilesList)
 	{
 		FileItem * pFile = pFilesList;
@@ -1379,27 +1381,7 @@ bool FileList::LoadSubFolder(LPCTSTR Subdir,
 		m_NumFiles++;
 	}
 
-	while (pDirsList)
-	{
-		FileItem * pDir = pDirsList;
-		pDirsList = pDir->m_pNext;
-
-		// add to the list
-		pDir->m_pNext = m_pList;
-		m_pList = pDir;
-		m_NumFiles++;
-
-		// scan the subdirectory
-		// but don't recurse down reparse point
-
-		if ( ! pDir->IsReparsePoint())
-		{
-			LoadSubFolder(SubDirectory + pDir->GetName(),
-						sInclusionMask, sExclusionMask, sC_CPPMask, sBinaryMask, sIgnoreDirs, pDir);
-		}
-	}
-
-	return true;
+	return result;
 }
 
 void FileList::FreeFileList()
@@ -1412,6 +1394,266 @@ void FileList::FreeFileList()
 	}
 	m_NumFiles = 0;
 }
+
+eLoadFolderResult FileList::LoadFingerprintFile(LPCTSTR Filename, bool &bRecurseSubdirs,
+												CString & sInclusionMask, CString & sExclusionMask,
+												CString & sIgnoreDirs)
+{
+	FILE * pFile = NULL;
+	_tfopen_s(&pFile, Filename, _T("rt,ccs=UNICODE"));
+	if (NULL == pFile)
+	{
+		if (errno == EACCES)
+		{
+			return eLoadFolderResultAccessDenied;
+		}
+		return eLoadFolderResultNotFound;
+	}
+
+	CString FingerprintName = Filename;
+	// load the fingerprint file
+	TCHAR buf[1024];
+	while (NULL != _fgetts(buf, 1023, pFile))
+	{
+		static const TCHAR sIncludeFiles[] = _T("IncludeFiles=");
+		static const TCHAR sExcludeFiles[] = _T("ExcludeFiles=");
+		static const TCHAR sExcludeFolders[] = _T("ExcludeFolders=");
+		static const TCHAR sIncludeSubdirs[] = _T("IncludeSubdirs=");
+		static const TCHAR sIncludeDirInfo[] = _T("IncludeDirInfo=");
+
+		if (';' == buf[0])
+		{
+			continue;
+		}
+		if (0 == _tcsnicmp(buf, sIncludeFiles, countof(sIncludeFiles) - 1))
+		{
+			sInclusionMask = buf + countof(sIncludeFiles) - 1;
+			sInclusionMask.Trim();
+		}
+		else if (0 == _tcsnicmp(buf, sExcludeFiles, countof(sExcludeFiles) - 1))
+		{
+			sExclusionMask = buf + countof(sExcludeFiles) - 1;
+			sExclusionMask.Trim();
+		}
+		else if (0 == _tcsnicmp(buf, sExcludeFolders, countof(sExcludeFolders) - 1))
+		{
+			sIgnoreDirs = buf + countof(sExcludeFolders) - 1;
+			sIgnoreDirs.Trim();
+		}
+		else if (0 == _tcsnicmp(buf, sIncludeSubdirs, countof(sIncludeSubdirs) - 1))
+		{
+			TCHAR * Endptr;
+			bRecurseSubdirs = (0 != _tcstol(buf + countof(sIncludeSubdirs) - 1, &Endptr, 10));
+		}
+		else if (0 == _tcsnicmp(buf, sIncludeDirInfo, countof(sIncludeDirInfo) - 1))
+		{
+			// ignored
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	TCHAR FileName[4096];
+
+	CString SubDir;
+	CString SubDirKey;
+	CString SubSubDir;
+	CString SubSubDirKey;
+	typedef avl_tree<FileItem*, const CString&, MultiStrDirComparePredicate> dir_tree_t;
+	dir_tree_t DirTree;
+	dir_tree_t::iterator iPrevParent;
+	// only modify PrevSubdir when parent changes
+	CString PrevSubDir;
+
+	while (NULL != _fgetts(buf, 1023, pFile))
+	{
+		if (';' == buf[0])
+		{
+			continue;
+		}
+		buf[1023] = 0;
+		FileName[511] = 0;
+
+		LONGLONG FileLength;
+
+		WIN32_FIND_DATA wfd = { 0 };
+		BYTE md5[16];
+
+		ULARGE_INTEGER uli;
+
+		int NumScannedItems = _stscanf_s(buf,
+										_T("\"%[^\"]\" %I64u %I64x ")
+										_T("%2hhx%2hhx%2hhx%2hhx")
+										_T("%2hhx%2hhx%2hhx%2hhx")
+										_T("%2hhx%2hhx%2hhx%2hhx")
+										_T("%2hhx%2hhx%2hhx%2hhx")
+										_T("\n")
+										,
+										FileName, (unsigned)_countof(FileName), &FileLength, &uli.QuadPart,
+
+										&md5[0], &md5[1], &md5[2], &md5[3],
+										&md5[4], &md5[5], &md5[6], &md5[7],
+										&md5[8], &md5[9], &md5[10], &md5[11],
+										&md5[12], &md5[13], &md5[14], &md5[15]);
+
+		if (NumScannedItems < 1)
+		{
+			// error
+			continue;
+		}
+
+		wfd.ftLastWriteTime.dwHighDateTime = uli.HighPart;
+		wfd.ftLastWriteTime.dwLowDateTime = uli.LowPart;
+
+		// find the last '\'
+		if (FileName[0] == '\\')
+		{
+			continue;
+		}
+
+		LPTSTR DirEnd = _tcsrchr(FileName, '\\');
+		// NamePart is the last component of the path
+		LPTSTR NamePart = DirEnd + 1;
+
+		if (NULL != DirEnd && 0 == DirEnd[1])
+		{
+			// last char is backslash
+			if (NumScannedItems != 1)
+			{
+				continue;
+			}
+
+			wfd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+		}
+		else
+		{
+			if (NumScannedItems != 19)
+			{
+				// error, skip this line
+				continue;
+			}
+
+			if (NULL == DirEnd)
+			{
+				// there was no subdirectory component
+				NamePart = FileName;
+				DirEnd = FileName;
+			}
+
+			wfd.nFileSizeLow = DWORD(FileLength);
+			wfd.nFileSizeHigh = DWORD(FileLength >> 32);
+
+			if (NamePart[0] == 0
+				|| NamePart[0] == '\\')
+			{
+				continue;
+			}
+		}
+
+		FileItem* pParent;
+		if (DirEnd == FileName)
+		{
+			// File in the root
+			pParent = nullptr;
+			SubDir.Empty();
+			PrevSubDir.Empty();
+			SubDirKey.Empty();
+		}
+		else
+		{
+			// not in the root directory
+			SubDir.SetString(FileName, (int)(DirEnd + 1 - FileName));
+
+			SubDir.Replace(_T('/'), _T('\\'));
+			while (0 != SubDir.Replace(_T("\\\\"), _T("\\")))
+			{
+			}
+			// make subdirectory key from SubDir
+			int length = SubDir.GetLength();
+			LPCTSTR str1 = SubDir;
+			LPTSTR str2 = SubDirKey.GetBuffer(length);
+			while (*str1)
+			{
+				TCHAR c = *(str1++);
+				if (c == _T('\\'))
+				{
+					c = 0;
+				}
+				*(str2++) = c;
+			}
+			*str2 = 0;
+			SubDirKey.ReleaseBufferSetLength(length);
+
+			dir_tree_t::iterator iParent = iPrevParent;
+			if (!iPrevParent
+				|| 0 != DirTree.predicate()(iPrevParent.key(), SubDirKey))
+			{
+				iParent = DirTree.find(SubDirKey);
+				PrevSubDir = SubDir;
+			}
+
+			if (iParent == DirTree.end())
+			{
+				// check and create all missing levels of parent
+				pParent = nullptr;
+				unsigned index = 0;
+				WIN32_FIND_DATA wfd1 = { 0 };
+				wfd1.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+
+				do
+				{
+					unsigned subdir_length = index;
+
+					// skip one directory level
+					while (SubDirKey[index++] != 0)
+					{}
+					SubSubDirKey.SetString(SubDirKey, index);
+					iParent = DirTree.find(SubSubDirKey);
+					if (iParent == DirTree.end())
+					{
+						SubSubDir.SetString(SubDir, subdir_length);
+						_tcsncpy_s(wfd1.cFileName, countof(wfd1.cFileName), (LPCTSTR)SubDirKey + subdir_length, countof(wfd1.cFileName) - 1);
+						wfd1.cFileName[countof(wfd1.cFileName) - 1] = 0;
+
+						pParent = new FileItem(&wfd1, FingerprintName, SubSubDir, pParent);
+
+						iParent = DirTree.insert(pParent->GetMultiStrSubdir(), pParent);
+
+						(*iParent)->m_pNext = m_pList;
+						m_pList = *iParent;
+						m_NumFiles++;
+					}
+					else
+					{
+						pParent = *iParent;
+					}
+				} while (SubDirKey[index] != 0);
+			}
+
+			iPrevParent = iParent;
+			pParent = *iParent;
+		}
+
+		if (0 == (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+		{
+			_tcsncpy_s(wfd.cFileName, countof(wfd.cFileName), NamePart, countof(wfd.cFileName) - 1);
+			wfd.cFileName[countof(wfd.cFileName) - 1] = 0;
+
+			FileItem * pFileItem = new FileItem(&wfd, FingerprintName, PrevSubDir, pParent);
+
+			pFileItem->SetMD5(md5);
+			pFileItem->m_pNext = m_pList;
+			m_pList = pFileItem;
+			m_NumFiles++;
+		}
+	}
+	fclose(pFile);
+
+	return eLoadFolderResultSuccess;
+}
+
 
 FilePair::FilePair()
 	: pFirstFile(NULL),
@@ -1461,149 +1703,163 @@ FilePair::~FilePair()
 
 int FilePairComparePredicate::Time1SortFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
+	// NULL and directory file items are sorted AFTER non-NULL
+	// Thus, NULL items are considered GREATER THAN non-NULL
 	FileItem * Item1 = Pair1->pFirstFile;
 	FileItem * Item2 = Pair2->pFirstFile;
 
-	if (NULL == Item1)
+	if (NULL == Item1 || Item1->IsFolder())
 	{
-		return NULL != Item2;
+		return NULL != Item2 && !Item2->IsFolder();
 	}
-	if (NULL == Item2)
+	if (NULL == Item2 || Item2->IsFolder())
 	{
 		return -1;
 	}
-	return FileItem::TimeCompare(Item2, Item1);
+	return FileItem::TimeCompare(Item1, Item2);
 }
 
 int FilePairComparePredicate::Time1SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
+	// NULL file items are sorted AFTER non-NULL
+	// Thus, NULL items are considered GREATER THAN non-NULL
 	FileItem * Item1 = Pair1->pFirstFile;
 	FileItem * Item2 = Pair2->pFirstFile;
 
-	if (NULL == Item1)
+	if (NULL == Item1 || Item1->IsFolder())
 	{
-		return NULL != Item2;
+		return NULL != Item2 && !Item2->IsFolder();
 	}
-	if (NULL == Item2)
-	{
-		return -1;
-	}
-	return FileItem::TimeCompare(Item1, Item2);
-}
-
-int FilePairComparePredicate::Time2SortFunc(const FilePair * Pair1, const FilePair * Pair2)
-{
-	FileItem * Item1 = Pair1->pSecondFile;
-	FileItem * Item2 = Pair2->pSecondFile;
-
-	if (NULL == Item1)
-	{
-		return NULL != Item2;
-	}
-	if (NULL == Item2)
+	if (NULL == Item2 || Item2->IsFolder())
 	{
 		return -1;
 	}
 	return FileItem::TimeCompare(Item2, Item1);
 }
 
-int FilePairComparePredicate::Time2SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2)
+int FilePairComparePredicate::Time2SortFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
+	// NULL file items are sorted AFTER non-NULL
+	// Thus, NULL items are considered GREATER THAN non-NULL
 	FileItem * Item1 = Pair1->pSecondFile;
 	FileItem * Item2 = Pair2->pSecondFile;
 
-	if (NULL == Item1)
+	if (NULL == Item1 || Item1->IsFolder())
 	{
-		return NULL != Item2;
+		return NULL != Item2 && !Item2->IsFolder();
 	}
-	if (NULL == Item2)
+	if (NULL == Item2 || Item2->IsFolder())
 	{
 		return -1;
 	}
 	return FileItem::TimeCompare(Item1, Item2);
 }
 
-int FilePairComparePredicate::Length1SortFunc(const FilePair * Pair1, const FilePair * Pair2)
+int FilePairComparePredicate::Time2SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
-	FileItem * Item1 = Pair1->pFirstFile;
-	FileItem * Item2 = Pair2->pFirstFile;
+	// NULL file items are sorted AFTER non-NULL
+	// Thus, NULL items are considered GREATER THAN non-NULL
+	FileItem * Item1 = Pair1->pSecondFile;
+	FileItem * Item2 = Pair2->pSecondFile;
 
-	if (NULL == Item1)
+	if (NULL == Item1 || Item1->IsFolder())
 	{
-		return NULL != Item2;
+		return NULL != Item2 && !Item2->IsFolder();
 	}
-	if (NULL == Item2)
+	if (NULL == Item2 || Item2->IsFolder())
 	{
 		return -1;
 	}
-	return FileItem::LengthCompare(Item2, Item1);
+	return FileItem::TimeCompare(Item2, Item1);
+}
+
+int FilePairComparePredicate::Length1SortFunc(const FilePair * Pair1, const FilePair * Pair2)
+{
+	// NULL file items are sorted AFTER non-NULL
+	// Thus, NULL items are considered GREATER THAN non-NULL
+	FileItem * Item1 = Pair1->pFirstFile;
+	FileItem * Item2 = Pair2->pFirstFile;
+
+	if (NULL == Item1 || Item1->IsFolder())
+	{
+		return NULL != Item2 && !Item2->IsFolder();
+	}
+	if (NULL == Item2 || Item2->IsFolder())
+	{
+		return -1;
+	}
+	return FileItem::LengthCompare(Item1, Item2);
 }
 
 int FilePairComparePredicate::Length1SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
+	// NULL file items are sorted AFTER non-NULL
+	// Thus, NULL items are considered GREATER THAN non-NULL
 	FileItem * Item1 = Pair1->pFirstFile;
 	FileItem * Item2 = Pair2->pFirstFile;
 
-	if (NULL == Item1)
+	if (NULL == Item1 || Item1->IsFolder())
 	{
-		return NULL != Item2;
+		return NULL != Item2 && !Item2->IsFolder();
 	}
-	if (NULL == Item2)
-	{
-		return -1;
-	}
-	return FileItem::LengthCompare(Item1, Item2);
-}
-
-int FilePairComparePredicate::Length2SortFunc(const FilePair * Pair1, const FilePair * Pair2)
-{
-	FileItem * Item1 = Pair1->pSecondFile;
-	FileItem * Item2 = Pair2->pSecondFile;
-
-	if (NULL == Item1)
-	{
-		return NULL != Item2;
-	}
-	if (NULL == Item2)
+	if (NULL == Item2 || Item2->IsFolder())
 	{
 		return -1;
 	}
 	return FileItem::LengthCompare(Item2, Item1);
 }
 
-int FilePairComparePredicate::Length2SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2)
+int FilePairComparePredicate::Length2SortFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
+	// NULL file items are sorted AFTER non-NULL
+	// Thus, NULL items are considered GREATER THAN non-NULL
 	FileItem * Item1 = Pair1->pSecondFile;
 	FileItem * Item2 = Pair2->pSecondFile;
 
-	if (NULL == Item1)
+	if (NULL == Item1 || Item1->IsFolder())
 	{
-		return NULL != Item2;
+		return NULL != Item2 && !Item2->IsFolder();
 	}
-	if (NULL == Item2)
+	if (NULL == Item2 || Item2->IsFolder())
 	{
 		return -1;
 	}
 	return FileItem::LengthCompare(Item1, Item2);
 }
 
+int FilePairComparePredicate::Length2SortBackwardsFunc(const FilePair * Pair1, const FilePair * Pair2)
+{
+	// NULL file items are sorted AFTER non-NULL
+	// Thus, NULL items are considered GREATER THAN non-NULL
+	FileItem * Item1 = Pair1->pSecondFile;
+	FileItem * Item2 = Pair2->pSecondFile;
+
+	if (NULL == Item1 || Item1->IsFolder())
+	{
+		return NULL != Item2 && !Item2->IsFolder();
+	}
+	if (NULL == Item2 || Item2->IsFolder())
+	{
+		return -1;
+	}
+	return FileItem::LengthCompare(Item2, Item1);
+}
+
 int FilePairComparePredicate::NameCompare(const FilePair * Pair1, const FilePair * Pair2)
 {
-	FileItem * Item1;
-	FileItem * Item2;
 
-	Item1 = Pair1->pFirstFile;
-	if (NULL == Item1)
+	FileItem * Item1 = Pair1->pFirstFile;
+	if (nullptr == Item1)
 	{
 		Item1 = Pair1->pSecondFile;
 	}
 
-	Item2 = Pair2->pFirstFile;
-	if (NULL == Item2)
+	FileItem * Item2 = Pair2->pFirstFile;
+	if (nullptr == Item2)
 	{
 		Item2 = Pair2->pSecondFile;
 	}
-	return -FileItem::NameCompare(Item1, Item2);
+	return FileItem::NameCompare(Item1, Item2);
 }
 
 int FilePairComparePredicate::NameCompareBackward(const FilePair * Pair1, const FilePair * Pair2)
@@ -1613,21 +1869,19 @@ int FilePairComparePredicate::NameCompareBackward(const FilePair * Pair1, const 
 
 int FilePairComparePredicate::DirNameCompare(const FilePair * Pair1, const FilePair * Pair2)
 {
-	FileItem * Item1;
-	FileItem * Item2;
 
-	Item1 = Pair1->pFirstFile;
-	if (NULL == Item1)
+	FileItem * Item1 = Pair1->pFirstFile;
+	if (nullptr == Item1)
 	{
 		Item1 = Pair1->pSecondFile;
 	}
 
-	Item2 = Pair2->pFirstFile;
-	if (NULL == Item2)
+	FileItem * Item2 = Pair2->pFirstFile;
+	if (nullptr == Item2)
 	{
 		Item2 = Pair2->pSecondFile;
 	}
-	return -FileItem::DirNameCompare(Item1, Item2);
+	return FileItem::DirNameCompare(Item1, Item2);
 }
 
 int FilePairComparePredicate::DirNameCompareBackward(const FilePair * Pair1, const FilePair * Pair2)
@@ -1687,6 +1941,7 @@ int FilePair::ComparisionResultPriority() const
 	}
 }
 
+// The std::sort predicate returns 'true' if first argument is strictly less than second
 bool FilePairComparePredicate::operator ()(const FilePair * Pair1, const FilePair * Pair2)
 {
 	for (int i = 0; i < countof (Functions); i++)
@@ -1697,7 +1952,7 @@ bool FilePairComparePredicate::operator ()(const FilePair * Pair1, const FilePai
 			return result < 0;
 		}
 	}
-	return 0;
+	return false;
 }
 
 FilePairComparePredicate::FilePairComparePredicate(enum eColumns Sort[], bool Ascending[], int SortNumber)
@@ -1858,24 +2113,24 @@ CString FilePair::GetComparisonResultStr() const
 		break;
 	case OnlyFirstFile:
 		s.Format(sOnlyOneExists,
-				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
+				(LPCTSTR)pFirstFile->GetBasedir(), (LPCTSTR)pFirstFile->GetSubdir());
 		break;
 	case FileFromSubdirInFirstDirOnly:
 		s.Format(sOnlyOneFilesSubdirExists,
-				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
+				(LPCTSTR)pFirstFile->GetBasedir(), (LPCTSTR)pFirstFile->GetSubdir());
 		break;
 	case SubdirsParentInFirstDirOnly:
 		s.Format(sOnlyOneSubdirsParentExists,
-				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
+				(LPCTSTR)pFirstFile->GetBasedir(), (LPCTSTR)pFirstFile->GetSubdir());
 		break;
 
 	case OnlySecondFile:
 		s.Format(sOnlyOneExists,
-				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
+				(LPCTSTR)pSecondFile->GetBasedir(), (LPCTSTR)pSecondFile->GetSubdir());
 		break;
 	case OnlyFirstDirectory:
 		s.Format(sOnlyOneSubdirExists,
-				pFirstFile->GetBasedir(), pFirstFile->GetSubdir());
+				(LPCTSTR)pFirstFile->GetBasedir(), (LPCTSTR)pFirstFile->GetSubdir());
 		break;
 	case DirectoryInFingerprintFileOnly:
 		return sOnlyFingerprintSubdirExists;
@@ -1885,25 +2140,25 @@ CString FilePair::GetComparisonResultStr() const
 		break;
 	case OnlySecondDirectory:
 		s.Format(sOnlyOneSubdirExists,
-				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
+				(LPCTSTR)pSecondFile->GetBasedir(), (LPCTSTR)pSecondFile->GetSubdir());
 		break;
 	case FileFromSubdirInSecondDirOnly:
 		s.Format(sOnlyOneFilesSubdirExists,
-				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
+				(LPCTSTR)pSecondFile->GetBasedir(), (LPCTSTR)pSecondFile->GetSubdir());
 		break;
 	case SubdirsParentInSecondDirOnly:
 		s.Format(sOnlyOneSubdirsParentExists,
-				pSecondFile->GetBasedir(), pSecondFile->GetSubdir());
+				(LPCTSTR)pSecondFile->GetBasedir(), (LPCTSTR)pSecondFile->GetSubdir());
 		break;
 
 	case FirstFileLonger:
 		s.Format(sOneFileLonger,
-				pFirstFile->GetBasedir(), pFirstFile->GetSubdir(),
+				(LPCTSTR)pFirstFile->GetBasedir(), (LPCTSTR)pFirstFile->GetSubdir(),
 				pFirstFile->GetFileLength() - pSecondFile->GetFileLength());
 		break;
 	case SecondFileLonger:
 		s.Format(sOneFileLonger,
-				pSecondFile->GetBasedir(), pSecondFile->GetSubdir(),
+				(LPCTSTR)pSecondFile->GetBasedir(), (LPCTSTR)pSecondFile->GetSubdir(),
 				pSecondFile->GetFileLength() - pFirstFile->GetFileLength());
 		break;
 	case ErrorReadingFirstFile:
@@ -2239,7 +2494,7 @@ FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLin
 	{
 		// find the beginning of the section
 		// find a few identical lines
-		TRACE("nLine1 = %d, nLine2 = %d, looking for identical section\n", nLine1, nLine2);
+		if (DEBUG_BUILD_SECTION_LIST) TRACE("nLine1 = %d, nLine2 = %d, looking for identical section\n", nLine1, nLine2);
 		int Line1Begin = nLine1;
 		int Line2Begin = nLine2;
 		// remember number of line with a found match and number of matched line
@@ -2274,8 +2529,8 @@ FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLin
 				{
 					Line1MatchIn2 = pFoundLine->GetLineNumber();
 					Line1Found = nLine1;
-					TRACE("Found Line1=%d, Line2=%d, \"%s\"\n",
-						Line1Found, Line1MatchIn2, pFoundLine->GetText());
+					if (DEBUG_BUILD_SECTION_LIST) TRACE("Found Line1=%d, Line2=%d, \"%s\"\n",
+														Line1Found, Line1MatchIn2, pFoundLine->GetText());
 				}
 				// there is no equivalent line for this one from nLine2 to end
 			}
@@ -2300,8 +2555,8 @@ FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLin
 				{
 					Line2MatchIn1 = pFoundLine->GetLineNumber();
 					Line2Found = nLine2;
-					TRACE("Found Line2=%d, Line1=%d, \"%s\"\n",
-						Line2Found, Line2MatchIn1, pFoundLine->GetText());
+					if (DEBUG_BUILD_SECTION_LIST) TRACE("Found Line2=%d, Line1=%d, \"%s\"\n",
+														Line2Found, Line2MatchIn1, pFoundLine->GetText());
 				}
 			}
 			nLine2++;
@@ -2313,7 +2568,7 @@ FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLin
 			if (-1 == Line2Found)
 			{
 				// no identical lines found
-				TRACE("No more identical lines found\n");
+				if (DEBUG_BUILD_SECTION_LIST) TRACE("No more identical lines found\n");
 				nLine1 = NumLines1;
 				nLine2 = NumLines2;
 			}
@@ -2321,23 +2576,23 @@ FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLin
 			{
 				nLine1 = Line2MatchIn1;
 				nLine2 = Line2Found;
-				TRACE("Found first line %d in file2 and matching line %d in file1\n",
-					nLine2, nLine1);
+				if (DEBUG_BUILD_SECTION_LIST) TRACE("Found first line %d in file2 and matching line %d in file1\n",
+													nLine2, nLine1);
 			}
 		}
 		else if (-1 == Line2Found)
 		{
 			nLine2 = Line1MatchIn2;
 			nLine1 = Line1Found;
-			TRACE("Found first line %d in file1 and matching line %d in file2\n",
-				nLine1, nLine2);
+			if (DEBUG_BUILD_SECTION_LIST) TRACE("Found first line %d in file1 and matching line %d in file2\n",
+												nLine1, nLine2);
 		}
 		else
 		{
-			TRACE("Found first line %d in file1 and matching line %d in file2\n",
-				Line1Found, Line1MatchIn2);
-			TRACE("Found first line %d in file2 and matching line %d in file1\n",
-				Line2Found, Line2MatchIn1);
+			if (DEBUG_BUILD_SECTION_LIST) TRACE("Found first line %d in file1 and matching line %d in file2\n",
+												Line1Found, Line1MatchIn2);
+			if (DEBUG_BUILD_SECTION_LIST) TRACE("Found first line %d in file2 and matching line %d in file1\n",
+												Line2Found, Line2MatchIn1);
 			// choose the one with less distance
 			if (Line1MatchIn2 - Line2Found < Line2MatchIn1 - Line1Found)
 			{
@@ -2349,8 +2604,8 @@ FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLin
 				nLine1 = Line2MatchIn1;
 				nLine2 = Line2Found;
 			}
-			TRACE("Chosen line %d in file1 and line %d in file2\n",
-				nLine1, nLine2);
+			if (DEBUG_BUILD_SECTION_LIST) TRACE("Chosen line %d in file1 and line %d in file2\n",
+												nLine1, nLine2);
 		}
 		Line1Begin = nLine1;
 		Line2Begin = nLine2;
@@ -2368,7 +2623,7 @@ FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLin
 			else
 			{
 				// the lines are different
-				TRACE("Difference found at lines %d, %d\n", nLine1, nLine2);
+				if (DEBUG_BUILD_SECTION_LIST) TRACE("Difference found at lines %d, %d\n", nLine1, nLine2);
 				// check if the lines are similar enough
 				// the lines can be considered similar if < 1/4 of the characters is different,
 				// or the only difference is in whitespaces
@@ -2887,8 +3142,8 @@ bool FilePair::NextDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
 	FileDiffSection diff;
 	diff.m_Begin = DisplayPosToLinePos(PosFrom, IgnoreWhitespaces);
 
-	vector<FileDiffSection *>::iterator pFound = upper_bound(m_DiffSections.begin(),
-															m_DiffSections.end(), & diff, less<FileDiffSection *>());
+	std::vector<FileDiffSection *>::iterator pFound = upper_bound(m_DiffSections.begin(),
+																m_DiffSections.end(), &diff, std::less<FileDiffSection *>());
 
 	if (pFound >= m_DiffSections.end())
 	{
@@ -2944,8 +3199,8 @@ bool FilePair::PrevDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
 	FileDiffSection diff;
 	diff.m_Begin = DisplayPosToLinePos(PosFrom, IgnoreWhitespaces);
 
-	vector<FileDiffSection *>::iterator pFound = lower_bound(m_DiffSections.begin(),
-															m_DiffSections.end(), & diff, less<FileDiffSection *>());
+	std::vector<FileDiffSection *>::iterator pFound = lower_bound(m_DiffSections.begin(),
+																m_DiffSections.end(), &diff, std::less<FileDiffSection *>());
 
 	if (pFound == m_DiffSections.begin())
 	{
@@ -3281,6 +3536,629 @@ void FileItem::SetMD5(BYTE const md5[16])
 	m_FileType = FileTypeHashOnly;
 	m_bMd5Calculated = true;
 }
+
+void FileItem::CopyMD5(FileItem *pFileItem)
+{
+	memcpy(m_Md5, pFileItem->m_Md5, sizeof m_Md5);
+	m_bMd5Calculated = true;
+}
+
+void FilePairList::AddToDictionary(FileList const *list)
+{
+	for (FileItem * pFile = list->m_pList; pFile != nullptr; pFile = pFile->m_pNext)
+	{
+		// add file (or directory component) name
+		name_tree_t::iterator ii;
+		ii = NameTree.insert(pFile->GetName());
+		ii->RefCount++;
+		pFile->iNameInTree = ii;
+
+		if (pFile->IsFolder())
+		{
+			full_dirname_tree_t::iterator jj = FullDirNameTree.insert(pFile->GetMultiStrSubdir());
+			jj->RefCount++;
+			pFile->iFullDirInTree = jj;
+		}
+	}
+}
+
+void FilePairList::MergeFileListToTree(FileList *list, file_item_tree_t &Files)
+{
+	// Build a tree from FileList
+	file_item_tree_t ListTree;
+	for (FileItem * pItem = list->Detach(); pItem != nullptr; )
+	{
+		// Update the file item with the dictionary numbering
+		if (pItem->m_pParentDir)
+		{
+			ASSERT(!!pItem->m_pParentDir->iFullDirInTree);
+			pItem->m_FullDirSortNum = pItem->m_pParentDir->iFullDirInTree->SortSequence;
+		}
+		else
+		{
+			// Item in the root directory
+			pItem->m_FullDirSortNum = 0;
+		}
+
+		pItem->m_NameSortNum = pItem->iNameInTree->SortSequence;
+		auto ii = ListTree.insert(pItem, pItem);
+		// delete the item if it's duplicate (if the fingerprint file is malformed)
+		if (*ii != pItem)
+		{
+			// this was a duplicate
+			FileItem * tmp = pItem;
+			pItem = pItem->m_pNext;
+
+			// put it back to the list, to be deleted by FileList destructor
+			tmp->m_pNext = list->m_pList;
+			list->m_pList = tmp;
+
+			RemoveFromDictionary(tmp);
+		}
+		else
+		{
+			pItem = pItem->m_pNext;
+		}
+	}
+
+	// merge the new tree and the original tree
+	for (auto i_new = ListTree.begin(), i_old = Files.begin(); ; )
+	{
+		// Compare: -1 if i_new < i_old, 1 if i_new > i_old
+		int compare = 0;
+		if (i_new == ListTree.end())
+		{
+			if (i_old == Files.end())
+			{
+				break;
+			}
+			compare = 1;
+		}
+		else if (i_old == Files.end())
+		{
+			compare = -1;
+		}
+		else
+		{
+			compare = Files.predicate()(i_new.key(), i_old.key());
+		}
+
+		if (compare < 0)
+		{
+			// 1. New FileItem is inserted into the "old" tree.
+			Files.insert(i_new.key(), *i_new);
+			i_new++;
+		}
+		else if (compare > 0)
+		{
+			// 3. Non - existing FileItem is removed from the old tree, but not deleted. It will be deleted when FilePair list is updated. It's removed from dictionary, though.
+			FileItem * pItem = *i_old;
+			// i_old needs to be post-incremented before it's erased:
+			Files.erase(i_old++);
+
+			RemoveFromDictionary(pItem);
+		}
+		else
+		{
+			// 2. Existing FileItem is removed from old tree, and removed from dictionary.
+			// It will be deleted when the file pair is updated
+			FileItem * pItem = *i_old;
+			Files.erase(i_old);
+			i_old = Files.insert(i_new.key(), *i_new);
+
+			RemoveFromDictionary(pItem);
+
+			++i_old;
+			++i_new;
+		}
+	}
+}
+
+void UpdateFileItemTreeNumbering(file_item_tree_t &Files)
+{
+	// Update the original tree with the new dictionary numbering
+	for (auto ii : Files)
+	{
+		if (ii->m_pParentDir)
+		{
+			ASSERT(!!ii->m_pParentDir->iFullDirInTree);
+			ii->m_FullDirSortNum = ii->m_pParentDir->iFullDirInTree->SortSequence;
+		}
+		else
+		{
+			// Item in the root directory
+			ii->m_FullDirSortNum = 0;
+		}
+		ii->m_NameSortNum = ii->iNameInTree->SortSequence;
+	}
+}
+
+bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, bool DoNotCompareContents)
+{
+	bool NeedUpdateViews = false;
+
+	// we don't call FreeFilePairList, because we could be performing file list refresh
+
+	// First, update dictionaries for both lists
+	if (List1 != nullptr)
+	{
+		AddToDictionary(List1);
+	}
+	AddToDictionary(List2);
+
+	// Renumber the dictionary: go through trees and renumber them
+	ULONG counter = 1;
+	for (auto & ii : NameTree)
+	{
+		ii.SortSequence = counter++;
+	}
+	counter = 1;
+	for (auto & jj : FullDirNameTree)
+	{
+		jj.SortSequence = counter++;
+	}
+
+	UpdateFileItemTreeNumbering(Files1);
+	UpdateFileItemTreeNumbering(Files2);
+
+	// List1 is null if the fingerprint comparision is updated
+	if (List1 != nullptr)
+	{
+		MergeFileListToTree(List1, Files1);
+	}
+
+	MergeFileListToTree(List2, Files2);
+
+	// Lists for left and right files are sorted to 2 trees, and the common dictionary is updated.
+
+	//    ULONG DirectoryNameIndex = 0;
+	//    ULONG FileNameIndex = 0;
+	FilePair * pInsertBefore = First();
+
+	for (auto pf1 = Files1.begin(), pf2 = Files2.begin(); ; )
+	{
+		FileItem * pParentDir;
+		FileItem * pFile1 = nullptr;
+		FileItem * pFile2 = nullptr;
+		FilePair::eFileComparisionResult result;
+
+		if (pf1 == Files1.end())
+		{
+			if (pf2 == Files2.end())
+			{
+				if (IsEnd(pInsertBefore))
+				{
+					break;
+				}
+
+				// Mark the rest of the pair list as deleted. The file items are already removed from dictionaries
+				NeedUpdateViews = true;
+				do
+				{
+					pInsertBefore->m_bDeleted = true;
+					NumFilePairs--;
+					pInsertBefore = Next(pInsertBefore);
+				} while (NotEnd(pInsertBefore));
+
+				break;
+			}
+
+			pFile2 = *pf2;
+			++pf2;
+		}
+		else if (pf2 == Files2.end())
+		{
+			pFile1 = *pf1;
+			++pf1;
+		}
+		else
+		{
+			pFile1 = *pf1;
+			pFile2 = *pf2;
+			int comparison = FileItem::DirNameCompare(pFile1, pFile2);
+			if (comparison > 0)
+			{
+				pFile1 = nullptr;
+				++pf2;
+			}
+			else if (comparison < 0)
+			{
+				pFile2 = nullptr;
+				++pf1;
+			}
+			else
+			{
+				++pf2;
+				++pf1;
+			}
+		}
+
+		// see if the next FilePair matches this pair of FileItem
+		// FilePair list goes in ascending order
+		// The source FileItem lists also go in ascending order
+		FileItem * pItem1 = pFile1;
+		if (NULL == pItem1)
+		{
+			pItem1 = pFile2;
+		}
+
+		while (NotEnd(pInsertBefore))
+		{
+			// check if we insert or remove items, or the item is duplicate
+
+			FileItem * pItem2 = pInsertBefore->pFirstFile;
+			if (NULL == pItem2)
+			{
+				pItem2 = pInsertBefore->pSecondFile;
+			}
+
+			int comparison = FileItem::DirNameCompare(pItem1, pItem2);
+			if (comparison > 0)
+			{
+				pInsertBefore->m_bDeleted = true;
+				NeedUpdateViews = true;
+				pInsertBefore = pInsertBefore->Next();
+				continue;
+			}
+
+			if (comparison < 0)
+			{
+				break;
+			}
+
+			// All FileItem's of the previous generation will be deleted (except for items originated from
+			// a fingerprint file with IsPhantomFile() == TRUE)
+			// name and directory is the same
+			// check if file times are the same, and both files exist/not exist
+
+			if ((nullptr != pFile1) == (nullptr != pInsertBefore->pFirstFile)
+				&& (nullptr != pFile2) == (nullptr != pInsertBefore->pSecondFile)
+				// also check to see if file types are the same (binary/text
+				&& ((nullptr == pFile1) || pFile1->IsBinary() == pInsertBefore->pFirstFile->IsBinary())
+				&& ((nullptr == pFile2) || pFile2->IsBinary() == pInsertBefore->pSecondFile->IsBinary()))
+			{
+				// This FilePair will be reused
+				if (pFile1 != NULL && pFile2 != NULL
+					&& (pFile1->GetLastWriteTime() !=
+						pInsertBefore->pFirstFile->GetLastWriteTime()
+						|| pFile2->GetLastWriteTime() !=
+						pInsertBefore->pSecondFile->GetLastWriteTime()))
+				{
+					// files times changed only
+					pInsertBefore->m_bChanged = true;
+					pInsertBefore->SetComparisonResult(pInsertBefore->ResultUnknown);
+					NeedUpdateViews = true;
+
+				}
+
+				if (pFile2 != nullptr)
+				{
+					FileItem* tmp = pInsertBefore->pSecondFile;
+					pInsertBefore->pSecondFile = pFile2;
+
+					if (pFile2->GetLastWriteTime() == tmp->GetLastWriteTime()
+						&& tmp->m_bMd5Calculated)
+					{
+						// copy the calculated MD5 over
+						pFile2->CopyMD5(tmp);
+					}
+
+					delete tmp;
+				}
+
+				if (pFile1 != pInsertBefore->pFirstFile)
+				{
+					// Guaranteed non-NULL
+					FileItem* tmp = pInsertBefore->pFirstFile;
+					pInsertBefore->pFirstFile = pFile1;
+
+					if (pFile1->GetLastWriteTime() == tmp->GetLastWriteTime()
+						&& tmp->m_bMd5Calculated)
+					{
+						// copy the calculated MD5 over
+						pFile1->CopyMD5(tmp);
+					}
+
+					delete tmp;
+				}
+
+				pFile1 = nullptr;
+				pFile2 = nullptr;
+			}
+			else
+			{
+				// One file either appeared or disappeared, or "binary" type changed.
+				// This FilePair will be recreated anew.
+				if (nullptr != pFile1 && pFile1->IsPhantomFile())
+				{
+					// If the FileItem came from fingerprint, it will be reused, not deleted
+					ASSERT(pInsertBefore->pFirstFile == pFile1);
+					pInsertBefore->pFirstFile = nullptr;
+				}
+
+				pInsertBefore->m_bDeleted = true;
+				NumFilePairs--;
+			}
+
+			pInsertBefore = Next(pInsertBefore);
+			break;
+		}
+
+		if (pFile1 == nullptr
+			&& pFile2 == nullptr)
+		{
+			continue;
+		}
+
+		FilePair * pPair = new FilePair;
+
+		pPair->pFirstFile = pFile1;
+		pPair->pSecondFile = pFile2;
+
+		if (pFile1 == nullptr)
+		{
+			ASSERT(!pFile2->IsPhantomFile());
+
+			pParentDir = pFile2->m_pParentDir;
+
+			if (pFile2->IsFolder())
+			{
+				if (pParentDir != NULL
+					&& pParentDir->IsAlone())
+				{
+					result = FilePair::SubdirsParentInSecondDirOnly;
+				}
+				else
+				{
+					result = FilePair::OnlySecondDirectory;
+				}
+
+				pFile2->SetAlone(true);
+			}
+			else if (pParentDir != NULL
+					&& pParentDir->IsAlone())
+			{
+				result = FilePair::FileFromSubdirInSecondDirOnly;
+			}
+			else
+			{
+				result = FilePair::OnlySecondFile;
+			}
+
+			if (DEBUG_FILE_PAIR_LIST) TRACE(_T("File \"%s\" exists only in dir \"%s\"\n"),
+											LPCTSTR(pFile2->GetName()),
+											LPCTSTR(pFile2->GetBasedir() + pFile2->GetSubdir()));
+		}
+		else if (pFile2 == nullptr)
+		{
+			pParentDir = pFile1->m_pParentDir;
+
+			if (pFile1->IsPhantomFile())
+			{
+				// reading fingerprint
+				if (pFile1->IsFolder())
+				{
+					result = FilePair::DirectoryInFingerprintFileOnly;
+				}
+				else
+				{
+					result = FilePair::FileInFingerprintFileOnly;
+				}
+			}
+			else if (pFile1->IsFolder())
+			{
+				if (pParentDir != NULL
+					&& pParentDir->IsAlone())
+				{
+					result = FilePair::SubdirsParentInFirstDirOnly;
+				}
+				else
+				{
+					result = FilePair::OnlyFirstDirectory;
+				}
+
+				pFile1->SetAlone(true);
+			}
+			else if(pParentDir != NULL
+					&& pParentDir->IsAlone())
+			{
+				result = FilePair::FileFromSubdirInFirstDirOnly;
+			}
+			else
+			{
+				result = FilePair::OnlyFirstFile;
+			}
+
+
+			if (DEBUG_FILE_PAIR_LIST) TRACE(_T("File \"%s\" exists only in dir \"%s\"\n"),
+											LPCTSTR(pFile1->GetName()),
+											LPCTSTR(pFile1->GetBasedir() + pFile1->GetSubdir()));
+		}
+		else
+		{
+			ASSERT(!pFile2->IsPhantomFile());
+
+			if (pFile1->IsFolder())
+			{
+				result = pPair->FilesIdentical;
+				pFile1->SetAlone(false);
+			}
+			else if (DoNotCompareContents
+					&& pFile1->GetFileLength() == pFile2->GetFileLength()
+					&& pFile1->GetLastWriteTime() == pFile2->GetLastWriteTime())
+			{
+				result = pPair->FilesAttributesIdentical;
+			}
+			else
+			{
+				result = pPair->ResultUnknown;
+			}
+
+			if (DEBUG_FILE_PAIR_LIST) TRACE(_T("File \"%s\" exists in both \"%s\" and \"%s\"\n"),
+											LPCTSTR(pFile1->GetName()),
+											LPCTSTR(pFile1->GetBasedir() + pFile1->GetSubdir()),
+											LPCTSTR(pFile2->GetBasedir() + pFile2->GetSubdir()));
+		}
+
+		pPair->SetComparisonResult(result);
+		pInsertBefore->InsertAsPrevItem(pPair);
+		NumFilePairs++;
+	}
+
+	return NeedUpdateViews;
+}
+
+ULONGLONG FilePairList::GetTotalDataSize(ULONG FileOpenOverhead)
+{
+	// amount of data to process
+	ULONGLONG TotalFilesSize = 0;
+
+	for (FilePair *pPair = First(); NotEnd(pPair); pPair = pPair->Next())
+	{
+		if (!pPair->m_bDeleted
+			&& pPair->ResultUnknown == pPair->GetComparisonResult())
+		{
+			// add files to the "data to process" size
+			if (pPair->NeedBinaryComparison())
+			{
+				if (pPair->pFirstFile->GetFileLength()
+					== pPair->pSecondFile->GetFileLength())
+				{
+					if (!pPair->pFirstFile->m_bMd5Calculated)
+					{
+						// overhead is 0x2000
+						TotalFilesSize += FileOpenOverhead + pPair->pFirstFile->GetFileLength();
+					}
+					if (!pPair->pSecondFile->m_bMd5Calculated)
+					{
+						TotalFilesSize += FileOpenOverhead + pPair->pSecondFile->GetFileLength();
+					}
+				}
+			}
+			else
+			{
+				// text files
+				TotalFilesSize += FileOpenOverhead * 2 + 2 * (pPair->pFirstFile->GetFileLength()
+															+ pPair->pSecondFile->GetFileLength());
+			}
+		}
+
+	}
+
+	return TotalFilesSize;
+}
+
+void FilePairList::RemovePair(FilePair * pPairToDelete)
+{
+	// find it in the list and remove from the list
+	for (FilePair * pPair = First(); NotEnd(pPair); pPair = pPair->Next())
+	{
+		if (pPairToDelete == pPair)
+		{
+			// First, remove they keys from the tree TODO
+			pPair->RemoveFromList();
+			pPair->Dereference();
+			break;
+		}
+	}
+}
+
+void FilePairList::RemoveAll()
+{
+	while (!IsEmpty())
+	{
+		RemoveHead()->Dereference();
+	}
+	NumFilePairs = 0;
+}
+
+bool FilePairList::HasFiles() const
+{
+	for (FilePair * pPair = First(); NotEnd(pPair); pPair = pPair->Next())
+	{
+		if (!pPair->FilesAreIdentical()
+			// if identical, both file items are non-NULL
+			|| !pPair->pFirstFile->IsFolder())
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+FileItem * FilePairList::GetSortedList(FileListIndex index)
+{
+	FileItem * pListHead = nullptr;
+	file_item_tree_t & tree = (index == LeftFileList) ? Files1 : Files2;
+	for (auto ii = tree.rbegin(); ii != tree.rend(); ii++)
+	{
+		(*ii)->m_pNext = pListHead;
+		pListHead = (*ii);
+	}
+
+	return pListHead;
+}
+
+
+void FilePairList::RemoveFromDictionary(FileItem *pItem)
+{
+	if (pItem->iFullDirInTree
+		&& 0 == --(pItem->iFullDirInTree->RefCount))
+	{
+		FullDirNameTree.erase(pItem->iFullDirInTree);
+	}
+
+	if (0 == --(pItem->iNameInTree->RefCount))
+	{
+		NameTree.erase(pItem->iNameInTree);
+	}
+}
+
+int MultiStrDirComparePredicate::operator()(LPCTSTR pA, LPCTSTR pB) const
+{
+	// A and B CString is multi-string
+	while (*pA != 0 || *pB != 0)
+	{
+		int compare = _tcscoll(pA, pB);
+		if (compare != 0)
+		{
+			return compare;
+		}
+		// Skip the substring and its trailing zero
+		while (*(pA++) != 0) {}
+		while (*(pB++) != 0) {}
+	}
+	// Multi-strings are equal
+	return 0;
+}
+
+int FullPathnameComparePredicate::operator()(FileItem const* A, FileItem const* B) const
+{
+	ASSERT(A->m_FullDirSortNum != ULONG_MAX);
+	ASSERT(B->m_FullDirSortNum != ULONG_MAX);
+	ASSERT(A->m_NameSortNum != ULONG_MAX);
+	ASSERT(B->m_NameSortNum != ULONG_MAX);
+
+	if (A->m_FullDirSortNum < B->m_FullDirSortNum)
+	{
+		return -1;
+	}
+	if (A->m_FullDirSortNum > B->m_FullDirSortNum)
+	{
+		return 1;
+
+	}
+	if (A->m_NameSortNum < B->m_NameSortNum)
+	{
+		return -1;
+	}
+	if (A->m_NameSortNum > B->m_NameSortNum)
+	{
+		return 1;
+	}
+	return 0;
+}
+
 
 CSmallAllocator StringSection::m_Allocator(sizeof StringSection);
 CSmallAllocator FileDiffSection::m_Allocator(sizeof FileDiffSection);

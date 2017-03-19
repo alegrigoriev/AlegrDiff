@@ -1210,9 +1210,36 @@ BEGIN
     IDS_FILENAME_FILTER     "All Files (*.*)|*||"
     IDS_OPEN_FIRST_TITLE    "First File To Compare"
     IDS_OPEN_SECOND_TITLE   "Second File To Compare"
-    IDS_STRING_DIRECTORY_LOAD_ERROR "Couldn't load directory ""%s"""
     IDR_ALEGRDTYPE_LIST     "\nAlegrD\nAlegrD\n\n\nAlegrDiff.Document\nAlegrD Document"
     IDR_ALEGRDTYPE_BIN      "\nAlegrD\nAlegrD\n\n\nAlegrDiff.Document\nAlegrD Document"
+END
+
+STRINGTABLE
+BEGIN
+    ID_SHOW_FILESIN2NDDIRECTORYONLY 
+                            "Show or hide files present in second directory only"
+    ID_SHOW_SUBDIRECTORIESIN1STDIRONLY 
+                            "Show or hide subdirectories present in first directory only"
+    IDS_CAN_CANCEL_COMPARISON_PROMPT 
+                            "Are you sure you want to cancel comparison of two directories?"
+    IDS_CAN_CANCEL_FINGERPRINT_PROMPT 
+                            "Are you sure you want to cancel creation of the directory fingerprint?"
+    ID_SHOW_FILESIN1STDIRECTORYONLY 
+                            "Show or hide files present in first directory only"
+    ID_SHOW_DIFFERENTINSPACESONLY 
+                            "Show or hide files different in white spaces"
+    ID_SHOW_LONGERFILESIN1STDIRECTORY 
+                            "Show or hide longer files in first directory"
+    ID_SHOW_LONGERFILESIN2NDDIRECTORY 
+                            "Show or hide longer files in second directory"
+    IDS_STRING_DIRECTORY_LOAD_ERROR "Couldn't load directory ""%s"""
+    ID_INFIRSTDIRECTORYONLY_SUBDIRECTORIESCONTENTS 
+                            "Show contents of subdirectories of first directory"
+    ID_INSECONDDIRECTORY_SUBDIRECTORIESCONTENTS 
+                            "Show contents of subdirectories of second directory"
+    IDS_FINGERPRINT_FILE_NOT_FOUND "Fingerprint file ""%s"" not found"
+    IDS_FINGERPRINT_FILE_ACCESS_DENIED 
+                            "Unable to open fingerprint file ""%s"" for reading"
 END
 
 STRINGTABLE
@@ -1535,30 +1562,6 @@ BEGIN
     ID_SHOW_DIFFERENTFILES  "Show or hide files that are different"
     ID_SHOW_DIFFERENTINVERSIONINFO 
                             "Show or hide files different in version control information"
-END
-
-STRINGTABLE
-BEGIN
-    ID_SHOW_FILESIN2NDDIRECTORYONLY 
-                            "Show or hide files present in second directory only"
-    ID_SHOW_SUBDIRECTORIESIN1STDIRONLY 
-                            "Show or hide subdirectories present in first directory only"
-    IDS_CAN_CANCEL_COMPARISON_PROMPT 
-                            "Are you sure you want to cancel comparison of two directories?"
-    IDS_CAN_CANCEL_FINGERPRINT_PROMPT 
-                            "Are you sure you want to cancel creation of the directory fingerprint?"
-    ID_SHOW_FILESIN1STDIRECTORYONLY 
-                            "Show or hide files present in first directory only"
-    ID_SHOW_DIFFERENTINSPACESONLY 
-                            "Show or hide files different in white spaces"
-    ID_SHOW_LONGERFILESIN1STDIRECTORY 
-                            "Show or hide longer files in first directory"
-    ID_SHOW_LONGERFILESIN2NDDIRECTORY 
-                            "Show or hide longer files in second directory"
-    ID_INFIRSTDIRECTORYONLY_SUBDIRECTORIESCONTENTS 
-                            "Show contents of subdirectories of first directory"
-    ID_INSECONDDIRECTORY_SUBDIRECTORIESCONTENTS 
-                            "Show contents of subdirectories of second directory"
 END
 
 #endif    // English (United States) resources

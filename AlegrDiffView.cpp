@@ -400,28 +400,34 @@ void CAlegrDiffView::OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
-void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, ListHead<FilePair> * pPairList, int nCount)
+void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, FilePairList * pPairList)
 {
 	PairArray.clear();
-	PairArray.reserve(nCount);
+	PairArray.reserve(pPairList->NumFilePairs);
 
 	FilePair * pPair = pPairList->First();
 
 	m_PresentFilesMask = 0;
 
-	for (int i = 0; i < nCount && pPairList->NotEnd(pPair); i++, pPair = pPair->Next())
+	for (int i = 0; pPairList->NotEnd(pPair); i++, pPair = pPairList->Next(pPair))
 	{
-		// set mask bit
-		m_PresentFilesMask |= 1 << pPair->GetComparisonResult();
+		if (pPair->m_bDeleted)
+		{
+			continue;
+		}
 
 		if (NULL != pPair->pFirstFile
 			&& NULL != pPair->pSecondFile
 			&& pPair->pFirstFile->IsFolder())
 		{
+			// skip directories present on both sides
 			continue;
 		}
 
-		if ( ! pPair->m_bHideFromListView
+		// set mask bit
+		m_PresentFilesMask |= 1 << pPair->GetComparisonResult();
+
+		if (!pPair->m_bHideFromListView
 			&& (m_ShowFilesMask & (1 << pPair->GetComparisonResult())))
 		{
 			PairArray.push_back(pPair);
@@ -667,7 +673,7 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 		m_ColumnPositionToViewItem[j] = j;
 	}
 
-	BuildSortedPairArray(m_PairArray, & pDoc->m_PairList, pDoc->m_nFilePairs);
+	BuildSortedPairArray(m_PairArray, &pDoc->m_PairList);
 
 	pListCtrl->SetItemCount((int)m_PairArray.size());
 
@@ -1020,7 +1026,7 @@ void CAlegrDiffView::SetListViewItem(FilePair *pPair, int item, bool bInsert)
 	lvi.state = 0;
 	lvi.stateMask = 0;
 
-	lvi.pszText = (LPTSTR)pFileItem->GetName();
+	lvi.pszText = (LPTSTR)(LPCTSTR)pFileItem->GetName();
 
 	lvi.lParam = LPARAM(pFileItem);
 
@@ -1434,14 +1440,13 @@ void CAlegrDiffView::OnUpdateViewHideselectedfiles(CCmdUI* pCmdUI)
 void CAlegrDiffView::OnViewShowallfiles()
 {
 	CAlegrDiffDoc * pDoc = GetDocument();
-	FilePair * pPair;
-	for (pPair = pDoc->m_PairList.First(); pDoc->m_PairList.NotEnd(pPair); pPair = pPair->Next())
+	for (FilePair * pPair = pDoc->GetFirstFilePair(); pDoc->FilePairNotEnd(pPair); pPair = pDoc->GetNextFilePair(pPair))
 	{
 		pPair->m_bHideFromListView = false;
 		pPair->m_bSelected = true;
 	}
 	pDoc->UpdateAllViews(NULL);
-	for (pPair = pDoc->m_PairList.First(); pDoc->m_PairList.NotEnd(pPair); pPair = pPair->Next())
+	for (FilePair * pPair = pDoc->GetFirstFilePair(); pDoc->FilePairNotEnd(pPair); pPair = pDoc->GetNextFilePair(pPair))
 	{
 		pPair->m_bSelected = false;
 	}
@@ -1450,7 +1455,7 @@ void CAlegrDiffView::OnViewShowallfiles()
 void CAlegrDiffView::OnUpdateViewShowallfiles(CCmdUI* pCmdUI)
 {
 	CAlegrDiffDoc * pDoc = GetDocument();
-	for (FilePair * pPair = pDoc->m_PairList.First(); pDoc->m_PairList.NotEnd(pPair); pPair = pPair->Next())
+	for (FilePair * pPair = pDoc->GetFirstFilePair(); pDoc->FilePairNotEnd(pPair); pPair = pDoc->GetNextFilePair(pPair))
 	{
 		if (pPair->m_bHideFromListView)
 		{
@@ -1936,10 +1941,10 @@ CString CAlegrDiffView::GetNumberOfFilesString()
 	CString s;
 	unsigned TotalFiles = 0;
 	unsigned DifferentFiles = 0;
-	ListHead<FilePair> * pPairList = & GetDocument()->m_PairList;
-
+	CAlegrDiffDoc *pDoc = GetDocument();
+	// FIXME: Dont walk the whole list which can be huge every time
 	// count number of files
-	for (FilePair * pPair = pPairList->First(); pPairList->NotEnd(pPair); pPair = pPair->Next())
+	for (FilePair * pPair = pDoc->GetFirstFilePair(); pDoc->FilePairNotEnd(pPair); pPair = pDoc->GetNextFilePair(pPair))
 	{
 		if (pPair->FilesAreDifferent())
 		{

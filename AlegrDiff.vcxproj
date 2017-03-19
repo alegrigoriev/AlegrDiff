@@ -306,6 +306,7 @@
     <ResourceCompile Include="AlegrDiff.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CommonSources\Utils\AdelsonVelskyLandisTree.h" />
     <ClInclude Include="CommonSources\UI\GdiObjectSave.h" />
     <ClInclude Include="CommonSources\UI\MessageBoxSynch.h" />
     <ClInclude Include="AcceptDeclineDlg.h" />

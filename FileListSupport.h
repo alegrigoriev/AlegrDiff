@@ -342,9 +342,7 @@ public:
 	}
 
 	unsigned GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes);
-	void FreeReadBuffer();
 
-	LPCTSTR GetLineString(int LineNum) const;
 	const FileLine * GetLine(int LineNum) const
 	{
 		return m_Lines[LineNum];
@@ -452,7 +450,7 @@ private:
 
 	FILETIME m_LastWriteTime;
 	LONGLONG m_Length;
-	LONGLONG m_Crc64;   // use x64 + x4 + x3 + x + 1 polynomial
+	LONGLONG m_Crc64;   // use x64 + x4 + x3 + x + 1 polynomial TODO
 	BYTE m_Md5[16];
 
 	BYTE * m_pFileReadBuf;

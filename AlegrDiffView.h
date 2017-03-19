@@ -110,7 +110,7 @@ protected:
 	CBitmap m_ArrowDownBitmap;
 	CBitmap m_ArrowUpBitmap;
 
-	void BuildSortedPairArray(vector<FilePair *> & PairArray, ListHead<FilePair> * pPairList, int nCount);
+	void BuildSortedPairArray(vector<FilePair *> & PairArray, FilePairList * pPairList);
 
 	CString GetNumberOfFilesString();
 	void UpdateStatusText(UINT nState);

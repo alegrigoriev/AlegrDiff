@@ -216,6 +216,10 @@ void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, UINT FormatID, U
 void OpenFileForEditing(class FileItem * pFile);
 void CopyFilesToFolder(FileItem ** ppFiles, int nCount, bool bAddSubdirToTarget);
 CString FileTimeToStr(FILETIME FileTime, LCID locale = LOCALE_USER_DEFAULT);
+inline CString FileTimeToStr(ULONGLONG const &FileTime, LCID locale = LOCALE_USER_DEFAULT)
+{
+	return FileTimeToStr(reinterpret_cast<FILETIME const&>(FileTime), locale);
+}
 CString UlonglongToStr(ULONGLONG Length, LCID locale = LOCALE_USER_DEFAULT);
 CString FileLengthToStrKb(ULONGLONG Length);
 void AFXAPI AbbreviateName(LPTSTR lpszCanon, int cchMax, BOOL bAtLeastName);

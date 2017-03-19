@@ -45,11 +45,9 @@ void CAlegrDiffBaseDoc::OnUpdateAllViews(CView* pSender,
 // CAlegrDiffDoc construction/destruction
 
 CAlegrDiffDoc::CAlegrDiffDoc()
-	: m_nFilePairs(0),
-	m_bRecurseSubdirs(false),
+	: m_bRecurseSubdirs(false),
 	m_bCheckingFingerprint(false)
 	, m_bDoNotCompareFileContents(false)
-	, m_bNeedUpdateViews(false)
 {
 }
 
@@ -122,21 +120,9 @@ bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
 	INT_PTR result = dlg.DoModal();
 	if (IDOK == result)
 	{
-		bool HasFiles = false;
-
-		for (FilePair * pPair = m_PairList.First();
-			m_PairList.NotEnd(pPair); pPair = pPair->Next())
+		if (!m_PairList.HasFiles())
 		{
-			if (!pPair->pFirstFile->IsFolder()
-				|| ! pPair->FilesAreIdentical())
-			{
-				HasFiles = true;
-				break;
-			}
-		}
-
-		if ( ! HasFiles)
-		{
+			// the list contains only identical directory structure
 			AfxMessageBox(IDS_STRING_NO_FILES_TO_COMPARE, MB_OK);
 			return false;
 		}
@@ -169,370 +155,120 @@ bool operator !=(const FILETIME & time1, const FILETIME & time2)
 			|| time1.dwHighDateTime != time2.dwHighDateTime;
 }
 
-bool CAlegrDiffDoc::RebuildFilePairList(CProgressDialog * pDlg)
+bool CAlegrDiffDoc::BuildFilePairList(OPTIONAL LPCTSTR FirstDirOrFingerprint, LPCTSTR SecondDir)
 {
-	FileList FileList1;
-	FileList FileList2;
+	CString s;
 
-	if (! FileList1.LoadFolder(m_sFirstDir, m_bRecurseSubdirs,
-								m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern,
-								m_sBinaryFilesPattern, m_sIgnoreDirsPattern))
+	FileList list1, *p_list1 = &list1;
+	eLoadFolderResult result1 = eLoadFolderResultSuccess;
+
+	if (!m_bCheckingFingerprint)
 	{
-		FreeFilePairList();
-		CString s;
-		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sFirstDir));
-		MessageBoxSync(s);
-		return false;
-	}
+		result1 = list1.LoadFolder(FirstDirOrFingerprint, m_bRecurseSubdirs,
+									m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern,
+									m_sBinaryFilesPattern, m_sIgnoreDirsPattern);
 
-	if (! FileList2.LoadFolder(m_sSecondDir, m_bRecurseSubdirs,
-								m_sInclusionPattern, m_sExclusionPattern,
-								m_sCFilesPattern, m_sBinaryFilesPattern, m_sIgnoreDirsPattern))
-	{
-		CString s;
-		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sSecondDir));
-		MessageBoxSync(s);
-		return false;
-	}
-
-	return BuildFilePairList(FileList1, FileList2, pDlg);
-}
-
-bool CAlegrDiffDoc::BuildFilePairList(FileList & FileList1, FileList & FileList2,
-									CProgressDialog * pDlg)
-{
-	typedef vector<FileItem *> FilesVector;
-	typedef FilesVector::iterator FilesVectorIterator;
-	FilesVector Files1;
-	FilesVector Files2;
-
-	FileList1.GetSortedList(Files1, FileList::SortDirFirst);
-	FileList2.GetSortedList(Files2, FileList::SortDirFirst);
-
-	// we don't call FreeFilePairList, because we could be performing file list refresh
-
-	//    ULONG DirectoryNameIndex = 0;
-	//    ULONG FileNameIndex = 0;
-	// the list is sorted backwards. The folder goes last.
-	ListHead<FilePair> TmpPairList;
-
-	for (FilesVectorIterator pf1 = Files1.begin(), pf2 = Files2.begin();
-		pf1 != Files1.end() || pf2 != Files2.end(); )
-	{
-		FilePair * pPair = new FilePair;
-
-		int comparison;
-		FileItem * pParentDir;
-		FileItem * pFile1 = NULL;
-		FileItem * pFile2 = NULL;
-		FilePair::eFileComparisionResult result;
-
-		if (pf1 == Files1.end())
+		switch (result1)
 		{
-			pFile2 = *pf2;
-			comparison = -1;
-		}
-		else
-		{
-			pFile1 = *pf1;
+		case eLoadFolderResultSuccess:
+			break;
 
-			if (pf2 == Files2.end())
-			{
-				comparison = 1;
-			}
-			else
-			{
-				pFile2 = *pf2;
-				if (NULL != pFile1->m_pParentDir
-					&& pFile1->m_pParentDir->IsAlone())
-				{
-					comparison = 1;
-				}
-				else if (NULL != pFile2->m_pParentDir
-						&& pFile2->m_pParentDir->IsAlone())
-				{
-					comparison = -1;
-				}
-				else
-				{
-					comparison = -FileItem::DirNameCompare(pFile1, pFile2);
-				}
-			}
-		}
+		case eLoadFolderResultSubdirReadError:
+			result1 = eLoadFolderResultSuccess;
+			// fallthrough
+		case eLoadFolderResultFailure:
+			s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(m_sFirstDir));
+			MessageBoxSync(s);
+			break;
 
-		if (comparison < 0)
-		{
-			pPair->pFirstFile = NULL;
-			pPair->pSecondFile = pFile2;
-			pParentDir = pFile2->m_pParentDir;
+		case eLoadFolderResultNotFound:
+			s.Format(IDS_DIRECTORY_NOT_FOUND2, LPCTSTR(m_sFirstDir));
+			MessageBoxSync(s);
+			break;
 
-			if (pFile2->IsFolder())
-			{
-				if (pParentDir != NULL
-					&& pParentDir->IsAlone())
-				{
-					result = FilePair::SubdirsParentInSecondDirOnly;
-				}
-				else
-				{
-					result = FilePair::OnlySecondDirectory;
-				}
-
-				pFile2->SetAlone(true);
-			}
-			else
-			{
-				if (pParentDir != NULL
-					&& pParentDir->IsAlone())
-				{
-					result = FilePair::FileFromSubdirInSecondDirOnly;
-				}
-				else
-				{
-					result = FilePair::OnlySecondFile;
-				}
-			}
-			pf2++;
-
-			if (0) TRACE(_T("File \"%s\" exists only in dir \"%s\"\n"),
-						LPCTSTR(pFile2->GetName()),
-						LPCTSTR(FileList2.m_BaseDir + pFile2->GetSubdir()));
-		}
-		else if (comparison > 0)
-		{
-			pPair->pFirstFile = pFile1;
-			pPair->pSecondFile = NULL;
-			pParentDir = pFile1->m_pParentDir;
-
-			if (pFile1->IsPhantomFile())
-			{
-				// reading fingerprint
-				if (pFile1->IsFolder())
-				{
-					result = FilePair::DirectoryInFingerprintFileOnly;
-				}
-				else
-				{
-					result = FilePair::FileInFingerprintFileOnly;
-				}
-			}
-			else
-			{
-				if (pFile1->IsFolder())
-				{
-					if (pParentDir != NULL
-						&& pParentDir->IsAlone())
-					{
-						result = FilePair::SubdirsParentInFirstDirOnly;
-					}
-					else
-					{
-						result = FilePair::OnlyFirstDirectory;
-					}
-
-					pFile1->SetAlone(true);
-				}
-				else
-				{
-					if (pParentDir != NULL
-						&& pParentDir->IsAlone())
-					{
-						result = FilePair::FileFromSubdirInFirstDirOnly;
-					}
-					else
-					{
-						result = FilePair::OnlyFirstFile;
-					}
-				}
-			}
-			pf1++;
-
-			if (0) TRACE(_T("File \"%s\" exists only in dir \"%s\"\n"),
-						LPCTSTR(pFile1->GetName()),
-						LPCTSTR(FileList1.m_BaseDir + pFile1->GetSubdir()));
-		}
-		else
-		{
-			pPair->pFirstFile = pFile1;
-			pPair->pSecondFile = pFile2;
-			pf1++;
-			pf2++;
-
-			if (pFile1->IsFolder())
-			{
-				result = pPair->FilesIdentical;
-			}
-			else if (m_bDoNotCompareFileContents
-					&& pFile1->GetFileLength() == pFile2->GetFileLength()
-					&& pFile1->GetLastWriteTime() == pFile2->GetLastWriteTime())
-			{
-				result = pPair->FilesAttributesIdentical;
-			}
-			else
-			{
-				result = pPair->ResultUnknown;
-			}
-
-			if (0) TRACE(_T("File \"%s\" exists in both \"%s\" and \"%s\"\n"),
-						LPCTSTR(pFile1->GetName()),
-						LPCTSTR(FileList1.m_BaseDir + pFile1->GetSubdir()),
-						LPCTSTR(FileList2.m_BaseDir + pFile2->GetSubdir()));
-		}
-
-		pPair->SetComparisonResult(result);
-		TmpPairList.InsertTail(pPair);
-	}
-
-	FilePair * pInsertBefore = m_PairList.First();
-
-	while ( ! TmpPairList.IsEmpty())
-	{
-		FilePair * pPair = TmpPairList.RemoveTail();
-
-		while (m_PairList.NotEnd(pInsertBefore))
-		{
-			// check if we insert or remove items, or the item is duplicate
-			FileItem * pItem1 = pPair->pFirstFile;
-			if (NULL == pItem1)
-			{
-				pItem1 = pPair->pSecondFile;
-			}
-
-			FileItem * pItem2 = pInsertBefore->pFirstFile;
-			if (NULL == pItem2)
-			{
-				pItem2 = pInsertBefore->pSecondFile;
-			}
-
-			int comparison = FileItem::DirNameCompare(pItem1, pItem2);
-			if (comparison < 0)
-			{
-				pInsertBefore->m_bDeleted = true;
-				m_bNeedUpdateViews = true;
-				pInsertBefore = pInsertBefore->Next();
-
-				continue;
-			}
-			else if (comparison > 0)
-			{
-				break;
-			}
-			// name is the same
-			// check if file times are the same, and both files exist/not exist
-			if ((NULL != pPair->pFirstFile) == (NULL != pInsertBefore->pFirstFile)
-				&& (NULL != pPair->pSecondFile) == (NULL != pInsertBefore->pSecondFile)
-				// also check to see if file types are the same (binary/text
-				&& (pPair->NeedBinaryComparison() == pInsertBefore->NeedBinaryComparison()))
-			{
-				if ((pPair->pFirstFile != NULL
-						&& pPair->pFirstFile->GetLastWriteTime() !=
-						pInsertBefore->pFirstFile->GetLastWriteTime())
-					|| (pPair->pSecondFile != NULL
-						&& pPair->pSecondFile->GetLastWriteTime() !=
-						pInsertBefore->pSecondFile->GetLastWriteTime()))
-				{
-					// files times changed only
-					pInsertBefore->m_bChanged = true;
-					pInsertBefore->SetComparisonResult(pInsertBefore->ResultUnknown);
-					m_bNeedUpdateViews = true;
-
-					if (pPair->pFirstFile != NULL
-						&& pPair->pFirstFile->GetLastWriteTime() !=
-						pInsertBefore->pFirstFile->GetLastWriteTime())
-					{
-						FileItem* tmp = pPair->pFirstFile;
-						pPair->pFirstFile = pInsertBefore->pFirstFile;
-						pInsertBefore->pFirstFile = tmp;
-					}
-
-					if (pPair->pSecondFile != NULL
-						&& pPair->pSecondFile->GetLastWriteTime() !=
-						pInsertBefore->pSecondFile->GetLastWriteTime())
-					{
-						FileItem* tmp = pPair->pSecondFile;
-						pPair->pSecondFile = pInsertBefore->pSecondFile;
-						pInsertBefore->pSecondFile = tmp;
-					}
-				}
-				pPair->Dereference();
-				pPair = NULL;
-			}
-			else
-			{
-				pInsertBefore->m_bDeleted = true;
-				pPair->m_bFocused = pInsertBefore->m_bFocused;
-				pPair->m_bSelected = pInsertBefore->m_bSelected;
-				pInsertBefore->m_bFocused = false;
-			}
-			pInsertBefore = m_PairList.Next(pInsertBefore);
+		case eLoadFolderResultSubdirAccessDenied:
+			// this is non-fatal
+			result1 = eLoadFolderResultSuccess;
+			// fallthrough
+		case eLoadFolderResultAccessDenied:
+			s.Format(IDS_DIRECTORY_ACCESS_DENIED2, LPCTSTR(m_sFirstDir));
+			MessageBoxSync(s);
 			break;
 		}
+	}
+	else if (FirstDirOrFingerprint != nullptr)
+	{
+		result1 = list1.LoadFingerprintFile(FirstDirOrFingerprint, m_bRecurseSubdirs, m_sInclusionPattern, m_sExclusionPattern, m_sIgnoreDirsPattern);
 
-		if (pPair != NULL)
+		switch (result1)
 		{
-			m_bNeedUpdateViews = true;
-			pInsertBefore->InsertAsPrevItem(pPair);
-			m_nFilePairs++;
+		default:
+		case eLoadFolderResultSuccess:
+			break;
 
+		case eLoadFolderResultAccessDenied:
+			s.Format(IDS_FINGERPRINT_FILE_ACCESS_DENIED, LPCTSTR(m_sFirstDir));
+			MessageBoxSync(s);
+			break;
+
+		case eLoadFolderResultNotFound:
+			s.Format(IDS_FINGERPRINT_FILE_NOT_FOUND, LPCTSTR(m_sFirstDir));
+			MessageBoxSync(s);
+			break;
 		}
 	}
-
-	while (m_PairList.NotEnd(pInsertBefore))
+	else
 	{
-		pInsertBefore->m_bDeleted = true;
-		pInsertBefore = m_PairList.Next(pInsertBefore);
+		p_list1 = nullptr;
 	}
 
-	// amount of data to process
-	ULONGLONG TotalFilesSize = 0;
+	FileList list2;
+	eLoadFolderResult result2 = list2.LoadFolder(SecondDir, m_bRecurseSubdirs,
+												m_sInclusionPattern, m_sExclusionPattern, m_sCFilesPattern,
+												m_sBinaryFilesPattern, m_sIgnoreDirsPattern);
 
-	for (FilePair *pPair = m_PairList.First(); m_PairList.NotEnd(pPair); pPair = pPair->Next())
+	switch (result2)
 	{
-		if (! pPair->m_bDeleted
-			&& pPair->ResultUnknown == pPair->GetComparisonResult())
-		{
-			// add files to the "data to process" size
-			if (pPair->NeedBinaryComparison())
-			{
-				if (pPair->pFirstFile->GetFileLength()
-					== pPair->pSecondFile->GetFileLength())
-				{
-					if ( ! pPair->pFirstFile->m_bMd5Calculated)
-					{
-						// overhead is 0x2000
-						TotalFilesSize += FILE_OPEN_OVERHEAD + pPair->pFirstFile->GetFileLength();
-					}
-					if ( ! pPair->pSecondFile->m_bMd5Calculated)
-					{
-						TotalFilesSize += FILE_OPEN_OVERHEAD + pPair->pSecondFile->GetFileLength();
-					}
-				}
-			}
-			else
-			{
-				// text files
-				TotalFilesSize += FILE_OPEN_OVERHEAD * 2 + 2 * (pPair->pFirstFile->GetFileLength()
-																+ pPair->pSecondFile->GetFileLength());
-			}
-		}
+	case eLoadFolderResultSuccess:
+		break;
 
+	case eLoadFolderResultSubdirReadError:
+		result2 = eLoadFolderResultSuccess;
+		// fallthrough
+	case eLoadFolderResultFailure:
+		s.Format(IDS_STRING_DIRECTORY_LOAD_ERROR, LPCTSTR(SecondDir));
+		MessageBoxSync(s);
+		break;
+
+	case eLoadFolderResultNotFound:
+		s.Format(IDS_DIRECTORY_NOT_FOUND2, LPCTSTR(SecondDir));
+		MessageBoxSync(s);
+		break;
+
+	case eLoadFolderResultSubdirAccessDenied:
+		// this is non-fatal
+		result2 = eLoadFolderResultSuccess;
+		// fallthrough
+	case eLoadFolderResultAccessDenied:
+		s.Format(IDS_DIRECTORY_ACCESS_DENIED2, LPCTSTR(SecondDir));
+		MessageBoxSync(s);
+		break;
 	}
-	// all files are referenced in FilePair list
-	FileList1.Detach();
-	FileList2.Detach();
 
-	pDlg->SetTotalDataSize(TotalFilesSize);
+	m_PairList.BuildFilePairList(p_list1, &list2, m_bDoNotCompareFileContents);
 
+	if ((result1 != eLoadFolderResultSuccess
+			|| result2 != eLoadFolderResultSuccess))
+	{
+		return false;
+	}
 	return true;
 }
 
+
 void CAlegrDiffDoc::FreeFilePairList()
 {
-	while (! m_PairList.IsEmpty())
-	{
-		m_PairList.RemoveHead()->Dereference();
-	}
-	m_nFilePairs = 0;
+	m_PairList.RemoveAll();
 }
 
 void CAlegrDiffDoc::OnUpdateAllViews(CView* pSender,
@@ -545,19 +281,7 @@ void CAlegrDiffDoc::OnUpdateAllViews(CView* pSender,
 		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
 		if (NULL != pArg)
 		{
-			FilePair * const pPairToDelete = pArg->m_pPair;
-
-			CSimpleCriticalSectionLock lock(m_FileListCs);
-			// find if it is in the list and remove from the list
-			for (FilePair * pPair = m_PairList.First(); m_PairList.NotEnd(pPair); pPair = pPair->Next())
-			{
-				if (pPairToDelete == pPair)
-				{
-					pPair->RemoveFromList();
-					pPair->Dereference();
-					break;
-				}
-			}
+			m_PairList.RemovePair(pArg->m_pPair);
 		}
 	}
 }
@@ -1104,7 +828,7 @@ void CAlegrDiffDoc::OnViewRefresh()
 
 	CThisApp * pApp = GetApp();
 	// rescan the directories again
-	m_bNeedUpdateViews = false;
+	bool NeedUpdateViews = false;
 
 	CComparisonProgressDlg dlg(this);
 
@@ -1120,6 +844,7 @@ void CAlegrDiffDoc::OnViewRefresh()
 	{
 		if (pPair->m_bDeleted)
 		{
+			// The file items are already removed from dictionary
 			FilePair * pTmp = pPair;
 			pPair = m_PairList.Next(pPair);
 			pTmp->RemoveFromList();
@@ -1129,15 +854,14 @@ void CAlegrDiffDoc::OnViewRefresh()
 			pApp->UpdateAllViews(UpdateViewsFilePairDeleteView, & arg);
 
 			pTmp->Dereference();
-			m_bNeedUpdateViews = true;
+			NeedUpdateViews = true;
 		}
 		else
 		{
-			if (!pPair->pFirstFile->IsFolder()
-				|| !pPair->FilesAreIdentical())
+			if (!pPair->FilesAreIdentical()
+				|| !pPair->pFirstFile->IsFolder())
 			{
 				HasFiles = true;
-				break;
 			}
 
 			if (pPair->m_bChanged)
@@ -1156,7 +880,7 @@ void CAlegrDiffDoc::OnViewRefresh()
 		return;
 	}
 
-	if (m_bNeedUpdateViews)
+	if (NeedUpdateViews)
 	{
 		// scan to remove the deleted pairs
 
@@ -1185,12 +909,13 @@ void CFilePairDoc::OnViewRefresh()
 	{
 		CString s;
 		s.Format(IDS_QUERY_RELOAD_FILES,
-				m_pFilePair->pSecondFile->GetSubdir(), m_pFilePair->pSecondFile->GetName());
+				(LPCTSTR)m_pFilePair->pSecondFile->GetSubdir(), (LPCTSTR)m_pFilePair->pSecondFile->GetName());
 		if (IDYES != AfxMessageBox(s, MB_YESNO))
 		{
 			return;
 		}
 	}
+
 	res1 = m_pFilePair->ReloadIfChanged();
 	if (FilesUnchanged == res1)
 	{
@@ -1973,7 +1698,7 @@ BOOL CFilePairDoc::SaveModified()
 	{
 		CString s;
 		s.Format(IDS_QUERY_SAVE_MERGED_FILE,
-				m_pFilePair->pSecondFile->GetSubdir(), m_pFilePair->pSecondFile->GetName());
+				(LPCTSTR)m_pFilePair->pSecondFile->GetSubdir(), (LPCTSTR)m_pFilePair->pSecondFile->GetName());
 		int answer = AfxMessageBox(s, MB_YESNOCANCEL);
 		if (IDYES == answer)
 		{
@@ -2356,19 +2081,21 @@ void CFilePairDoc::OnFileCopySecondDirFile()
 
 unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg)
 {
-	if ( ! RebuildFilePairList(pDlg))
+	if (!BuildFilePairList(m_sFirstDir, m_sSecondDir))
 	{
 		// TODO
 		return IDABORT;
 	}
-	// preload first of binary files in pair (calculate MD5 digest)
+
+	pDlg->SetTotalDataSize(m_PairList.GetTotalDataSize());
 
 	CMd5HashCalculator HashCalc;
 	FilePair * pPair;
 
-	for (pPair = m_PairList.Last();
-		m_PairList.NotEnd(pPair) && (NULL == pDlg || ! pDlg->m_StopRunThread);
-		pPair = pPair->Prev())
+	// preload first of binary files in pair (calculate MD5 digest)
+	for (pPair = m_PairList.First();
+		m_PairList.NotEnd(pPair) && (NULL == pDlg || !pDlg->m_StopRunThread);
+		pPair = pPair->Next())
 	{
 		if (0) TRACE("First pass, pPair=%p, result=%d\n", pPair, pPair->m_ComparisonResult);
 		if (pPair->m_ComparisonResult != FilePair::ResultUnknown
@@ -2398,12 +2125,11 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 		pDlg->AddDoneItem(pPair->pFirstFile->GetFileLength());
 
 		pPair->m_bChanged = true;
-
 	}
 
-	for (pPair = m_PairList.Last();
-		m_PairList.NotEnd(pPair) && (NULL == pDlg || ! pDlg->m_StopRunThread);
-		pPair = pPair->Prev())
+	for (pPair = m_PairList.First();
+		m_PairList.NotEnd(pPair) && (NULL == pDlg || !pDlg->m_StopRunThread);
+		pPair = pPair->Next())
 	{
 		if (0) TRACE("Second pass, pPair=%p, result=%d\n", pPair, pPair->GetComparisonResult());
 		if (FilePair::ResultUnknown != pPair->GetComparisonResult())
@@ -2413,7 +2139,6 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 
 		pPair->SetComparisonResult(pPair->PreCompareFiles( & HashCalc, pDlg));
 		pPair->m_bChanged = true;
-
 	}
 
 	return IDOK;

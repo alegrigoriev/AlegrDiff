@@ -22,15 +22,14 @@ protected:
 	// percents complete
 
 	CString m_sDirectory;
-	BOOL m_bIncludeSubdirectories;
-	BOOL m_bIncludeDirectoryStructure;
+	bool    m_bIncludeSubdirectories;
 	CString m_FingerprintFilename;
 	CString m_sFilenameFilter;
 	CString m_sIgnoreFiles;
 	CString m_sIgnoreFolders;
 
 	virtual unsigned ThreadProc();
-	BOOL LoadFingerprintFile(LPCTSTR Filename, FileList & Files);
+
 public:
 	virtual BOOL OnInitDialog();
 protected:

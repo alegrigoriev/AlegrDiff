@@ -8,8 +8,8 @@
 #include "Md5HashCalculator.h"
 #include "KListEntry.h"
 #include "SmallAllocator.h"
-
-using namespace std;
+#include "AdelsonVelskyLandisTree.h"
+#include "PathEx.h"
 
 #define FILE_OPEN_OVERHEAD 0x2000
 
@@ -225,13 +225,51 @@ private:
 	static class CSmallAllocator m_Allocator;
 };
 
+class FileItem;
 enum FileCheckResult { FileDeleted, FileUnchanged, FileTimeChanged, };
+struct KeyDirectoryEntry
+{
+	ULONG RefCount;     // number of entries referring to this key
+	ULONG SortSequence; // index in sorted sequence
+	KeyDirectoryEntry()
+		: RefCount(0), SortSequence(0xFFFFFFFF)
+	{}
+};
+struct FileItemListEntry
+{
+	FileItem * pItem;
+	FileItemListEntry(FileItem * item)
+		: pItem(item)
+	{}
+};
+
+struct FilenameComparePredicate
+{
+	int operator()(CString const & A, CString const & B) const
+	{
+		return A.CollateNoCase(B);
+	}
+};
+
+struct MultiStrDirComparePredicate
+{
+	int operator()(LPCTSTR pA, LPCTSTR pB) const;  // The strings are multi-strings
+};
+
+struct FullPathnameComparePredicate
+{
+	int operator()(FileItem const* A, FileItem const* B) const;
+};
+
+typedef avl_tree<KeyDirectoryEntry, CString, FilenameComparePredicate> name_tree_t;
+typedef avl_tree<KeyDirectoryEntry, CString, MultiStrDirComparePredicate> full_dirname_tree_t;  // CString is multi-string
+typedef avl_tree<FileItem *, FileItem const*, FullPathnameComparePredicate> file_item_tree_t;
 
 class FileItem
 {
 public:
 	FileItem(const WIN32_FIND_DATA * pWfd,
-			const CString & BaseDir, const CString & Dir, FileItem * pParentDir);
+			const CString & BaseDir, const CString & Dir, OPTIONAL FileItem * pParentDir);
 
 	~FileItem();
 	bool Load();
@@ -266,6 +304,7 @@ public:
 	static size_t GetDigestLength() { return 16; }
 
 	void SetMD5(BYTE const md5[16]);
+	void CopyMD5(FileItem *pFileItem);
 
 	// add line from memory. Assuming the file created dynamically by the program
 	void AddLine(LPCTSTR pLine);
@@ -352,8 +391,18 @@ public:
 		return (unsigned)m_Lines.size();
 	}
 
-	// get file name ONLY
-	LPCTSTR GetName() const
+	// get file name ONLY. Empty for a directory
+	CString const & GetFileName() const
+	{
+		if (IsFolder())
+		{
+			static CString empty;
+			return empty;
+		}
+		return m_Name;
+	}
+	// get file (or subdirectory) name
+	CString const & GetName() const
 	{
 		return m_Name;
 	}
@@ -362,8 +411,8 @@ public:
 		return (unsigned)m_Name.GetLength();
 	}
 
-	// get sibdirectory ONLY, with trailing slash
-	LPCTSTR GetSubdir() const
+	// get sibdirectory ONLY, with trailing slash. For a directory does NOT includes its own name
+	CString const & GetSubdir() const
 	{
 		return m_Subdir;
 	}
@@ -372,7 +421,7 @@ public:
 		return m_Subdir.GetLength();
 	}
 
-	LPCTSTR GetBasedir() const
+	CString const & GetBasedir() const
 	{
 		return m_BaseDir;
 	}
@@ -390,7 +439,13 @@ public:
 		return m_BaseDir.GetLength() + m_Subdir.GetLength() + m_Name.GetLength();
 	}
 
-	FILETIME GetLastWriteTime() const
+	CString const & GetMultiStrSubdir() const
+	{
+		ASSERT(IsFolder());
+		return m_MultiStrDir;
+	}
+
+	ULONGLONG GetLastWriteTime() const
 	{
 		return m_LastWriteTime;
 	}
@@ -421,13 +476,18 @@ public:
 
 	FileItem * m_pNext;
 	FileItem* m_pParentDir;
+
+	// These functions return 1 if Item1 is greater than Item2
 	static bool NameSortFunc(FileItem const * Item1, FileItem const * Item2);
 	static bool DirNameSortFunc(FileItem const * Item1, FileItem const * Item2);
 	static bool TimeSortFunc(FileItem const * Item1, FileItem const * Item2);
+	// These functions return 1 if Item1 is less than Item2
 	static bool NameSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2);
 	static bool DirNameSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2);
 	static bool TimeSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2);
 
+	// These functions return 1 if Item1 is greater than Item2, -1 if Item1 is less than Item2,
+	// and zero if they are equal
 	static int NameCompare(FileItem const * Item1, FileItem const * Item2);
 	static int DirNameCompare(FileItem const * Item1, FileItem const * Item2);
 	static int TimeCompare(FileItem const * Item1, FileItem const * Item2);
@@ -443,12 +503,33 @@ public:
 		m_Cs.Unlock();
 	}
 
+	// These are indices in a pre-sorted list of m_Name values (collated no case), in the common dictionary for left and right trees, in ascending order.
+	ULONG m_NameSortNum;        // zero for directories
+	ULONG m_FullDirSortNum;     // full directory names have a separate dictionary, because the sorting predicate is different
+	name_tree_t::iterator iNameInTree;  // NULL for directories
+	full_dirname_tree_t::iterator iFullDirInTree;
+
 private:
+	// This data is used to facilitate sorting and UI.
+	// This is a filename or directory name (last element only)
+	// For a directory, it has a trailing backslash
+	// Used also as a sort key (case-insensitive collate)
 	CString m_Name;
-	CString m_Subdir;
+
+	// base directory is common for all items in the list. Ends with backslash.
+	// For items built from a fingerprint file, it's FP filename
 	CString m_BaseDir;
 
-	FILETIME m_LastWriteTime;
+	// full containing subdirectory name (NOT including the comparison base directory). If not empty, ends with backslash
+	// Will be equal for left and right directories (case-insensitive)
+	// Is used for UI.
+	CString m_Subdir;
+
+	// full sub directory presented as multi-string (includes current directory name).
+	// Is set for directory items only and used as the sort key.
+	CString m_MultiStrDir;
+
+	ULONGLONG m_LastWriteTime;
 	LONGLONG m_Length;
 	LONGLONG m_Crc64;   // use x64 + x4 + x3 + x + 1 polynomial TODO
 	BYTE m_Md5[16];
@@ -460,10 +541,10 @@ private:
 	DWORD m_Attributes;
 	HANDLE m_hFile;
 
-	vector<FileLine *> m_Lines;
-	vector<FileLine *> m_NonBlankLines;
-	vector<FileLine *> m_NormalizedHashSortedLines;   // non-blank only
-	vector<FileLine *> m_NormalizedHashSortedLineGroups;   // non-blank only
+	std::vector<FileLine *> m_Lines;
+	std::vector<FileLine *> m_NonBlankLines;
+	std::vector<FileLine *> m_NormalizedHashSortedLines;   // non-blank only
+	std::vector<FileLine *> m_NormalizedHashSortedLineGroups;   // non-blank only
 
 	friend class FilePair;
 	static CSimpleCriticalSection m_Cs;
@@ -640,32 +721,88 @@ private:
 	}
 };
 
+enum eLoadFolderResult
+{
+	eLoadFolderResultSuccess = 0,
+	eLoadFolderResultFailure = ERROR_GEN_FAILURE,
+	eLoadFolderResultNotFound = ERROR_FILE_NOT_FOUND | 0xC0000000,
+	eLoadFolderResultAccessDenied = ERROR_ACCESS_DENIED | 0xC0000000,
+	eLoadFolderResultSubdirAccessDenied = ERROR_ACCESS_DENIED,   // non-fatal
+	eLoadFolderResultSubdirReadError = ERROR_READ_FAULT,   // non-fatal
+};
+
 class FileList
 {
 public:
 	FileList();
 	~FileList();
-	void Detach()
+	FileItem *Detach()
 	{
+		FileItem * item = m_pList;
 		m_pList = NULL;
 		m_NumFiles = 0;
+		return item;
 	}
 
-	bool LoadFolder(const CString & BaseDir, bool bRecurseSubdirs,
-					LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
-					LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask, LPCTSTR sIgnoreDirs);
-	bool LoadSubFolder(LPCTSTR Subdir,
-						LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
-						LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask, LPCTSTR sIgnoreDirs, FileItem * pParentDir);
+	eLoadFolderResult LoadFolder(LPCTSTR BaseDir, bool bRecurseSubdirs,
+								LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
+								LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask, LPCTSTR sIgnoreDirs);
+	eLoadFolderResult LoadFingerprintFile(LPCTSTR Filename, bool &bRecurseSubdirs,
+										CString & sInclusionMask, CString & sExclusionMask,
+										CString & sIgnoreDirs);
 
 	void FreeFileList();
 
-	enum { SortNameFirst = 1, SortDirFirst = 2, SortDataModified = 4, SortBackwards = 8};
-	void GetSortedList(vector<FileItem *> & ItemArray, DWORD SortFlags);
+	enum { SortNameFirst = 1, SortDirFirst = 2, SortDataModified = 4, SortBackwards = 8 };
 
 	FileItem * m_pList;
-	CString m_BaseDir;
+	CPathEx m_BaseDir;
+protected:
 	int m_NumFiles;
+	eLoadFolderResult LoadSubFolder(LPCTSTR Subdir,
+									LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
+									LPCTSTR sC_CPPMask, LPCTSTR sBinaryMask, LPCTSTR sIgnoreDirs, FileItem * pParentDir);
+};
+
+
+class FilePairList : ListHead<FilePair>
+{
+public:
+	FilePairList()
+		: NumFilePairs(0)
+	{}
+	enum FileListIndex
+	{
+		LeftFileList = 1,
+		RightFileList = 2,
+	};
+
+	FileItem * GetSortedList(FileListIndex index);
+
+	bool BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, bool DoNotCompareContents);  // returns 'true' if there were changes in it
+
+	unsigned NumFilePairs;
+	bool HasFiles() const;
+	ULONGLONG GetTotalDataSize(ULONG FileOpenOverhead = FILE_OPEN_OVERHEAD);
+	void RemovePair(FilePair * pPairToDelete);
+	void RemoveAll();
+
+	using ListHead<FilePair>::First;
+	using ListHead<FilePair>::Next;
+	using ListHead<FilePair>::Last;
+	using ListHead<FilePair>::NotEnd;
+
+private:
+
+	void AddToDictionary(FileList const *list);
+	void RemoveFromDictionary(FileItem *pItem);
+	void MergeFileListToTree(FileList *list, file_item_tree_t &Files);
+
+	name_tree_t NameTree;
+	full_dirname_tree_t FullDirNameTree;
+
+	file_item_tree_t Files1;
+	file_item_tree_t Files2;
 };
 
 bool MatchWildcard(LPCTSTR name, LPCTSTR pattern);

@@ -484,6 +484,9 @@
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="ReadMe.txt" />
+    <None Include="CommonSources\Utils\MultiString.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="resource.h">

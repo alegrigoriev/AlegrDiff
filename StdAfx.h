@@ -35,47 +35,7 @@ template<typename T> inline void memzero(T & obj)
 
 #define countof(a) (sizeof (a) / sizeof (a[0]))
 
-static unsigned MultiSzLen(LPCSTR src)
-{
-	size_t len = 0;
-	size_t len1;
-	while(0 != (len1 = strlen(src + len)))
-	{
-		len += len1 + 1;
-	}
-	return (unsigned)len;
-}
-
-static unsigned MultiSzLen(LPCWSTR src)
-{
-	size_t len = 0;
-	size_t len1;
-	while(0 != (len1 = wcslen(src + len)))
-	{
-		len += len1 + 1;
-	}
-	return (unsigned)len;
-}
-
-inline void AssignMultiSz(CStringW & dst, LPCSTR src)
-{
-	dst = CStringW(src, MultiSzLen(src));
-}
-
-inline void AssignMultiSz(CStringW & dst, LPCWSTR src)
-{
-	dst.SetString(src, MultiSzLen(src));
-}
-
-inline void AssignMultiSz(CStringA & dst, LPCSTR src)
-{
-	dst.SetString(src, MultiSzLen(src));
-}
-
-inline void AssignMultiSz(CStringA & dst, LPCWSTR src)
-{
-	dst = CStringA(src, MultiSzLen(src));
-}
+#include "MultiString.inl"
 
 #define EnableDlgItem(id, Enable) \
 	::EnableWindow(GetDlgItem(id)->GetSafeHwnd(), Enable)

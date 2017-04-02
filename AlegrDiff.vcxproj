@@ -418,6 +418,7 @@ makehm /h /a afxhh.h IDW_,HIDW_,0x50000 "%(Filename)%(Extension)" &gt;&gt; "hlp\
     <ClInclude Include="CommonSources\UI\UiUpdatedDlg.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="CommonSources\Utils\MultiString.inl" />
     <None Include="res\AlegrDiff.ico" />
     <None Include="res\AlegrDiff.rc2" />
     <None Include="res\AlegrDiffDoc.ico" />

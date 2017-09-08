@@ -164,7 +164,9 @@ protected:
 	afx_msg void OnUpdateListviewSortby2ndmodificationdate(CCmdUI *pCmdUI);
 	afx_msg void OnHdnBegindrag(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnHdnEnddrag(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnHdnEndtrack(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnHdnEndTrack(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnHdnTrack(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnHdnBeginTrack(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnViewResetcolumns();
 	afx_msg void OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnFileProperties();

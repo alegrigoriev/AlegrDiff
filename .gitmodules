@@ -1,0 +1,3 @@
+[submodule "CommonSources"]
+	path = CommonSources
+	url = ../CommonSources

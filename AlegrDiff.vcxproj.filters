@@ -33,7 +33,7 @@
     <ClCompile Include="AlegrDiffView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ApplicationProfile.cpp">
+    <ClCompile Include="CommonSources\Utils\ApplicationProfile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BinaryCompareDoc.cpp">
@@ -72,7 +72,7 @@
     <ClCompile Include="DirectoryFingerprintDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FileDialogWithHistory.cpp">
+    <ClCompile Include="CommonSources\UI\FileDialogWithHistory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FileLine.cpp">
@@ -90,7 +90,7 @@
     <ClCompile Include="FindDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FolderDialog.cpp">
+    <ClCompile Include="CommonSources\UI\FolderDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GotoLineDialog.cpp">
@@ -102,19 +102,19 @@
     <ClCompile Include="Md5HashCalculator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MessageBoxSynch.cpp">
+    <ClCompile Include="CommonSources\UI\MessageBoxSynch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PreferencesDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ProgressDialog.cpp">
+    <ClCompile Include="CommonSources\UI\ProgressDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SaveFileListDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SmallAllocator.cpp">
+    <ClCompile Include="CommonSources\Utils\SmallAllocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StdAfx.cpp">
@@ -127,10 +127,10 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GdiObjectSave.h">
+    <ClInclude Include="CommonSources\UI\GdiObjectSave.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="MessageBoxSynch.h">
+    <ClInclude Include="CommonSources\UI\MessageBoxSynch.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="AcceptDeclineDlg.h">
@@ -148,7 +148,7 @@
     <ClInclude Include="AlegrDiffView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ApplicationProfile.h">
+    <ClInclude Include="CommonSources\Utils\ApplicationProfile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BinaryCompareDoc.h">
@@ -163,7 +163,7 @@
     <ClInclude Include="CHeckFingerprintDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ChildFrameEx.h">
+    <ClInclude Include="CommonSources\UI\ChildFrameEx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ChildFrm.h">
@@ -190,7 +190,7 @@
     <ClInclude Include="DirectoryFingerprintDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FileDialogWithHistory.h">
+    <ClInclude Include="CommonSources\Utils\FileDialogWithHistory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FileLine.h">
@@ -208,19 +208,19 @@
     <ClInclude Include="FindDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FolderDialog.h">
+    <ClInclude Include="CommonSources\UI\FolderDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GotoLineDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="KListEntry.h">
+    <ClInclude Include="CommonSources\Utils\KListEntry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LastError.h">
+    <ClInclude Include="CommonSources\Utils\LastError.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MainFrameEx.h">
+    <ClInclude Include="CommonSources\UI\MainFrameEx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MainFrm.h">
@@ -229,34 +229,31 @@
     <ClInclude Include="Md5HashCalculator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MessageMapT.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PathEx.h">
+    <ClInclude Include="CommonSources\Utils\PathEx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PreferencesDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ProgressDialog.h">
+    <ClInclude Include="CommonSources\UI\ProgressDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ResizableDialog.h">
+    <ClInclude Include="CommonSources\UI\ResizableDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SaveFileListDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SimpleCriticalSection.h">
+    <ClInclude Include="CommonSources\Utils\SimpleCriticalSection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SmallAllocator.h">
+    <ClInclude Include="CommonSources\Utils\SmallAllocator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StdAfx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UiUpdatedDlg.h">
+    <ClInclude Include="CommonSources\UI\UiUpdatedDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

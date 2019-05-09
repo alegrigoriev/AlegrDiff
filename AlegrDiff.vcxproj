@@ -95,6 +95,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>.;CommonSources\Utils;CommonSources\UI</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -131,6 +132,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>.;CommonSources\Utils;CommonSources\UI</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -169,6 +171,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>.;CommonSources\Utils;CommonSources\UI</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -212,6 +215,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>.;CommonSources\Utils;CommonSources\UI</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -245,7 +249,7 @@
     <ClCompile Include="AlegrDiff.cpp" />
     <ClCompile Include="AlegrDiffDoc.cpp" />
     <ClCompile Include="AlegrDiffView.cpp" />
-    <ClCompile Include="ApplicationProfile.cpp" />
+    <ClCompile Include="CommonSources\Utils\ApplicationProfile.cpp" />
     <ClCompile Include="BinaryCompareDoc.cpp" />
     <ClCompile Include="BinaryCompareView.cpp" />
     <ClCompile Include="BinaryGoToDlg.cpp" />
@@ -258,21 +262,21 @@
     <ClCompile Include="DirectoryFingerpringCreateDlg.cpp" />
     <ClCompile Include="DirectoryFingerprintCheckDlg.cpp" />
     <ClCompile Include="DirectoryFingerprintDlg.cpp" />
-    <ClCompile Include="FileDialogWithHistory.cpp" />
+    <ClCompile Include="CommonSources\UI\FileDialogWithHistory.cpp" />
     <ClCompile Include="FileLine.cpp" />
     <ClCompile Include="FileListSupport.cpp" />
     <ClCompile Include="FilesCompareDialog.cpp" />
     <ClCompile Include="FilesPropertiesDialog.cpp" />
     <ClCompile Include="FindDialog.cpp" />
-    <ClCompile Include="FolderDialog.cpp" />
+    <ClCompile Include="CommonSources\UI\FolderDialog.cpp" />
     <ClCompile Include="GotoLineDialog.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="Md5HashCalculator.cpp" />
-    <ClCompile Include="MessageBoxSynch.cpp" />
+    <ClCompile Include="CommonSources\UI\MessageBoxSynch.cpp" />
     <ClCompile Include="PreferencesDialog.cpp" />
-    <ClCompile Include="ProgressDialog.cpp" />
+    <ClCompile Include="CommonSources\UI\ProgressDialog.cpp" />
     <ClCompile Include="SaveFileListDlg.cpp" />
-    <ClCompile Include="SmallAllocator.cpp" />
+    <ClCompile Include="CommonSources\Utils\SmallAllocator.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -284,19 +288,19 @@
     <ResourceCompile Include="AlegrDiff.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GdiObjectSave.h" />
-    <ClInclude Include="MessageBoxSynch.h" />
+    <ClInclude Include="CommonSources\UI\GdiObjectSave.h" />
+    <ClInclude Include="CommonSources\UI\MessageBoxSynch.h" />
     <ClInclude Include="AcceptDeclineDlg.h" />
     <ClInclude Include="AlegrDiff.h" />
     <ClInclude Include="AlegrDiffDoc.h" />
     <ClInclude Include="AlegrDiffVer.h" />
     <ClInclude Include="AlegrDiffView.h" />
-    <ClInclude Include="ApplicationProfile.h" />
+    <ClInclude Include="CommonSources\Utils\ApplicationProfile.h" />
     <ClInclude Include="BinaryCompareDoc.h" />
     <ClInclude Include="BinaryCompareView.h" />
     <ClInclude Include="BinaryGoToDlg.h" />
     <ClInclude Include="CHeckFingerprintDlg.h" />
-    <ClInclude Include="ChildFrameEx.h" />
+    <ClInclude Include="CommonSources\UI\ChildFrameEx.h" />
     <ClInclude Include="ChildFrm.h" />
     <ClInclude Include="CompareDirsDialog.h" />
     <ClInclude Include="ComparisonProgressDlg.h" />
@@ -305,24 +309,23 @@
     <ClInclude Include="DirectoryFingerpringCreateDlg.h" />
     <ClInclude Include="DirectoryFingerprintCheckDlg.h" />
     <ClInclude Include="DirectoryFingerprintDlg.h" />
-    <ClInclude Include="FileDialogWithHistory.h" />
+    <ClInclude Include="CommonSources\Utils\FileDialogWithHistory.h" />
     <ClInclude Include="FileLine.h" />
     <ClInclude Include="FileListSupport.h" />
     <ClInclude Include="FilesCompareDialog.h" />
     <ClInclude Include="FilesPropertiesDialog.h" />
     <ClInclude Include="FindDialog.h" />
-    <ClInclude Include="FolderDialog.h" />
+    <ClInclude Include="CommonSources\UI\FolderDialog.h" />
     <ClInclude Include="GotoLineDialog.h" />
-    <ClInclude Include="KListEntry.h" />
-    <ClInclude Include="LastError.h" />
-    <ClInclude Include="MainFrameEx.h" />
+    <ClInclude Include="CommonSources\Utils\KListEntry.h" />
+    <ClInclude Include="CommonSources\Utils\LastError.h" />
+    <ClInclude Include="CommonSources\UI\MainFrameEx.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="Md5HashCalculator.h" />
-    <ClInclude Include="MessageMapT.h" />
-    <ClInclude Include="PathEx.h" />
+    <ClInclude Include="CommonSources\Utils\PathEx.h" />
     <ClInclude Include="PreferencesDialog.h" />
-    <ClInclude Include="ProgressDialog.h" />
-    <ClInclude Include="ResizableDialog.h" />
+    <ClInclude Include="CommonSources\UI\ProgressDialog.h" />
+    <ClInclude Include="CommonSources\UI\ResizableDialog.h" />
     <CustomBuild Include="Resource.h">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Making help include file...</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">makehm /h ID_,HID_,0x10000 IDM_,HIDM_,0x10000 "%(Filename)%(Extension)" &gt; "hlp\HTMLDefines.h"
@@ -390,10 +393,10 @@ makehm /h /a afxhh.h IDW_,HIDW_,0x50000 "%(Filename)%(Extension)" &gt;&gt; "hlp\
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlp\HTMLDefines.h;%(Outputs)</Outputs>
     </CustomBuild>
     <ClInclude Include="SaveFileListDlg.h" />
-    <ClInclude Include="SimpleCriticalSection.h" />
-    <ClInclude Include="SmallAllocator.h" />
+    <ClInclude Include="CommonSources\Utils\SimpleCriticalSection.h" />
+    <ClInclude Include="CommonSources\Utils\SmallAllocator.h" />
     <ClInclude Include="StdAfx.h" />
-    <ClInclude Include="UiUpdatedDlg.h" />
+    <ClInclude Include="CommonSources\UI\UiUpdatedDlg.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\AlegrDiff.ico" />

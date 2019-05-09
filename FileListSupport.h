@@ -47,104 +47,104 @@ struct TextPosDisplay
 	}
 };
 
-inline bool operator >(const TextPos & p1, const TextPos & p2)
+constexpr inline bool operator >(const TextPos & p1, const TextPos & p2)
 {
 	return (p1.line > p2.line)
 		|| (p1.line == p2.line && p1.pos > p2.pos);
 }
 
-inline bool operator >=(const TextPos & p1, const TextPos & p2)
+constexpr inline bool operator >=(const TextPos & p1, const TextPos & p2)
 {
 	return (p1.line > p2.line)
 		|| (p1.line == p2.line && p1.pos >= p2.pos);
 }
 
-inline bool operator <(const TextPos & p1, const TextPos & p2)
+constexpr inline bool operator <(const TextPos & p1, const TextPos & p2)
 {
 	return (p1.line < p2.line)
 		|| (p1.line == p2.line && p1.pos < p2.pos);
 }
 
-inline bool operator <=(const TextPos & p1, const TextPos & p2)
+constexpr inline bool operator <=(const TextPos & p1, const TextPos & p2)
 {
 	return (p1.line < p2.line)
 		|| (p1.line == p2.line && p1.pos <= p2.pos);
 }
 
-inline bool operator ==(const TextPos & p1, const TextPos & p2)
+constexpr inline bool operator ==(const TextPos & p1, const TextPos & p2)
 {
 	return p1.line == p2.line && p1.pos == p2.pos;
 }
 
-inline bool operator !=(const TextPos & p1, const TextPos & p2)
+constexpr inline bool operator !=(const TextPos & p1, const TextPos & p2)
 {
 	return p1.line != p2.line || p1.pos != p2.pos;
 }
 
-inline bool operator >(const TextPosLine & p1, const TextPosLine & p2)
+constexpr inline bool operator >(const TextPosLine & p1, const TextPosLine & p2)
 {
 	return (p1.line > p2.line)
 		|| (p1.line == p2.line && p1.pos > p2.pos);
 }
 
-inline bool operator >=(const TextPosLine & p1, const TextPosLine & p2)
+constexpr inline bool operator >=(const TextPosLine & p1, const TextPosLine & p2)
 {
 	return (p1.line > p2.line)
 		|| (p1.line == p2.line && p1.pos >= p2.pos);
 }
 
-inline bool operator <(const TextPosLine & p1, const TextPosLine & p2)
+constexpr inline bool operator <(const TextPosLine & p1, const TextPosLine & p2)
 {
 	return (p1.line < p2.line)
 		|| (p1.line == p2.line && p1.pos < p2.pos);
 }
 
-inline bool operator <=(const TextPosLine & p1, const TextPosLine & p2)
+constexpr inline bool operator <=(const TextPosLine & p1, const TextPosLine & p2)
 {
 	return (p1.line < p2.line)
 		|| (p1.line == p2.line && p1.pos <= p2.pos);
 }
 
-inline bool operator ==(const TextPosLine & p1, const TextPosLine & p2)
+constexpr inline bool operator ==(const TextPosLine & p1, const TextPosLine & p2)
 {
 	return p1.line == p2.line && p1.pos == p2.pos;
 }
 
-inline bool operator !=(const TextPosLine & p1, const TextPosLine & p2)
+constexpr inline bool operator !=(const TextPosLine & p1, const TextPosLine & p2)
 {
 	return p1.line != p2.line || p1.pos != p2.pos;
 }
 
-inline bool operator >(const TextPosDisplay & p1, const TextPosDisplay & p2)
+constexpr inline bool operator >(const TextPosDisplay & p1, const TextPosDisplay & p2)
 {
 	return (p1.line > p2.line)
 		|| (p1.line == p2.line && p1.pos > p2.pos);
 }
 
-inline bool operator >=(const TextPosDisplay & p1, const TextPosDisplay & p2)
+constexpr inline bool operator >=(const TextPosDisplay & p1, const TextPosDisplay & p2)
 {
 	return (p1.line > p2.line)
 		|| (p1.line == p2.line && p1.pos >= p2.pos);
 }
 
-inline bool operator <(const TextPosDisplay & p1, const TextPosDisplay & p2)
+constexpr inline bool operator <(const TextPosDisplay & p1, const TextPosDisplay & p2)
 {
 	return (p1.line < p2.line)
 		|| (p1.line == p2.line && p1.pos < p2.pos);
 }
 
-inline bool operator <=(const TextPosDisplay & p1, const TextPosDisplay & p2)
+constexpr inline bool operator <=(const TextPosDisplay & p1, const TextPosDisplay & p2)
 {
 	return (p1.line < p2.line)
 		|| (p1.line == p2.line && p1.pos <= p2.pos);
 }
 
-inline bool operator ==(const TextPosDisplay & p1, const TextPosDisplay & p2)
+constexpr inline bool operator ==(const TextPosDisplay & p1, const TextPosDisplay & p2)
 {
 	return p1.line == p2.line && p1.pos == p2.pos;
 }
 
-inline bool operator !=(const TextPosDisplay & p1, const TextPosDisplay & p2)
+constexpr inline bool operator !=(const TextPosDisplay & p1, const TextPosDisplay & p2)
 {
 	return p1.line != p2.line || p1.pos != p2.pos;
 }

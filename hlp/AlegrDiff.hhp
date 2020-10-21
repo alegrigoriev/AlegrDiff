@@ -16,7 +16,6 @@ afx_hidp_default.htm
 afx_hidw_dockbar_top.htm
 afx_hidw_status_bar.htm
 afx_hidw_toolbar.htm
-hidr_doc1type.htm
 hid_app_about.htm
 hid_app_exit.htm
 hid_context_help.htm
@@ -156,7 +155,6 @@ hid_window_tile						= hid_window_tile.htm
 hid_window_tile_horz				= hid_window_tile_horz.htm
 hid_window_tile_vert				= hid_window_tile_vert.htm
 HIDD_ABOUTBOX						= HID_APP_ABOUT.htm
-hidr_doc1type						= hidr_doc1type.htm
 HIDR_MAINFRAME = main_index.htm
 main_index							= main_index.htm
 menu_edit							= menu_edit.htm

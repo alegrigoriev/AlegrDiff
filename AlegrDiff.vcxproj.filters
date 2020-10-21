@@ -354,9 +354,6 @@
     <None Include="hlp\hid_file_mru_file1.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
-    <None Include="hlp\hid_file_new.htm">
-      <Filter>HTML Help Topics</Filter>
-    </None>
     <None Include="hlp\hid_file_open.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
@@ -376,9 +373,6 @@
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\hid_file_save_as.htm">
-      <Filter>HTML Help Topics</Filter>
-    </None>
-    <None Include="hlp\hid_file_send_mail.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\hid_help_index.htm">
@@ -457,9 +451,6 @@
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\hid_window_tile_vert.htm">
-      <Filter>HTML Help Topics</Filter>
-    </None>
-    <None Include="hlp\hidr_doc1type.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\main_index.htm">

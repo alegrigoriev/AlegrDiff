@@ -540,9 +540,6 @@ echo.
     <None Include="hlp\hid_file_mru_file1.htm">
       <DeploymentContent>true</DeploymentContent>
     </None>
-    <None Include="hlp\hid_file_new.htm">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
     <None Include="hlp\hid_file_open.htm">
       <DeploymentContent>true</DeploymentContent>
     </None>
@@ -562,9 +559,6 @@ echo.
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="hlp\hid_file_save_as.htm">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
-    <None Include="hlp\hid_file_send_mail.htm">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="hlp\hid_help_index.htm">
@@ -643,9 +637,6 @@ echo.
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="hlp\hid_window_tile_vert.htm">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
-    <None Include="hlp\hidr_doc1type.htm">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="hlp\main_index.htm">

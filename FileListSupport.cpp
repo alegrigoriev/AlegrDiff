@@ -1644,9 +1644,9 @@ eLoadFolderResult FileList::LoadFingerprintFile(LPCTSTR Filename, bool &bRecurse
 }
 
 
-FilePair::FilePair()
-	: pFirstFile(NULL),
-	pSecondFile(NULL),
+FilePair::FilePair(FileItem* file1, FileItem* file2)
+	: pFirstFile(file1),
+	pSecondFile(file2),
 	m_RefCount(1),
 	m_LoadedCount(0),
 	m_bChanged(false),
@@ -3879,10 +3879,7 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 			continue;
 		}
 
-		FilePair * pPair = new FilePair;
-
-		pPair->pFirstFile = pFile1;
-		pPair->pSecondFile = pFile2;
+		FilePair * pPair = new FilePair(pFile1, pFile2);
 
 		if (pFile1 == nullptr)
 		{

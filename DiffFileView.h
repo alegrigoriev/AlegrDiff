@@ -14,12 +14,17 @@
 class CDiffFileView : public CView
 {
 protected:
+	typedef CTextFilePairDoc ThisDoc;
 	CDiffFileView();           // protected constructor used by dynamic creation
 	DECLARE_DYNCREATE(CDiffFileView)
 
-// Attributes
+	FilePair* GetFilePair()
+	{
+		return GetDocument()->GetFilePair();
+	}
+
+	// Attributes
 public:
-	typedef CFilePairDoc ThisDoc;
 	ThisDoc * GetDocument();
 	bool m_OnActivateViewEntered;
 
@@ -75,13 +80,13 @@ public:
 	void MakeCaretCenteredRangeVisible(TextPosDisplay NewPos, TextPosDisplay EndPos);
 	void MakeCaretVisible()
 	{
-		CFilePairDoc * pDoc = GetDocument();
+		ThisDoc* pDoc = GetDocument();
 		MakePositionVisible(pDoc->m_CaretPos.line, pDoc->m_CaretPos.pos);
 	}
 	void MakePositionCentered(size_t line, int pos);
 	void MakeCaretCentered()
 	{
-		CFilePairDoc * pDoc = GetDocument();
+		ThisDoc* pDoc = GetDocument();
 		MakePositionCentered(pDoc->m_CaretPos.line, pDoc->m_CaretPos.pos);
 	}
 	void BringPositionsToBounds(TextPosDisplay textpos, TextPosDisplay endpos,
@@ -173,8 +178,10 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////
 #ifndef _DEBUG  // debug version in AlegrDiffView.cpp
-inline CFilePairDoc* CDiffFileView::GetDocument()
-{ return (CFilePairDoc*)m_pDocument; }
+inline CTextFilePairDoc* CDiffFileView::GetDocument()
+{
+	return (ThisDoc*)m_pDocument;
+}
 #endif
 
 //{{AFX_INSERT_LOCATION}}

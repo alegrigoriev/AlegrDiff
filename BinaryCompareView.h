@@ -13,6 +13,11 @@ protected:
 	CBinaryCompareView();           // protected constructor used by dynamic creation
 	virtual ~CBinaryCompareView();
 
+	FilePair* GetFilePair()
+	{
+		return GetDocument()->GetFilePair();
+	}
+
 public:
 	class CBinaryCompareDoc * GetDocument();
 

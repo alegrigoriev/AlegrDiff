@@ -108,7 +108,7 @@ public:
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
-// CFilePairDoc document
+// CTextFilePairDoc document
 
 class AddListViewItemStruct : public CObject
 {
@@ -119,8 +119,24 @@ public:
 class CFilePairDoc : public CAlegrDiffBaseDoc
 {
 protected:
-	CFilePairDoc();           // protected constructor used by dynamic creation
-	DECLARE_DYNCREATE(CFilePairDoc)
+	DECLARE_DYNAMIC(CFilePairDoc)
+public:
+	CFilePairDoc()
+		: m_pFilePair(nullptr)
+	{}
+
+	virtual void SetFilePair(FilePair* pPair) = 0;
+	FilePair * GetFilePair() const { return m_pFilePair; }
+protected:
+	FilePair* m_pFilePair;
+};
+
+class CTextFilePairDoc : public CFilePairDoc
+{
+	typedef CFilePairDoc BaseDoc;
+protected:
+	CTextFilePairDoc();           // protected constructor used by dynamic creation
+	DECLARE_DYNCREATE(CTextFilePairDoc)
 
 // Attributes
 public:
@@ -134,8 +150,7 @@ public:
 
 // Operations
 public:
-	void SetFilePair(FilePair * pPair);
-	FilePair * GetFilePair() const { return m_pFilePair; }
+	virtual void SetFilePair(FilePair * pPair);
 	LinePair * GetLinePair(int line) const;
 	int GetTotalLines() const { return m_TotalLines; }
 	void SetCaretPosition(int pos, int line, int flags);
@@ -154,7 +169,7 @@ public:
 							TextPosDisplay pFrom, TextPosDisplay pTo, int FileSelect);
 	// Overrides
 	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CFilePairDoc)
+	//{{AFX_VIRTUAL(CTextFilePairDoc)
 public:
 protected:
 	virtual BOOL SaveModified();
@@ -162,10 +177,9 @@ protected:
 
 // Implementation
 	int m_TotalLines;
-	FilePair * m_pFilePair;
 
 public:
-	virtual ~CFilePairDoc();
+	virtual ~CTextFilePairDoc();
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;
@@ -203,7 +217,7 @@ public:
 	void OnEditCopy(int FileSelect);
 	afx_msg void OnUpdateCaretPosIndicator(CCmdUI* pCmdUI);
 	// Generated message map functions
-	//{{AFX_MSG(CFilePairDoc)
+	//{{AFX_MSG(CTextFilePairDoc)
 	afx_msg void OnUpdateEditGotonextdiff(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditGotoprevdiff(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditCopy(CCmdUI* pCmdUI);

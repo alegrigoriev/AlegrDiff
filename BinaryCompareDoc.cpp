@@ -7,11 +7,10 @@
 #include "DifferenceProgressDialog.h"
 // CBinaryCompareDoc
 
-IMPLEMENT_DYNCREATE(CBinaryCompareDoc, CAlegrDiffBaseDoc)
+IMPLEMENT_DYNCREATE(CBinaryCompareDoc, CFilePairDoc)
 
 CBinaryCompareDoc::CBinaryCompareDoc()
-	: m_pFilePair(NULL)
-	, m_CaretPos(0)
+	: m_CaretPos(0)
 	, m_SelectionAnchor(0)
 	, m_OriginalSelectionAnchor(0)
 {
@@ -19,7 +18,7 @@ CBinaryCompareDoc::CBinaryCompareDoc()
 
 BOOL CBinaryCompareDoc::OnNewDocument()
 {
-	if (!CAlegrDiffBaseDoc::OnNewDocument())
+	if (!BaseDoc::OnNewDocument())
 		return FALSE;
 	m_CaretPos = 0;
 	m_SelectionAnchor = 0;
@@ -55,11 +54,11 @@ void CBinaryCompareDoc::OnUpdateAllViews(CView* pSender,
 	}
 	else
 	{
-		CAlegrDiffBaseDoc::OnUpdateAllViews(pSender, lHint, pHint);
+		BaseDoc::OnUpdateAllViews(pSender, lHint, pHint);
 	}
 }
 
-BEGIN_MESSAGE_MAP(CBinaryCompareDoc, CAlegrDiffBaseDoc)
+BEGIN_MESSAGE_MAP(CBinaryCompareDoc, CFilePairDoc)
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CARET_POS, OnUpdateCaretPosIndicator)
 	ON_COMMAND(ID_VIEW_VIEWASTEXTFILES, OnViewViewastextfiles)
 END_MESSAGE_MAP()
@@ -70,12 +69,12 @@ END_MESSAGE_MAP()
 #ifdef _DEBUG
 void CBinaryCompareDoc::AssertValid() const
 {
-	CAlegrDiffBaseDoc::AssertValid();
+	BaseDoc::AssertValid();
 }
 
 void CBinaryCompareDoc::Dump(CDumpContext& dc) const
 {
-	CAlegrDiffBaseDoc::Dump(dc);
+	BaseDoc::Dump(dc);
 }
 #endif //_DEBUG
 

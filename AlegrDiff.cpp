@@ -298,7 +298,7 @@ BOOL CAlegrDiffApp::InitInstance()
 
 	m_pFileDiffTemplate = new CMultiDocTemplate(
 												IDR_ALEGRDTYPE,
-												RUNTIME_CLASS(CFilePairDoc),
+												RUNTIME_CLASS(CTextFilePairDoc),
 												RUNTIME_CLASS(CChildFrame), // custom MDI child frame
 												RUNTIME_CLASS(CDiffFileView));
 	AddDocTemplate(m_pFileDiffTemplate);
@@ -415,68 +415,49 @@ CDocument * CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 		// the file is not a real file, can't open
 		return NULL;
 	}
-	// check if there is already a CFilePairDoc
-	POSITION position = m_pFileDiffTemplate->GetFirstDocPosition();
-	while(position)
-	{
-		CDocument * pJustDoc = m_pFileDiffTemplate->GetNextDoc(position);
-		CFilePairDoc * pDoc =
-			dynamic_cast<CFilePairDoc *>(pJustDoc);
-		if (NULL != pDoc
-			&& pDoc->GetFilePair() == pPair)
-		{
-			POSITION viewpos = pDoc->GetFirstViewPosition();
-			if (viewpos)
-			{
-				CView * pView = pDoc->GetNextView(viewpos);
-				((CMDIChildWnd*)pView->GetParentFrame())->MDIActivate();
-			}
-			return pDoc;
-		}
-	}
 
-	// check if there is already a CBinaryCompareDoc
-	position = m_pBinaryDiffTemplate->GetFirstDocPosition();
-	while(position)
+	POSITION DocTemplatePos = GetFirstDocTemplatePosition();
+	CDocTemplate* DocTemplate = nullptr;
+
+	while (DocTemplatePos)
 	{
-		CDocument * pJustDoc = m_pFileDiffTemplate->GetNextDoc(position);
-		CBinaryCompareDoc * pDoc =
-			dynamic_cast<CBinaryCompareDoc *>(pJustDoc);
-		if (NULL != pDoc
-			&& pDoc->GetFilePair() == pPair)
+		DocTemplate = GetNextDocTemplate(DocTemplatePos);
+		// check if there is already a CTextFilePairDoc
+		POSITION position = DocTemplate->GetFirstDocPosition();
+		while (position)
 		{
-			POSITION viewpos = pDoc->GetFirstViewPosition();
-			if (viewpos)
+			CDocument * pDocument = DocTemplate->GetNextDoc(position);
+			CFilePairDoc * pDoc =
+				dynamic_cast<CFilePairDoc *>(pDocument);
+			if (nullptr != pDoc
+				&& pDoc->GetFilePair() == pPair)
 			{
-				CView * pView = pDoc->GetNextView(viewpos);
-				((CMDIChildWnd*)pView->GetParentFrame())->MDIActivate();
+				POSITION viewpos = pDoc->GetFirstViewPosition();
+				if (viewpos)
+				{
+					CView * pView = pDoc->GetNextView(viewpos);
+					((CMDIChildWnd*)pView->GetParentFrame())->MDIActivate();
+				}
+				return pDoc;
 			}
-			return pDoc;
 		}
 	}
 
 	if (pPair->NeedBinaryComparison())
 	{
-		CBinaryCompareDoc * pDoc = dynamic_cast<CBinaryCompareDoc *>
-									(m_pBinaryDiffTemplate->OpenDocumentFile(NULL));
-
-		if (NULL != pDoc)
-		{
-			pDoc->SetFilePair(pPair);
-		}
-		return pDoc;
+		DocTemplate = m_pBinaryDiffTemplate;
 	}
 	else
 	{
-		CFilePairDoc * pDoc = dynamic_cast<CFilePairDoc *>
-							(m_pFileDiffTemplate->OpenDocumentFile(NULL));
-
-		if (NULL != pDoc)
-		{
-			pDoc->SetFilePair(pPair);
-		}
-		return pDoc;
+		DocTemplate = m_pFileDiffTemplate;
 	}
+
+	CFilePairDoc* pDoc = dynamic_cast<CFilePairDoc*>(DocTemplate->OpenDocumentFile(NULL));
+	if (nullptr != pDoc)
+	{
+		pDoc->SetFilePair(pPair);
+	}
+	return pDoc;
 }
 
 void CAlegrDiffApp::OnFileComparefiles()
@@ -766,9 +747,7 @@ void CAlegrDiffApp::OpenSingleFile(LPCTSTR pName)
 		*pFileName1 = 0;
 	}
 
-	FilePair * pPair = new FilePair;
-	pPair->pFirstFile = new FileItem( & wfd1, FileDir1, "", NULL);
-	pPair->pSecondFile = NULL;
+	FilePair * pPair = new FilePair(new FileItem(&wfd1, FileDir1, "", NULL), nullptr);
 
 	if (MultiPatternMatches(wfd1.cFileName, PatternToMultiCString(m_sBinaryFilesFilter)))
 	{
@@ -937,29 +916,23 @@ void CAlegrDiffApp::CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filte
 	}
 }
 
-void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
+void CAlegrDiffApp::CompareFiles(LPCTSTR OPTIONAL pName1, LPCTSTR OPTIONAL pName2)
 {
-	// TODO: check if there is already a CFilePairDoc
-	CString Name1;
-	CString Name2;
+	CFilesCompareDialog dlg;
 	if (pName1 != NULL && 0 != pName1[0])
 	{
-		Name1 = pName1;
+		dlg.m_sFirstFileName = pName1;
 	}
 
 	if (pName2 != NULL && 0 != pName2[0])
 	{
-		Name2 = pName2;
+		dlg.m_sSecondFileName = pName2;
 	}
 
-	if (Name1.IsEmpty()
-		|| Name2.IsEmpty()
+	if (dlg.m_sFirstFileName.IsEmpty()
+		|| dlg.m_sSecondFileName.IsEmpty()
 		|| 0 != (0x8000 & GetKeyState(VK_SHIFT)))
 	{
-		CFilesCompareDialog dlg;
-
-		dlg.m_sFirstFileName = Name1;
-		dlg.m_sSecondFileName = Name2;
 		dlg.m_ComparisonMode = m_ComparisonMode;
 
 		if (IDOK != dlg.DoModal())
@@ -968,96 +941,130 @@ void CAlegrDiffApp::CompareFiles(LPCTSTR pName1, LPCTSTR pName2)
 		}
 
 		m_ComparisonMode = dlg.m_ComparisonMode;
-		Name1 = dlg.m_sFirstFileName;
-		Name2 = dlg.m_sSecondFileName;
 	}
+	OpenPairOrFile(dlg.m_sFirstFileName, dlg.m_sSecondFileName);
+}
 
-	TCHAR FileDir1[MAX_PATH];
-	LPTSTR pFileName1 = FileDir1;
-	GetFullPathName(Name1, MAX_PATH, FileDir1, & pFileName1);
+void CAlegrDiffApp::OpenPairOrFile(LPCTSTR Name1, LPCTSTR OPTIONAL Name2)
+{
+	// TODO: check if there is already a CTextFilePairDoc
+	CPathEx FileDir1;
+	CString FileName1;
+	WIN32_FIND_DATA wfd1 = { 0 };
+	FileItem* FileItem1 = nullptr;
 
-	TCHAR FileDir2[MAX_PATH];
-	LPTSTR pFileName2 = FileDir2;
-	GetFullPathName(Name2, MAX_PATH, FileDir2, & pFileName2);
+	CPathEx FileDir2;
+	CString FileName2;
+	WIN32_FIND_DATA wfd2 = { 0 };
+	FileItem* FileItem2 = nullptr;
 
-	WIN32_FIND_DATA wfd1;
-	WIN32_FIND_DATA wfd2;
-	HANDLE hFind = FindFirstFile(Name1, & wfd1);
-	if (INVALID_HANDLE_VALUE == hFind
-		|| NULL == hFind)
+	CString sCFilesPattern(PatternToMultiCString(m_sCppFilesFilter));
+	CString sBinFilesPattern(PatternToMultiCString(m_sBinaryFilesFilter));
+
+	int ComparisonMode = m_ComparisonMode;
+
+	if (Name1 == nullptr || Name1[0] == 0)
 	{
-		CString s;
-		s.Format(IDS_STRING_CANT_OPEN_FILE, LPCTSTR(Name1));
-		AfxMessageBox(s);
+		// The first name must be specified
 		return;
 	}
-	FindClose(hFind);
 
-	hFind = FindFirstFile(Name2, & wfd2);
-	if (INVALID_HANDLE_VALUE == hFind
-		|| NULL == hFind)
+	FileDir1.MakeFullPath(Name1);
+
+	HANDLE hFind = FindFirstFile(FileDir1, &wfd1);
+	if (INVALID_HANDLE_VALUE == hFind)
 	{
 		CString s;
-		s.Format(IDS_STRING_CANT_OPEN_FILE, LPCTSTR(Name2));
+		s.Format(IDS_STRING_CANT_OPEN_FILE, Name1);
 		AfxMessageBox(s);
 		return;
 	}
 	FindClose(hFind);
 
 	m_RecentFiles.AddString(FileDir1);
-	m_RecentFiles.AddString(FileDir2, 1);
 
-	*pFileName1 = 0;
-	*pFileName2 = 0;
-	FilePair * pPair = new FilePair;
+	FileDir1.RemoveFileSpec();
+	FileDir1.AddBackslash();
 
-	CString sCFilesPattern(PatternToMultiCString(m_sCppFilesFilter));
-	CString sBinFilesPattern(PatternToMultiCString(m_sBinaryFilesFilter));
+	FileItem1 = new FileItem(&wfd1, FileDir1, _T(""), NULL);
 
-	pPair->pFirstFile = new FileItem(&wfd1, FileDir1, _T(""), NULL);
-	pPair->pSecondFile = new FileItem(&wfd2, FileDir2, _T(""), NULL);
-
-	if (FileComparisonModeBinary == m_ComparisonMode
-		|| (FileComparisonModeDefault == m_ComparisonMode
-			&& (MultiPatternMatches(wfd1.cFileName, sBinFilesPattern)
-				|| MultiPatternMatches(wfd2.cFileName, sBinFilesPattern))))
+	if (FileComparisonModeDefault == ComparisonMode
+		&& MultiPatternMatches(wfd1.cFileName, sBinFilesPattern))
 	{
-		pPair->pFirstFile->SetBinary();
-		pPair->pSecondFile->SetBinary();
+		ComparisonMode = FileComparisonModeBinary;
+	}
 
-		CBinaryCompareDoc * pDoc = (CBinaryCompareDoc *)m_pBinaryDiffTemplate->OpenDocumentFile(NULL);
-		if (NULL != pDoc)
+	if (Name2 != nullptr && Name2[0] != 0)
+	{
+		FileDir2.MakeFullPath(Name2);
+
+		hFind = FindFirstFile(FileDir2, &wfd2);
+		if (INVALID_HANDLE_VALUE == hFind)
 		{
-			pDoc->SetFilePair(pPair);
+			CString s;
+			s.Format(IDS_STRING_CANT_OPEN_FILE, LPCTSTR(Name2));
+			AfxMessageBox(s);
+
+			delete FileItem1;
+			return;
 		}
+		FindClose(hFind);
+
+		m_RecentFiles.AddString(FileDir2, 1);
+		FileDir2.RemoveFileSpec();
+		FileDir2.AddBackslash();
+
+		FileItem2 = new FileItem(&wfd2, FileDir2, _T(""), NULL);
+
+		if (FileComparisonModeDefault == ComparisonMode
+			&& MultiPatternMatches(wfd2.cFileName, sBinFilesPattern))
+		{
+			ComparisonMode = FileComparisonModeBinary;
+		}
+	}
+
+	FilePair* pPair = new FilePair(FileItem1, FileItem2);
+	CDocTemplate* DocTemplate = nullptr;
+
+	if (FileComparisonModeBinary == m_ComparisonMode)
+	{
+		FileItem1->SetBinary();
+		if (nullptr != FileItem2) FileItem2->SetBinary();
+
+		DocTemplate = m_pBinaryDiffTemplate;
 	}
 	else
 	{
 		if (MultiPatternMatches(wfd1.cFileName, sCFilesPattern))
 		{
-			pPair->pFirstFile->SetCCpp();
+			FileItem1->SetCCpp();
 		}
 		else
 		{
-			pPair->pFirstFile->SetText();
+			FileItem1->SetText();
 		}
 
-		if (MultiPatternMatches(wfd2.cFileName, sCFilesPattern))
+		if (FileItem2 == nullptr)
 		{
-			pPair->pSecondFile->SetCCpp();
+			// skip
+		}
+		else if (MultiPatternMatches(wfd2.cFileName, sCFilesPattern))
+		{
+			FileItem2->SetCCpp();
 		}
 		else
 		{
-			pPair->pSecondFile->SetText();
+			FileItem2->SetText();
 		}
-
-		CFilePairDoc * pDoc = (CFilePairDoc *)m_pFileDiffTemplate->OpenDocumentFile(NULL);
-		if (NULL != pDoc)
-		{
-			pDoc->SetFilePair(pPair);
-		}
+		DocTemplate = m_pFileDiffTemplate;
 	}
-	// SetFilePair references the pair, we need to compensate it
+
+	CFilePairDoc* pDoc = dynamic_cast<CFilePairDoc*>(DocTemplate->OpenDocumentFile(NULL));
+	if (NULL != pDoc)
+	{
+		pDoc->SetFilePair(pPair);
+	}
+	// SetFilePair references the pair
 	pPair->Dereference();
 }
 

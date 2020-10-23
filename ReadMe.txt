@@ -35,7 +35,8 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-Refresh command disabled for fingerprunt check
+Line numbers erase the separator line
+Refresh command disabled for fingerprint check
 Directory share name cannot be selected if no '\' appended
 If the text comparison got aborted because of read error, this is not shown
 Blank line immediately following difference block is considered separate 
@@ -48,6 +49,9 @@ Done:
 Column resize leaves marks
 Compare after refresh doesn't show progress. If compare was aborted and refresh clicked, estimated time is not shown. The files get read again for an MD5.
 Assign an index to the files during original sort (for faster sorting)
+GetTitle() incorrect (no backslash before filename) -  backslash missing in BaseDir and SubDir
+Compare files History saved incorrectly
+Open two files doesn't work
 
 Retracted:
 screen move in two directions may corrupt the image (??)

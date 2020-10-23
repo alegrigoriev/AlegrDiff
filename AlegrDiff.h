@@ -56,14 +56,16 @@ class CAlegrDiffApp : public CWinApp
 {
 public:
 
+	CAlegrDiffApp();
+	~CAlegrDiffApp();
+
 	void OpenPairOfPathnames(LPTSTR path1, LPTSTR path2);
-	void CompareFiles(LPCTSTR name1, LPCTSTR name2);
+	void CompareFiles(LPCTSTR OPTIONAL pName1, LPCTSTR OPTIONAL pName2);
+	void OpenPairOrFile(LPCTSTR pName1, LPCTSTR OPTIONAL pName2 = NULL);
 	void CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filter = NULL);
 	void ParseCommandLine();
 	void OpenSingleFile(LPCTSTR pName);
 	void NotifyFilePairChanged(FilePair * pPair);
-	CAlegrDiffApp();
-	~CAlegrDiffApp();
 
 	CApplicationProfile Profile;
 

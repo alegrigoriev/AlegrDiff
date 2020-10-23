@@ -555,7 +555,7 @@ enum PairCheckResult { FilesDeleted, FilesUnchanged, FilesTimeChanged, };
 class FilePair : public ListItem<FilePair>
 {
 public:
-	FilePair();
+	FilePair(FileItem* file1, FileItem* file2);
 	void Reference();
 	void Dereference();
 private:

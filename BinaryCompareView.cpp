@@ -96,7 +96,7 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 	{
 		return;
 	}
-	FilePair * pFilePair = pDoc->GetFilePair();
+	FilePair * pFilePair = GetFilePair();
 	if (NULL == pFilePair)
 	{
 		return;
@@ -1665,7 +1665,7 @@ void CBinaryCompareView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 
 void CBinaryCompareView::OnBindiffShowfirstfile()
 {
-	FilePair * pPair = GetDocument()->GetFilePair();
+	FilePair * pPair = GetFilePair();
 	if (NULL != pPair->pFirstFile
 		&& NULL != pPair->pSecondFile)
 	{
@@ -1676,7 +1676,7 @@ void CBinaryCompareView::OnBindiffShowfirstfile()
 
 void CBinaryCompareView::OnUpdateBindiffShowfirstfile(CCmdUI *pCmdUI)
 {
-	FilePair * pPair = GetDocument()->GetFilePair();
+	FilePair * pPair = GetFilePair();
 	if (1 == m_NumberOfPanes)
 	{
 		if (NULL != pPair->pFirstFile
@@ -1701,7 +1701,7 @@ void CBinaryCompareView::OnUpdateBindiffShowfirstfile(CCmdUI *pCmdUI)
 
 void CBinaryCompareView::OnBindiffShow2ndfile()
 {
-	FilePair * pPair = GetDocument()->GetFilePair();
+	FilePair * pPair = GetFilePair();
 	if (NULL != pPair->pFirstFile
 		&& NULL != pPair->pSecondFile)
 	{
@@ -1712,7 +1712,7 @@ void CBinaryCompareView::OnBindiffShow2ndfile()
 
 void CBinaryCompareView::OnUpdateBindiffShow2ndfile(CCmdUI *pCmdUI)
 {
-	FilePair * pPair = GetDocument()->GetFilePair();
+	FilePair * pPair = GetFilePair();
 	if (1 == m_NumberOfPanes)
 	{
 		if (NULL != pPair->pFirstFile
@@ -1850,7 +1850,7 @@ void CBinaryCompareView::OnActivateView(BOOL bActivate, CView* pActivateView, CV
 	{
 		if (bActivate && this == pActivateView)
 		{
-			FilePair * pPair = GetDocument()->GetFilePair();
+			FilePair * pPair = GetFilePair();
 			if (NULL != pPair)
 			{
 				pMainFrm->SetMessageText(pPair->GetComparisonResultStr());
@@ -1953,8 +1953,7 @@ int CBinaryCompareView::GetPaneWidth()
 
 void CBinaryCompareView::OnViewSideBySide()
 {
-	ThisDoc * pDoc = GetDocument();
-	FilePair * pFilePair = pDoc->GetFilePair();
+	FilePair * pFilePair = GetFilePair();
 
 	if (pFilePair->pFirstFile != NULL
 		&& pFilePair->pSecondFile != NULL)
@@ -1978,7 +1977,7 @@ void CBinaryCompareView::OnViewSideBySide()
 
 void CBinaryCompareView::OnUpdateViewSideBySide(CCmdUI *pCmdUI)
 {
-	FilePair * pFilePair = GetDocument()->GetFilePair();
+	FilePair * pFilePair = GetFilePair();
 
 	if (pFilePair->pFirstFile != NULL && !pFilePair->pFirstFile->IsPhantomFile()
 		&& pFilePair->pSecondFile != NULL

@@ -10,9 +10,10 @@ public:
 	LONGLONG end;
 };
 
-class CBinaryCompareDoc : public CAlegrDiffBaseDoc
+class CBinaryCompareDoc : public CFilePairDoc
 {
 	DECLARE_DYNCREATE(CBinaryCompareDoc)
+	typedef CFilePairDoc BaseDoc;
 
 public:
 	CBinaryCompareDoc();
@@ -29,8 +30,7 @@ public:
 	LONGLONG m_SelectionAnchor;
 	LONGLONG m_OriginalSelectionAnchor;
 
-	void SetFilePair(FilePair * pPair);
-	FilePair * GetFilePair() const { return m_pFilePair; }
+	virtual void SetFilePair(FilePair * pPair);
 	LONGLONG GetFileSize() const;
 
 	//void SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags = SetPositionMakeCentered);
@@ -46,7 +46,6 @@ public:
 protected:
 	afx_msg void OnUpdateCaretPosIndicator(CCmdUI* pCmdUI);
 	virtual BOOL OnNewDocument();
-	FilePair * m_pFilePair;
 
 	DECLARE_MESSAGE_MAP()
 public:

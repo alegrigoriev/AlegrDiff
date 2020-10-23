@@ -27,6 +27,7 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNCREATE(CAlegrDiffBaseDoc, CDocument)
 IMPLEMENT_DYNCREATE(CAlegrDiffDoc, CAlegrDiffBaseDoc)
+IMPLEMENT_DYNAMIC(CFilePairDoc, CAlegrDiffBaseDoc)
 
 BEGIN_MESSAGE_MAP(CAlegrDiffDoc, CAlegrDiffBaseDoc)
 	//{{AFX_MSG_MAP(CAlegrDiffDoc)
@@ -305,13 +306,12 @@ void CAlegrDiffDoc::Dump(CDumpContext& dc) const
 // CAlegrDiffDoc commands
 
 /////////////////////////////////////////////////////////////////////////////
-// CFilePairDoc
+// CTextFilePairDoc
 
-IMPLEMENT_DYNCREATE(CFilePairDoc, CAlegrDiffBaseDoc)
+IMPLEMENT_DYNCREATE(CTextFilePairDoc, CFilePairDoc)
 
-CFilePairDoc::CFilePairDoc()
+CTextFilePairDoc::CTextFilePairDoc()
 	: m_TotalLines(0),
-	m_pFilePair(NULL),
 	m_CopyDisabled(false),
 	m_CaretPos(0, 0, 0)
 	, m_SelectionAnchor(0, 0, 0)
@@ -320,7 +320,7 @@ CFilePairDoc::CFilePairDoc()
 	m_bIgnoreWhitespaces = GetApp()->m_bIgnoreWhitespaces;
 }
 
-CFilePairDoc::~CFilePairDoc()
+CTextFilePairDoc::~CTextFilePairDoc()
 {
 	if (NULL != m_pFilePair)
 	{
@@ -330,8 +330,8 @@ CFilePairDoc::~CFilePairDoc()
 	}
 }
 
-void CFilePairDoc::OnUpdateAllViews(CView* pSender,
-									LPARAM lHint, CObject* pHint)
+void CTextFilePairDoc::OnUpdateAllViews(CView* pSender,
+										LPARAM lHint, CObject* pHint)
 {
 	if (UpdateViewsFilePairDeleteFromList == lHint
 		|| UpdateViewsFilePairDeleteView == lHint)
@@ -346,11 +346,11 @@ void CFilePairDoc::OnUpdateAllViews(CView* pSender,
 	}
 	else
 	{
-		CAlegrDiffBaseDoc::OnUpdateAllViews(pSender, lHint, pHint);
+		BaseDoc::OnUpdateAllViews(pSender, lHint, pHint);
 	}
 }
 
-void CFilePairDoc::SetFilePair(FilePair * pPair)
+void CTextFilePairDoc::SetFilePair(FilePair * pPair)
 {
 	if (NULL != m_pFilePair)
 	{
@@ -401,23 +401,23 @@ void CFilePairDoc::SetFilePair(FilePair * pPair)
 	SetCaretPosition(0, 0, SetPositionCancelSelection);
 }
 
-void CFilePairDoc::SetSelection(TextPosDisplay CaretPos, TextPosDisplay AnchorPos, int flags)
+void CTextFilePairDoc::SetSelection(TextPosDisplay CaretPos, TextPosDisplay AnchorPos, int flags)
 {
 	m_SelectionAnchor = AnchorPos;
 	SetCaretPosition(CaretPos.pos, (int)CaretPos.line, flags & ~SetPositionCancelSelection);
 }
 
-void CFilePairDoc::SetCaretPosition(int pos, int line, int flags)
+void CTextFilePairDoc::SetCaretPosition(int pos, int line, int flags)
 {
 	SetCaretPosition(TextPosDisplay(line, pos, m_CaretPos.scope), flags);
 }
 
-void CFilePairDoc::SetCaretPosition(TextPosLine pos, int FileScope, int flags)
+void CTextFilePairDoc::SetCaretPosition(TextPosLine pos, int FileScope, int flags)
 {
 	SetCaretPosition(LinePosToDisplayPos(pos, FileScope), flags);
 }
 
-void CFilePairDoc::SetCaretPosition(TextPosDisplay pos, int flags)
+void CTextFilePairDoc::SetCaretPosition(TextPosDisplay pos, int flags)
 {
 	if (pos.line > GetTotalLines())
 	{
@@ -476,7 +476,7 @@ void CFilePairDoc::SetCaretPosition(TextPosDisplay pos, int flags)
 	UpdateAllViews(NULL, CaretPositionChanged, NULL);
 }
 
-void CFilePairDoc::CaretToHome(int flags)
+void CTextFilePairDoc::CaretToHome(int flags)
 {
 	int NewLine = m_CaretPos.line;
 	int NewPos = m_CaretPos.pos;
@@ -536,7 +536,7 @@ void CFilePairDoc::CaretToHome(int flags)
 	SetCaretPosition(0, (int)NewLine, flags);
 }
 
-void CFilePairDoc::CaretToEnd(int flags)
+void CTextFilePairDoc::CaretToEnd(int flags)
 {
 	int NewLine = m_CaretPos.line;
 	if ((flags & SetPositionCancelSelection)
@@ -576,8 +576,8 @@ void CFilePairDoc::CaretToEnd(int flags)
 	SetCaretPosition(pos, (int)NewLine, flags);
 }
 
-BEGIN_MESSAGE_MAP(CFilePairDoc, CAlegrDiffBaseDoc)
-	//{{AFX_MSG_MAP(CFilePairDoc)
+BEGIN_MESSAGE_MAP(CTextFilePairDoc, CFilePairDoc)
+	//{{AFX_MSG_MAP(CTextFilePairDoc)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_GOTONEXTDIFF, OnUpdateEditGotonextdiff)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_GOTOPREVDIFF, OnUpdateEditGotoprevdiff)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, OnUpdateEditCopy)
@@ -609,41 +609,41 @@ BEGIN_MESSAGE_MAP(CFilePairDoc, CAlegrDiffBaseDoc)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
-// CFilePairDoc diagnostics
+// CTextFilePairDoc diagnostics
 
 #ifdef _DEBUG
-void CFilePairDoc::AssertValid() const
+void CTextFilePairDoc::AssertValid() const
 {
-	CAlegrDiffBaseDoc::AssertValid();
+	BaseDoc::AssertValid();
 }
 
-void CFilePairDoc::Dump(CDumpContext& dc) const
+void CTextFilePairDoc::Dump(CDumpContext& dc) const
 {
-	CAlegrDiffBaseDoc::Dump(dc);
+	BaseDoc::Dump(dc);
 }
 #endif //_DEBUG
 
 /////////////////////////////////////////////////////////////////////////////
-// CFilePairDoc commands
+// CTextFilePairDoc commands
 
-void CFilePairDoc::OnUpdateEditGotonextdiff(CCmdUI* pCmdUI)
+void CTextFilePairDoc::OnUpdateEditGotonextdiff(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(m_pFilePair->NextDifference(m_CaretPos, m_bIgnoreWhitespaces, NULL, NULL));
 }
 
-void CFilePairDoc::OnUpdateEditGotoprevdiff(CCmdUI* pCmdUI)
+void CTextFilePairDoc::OnUpdateEditGotoprevdiff(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(m_pFilePair->PrevDifference(m_CaretPos, m_bIgnoreWhitespaces, NULL, NULL));
 }
 
-void CFilePairDoc::OnUpdateEditCopy(CCmdUI* pCmdUI)
+void CTextFilePairDoc::OnUpdateEditCopy(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(m_CaretPos != m_SelectionAnchor && ! m_CopyDisabled);
 }
 
-ULONG CFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen,
-									TextPosDisplay pFrom, TextPosDisplay pTo,
-									int FileSelect)
+ULONG CTextFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen,
+										TextPosDisplay pFrom, TextPosDisplay pTo,
+										int FileSelect)
 {
 	// FileSelect 1 - file 1, 2 - file 2, 0 = both files
 	ULONG TotalChars = 0;
@@ -761,7 +761,7 @@ ULONG CFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen,
 	return TotalChars;
 }
 
-void CFilePairDoc::OnEditCopy(int FileSelect)
+void CTextFilePairDoc::OnEditCopy(int FileSelect)
 {
 	if(m_CopyDisabled)
 	{
@@ -800,7 +800,7 @@ void CFilePairDoc::OnEditCopy(int FileSelect)
 	}
 }
 
-void CFilePairDoc::OnFileSave()
+void CTextFilePairDoc::OnFileSave()
 {
 	// TODO: Add your command handler code here
 
@@ -812,7 +812,7 @@ void CAlegrDiffDoc::OnFileSave()
 
 }
 
-void CFilePairDoc::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
+void CTextFilePairDoc::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
 {
 	CString s;
 	s.Format(_T("Ln %d, Col %d"), m_CaretPos.line + 1, m_CaretPos.pos + 1);
@@ -888,7 +888,7 @@ void CAlegrDiffDoc::OnViewRefresh()
 	}
 }
 
-void CFilePairDoc::OnViewRefresh()
+void CTextFilePairDoc::OnViewRefresh()
 {
 	if (NULL == m_pFilePair)
 	{
@@ -946,7 +946,7 @@ void CFilePairDoc::OnViewRefresh()
 	GetApp()->NotifyFilePairChanged(m_pFilePair);
 }
 
-void CFilePairDoc::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
+void CTextFilePairDoc::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
 {
 	FileItem * pFile = NULL;
 	if (m_pFilePair != NULL)
@@ -957,7 +957,7 @@ void CFilePairDoc::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
 						IDS_OPEN_FIRST_FILE_MENU, IDS_OPEN_FIRST_FILE_MENU_DISABLED);
 }
 
-void CFilePairDoc::OnFileEditFirst()
+void CTextFilePairDoc::OnFileEditFirst()
 {
 	if (m_pFilePair != NULL)
 	{
@@ -965,7 +965,7 @@ void CFilePairDoc::OnFileEditFirst()
 	}
 }
 
-void CFilePairDoc::OnUpdateFileEditSecond(CCmdUI* pCmdUI)
+void CTextFilePairDoc::OnUpdateFileEditSecond(CCmdUI* pCmdUI)
 {
 	FileItem * pFile = NULL;
 	if (m_pFilePair != NULL)
@@ -976,7 +976,7 @@ void CFilePairDoc::OnUpdateFileEditSecond(CCmdUI* pCmdUI)
 						IDS_OPEN_SECOND_FILE_MENU, IDS_OPEN_SECOND_FILE_MENU_DISABLED);
 }
 
-void CFilePairDoc::OnFileEditSecond()
+void CTextFilePairDoc::OnFileEditSecond()
 {
 	if (m_pFilePair != NULL)
 	{
@@ -984,7 +984,7 @@ void CFilePairDoc::OnFileEditSecond()
 	}
 }
 
-bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive, bool WholeWord, int SearchScope)
+bool CTextFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive, bool WholeWord, int SearchScope)
 {
 	// find from the current position
 	if (NULL == m_pFilePair
@@ -1211,7 +1211,7 @@ bool CFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCase
 	return false;
 }
 
-bool CFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, TextPosDisplay &End)
+bool CTextFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, TextPosDisplay &End)
 {
 	if (OnPos.line >= (int)m_pFilePair->m_LinePairs.size())
 	{
@@ -1369,7 +1369,7 @@ bool CFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start, Tex
 	return false;
 }
 
-void CFilePairDoc::GetWordUnderCursor(CString & Str)
+void CTextFilePairDoc::GetWordUnderCursor(CString & Str)
 {
 	int nBeginOffset = 0;
 	int nLength = 0;
@@ -1420,7 +1420,7 @@ void CFilePairDoc::GetWordUnderCursor(CString & Str)
 
 // returns a pointer to a line text
 // buf is used to assembly the string if it is fragmented
-LPCTSTR CFilePairDoc::GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int *pStrLen, int Scope)
+LPCTSTR CTextFilePairDoc::GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int *pStrLen, int Scope)
 {
 	if (NULL == m_pFilePair
 		|| nLineNum >= (int)m_pFilePair->m_LinePairs.size())
@@ -1439,7 +1439,7 @@ LPCTSTR CFilePairDoc::GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int
 	return pPair->GetText(buf, BufChars, pStrLen, m_bIgnoreWhitespaces, Scope);
 }
 
-void CFilePairDoc::CaretLeftToWord(int SelectionFlags)
+void CTextFilePairDoc::CaretLeftToWord(int SelectionFlags)
 {
 	// if the caret is on the begin of the line, go to the previous line
 	TCHAR linebuf[2048];
@@ -1521,7 +1521,7 @@ void CFilePairDoc::CaretLeftToWord(int SelectionFlags)
 	SetCaretPosition(CaretPos, CaretLine, SelectionFlags);
 }
 
-void CFilePairDoc::CaretRightToWord(int SelectionFlags)
+void CTextFilePairDoc::CaretRightToWord(int SelectionFlags)
 {
 	// if the caret is on the end of the line, go to the nextline
 	TCHAR linebuf[2048];
@@ -1599,7 +1599,7 @@ void CFilePairDoc::CaretRightToWord(int SelectionFlags)
 	SetCaretPosition(CaretPos, (int)CaretLine, SelectionFlags);
 }
 
-void CFilePairDoc::OnEditAccept()
+void CTextFilePairDoc::OnEditAccept()
 {
 	if (NULL != m_pFilePair)
 	{
@@ -1636,14 +1636,14 @@ void CFilePairDoc::OnEditAccept()
 	}
 }
 
-void CFilePairDoc::OnUpdateEditAccept(CCmdUI* pCmdUI)
+void CTextFilePairDoc::OnUpdateEditAccept(CCmdUI* pCmdUI)
 {
 	int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
 	pCmdUI->Enable(0 == (flags & StringSection::NoDifference));
 	pCmdUI->SetCheck(0 != (flags & StringSection::Accepted));
 }
 
-void CFilePairDoc::OnEditDecline()
+void CTextFilePairDoc::OnEditDecline()
 {
 	if (NULL != m_pFilePair)
 	{
@@ -1678,14 +1678,14 @@ void CFilePairDoc::OnEditDecline()
 	}
 }
 
-void CFilePairDoc::OnUpdateEditDecline(CCmdUI* pCmdUI)
+void CTextFilePairDoc::OnUpdateEditDecline(CCmdUI* pCmdUI)
 {
 	int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
 	pCmdUI->Enable(0 == (flags & StringSection::NoDifference));
 	pCmdUI->SetCheck(0 != (flags & StringSection::Declined));
 }
 
-BOOL CFilePairDoc::SaveModified()
+BOOL CTextFilePairDoc::SaveModified()
 {
 	if ( ! IsModified())
 	{
@@ -1762,7 +1762,7 @@ BEGIN_MESSAGE_MAP(CMergedFilesSaveDlg, CFileDialogWithHistory)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
+BOOL CTextFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 {
 	// check if there are unmarked differences
 	int flags = GetAcceptDeclineFlags(TextPosLine(0, 0),
@@ -1865,7 +1865,7 @@ BOOL CFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 	}
 }
 
-BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
+BOOL CTextFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 {
 	// save ANSI or UNICODE
 	LPCTSTR FileMode = _T("wt");
@@ -1974,12 +1974,12 @@ BOOL CFilePairDoc::SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode)
 	return result;
 }
 
-void CFilePairDoc::OnFileMergeSave()
+void CTextFilePairDoc::OnFileMergeSave()
 {
 	DoSaveMerged(TRUE); // open it in new window
 }
 
-void CFilePairDoc::OnViewIgnoreWhitespaces()
+void CTextFilePairDoc::OnViewIgnoreWhitespaces()
 {
 	TextPosLine CaretLinePos = DisplayPosToLinePos(m_CaretPos);
 	TextPosLine AnchorLinePos = DisplayPosToLinePos(m_SelectionAnchor);
@@ -1993,7 +1993,7 @@ void CFilePairDoc::OnViewIgnoreWhitespaces()
 	UpdateAllViews(NULL);
 }
 
-TextPosDisplay CFilePairDoc::LinePosToDisplayPos(TextPosLine position, int FileScope)
+TextPosDisplay CTextFilePairDoc::LinePosToDisplayPos(TextPosLine position, int FileScope)
 {
 	if (NULL == m_pFilePair)
 	{
@@ -2002,7 +2002,7 @@ TextPosDisplay CFilePairDoc::LinePosToDisplayPos(TextPosLine position, int FileS
 	return m_pFilePair->LinePosToDisplayPos(position, m_bIgnoreWhitespaces, FileScope);
 }
 // recalculates offset in the line with or without whitespaces shown to offset in the raw line
-TextPosLine CFilePairDoc::DisplayPosToLinePos(TextPosDisplay position)
+TextPosLine CTextFilePairDoc::DisplayPosToLinePos(TextPosDisplay position)
 {
 	if (NULL == m_pFilePair)
 	{
@@ -2011,7 +2011,7 @@ TextPosLine CFilePairDoc::DisplayPosToLinePos(TextPosDisplay position)
 	return m_pFilePair->DisplayPosToLinePos(position, m_bIgnoreWhitespaces);
 }
 
-LinePair * CFilePairDoc::GetLinePair(int line) const
+LinePair * CTextFilePairDoc::GetLinePair(int line) const
 {
 	if (NULL == m_pFilePair
 		|| line >= (int)m_pFilePair->m_LinePairs.size())
@@ -2021,7 +2021,7 @@ LinePair * CFilePairDoc::GetLinePair(int line) const
 	return m_pFilePair->m_LinePairs[line];
 }
 
-int CFilePairDoc::GetAcceptDeclineFlags(TextPosLine begin, TextPosLine end)
+int CTextFilePairDoc::GetAcceptDeclineFlags(TextPosLine begin, TextPosLine end)
 {
 	if (NULL == m_pFilePair)
 	{
@@ -2030,7 +2030,7 @@ int CFilePairDoc::GetAcceptDeclineFlags(TextPosLine begin, TextPosLine end)
 	return m_pFilePair->GetAcceptDeclineFlags(begin, end, m_bIgnoreWhitespaces);
 }
 
-int CFilePairDoc::GetAcceptDeclineFlags(TextPosDisplay begin, TextPosDisplay end)
+int CTextFilePairDoc::GetAcceptDeclineFlags(TextPosDisplay begin, TextPosDisplay end)
 {
 	if (NULL == m_pFilePair)
 	{
@@ -2040,7 +2040,7 @@ int CFilePairDoc::GetAcceptDeclineFlags(TextPosDisplay begin, TextPosDisplay end
 											DisplayPosToLinePos(end), m_bIgnoreWhitespaces);
 }
 
-void CFilePairDoc::OnUpdateFileCopyFirstDirFile(CCmdUI* pCmdUI)
+void CTextFilePairDoc::OnUpdateFileCopyFirstDirFile(CCmdUI* pCmdUI)
 {
 	FileItem * pFile = NULL;
 	if (m_pFilePair != NULL)
@@ -2051,7 +2051,7 @@ void CFilePairDoc::OnUpdateFileCopyFirstDirFile(CCmdUI* pCmdUI)
 						IDS_COPY_FILE_TO_FOLDER, IDS_COPY_FIRST_FILE_MENU_DISABLED);
 }
 
-void CFilePairDoc::OnFileCopyFirstDirFile()
+void CTextFilePairDoc::OnFileCopyFirstDirFile()
 {
 	if (m_pFilePair != NULL && m_pFilePair->pFirstFile != NULL)
 	{
@@ -2059,7 +2059,7 @@ void CFilePairDoc::OnFileCopyFirstDirFile()
 	}
 }
 
-void CFilePairDoc::OnUpdateFileCopySecondDirFile(CCmdUI* pCmdUI)
+void CTextFilePairDoc::OnUpdateFileCopySecondDirFile(CCmdUI* pCmdUI)
 {
 	FileItem * pFile = NULL;
 	if (m_pFilePair != NULL)
@@ -2071,7 +2071,7 @@ void CFilePairDoc::OnUpdateFileCopySecondDirFile(CCmdUI* pCmdUI)
 
 }
 
-void CFilePairDoc::OnFileCopySecondDirFile()
+void CTextFilePairDoc::OnFileCopySecondDirFile()
 {
 	if (m_pFilePair != NULL && m_pFilePair->pSecondFile != NULL)
 	{
@@ -2144,7 +2144,7 @@ unsigned CAlegrDiffDoc::CompareDirectoriesFunction(CComparisonProgressDlg * pDlg
 	return IDOK;
 }
 
-void CFilePairDoc::OnFileProperties()
+void CTextFilePairDoc::OnFileProperties()
 {
 	if (NULL != m_pFilePair)
 	{
@@ -2153,7 +2153,7 @@ void CFilePairDoc::OnFileProperties()
 	}
 }
 
-void CFilePairDoc::OnUpdateFileMergeSave(CCmdUI* pCmdUI)
+void CTextFilePairDoc::OnUpdateFileMergeSave(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(m_pFilePair != NULL
 					&& m_pFilePair->pFirstFile != NULL
@@ -2161,7 +2161,7 @@ void CFilePairDoc::OnUpdateFileMergeSave(CCmdUI* pCmdUI)
 }
 
 
-void CFilePairDoc::OnMergeInclude()
+void CTextFilePairDoc::OnMergeInclude()
 {
 	if (NULL != m_pFilePair)
 	{
@@ -2198,14 +2198,14 @@ void CFilePairDoc::OnMergeInclude()
 	}
 }
 
-void CFilePairDoc::OnUpdateMergeInclude(CCmdUI* pCmdUI)
+void CTextFilePairDoc::OnUpdateMergeInclude(CCmdUI* pCmdUI)
 {
 	int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
 	pCmdUI->Enable(0 == (flags & StringSection::NoDifference));
 	pCmdUI->SetCheck(0 != (flags & StringSection::Included));
 }
 
-void CFilePairDoc::OnMergeExclude()
+void CTextFilePairDoc::OnMergeExclude()
 {
 	if (NULL != m_pFilePair)
 	{
@@ -2243,7 +2243,7 @@ void CFilePairDoc::OnMergeExclude()
 	}
 }
 
-void CFilePairDoc::OnUpdateMergeExclude(CCmdUI* pCmdUI)
+void CTextFilePairDoc::OnUpdateMergeExclude(CCmdUI* pCmdUI)
 {
 	int flags = GetAcceptDeclineFlags(m_SelectionAnchor, m_CaretPos);
 	pCmdUI->Enable(0 == (flags & StringSection::NoDifference));
@@ -2255,7 +2255,7 @@ void CAlegrDiffDoc::OnUpdateViewRefresh(CCmdUI *pCmdUI)
 	pCmdUI->Enable( ! m_sFirstDir.IsEmpty());
 }
 
-void CFilePairDoc::OnViewAsBinary()
+void CTextFilePairDoc::OnViewAsBinary()
 {
 	FilePair * pPair = GetFilePair();
 

@@ -99,7 +99,7 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 										int SelBegin, int SelEnd, int nFileSelect)
 {
 	TCHAR buf[2048];
-	CFilePairDoc* pDoc = GetDocument();
+	ThisDoc* pDoc = GetDocument();
 	CThisApp * pApp = GetApp();
 
 	SelBegin -= nSkipChars;
@@ -293,7 +293,7 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 
 void CDiffFileView::OnDraw(CDC* pDC)
 {
-	CFilePairDoc* pDoc = GetDocument();
+	ThisDoc* pDoc = GetDocument();
 	CThisApp * pApp = GetApp();
 	if (NULL == pDoc)
 	{
@@ -538,10 +538,10 @@ void CDiffFileView::Dump(CDumpContext& dc) const
 {
 	CView::Dump(dc);
 }
-CFilePairDoc* CDiffFileView::GetDocument() // non-debug version is inline
+CTextFilePairDoc* CDiffFileView::GetDocument() // non-debug version is inline
 {
-	ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CFilePairDoc)));
-	return (CFilePairDoc*)m_pDocument;
+	ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CTextFilePairDoc)));
+	return (ThisDoc*)m_pDocument;
 }
 #endif //_DEBUG
 
@@ -757,7 +757,7 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 void CDiffFileView::MoveCaretBy(int dx, int dy, int flags)
 {
-	CFilePairDoc * pDoc = GetDocument();
+	ThisDoc* pDoc = GetDocument();
 	int NewLine = (int)pDoc->m_CaretPos.line;
 	int NewPos = pDoc->m_CaretPos.pos;
 	if ((flags & SetPositionCancelSelection)
@@ -1030,7 +1030,7 @@ void CDiffFileView::MakePositionCentered(size_t line, int pos)
 
 void CDiffFileView::InvalidateRangeLine(TextPosLine begin, TextPosLine end)
 {
-	CFilePairDoc * pDoc = GetDocument();
+	ThisDoc* pDoc = GetDocument();
 
 	if (1 == m_NumberOfPanes)
 	{
@@ -1153,7 +1153,7 @@ void CDiffFileView::InvalidateRange(TextPosDisplay begin, TextPosDisplay end)
 
 void CDiffFileView::SetCaretPosition(TextPosDisplay pos, int flags)
 {
-	CFilePairDoc * pDoc = GetDocument();
+	ThisDoc* pDoc = GetDocument();
 	pDoc->SetCaretPosition(pos, flags);
 	if (flags & SetPositionMakeVisible)
 	{
@@ -1167,7 +1167,7 @@ void CDiffFileView::SetCaretPosition(TextPosDisplay pos, int flags)
 
 void CDiffFileView::SetCaretPosition(TextPosLine pos, int FileScope, int flags)
 {
-	CFilePairDoc * pDoc = GetDocument();
+	ThisDoc* pDoc = GetDocument();
 	pDoc->SetCaretPosition(pos, FileScope, flags);
 
 	if (flags & SetPositionMakeVisible)
@@ -1182,7 +1182,7 @@ void CDiffFileView::SetCaretPosition(TextPosLine pos, int FileScope, int flags)
 
 void CDiffFileView::SetCaretPosition(int pos, int line, int flags)
 {
-	CFilePairDoc * pDoc = GetDocument();
+	ThisDoc* pDoc = GetDocument();
 	pDoc->SetCaretPosition(pos, line, flags);
 	if (flags & SetPositionMakeVisible)
 	{
@@ -1196,7 +1196,7 @@ void CDiffFileView::SetCaretPosition(int pos, int line, int flags)
 
 void CDiffFileView::CreateAndShowCaret()
 {
-	CFilePairDoc * pDoc = GetDocument();
+	ThisDoc* pDoc = GetDocument();
 	if (this != GetFocus())
 	{
 		TRACE("CDiffFileView::CreateAndShowCaret - No Focus\n");
@@ -1401,8 +1401,7 @@ void CDiffFileView::OnMetricsChange()
 	wdc.SelectObject(pOldFont);
 
 	m_LineNumberMarginWidth = 0;
-	CFilePairDoc * pDoc = GetDocument();
-	FilePair * pFilePair = pDoc->GetFilePair();
+	FilePair * pFilePair = GetFilePair();
 	if (m_ShowLineNumbers && pFilePair != NULL)
 	{
 		int nNumChars = 5;
@@ -1502,12 +1501,12 @@ void CDiffFileView::OnCaptureChanged(CWnd *pWnd)
 
 void CDiffFileView::OnEditGotonextdiff()
 {
-	CFilePairDoc * pDoc = GetDocument();
+	ThisDoc* pDoc = GetDocument();
 	TextPosDisplay NewPos;
 	TextPosDisplay EndPos;
 
-	if ( ! pDoc->GetFilePair()->NextDifference(pDoc->m_CaretPos,
-												pDoc->m_bIgnoreWhitespaces, & NewPos, & EndPos))
+	if (!GetFilePair()->NextDifference(pDoc->m_CaretPos,
+										pDoc->m_bIgnoreWhitespaces, &NewPos, &EndPos))
 	{
 		return;
 	}
@@ -1519,12 +1518,12 @@ void CDiffFileView::OnEditGotonextdiff()
 
 void CDiffFileView::OnEditGotoprevdiff()
 {
-	CFilePairDoc * pDoc = GetDocument();
+	ThisDoc* pDoc = GetDocument();
 	TextPosDisplay NewPos;
 	TextPosDisplay EndPos;
 
-	if ( ! pDoc->GetFilePair()->PrevDifference(pDoc->m_CaretPos,
-												pDoc->m_bIgnoreWhitespaces, & NewPos, & EndPos))
+	if (!GetFilePair()->PrevDifference(pDoc->m_CaretPos,
+										pDoc->m_bIgnoreWhitespaces, &NewPos, &EndPos))
 	{
 		return;
 	}
@@ -1536,8 +1535,8 @@ void CDiffFileView::OnEditGotoprevdiff()
 
 void CDiffFileView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 {
-	CFilePairDoc * pDoc = GetDocument();
-	if (lHint == CFilePairDoc::CaretPositionChanged)
+	ThisDoc* pDoc = GetDocument();
+	if (lHint == ThisDoc::CaretPositionChanged)
 	{
 		// invalidate selection
 		// invalidate where the selection changed
@@ -1600,7 +1599,7 @@ void CDiffFileView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 		}
 		TRACE("m_PaneWithFocus=%d\n", m_PaneWithFocus);
 	}
-	else if (lHint == CFilePairDoc::InvalidateRange)
+	else if (lHint == ThisDoc::InvalidateRange)
 	{
 		InvalidatedRange * pRange = dynamic_cast<InvalidatedRange *>(pHint);
 		if (NULL != pRange)
@@ -1624,7 +1623,7 @@ void CDiffFileView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 	{
 		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
 		if (NULL != pArg
-			&& pArg->m_pPair == pDoc->GetFilePair())
+			&& pArg->m_pPair == GetFilePair())
 		{
 			OnMetricsChange();
 		}
@@ -1738,7 +1737,7 @@ void CDiffFileView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* 
 	{
 		if (bActivate && this == pActivateView)
 		{
-			FilePair * pPair = GetDocument()->GetFilePair();
+			FilePair * pPair = GetFilePair();
 			if (NULL != pPair)
 			{
 				pMainFrm->SetMessageText(pPair->GetComparisonResultStr());
@@ -1823,7 +1822,7 @@ bool CDiffFileView::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvo
 		dlg.m_bWholeWord = pApp->m_bFindWholeWord;
 		dlg.m_SearchScope = SearchScope;
 
-		FilePair * pPair = pDoc->GetFilePair();
+		FilePair * pPair = GetFilePair();
 		if (NULL == pPair->pFirstFile
 			|| pPair->pFirstFile->IsPhantomFile()
 			|| NULL == pPair->pSecondFile
@@ -1894,8 +1893,8 @@ void CDiffFileView::OnEditGotoline()
 {
 	CGotoLineDialog dlg;
 	CThisApp * pApp = GetApp();
-	CFilePairDoc * pDoc = GetDocument();
-	FilePair * pFilePair = pDoc->GetFilePair();
+	ThisDoc* pDoc = GetDocument();
+	FilePair * pFilePair = GetFilePair();
 	if (NULL == pFilePair)
 	{
 		return;
@@ -2100,7 +2099,7 @@ void CDiffFileView::OnActivateFrame(UINT nState, CFrameWnd* pDeactivateFrame)
 		else if (WA_ACTIVE == nState
 				|| WA_CLICKACTIVE == nState)
 		{
-			FilePair * pPair = GetDocument()->GetFilePair();
+			FilePair * pPair = GetFilePair();
 			if (NULL != pPair)
 			{
 				pMainFrm->SetMessageText(pPair->GetComparisonResultStr());
@@ -2112,7 +2111,7 @@ void CDiffFileView::OnActivateFrame(UINT nState, CFrameWnd* pDeactivateFrame)
 void CDiffFileView::OnViewSideBySide()
 {
 	ThisDoc * pDoc = GetDocument();
-	FilePair * pFilePair = pDoc->GetFilePair();
+	FilePair * pFilePair = GetFilePair();
 
 	if (pFilePair->pFirstFile != NULL
 		&& pFilePair->pSecondFile != NULL)
@@ -2135,7 +2134,7 @@ void CDiffFileView::OnViewSideBySide()
 
 void CDiffFileView::OnUpdateViewSideBySide(CCmdUI *pCmdUI)
 {
-	FilePair * pFilePair = GetDocument()->GetFilePair();
+	FilePair * pFilePair = GetFilePair();
 
 	if (pFilePair->pFirstFile != NULL
 		&& pFilePair->pSecondFile != NULL)

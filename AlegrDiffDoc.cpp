@@ -312,7 +312,6 @@ IMPLEMENT_DYNCREATE(CTextFilePairDoc, CFilePairDoc)
 
 CTextFilePairDoc::CTextFilePairDoc()
 	: m_TotalLines(0),
-	m_CopyDisabled(false),
 	m_CaretPos(0, 0, 0)
 	, m_SelectionAnchor(0, 0, 0)
 {
@@ -638,7 +637,7 @@ void CTextFilePairDoc::OnUpdateEditGotoprevdiff(CCmdUI* pCmdUI)
 
 void CTextFilePairDoc::OnUpdateEditCopy(CCmdUI* pCmdUI)
 {
-	pCmdUI->Enable(m_CaretPos != m_SelectionAnchor && ! m_CopyDisabled);
+	pCmdUI->Enable(m_CaretPos != m_SelectionAnchor);
 }
 
 ULONG CTextFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen,
@@ -763,10 +762,6 @@ ULONG CTextFilePairDoc::CopyTextToMemory(LPTSTR pBuf, ULONG BufLen,
 
 void CTextFilePairDoc::OnEditCopy(int FileSelect)
 {
-	if(m_CopyDisabled)
-	{
-		return;
-	}
 	// todo: perform UNICODE or ANSI copy?
 	// calculate length of the selection
 	ULONG Len = CopyTextToMemory(NULL, 0, m_SelectionAnchor, m_CaretPos, FileSelect);

@@ -298,7 +298,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 	{
 		return;
 	}
-	FilePair * pFilePair = pDoc->GetFilePair();
+	TextFilePair * pFilePair = pDoc->GetFilePair();
 	if (NULL == pFilePair)
 	{
 		return;
@@ -1398,7 +1398,7 @@ void CDiffFileView::OnMetricsChange()
 	wdc.SelectObject(pOldFont);
 
 	m_LineNumberMarginWidth = 0;
-	FilePair * pFilePair = GetFilePair();
+	TextFilePair* pFilePair = GetFilePair();
 
 	if (pFilePair != nullptr && !pFilePair->CanCompare())
 	{
@@ -1739,7 +1739,7 @@ void CDiffFileView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* 
 	{
 		if (bActivate && this == pActivateView)
 		{
-			FilePair * pPair = GetFilePair();
+			TextFilePair* pPair = GetFilePair();
 			if (NULL != pPair)
 			{
 				pMainFrm->SetMessageText(pPair->GetComparisonResultStr());
@@ -1892,7 +1892,7 @@ void CDiffFileView::OnEditGotoline()
 	CGotoLineDialog dlg;
 	CThisApp * pApp = GetApp();
 	ThisDoc* pDoc = GetDocument();
-	FilePair * pFilePair = GetFilePair();
+	TextFilePair * pFilePair = GetFilePair();
 	if (NULL == pFilePair)
 	{
 		return;
@@ -2096,7 +2096,7 @@ void CDiffFileView::OnActivateFrame(UINT nState, CFrameWnd* pDeactivateFrame)
 		else if (WA_ACTIVE == nState
 				|| WA_CLICKACTIVE == nState)
 		{
-			FilePair * pPair = GetFilePair();
+			TextFilePair* pPair = GetFilePair();
 			if (NULL != pPair)
 			{
 				pMainFrm->SetMessageText(pPair->GetComparisonResultStr());

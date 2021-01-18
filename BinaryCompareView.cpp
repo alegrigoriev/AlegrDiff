@@ -95,7 +95,7 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 	{
 		return;
 	}
-	FilePair * pFilePair = GetFilePair();
+	BinaryFilePair* pFilePair = GetFilePair();
 	if (NULL == pFilePair)
 	{
 		return;
@@ -1674,7 +1674,7 @@ void CBinaryCompareView::OnBindiffShowfirstfile()
 
 void CBinaryCompareView::OnUpdateBindiffShowfirstfile(CCmdUI *pCmdUI)
 {
-	FilePair * pPair = GetFilePair();
+	BinaryFilePair* pPair = GetFilePair();
 	if (1 == m_NumberOfPanes)
 	{
 		if (pPair->CanCompare())
@@ -1706,7 +1706,7 @@ void CBinaryCompareView::OnBindiffShow2ndfile()
 
 void CBinaryCompareView::OnUpdateBindiffShow2ndfile(CCmdUI *pCmdUI)
 {
-	FilePair * pPair = GetFilePair();
+	BinaryFilePair* pPair = GetFilePair();
 	if (1 == m_NumberOfPanes)
 	{
 		if (pPair->CanCompare())
@@ -1842,7 +1842,7 @@ void CBinaryCompareView::OnActivateView(BOOL bActivate, CView* pActivateView, CV
 	{
 		if (bActivate && this == pActivateView)
 		{
-			FilePair * pPair = GetFilePair();
+			BinaryFilePair* pPair = GetFilePair();
 			if (NULL != pPair)
 			{
 				pMainFrm->SetMessageText(pPair->GetComparisonResultStr());

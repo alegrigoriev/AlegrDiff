@@ -116,13 +116,11 @@ protected:
 	DECLARE_DYNAMIC(CFilePairDoc)
 public:
 	CFilePairDoc() noexcept
-		: m_pFilePair(nullptr)
 	{}
 
 	virtual void SetFilePair(FilePair* pPair) = 0;
-	FilePair * GetFilePair() const noexcept { return m_pFilePair; }
+	virtual FilePair* GetFilePair() const = 0;
 protected:
-	FilePair* m_pFilePair;
 };
 
 class CTextFilePairDoc : public CFilePairDoc
@@ -134,6 +132,10 @@ protected:
 
 // Attributes
 public:
+	virtual TextFilePair* GetFilePair() const noexcept override
+	{
+		return m_pFilePair;
+	}
 	TextPosDisplay m_CaretPos;
 	TextPosDisplay m_SelectionAnchor;
 	TextPosDisplay m_OriginalSelectionAnchor;
@@ -143,7 +145,7 @@ public:
 
 // Operations
 public:
-	virtual void SetFilePair(FilePair * pPair);
+	virtual void SetFilePair(FilePair * pPair) override;
 	LinePair * GetLinePair(int line) const noexcept;
 	int GetTotalLines() const noexcept { return m_TotalLines; }
 	void SetCaretPosition(int pos, int line, int flags);
@@ -170,6 +172,7 @@ protected:
 
 // Implementation
 	int m_TotalLines;
+	TextFilePair* m_pFilePair;
 
 public:
 	virtual ~CTextFilePairDoc();

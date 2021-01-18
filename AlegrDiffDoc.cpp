@@ -303,8 +303,9 @@ IMPLEMENT_DYNCREATE(CTextFilePairDoc, CFilePairDoc)
 
 CTextFilePairDoc::CTextFilePairDoc() noexcept
 	: m_TotalLines(0),
-	m_CaretPos(0, 0, 0)
-	, m_SelectionAnchor(0, 0, 0)
+	m_pFilePair(nullptr),
+	m_CaretPos(0, 0, 0),
+	m_SelectionAnchor(0, 0, 0)
 {
 	m_ComparisonResult[0] = 0;
 	m_bIgnoreWhitespaces = GetApp()->m_bIgnoreWhitespaces;
@@ -347,23 +348,24 @@ void CTextFilePairDoc::SetFilePair(FilePair * pPair)
 		m_pFilePair->UnloadFiles();
 		m_pFilePair->Dereference();
 	}
-	m_pFilePair = pPair;
+
+	m_pFilePair = static_cast<TextFilePair*>(pPair);
 	if (NULL != pPair)
 	{
 		pPair->Reference();
 
 		SetTitle(pPair->GetTitle());
 
-		if (pPair->m_LinePairs.empty())
+		if (m_pFilePair->m_LinePairs.empty())
 		{
 			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(_T("Loading and comparing files..."));
 
 			CWaitCursor WaitCursor;
-			pPair->SetComparisonResult(pPair->CompareFiles(NULL));
+			m_pFilePair->SetComparisonResult(m_pFilePair->CompareFiles(NULL));
 		}
 
-		m_TotalLines = (int)pPair->m_LinePairs.size();
-		_tcsncpy_s(m_ComparisonResult, countof(m_ComparisonResult), pPair->GetComparisonResultStr(),
+		m_TotalLines = (int)m_pFilePair->m_LinePairs.size();
+		_tcsncpy_s(m_ComparisonResult, countof(m_ComparisonResult), m_pFilePair->GetComparisonResultStr(),
 					countof(m_ComparisonResult));
 		m_ComparisonResult[countof(m_ComparisonResult) - 1] = 0;
 		((CFrameWnd*)AfxGetMainWnd())->PostMessage(WM_SETMESSAGESTRING_POST, 0, (LPARAM)m_ComparisonResult);
@@ -2227,7 +2229,7 @@ void CAlegrDiffDoc::OnUpdateViewRefresh(CCmdUI *pCmdUI)
 
 void CTextFilePairDoc::OnViewAsBinary()
 {
-	FilePair * pPair = GetFilePair();
+	TextFilePair* pPair = GetFilePair();
 
 	pPair->Reference();
 	OnCloseDocument();

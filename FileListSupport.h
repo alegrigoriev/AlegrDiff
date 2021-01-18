@@ -364,12 +364,12 @@ public:
 		return m_FileType == FileTypeHashOnly;
 	}
 
-	bool IsAlone() const noexcept
+	bool IsFolderAlone() const noexcept
 	{
-		return m_bIsAlone;
+		return this != nullptr && m_bIsAlone;
 	}
 
-	void SetAlone(bool alone) noexcept
+	void SetFolderAlone(bool alone) noexcept
 	{
 		m_bIsAlone = alone;
 	}
@@ -698,6 +698,8 @@ public:
 		SubdirsParentInSecondDirOnly,   // dir from a subdirectory that exists only in first directory
 		FilesDirectoryInFingerprintFileOnly,
 		FilesAttributesIdentical,
+
+		DirectoriesBothPresent, // this directory is present in both left and right
 	};
 
 	int ComparisionResultPriority() const;

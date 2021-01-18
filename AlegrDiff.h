@@ -40,14 +40,17 @@ enum {
 	UpdateViewsFilePairDeleteFromList = 0x400000,
 	UpdateViewsFilePairDeleteView = 0x400000,
 	UpdateViewsCloseOpenFiles = 0x500000,
+	UpdateViewsReplaceFilePair = 0x600000,
 };
 
 class FilePairChangedArg : public CObject
 {
 public:
 	class FilePair * m_pPair;
-	FilePairChangedArg(FilePair * pPair)
-		: m_pPair(pPair)
+	class FilePair * m_pNewPair;
+	FilePairChangedArg(FilePair * pPair, FilePair* pNewPair = nullptr)
+		: m_pPair(pPair),
+		m_pNewPair(pNewPair)
 	{
 	}
 };
@@ -64,6 +67,7 @@ public:
 	void OpenPairOrFile(LPCTSTR pName1, LPCTSTR OPTIONAL pName2 = NULL);
 	void CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filter = NULL);
 	void ParseCommandLine();
+	void NotifyFilePairReplaced(FilePair * pPair, FilePair* pNewPair);
 	void NotifyFilePairChanged(FilePair * pPair);
 
 	CApplicationProfile Profile;

@@ -559,6 +559,19 @@ void CAlegrDiffApp::OnFontChanged()
 	UpdateAllViews(UpdateViewsMetricsChanged);
 }
 
+void CAlegrDiffApp::NotifyFilePairReplaced(FilePair *pPair, FilePair* pNewPair)
+{
+	FilePairChangedArg arg(pPair, pNewPair);
+	UpdateAllViews(UpdateViewsFilePairChanged, &arg);
+	if (!pPair->IsAlone())
+	{
+		pNewPair->Reference();
+		pPair->InsertAsNextItem(pNewPair);
+		pPair->RemoveFromList();
+		pPair->Dereference();
+	}
+}
+
 void CAlegrDiffApp::NotifyFilePairChanged(FilePair *pPair)
 {
 	FilePairChangedArg arg(pPair);

@@ -28,7 +28,7 @@
 #include <afxdhtml.h>
 #define TCHAR_MASK TCHAR(-1)
 
-template<typename T> inline void memzero(T & obj)
+template<typename T> inline void memzero(T & obj) noexcept
 {
 	memset( & obj, 0, sizeof obj);
 }

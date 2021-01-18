@@ -31,7 +31,7 @@ public:
 	LONGLONG m_OriginalSelectionAnchor;
 
 	virtual void SetFilePair(FilePair * pPair);
-	LONGLONG GetFileSize() const;
+	LONGLONG GetFileSize() const noexcept;
 
 	//void SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags = SetPositionMakeCentered);
 	void SetCaretPosition(LONGLONG Addr, int flags);

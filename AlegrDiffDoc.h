@@ -19,7 +19,7 @@ class CAlegrDiffBaseDoc : public CDocument
 protected:
 	DECLARE_DYNCREATE(CAlegrDiffBaseDoc)
 public:
-	CAlegrDiffBaseDoc() {}
+	CAlegrDiffBaseDoc() noexcept {}
 	virtual void OnUpdateAllViews(CView* pSender,
 								LPARAM lHint = 0L, CObject* pHint = NULL);
 };
@@ -50,15 +50,15 @@ public:
 	bool m_bCheckingFingerprint;
 	bool m_bDoNotCompareFileContents;
 
-	FilePair* GetFirstFilePair()
+	FilePair* GetFirstFilePair() noexcept
 	{
 		return m_PairList.First();
 	}
-	FilePair* GetNextFilePair(FilePair *Pair)
+	FilePair* GetNextFilePair(FilePair const *Pair) noexcept
 	{
 		return m_PairList.Next(Pair);
 	}
-	bool FilePairNotEnd(FilePair *Pair)
+	bool FilePairNotEnd(FilePair const *Pair) noexcept
 	{
 		return m_PairList.NotEnd(Pair);
 	}
@@ -72,7 +72,7 @@ public:
 	bool CanCancelComparison(CProgressDialog * pDlg);
 	// if returns true, call UpdateAllViews
 	bool BuildFilePairList(OPTIONAL LPCTSTR FirstDirOrFingerprint, LPCTSTR SecondDir);
-	void FreeFilePairList();
+	void FreeFilePairList() noexcept;
 	void SetFingerprintCheckingMode(LPCTSTR DirectoryToCheck,
 									LPCTSTR FingerprintFilename);
 
@@ -121,12 +121,12 @@ class CFilePairDoc : public CAlegrDiffBaseDoc
 protected:
 	DECLARE_DYNAMIC(CFilePairDoc)
 public:
-	CFilePairDoc()
+	CFilePairDoc() noexcept
 		: m_pFilePair(nullptr)
 	{}
 
 	virtual void SetFilePair(FilePair* pPair) = 0;
-	FilePair * GetFilePair() const { return m_pFilePair; }
+	FilePair * GetFilePair() const noexcept { return m_pFilePair; }
 protected:
 	FilePair* m_pFilePair;
 };
@@ -135,7 +135,7 @@ class CTextFilePairDoc : public CFilePairDoc
 {
 	typedef CFilePairDoc BaseDoc;
 protected:
-	CTextFilePairDoc();           // protected constructor used by dynamic creation
+	CTextFilePairDoc() noexcept;           // protected constructor used by dynamic creation
 	DECLARE_DYNCREATE(CTextFilePairDoc)
 
 // Attributes
@@ -150,8 +150,8 @@ public:
 // Operations
 public:
 	virtual void SetFilePair(FilePair * pPair);
-	LinePair * GetLinePair(int line) const;
-	int GetTotalLines() const { return m_TotalLines; }
+	LinePair * GetLinePair(int line) const noexcept;
+	int GetTotalLines() const noexcept { return m_TotalLines; }
 	void SetCaretPosition(int pos, int line, int flags);
 	void SetCaretPosition(TextPosDisplay pos, int flags);
 	void SetCaretPosition(TextPosLine pos, int FileScope, int flags);

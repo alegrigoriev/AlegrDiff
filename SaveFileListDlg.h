@@ -43,66 +43,66 @@ public:
 		IncludeGroups = 2,
 	};
 
-	FilesFilter GetFilesFilter() const
+	FilesFilter GetFilesFilter() const noexcept
 	{
 		return (FilesFilter) m_IncludeFilesSelect;
 	}
-	LPCTSTR GetFilename() const
+	LPCTSTR GetFilename() const noexcept
 	{
 		return m_sFilename;
 	}
 
-	bool IncludeIdenticalFiles() const
+	bool IncludeIdenticalFiles() const noexcept
 	{
 		return FALSE != m_bIncludeIdenticalFiles;
 	}
 
-	bool IncludeDifferentFiles() const
+	bool IncludeDifferentFiles() const noexcept
 	{
 		return FALSE != m_bIncludeDifferentFiles;
 	}
 
-	bool IncludeDifferentInSpacesFiles() const
+	bool IncludeDifferentInSpacesFiles() const noexcept
 	{
 		return FALSE != m_bIncludeDifferentInBlanksFiles;
 	}
 
-	bool IncludeVersionInfoDifferentFiles() const
+	bool IncludeVersionInfoDifferentFiles() const noexcept
 	{
 		return FALSE != m_bIncludeDifferentVersionFiles;
 	}
 
-	bool IncludeFolder1Files() const
+	bool IncludeFolder1Files() const noexcept
 	{
 		return FALSE != m_bIncludeFolder1OnlyFiles;
 	}
 
-	bool IncludeFolder2Files() const
+	bool IncludeFolder2Files() const noexcept
 	{
 		return FALSE != m_bIncludeFolder2OnlyFiles;
 	}
 
-	bool IncludeSubdirectoryName() const
+	bool IncludeSubdirectoryName() const noexcept
 	{
 		return FALSE != m_bIncludeSubdirectoryName;
 	}
 
-	bool IncludeTimestamp() const
+	bool IncludeTimestamp() const noexcept
 	{
 		return FALSE != m_bIncludeTimestamp;
 	}
 
-	bool IncludeLength() const
+	bool IncludeLength() const noexcept
 	{
 		return FALSE != m_bIncludeLength;
 	}
 
-	bool IncludeComparisonResult() const
+	bool IncludeComparisonResult() const noexcept
 	{
 		return FALSE != m_bIncludeComparisonResult;
 	}
 
-	void EnableSelectedItems()
+	void EnableSelectedItems() noexcept
 	{
 		m_bEnableSelectedItems = TRUE;
 	}

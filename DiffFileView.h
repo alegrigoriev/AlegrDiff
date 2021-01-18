@@ -72,21 +72,21 @@ public:
 
 	void UpdateVisibleRectangleBounds();
 
-	int CharWidth() const { return m_FontMetric.tmAveCharWidth; }
-	int LineHeight() const { return m_FontMetric.tmHeight + m_FontMetric.tmExternalLeading; }
-	int LinesInView() const { return m_VisibleRect.bottom - m_VisibleRect.top; }
-	int CharsInView() const { return m_VisibleRect.right - m_VisibleRect.left; }
+	int CharWidth() const noexcept { return m_FontMetric.tmAveCharWidth; }
+	int LineHeight() const noexcept { return m_FontMetric.tmHeight + m_FontMetric.tmExternalLeading; }
+	int LinesInView() const noexcept { return m_VisibleRect.bottom - m_VisibleRect.top; }
+	int CharsInView() const noexcept { return m_VisibleRect.right - m_VisibleRect.left; }
 	void MakePositionVisible(size_t line, int pos);
 	void MakeCaretCenteredRangeVisible(TextPosDisplay NewPos, TextPosDisplay EndPos);
 	void MakeCaretVisible()
 	{
-		ThisDoc* pDoc = GetDocument();
+		const ThisDoc* const pDoc = GetDocument();
 		MakePositionVisible(pDoc->m_CaretPos.line, pDoc->m_CaretPos.pos);
 	}
 	void MakePositionCentered(size_t line, int pos);
 	void MakeCaretCentered()
 	{
-		ThisDoc* pDoc = GetDocument();
+		const ThisDoc* const pDoc = GetDocument();
 		MakePositionCentered(pDoc->m_CaretPos.line, pDoc->m_CaretPos.pos);
 	}
 	void BringPositionsToBounds(TextPosDisplay textpos, TextPosDisplay endpos,

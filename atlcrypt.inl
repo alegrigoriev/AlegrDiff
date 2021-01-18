@@ -22,26 +22,26 @@
 namespace ATL
 {
 
-inline CCryptProv::CCryptProv( const CCryptProv& prov ) throw()
+inline CCryptProv::CCryptProv( const CCryptProv& prov ) noexcept
 {
 	m_hProv = prov.m_hProv;
 	if (m_hProv)
 		AddRef();
 }
 
-inline CCryptProv::CCryptProv( HCRYPTPROV hProv, BOOL bTakeOwnership ) throw()
+inline CCryptProv::CCryptProv( HCRYPTPROV hProv, BOOL bTakeOwnership ) noexcept
 {
 	m_hProv = hProv;
 	if (m_hProv && !bTakeOwnership)
 		AddRef();
 }
 
-inline CCryptProv::~CCryptProv() throw()
+inline CCryptProv::~CCryptProv() noexcept
 {
 	Release();
 }
 
-inline CCryptProv& CCryptProv::operator=( const CCryptProv& prov ) throw()
+inline CCryptProv& CCryptProv::operator=( const CCryptProv& prov ) noexcept
 {
 	if(this!=&prov)
 	{
@@ -56,7 +56,7 @@ inline CCryptProv& CCryptProv::operator=( const CCryptProv& prov ) throw()
 	return( *this );
 }
 
-inline HRESULT CCryptProv::AddRef() throw()
+inline HRESULT CCryptProv::AddRef() noexcept
 {
 	ATLASSUME( m_hProv != NULL );
 
@@ -67,7 +67,7 @@ inline HRESULT CCryptProv::AddRef() throw()
 	return S_OK;
 }
 
-inline void CCryptProv::Attach( HCRYPTPROV hProv, BOOL bTakeOwnership ) throw()
+inline void CCryptProv::Attach( HCRYPTPROV hProv, BOOL bTakeOwnership ) noexcept
 {
 	ATLASSUME( m_hProv == NULL );
 
@@ -76,7 +76,7 @@ inline void CCryptProv::Attach( HCRYPTPROV hProv, BOOL bTakeOwnership ) throw()
 		AddRef();
 }
 
-inline HCRYPTPROV CCryptProv::Detach() throw()
+inline HCRYPTPROV CCryptProv::Detach() noexcept
 {
 	HCRYPTPROV hProv;
 
@@ -87,12 +87,12 @@ inline HCRYPTPROV CCryptProv::Detach() throw()
 }
 
 
-inline CCryptProv::CCryptProv() throw() :
-m_hProv( NULL )
+inline CCryptProv::CCryptProv() noexcept :
+	m_hProv( NULL )
 {
 }
 
-inline HRESULT CCryptProv::Release() throw()
+inline HRESULT CCryptProv::Release() noexcept
 {
 	if( m_hProv != NULL )
 	{
@@ -109,7 +109,7 @@ inline HRESULT CCryptProv::Initialize(
 									DWORD dwProviderType,
 									LPCTSTR szContainer,
 									LPCTSTR szProvider,
-									DWORD dwFlags) throw()
+									DWORD dwFlags) noexcept
 {
 	ATLASSUME(m_hProv == NULL);
 
@@ -123,7 +123,7 @@ inline HRESULT CCryptProv::Initialize(
 inline HRESULT CCryptProv::InitVerifyContext(
 											DWORD dwProviderType,
 											LPCTSTR szProvider,
-											DWORD dwFlags) throw()
+											DWORD dwFlags) noexcept
 {
 	ATLASSUME(m_hProv == NULL);
 
@@ -138,7 +138,7 @@ inline HRESULT CCryptProv::InitCreateKeySet(
 											DWORD dwProviderType,
 											LPCTSTR szContainer,
 											LPCTSTR szProvider,
-											DWORD dwFlags) throw()
+											DWORD dwFlags) noexcept
 {
 	ATLASSUME(m_hProv == NULL);
 
@@ -153,7 +153,7 @@ inline HRESULT CCryptProv::DeleteKeySet(
 										DWORD dwProviderType,
 										LPCTSTR szContainer,
 										LPCTSTR szProvider,
-										DWORD dwFlags) throw()
+										DWORD dwFlags) noexcept
 {
 	HCRYPTPROV hProv = NULL;
 	if (!CryptAcquireContext(&hProv, szContainer, szProvider, dwProviderType, CRYPT_DELETEKEYSET | dwFlags))
@@ -164,7 +164,7 @@ inline HRESULT CCryptProv::DeleteKeySet(
 }
 
 
-inline HRESULT CCryptProv::Uninitialize() throw()
+inline HRESULT CCryptProv::Uninitialize() noexcept
 {
 	ATLASSUME(m_hProv != NULL);
 
@@ -179,7 +179,7 @@ inline HRESULT CCryptProv::Uninitialize() throw()
 	}
 }
 
-inline HRESULT CCryptProv::GetParam(DWORD dwParam, BYTE * pbData, DWORD * pdwDataLen, DWORD dwFlags) throw()
+inline HRESULT CCryptProv::GetParam(DWORD dwParam, BYTE * pbData, DWORD * pdwDataLen, DWORD dwFlags) noexcept
 {
 	ATLASSUME(m_hProv != NULL);
 
@@ -190,7 +190,7 @@ inline HRESULT CCryptProv::GetParam(DWORD dwParam, BYTE * pbData, DWORD * pdwDat
 	else return S_OK;
 }
 
-inline HRESULT CCryptProv::SetParam( DWORD dwParam, BYTE* pbData, DWORD dwFlags) throw()
+inline HRESULT CCryptProv::SetParam( DWORD dwParam, BYTE* pbData, DWORD dwFlags) noexcept
 {
 	ATLASSUME(m_hProv != NULL);
 
@@ -201,46 +201,46 @@ inline HRESULT CCryptProv::SetParam( DWORD dwParam, BYTE* pbData, DWORD dwFlags)
 	else return S_OK;
 }
 
-inline HRESULT CCryptProv::GetName(__out_bcount_part(*pdwLength, *pdwLength) LPSTR szBuf, __inout DWORD * pdwLength) throw()
+inline HRESULT CCryptProv::GetName(__out_bcount_part(*pdwLength, *pdwLength) LPSTR szBuf, __inout DWORD * pdwLength) noexcept
 {
 	return GetParam(PP_NAME, (BYTE *)szBuf, pdwLength);
 }
 
-inline HRESULT CCryptProv::GetContainer(__out_bcount_part(*pdwLength, *pdwLength) LPSTR szBuf, __inout DWORD * pdwLength) throw()
+inline HRESULT CCryptProv::GetContainer(__out_bcount_part(*pdwLength, *pdwLength) LPSTR szBuf, __inout DWORD * pdwLength) noexcept
 {
 	return GetParam(PP_CONTAINER, (BYTE *)szBuf, pdwLength);
 }
 
-inline HRESULT CCryptProv::GetImpType(DWORD * pdwImpType) throw()
+inline HRESULT CCryptProv::GetImpType(DWORD * pdwImpType) noexcept
 {
 	DWORD dwLength = sizeof(DWORD);
 	return GetParam(PP_IMPTYPE, (BYTE *)pdwImpType, &dwLength);
 }
 
-inline HRESULT CCryptProv::GetVersion(DWORD * pdwVersion) throw()
+inline HRESULT CCryptProv::GetVersion(DWORD * pdwVersion) noexcept
 {
 	DWORD dwLength = sizeof(DWORD);
 	return GetParam(PP_VERSION, (BYTE *)pdwVersion, &dwLength);
 }
 
-inline HRESULT CCryptProv::GetProvType(DWORD * pdwType) throw()
+inline HRESULT CCryptProv::GetProvType(DWORD * pdwType) noexcept
 {
 	DWORD dwLength = sizeof(DWORD);
 	return GetParam(PP_PROVTYPE, (BYTE * )pdwType, &dwLength);
 }
 
-inline HRESULT CCryptProv::GetSecurityDesc(SECURITY_INFORMATION * pSecInfo) throw()
+inline HRESULT CCryptProv::GetSecurityDesc(SECURITY_INFORMATION * pSecInfo) noexcept
 {
 	DWORD dwSize = sizeof(SECURITY_INFORMATION);
 	return GetParam(PP_KEYSET_SEC_DESCR, (BYTE *)pSecInfo, &dwSize);
 }
 
-inline HRESULT CCryptProv::SetSecurityDesc(SECURITY_INFORMATION SecInfo) throw()
+inline HRESULT CCryptProv::SetSecurityDesc(SECURITY_INFORMATION SecInfo) noexcept
 {
 	return SetParam(PP_KEYSET_SEC_DESCR, (BYTE *)&SecInfo);
 }
 
-inline HRESULT CCryptProv::GenRandom(ULONG nLength, BYTE* pbBuffer ) throw()
+inline HRESULT CCryptProv::GenRandom(ULONG nLength, BYTE* pbBuffer ) noexcept
 {
 	ATLASSUME(m_hProv != NULL);
 
@@ -252,17 +252,17 @@ inline HRESULT CCryptProv::GenRandom(ULONG nLength, BYTE* pbBuffer ) throw()
 	return S_OK;
 }
 
-inline CCryptHash::CCryptHash() throw() :
-m_hHash( NULL )
+inline CCryptHash::CCryptHash() noexcept :
+	m_hHash( NULL )
 {
 }
 
-inline CCryptHash::CCryptHash( const CCryptHash& hash ) throw()
+inline CCryptHash::CCryptHash( const CCryptHash& hash ) noexcept
 {
 	m_hHash = hash.Duplicate();
 }
 
-inline CCryptHash::CCryptHash( HCRYPTHASH hHash, BOOL bTakeOwnership ) throw()
+inline CCryptHash::CCryptHash( HCRYPTHASH hHash, BOOL bTakeOwnership ) noexcept
 {
 	if (bTakeOwnership)
 		m_hHash = hHash;
@@ -275,12 +275,12 @@ inline CCryptHash::CCryptHash( HCRYPTHASH hHash, BOOL bTakeOwnership ) throw()
 	}
 }
 
-inline CCryptHash::~CCryptHash() throw()
+inline CCryptHash::~CCryptHash() noexcept
 {
 	Destroy();
 }
 
-inline void CCryptHash::Attach( HCRYPTHASH hHash, BOOL bTakeOwnership ) throw()
+inline void CCryptHash::Attach( HCRYPTHASH hHash, BOOL bTakeOwnership ) noexcept
 {
 	ATLASSUME( m_hHash == NULL );
 
@@ -295,7 +295,7 @@ inline void CCryptHash::Attach( HCRYPTHASH hHash, BOOL bTakeOwnership ) throw()
 	}
 }
 
-inline void CCryptHash::Destroy() throw()
+inline void CCryptHash::Destroy() noexcept
 {
 	if( m_hHash != NULL )
 	{
@@ -310,7 +310,7 @@ inline void CCryptHash::Destroy() throw()
 	}
 }
 
-inline HCRYPTHASH CCryptHash::Detach() throw()
+inline HCRYPTHASH CCryptHash::Detach() noexcept
 {
 	HCRYPTHASH hHash;
 
@@ -320,7 +320,7 @@ inline HCRYPTHASH CCryptHash::Detach() throw()
 	return hHash;
 }
 
-inline HCRYPTHASH CCryptHash::Duplicate() const throw()
+inline HCRYPTHASH CCryptHash::Duplicate() const noexcept
 {
 	BOOL bSuccess;
 	HCRYPTHASH hHash;
@@ -337,7 +337,7 @@ inline HCRYPTHASH CCryptHash::Duplicate() const throw()
 	return hHash;
 }
 
-inline HRESULT CCryptHash::Uninitialize() throw()
+inline HRESULT CCryptHash::Uninitialize() noexcept
 {
 	ATLASSUME(m_hHash != NULL);
 
@@ -352,7 +352,7 @@ inline HRESULT CCryptHash::Uninitialize() throw()
 	}
 }
 
-inline HRESULT CCryptHash::Detach(HCRYPTHASH * phHash) throw()
+inline HRESULT CCryptHash::Detach(HCRYPTHASH * phHash) noexcept
 {
 	ATLASSERT(phHash);
 	if (!phHash)
@@ -364,7 +364,7 @@ inline HRESULT CCryptHash::Detach(HCRYPTHASH * phHash) throw()
 	return S_OK;
 }
 
-inline HRESULT CCryptHash::AddData(const BYTE * pbData, DWORD dwDataLen, DWORD dwFlags) throw()
+inline HRESULT CCryptHash::AddData(const BYTE * pbData, DWORD dwDataLen, DWORD dwFlags) noexcept
 {
 	ATLASSUME(m_hHash != NULL);
 
@@ -376,12 +376,12 @@ inline HRESULT CCryptHash::AddData(const BYTE * pbData, DWORD dwDataLen, DWORD d
 
 }
 
-inline HRESULT CCryptHash::AddString(LPCTSTR szData, DWORD dwFlags) throw()
+inline HRESULT CCryptHash::AddString(LPCTSTR szData, DWORD dwFlags) noexcept
 {
 	return AddData((BYTE *)szData, (DWORD)_tcslen(szData) * sizeof(TCHAR), dwFlags);
 }
 
-inline HRESULT CCryptHash::GetParam(DWORD dwParam, BYTE * pbData, DWORD * pdwDataLen, DWORD dwFlags) throw()
+inline HRESULT CCryptHash::GetParam(DWORD dwParam, BYTE * pbData, DWORD * pdwDataLen, DWORD dwFlags) noexcept
 {
 	ATLASSUME(m_hHash != NULL);
 
@@ -392,7 +392,7 @@ inline HRESULT CCryptHash::GetParam(DWORD dwParam, BYTE * pbData, DWORD * pdwDat
 	else return S_OK;
 }
 
-inline HRESULT CCryptHash::SetParam(DWORD dwParam, BYTE * pbData, DWORD dwFlags) throw()
+inline HRESULT CCryptHash::SetParam(DWORD dwParam, BYTE * pbData, DWORD dwFlags) noexcept
 {
 	ATLASSUME(m_hHash != NULL);
 
@@ -403,24 +403,24 @@ inline HRESULT CCryptHash::SetParam(DWORD dwParam, BYTE * pbData, DWORD dwFlags)
 	else return S_OK;
 }
 
-inline HRESULT CCryptHash::GetAlgId(ALG_ID * pAlgId) throw()
+inline HRESULT CCryptHash::GetAlgId(ALG_ID * pAlgId) noexcept
 {
 	DWORD dwSize = sizeof(ALG_ID);
 	return GetParam(HP_ALGID, (BYTE *)pAlgId, &dwSize);
 }
 
-inline HRESULT CCryptHash::GetSize(DWORD * pdwSize) throw()
+inline HRESULT CCryptHash::GetSize(DWORD * pdwSize) noexcept
 {
 	DWORD dwLength = sizeof(DWORD);
 	return GetParam(HP_HASHSIZE, (BYTE *)pdwSize, &dwLength);
 }
 
-inline HRESULT CCryptHash::GetValue(BYTE * pBuf, DWORD * pdwSize) throw()
+inline HRESULT CCryptHash::GetValue(BYTE * pBuf, DWORD * pdwSize) noexcept
 {
 	return GetParam(HP_HASHVAL, pBuf, pdwSize);
 }
 
-inline HRESULT CCryptHash::SetValue(BYTE * pBuf) throw()
+inline HRESULT CCryptHash::SetValue(BYTE * pBuf) noexcept
 {
 	return SetParam(HP_HASHVAL, pBuf);
 }
@@ -429,7 +429,7 @@ inline HRESULT CCryptHash::Sign(
 								BYTE * pbSignature,
 								DWORD * pdwSigLen,
 								DWORD dwFlags,
-								DWORD dwKeySpec) throw()
+								DWORD dwKeySpec) noexcept
 {
 	ATLASSUME(m_hHash != NULL);
 
@@ -444,7 +444,7 @@ inline HRESULT CCryptHash::VerifySignature(
 											const BYTE * pbSignature,
 											DWORD dwSigLen,
 											CCryptKey &PubKey,
-											DWORD dwFlags) throw()
+											DWORD dwFlags) noexcept
 {
 	ATLASSUME(m_hHash != NULL);
 
@@ -457,17 +457,17 @@ inline HRESULT CCryptHash::VerifySignature(
 
 __declspec(selectany) CCryptHash CCryptHash::EmptyHash = CCryptHash();
 __declspec(selectany) CCryptKey CCryptKey::EmptyKey = CCryptKey();
-inline CCryptKey::CCryptKey() throw() :
-m_hKey( NULL )
+inline CCryptKey::CCryptKey() noexcept :
+	m_hKey( NULL )
 {
 }
 
-inline CCryptKey::CCryptKey( const CCryptKey& key ) throw()
+inline CCryptKey::CCryptKey( const CCryptKey& key ) noexcept
 {
 	m_hKey = key.Duplicate();
 }
 
-inline CCryptKey::CCryptKey( HCRYPTKEY hKey, BOOL bTakeOwnership ) throw()
+inline CCryptKey::CCryptKey( HCRYPTKEY hKey, BOOL bTakeOwnership ) noexcept
 {
 	if (bTakeOwnership)
 		m_hKey = hKey;
@@ -479,12 +479,12 @@ inline CCryptKey::CCryptKey( HCRYPTKEY hKey, BOOL bTakeOwnership ) throw()
 	}
 }
 
-inline CCryptKey::~CCryptKey() throw()
+inline CCryptKey::~CCryptKey() noexcept
 {
 	Destroy();
 }
 
-inline void CCryptKey::Attach( HCRYPTKEY hKey, BOOL bTakeOwnership ) throw()
+inline void CCryptKey::Attach( HCRYPTKEY hKey, BOOL bTakeOwnership ) noexcept
 {
 	ATLASSUME( m_hKey == NULL );
 	if (bTakeOwnership)
@@ -497,7 +497,7 @@ inline void CCryptKey::Attach( HCRYPTKEY hKey, BOOL bTakeOwnership ) throw()
 	}
 }
 
-inline void CCryptKey::Destroy() throw()
+inline void CCryptKey::Destroy() noexcept
 {
 	if( m_hKey != NULL )
 	{
@@ -512,7 +512,7 @@ inline void CCryptKey::Destroy() throw()
 	}
 }
 
-inline HCRYPTKEY CCryptKey::Detach() throw()
+inline HCRYPTKEY CCryptKey::Detach() noexcept
 {
 	HCRYPTKEY hKey;
 
@@ -522,7 +522,7 @@ inline HCRYPTKEY CCryptKey::Detach() throw()
 	return( hKey );
 }
 
-inline HCRYPTKEY CCryptKey::Duplicate() const throw()
+inline HCRYPTKEY CCryptKey::Duplicate() const noexcept
 {
 	BOOL bSuccess;
 
@@ -536,7 +536,7 @@ inline HCRYPTKEY CCryptKey::Duplicate() const throw()
 	return hKey;
 }
 
-inline HRESULT CCryptKey::Uninitialize() throw()
+inline HRESULT CCryptKey::Uninitialize() noexcept
 {
 	ATLASSUME(m_hKey != NULL);
 
@@ -556,7 +556,7 @@ inline HRESULT CCryptKey::Encrypt(
 								BYTE * pbData,
 								DWORD * pdwDataLen,
 								DWORD dwBufLen,
-								CCryptHash &Hash) throw()
+								CCryptHash &Hash) noexcept
 {
 	ATLASSUME(m_hKey != NULL);
 
@@ -568,7 +568,7 @@ inline HRESULT CCryptKey::Encrypt(
 
 }
 
-inline HRESULT CCryptKey::Decrypt(BOOL final, BYTE * pbData, DWORD * pdwDataLen, CCryptHash &Hash) throw()
+inline HRESULT CCryptKey::Decrypt(BOOL final, BYTE * pbData, DWORD * pdwDataLen, CCryptHash &Hash) noexcept
 {
 	ATLASSUME(m_hKey != NULL);
 
@@ -585,7 +585,7 @@ inline HRESULT CCryptKey::Encrypt(
 								DWORD dwPlainTextLen,
 								BYTE * pbCipherText,
 								DWORD * pdwCipherTextLen,
-								CCryptHash &Hash) throw()
+								CCryptHash &Hash) noexcept
 {
 	ATLASSUME(m_hKey != NULL);
 
@@ -609,7 +609,7 @@ inline HRESULT CCryptKey::Decrypt(
 								DWORD dwCipherTextLen,
 								BYTE * pbPlainText,
 								DWORD * pdwPlainTextLen,
-								CCryptHash &Hash) throw()
+								CCryptHash &Hash) noexcept
 {
 	ATLASSUME(m_hKey != NULL);
 
@@ -631,7 +631,7 @@ inline HRESULT CCryptKey::EncryptString(
 										LPCTSTR szPlainText,
 										BYTE * pbCipherText,
 										DWORD * pdwCipherTextLen,
-										CCryptHash &Hash) throw()
+										CCryptHash &Hash) noexcept
 {
 	DWORD dwSize = ((DWORD)_tcslen(szPlainText) + 1) * sizeof(TCHAR);
 	return Encrypt((BYTE *)szPlainText, dwSize, pbCipherText, pdwCipherTextLen, Hash);
@@ -641,7 +641,7 @@ inline HRESULT CCryptKey::ExportSimpleBlob(
 											CCryptKey &ExpKey,
 											DWORD dwFlags,
 											BYTE * pbData,
-											DWORD * pdwDataLen) throw()
+											DWORD * pdwDataLen) noexcept
 {
 	ATLASSUME(m_hKey != NULL);
 
@@ -656,7 +656,7 @@ inline HRESULT CCryptKey::ExportPublicKeyBlob(
 											CCryptKey &ExpKey,
 											DWORD dwFlags,
 											BYTE * pbData,
-											DWORD * pdwDataLen) throw()
+											DWORD * pdwDataLen) noexcept
 {
 	ATLASSUME(m_hKey != NULL);
 
@@ -671,7 +671,7 @@ inline HRESULT CCryptKey::ExportPrivateKeyBlob(
 												CCryptKey &ExpKey,
 												DWORD dwFlags,
 												BYTE * pbData,
-												DWORD * pdwDataLen) throw()
+												DWORD * pdwDataLen) noexcept
 {
 	ATLASSUME(m_hKey != NULL);
 
@@ -682,7 +682,7 @@ inline HRESULT CCryptKey::ExportPrivateKeyBlob(
 	else return S_OK;
 }
 
-inline HRESULT CCryptKey::GetParam(DWORD dwParam, BYTE * pbData, DWORD * pdwDataLen, DWORD dwFlags) throw()
+inline HRESULT CCryptKey::GetParam(DWORD dwParam, BYTE * pbData, DWORD * pdwDataLen, DWORD dwFlags) noexcept
 {
 	ATLASSUME(m_hKey != NULL);
 
@@ -693,7 +693,7 @@ inline HRESULT CCryptKey::GetParam(DWORD dwParam, BYTE * pbData, DWORD * pdwData
 	else return S_OK;
 }
 
-inline HRESULT CCryptKey::SetParam(DWORD dwParam, BYTE * pbData, DWORD dwFlags) throw()
+inline HRESULT CCryptKey::SetParam(DWORD dwParam, BYTE * pbData, DWORD dwFlags) noexcept
 {
 	ATLASSUME(m_hKey != NULL);
 
@@ -704,158 +704,158 @@ inline HRESULT CCryptKey::SetParam(DWORD dwParam, BYTE * pbData, DWORD dwFlags) 
 	else return S_OK;
 }
 
-inline HRESULT CCryptKey::GetAlgId(ALG_ID * pAlgId) throw()
+inline HRESULT CCryptKey::GetAlgId(ALG_ID * pAlgId) noexcept
 {
 	DWORD dwSize = sizeof(DWORD);
 	return GetParam(KP_ALGID, (BYTE *)pAlgId, &dwSize);
 }
 
-inline HRESULT CCryptKey::SetAlgId(ALG_ID AlgId, DWORD dwFlags) throw()
+inline HRESULT CCryptKey::SetAlgId(ALG_ID AlgId, DWORD dwFlags) noexcept
 {
 	return SetParam(KP_ALGID, (BYTE *)&AlgId, dwFlags);
 }
 
-inline HRESULT CCryptKey::GetBlockLength(DWORD * pdwBlockLen) throw()
+inline HRESULT CCryptKey::GetBlockLength(DWORD * pdwBlockLen) noexcept
 {
 	DWORD dwSize = sizeof(DWORD);
 	return GetParam(KP_BLOCKLEN, (BYTE *)pdwBlockLen, &dwSize);
 }
 
-inline HRESULT CCryptKey::GetKeyLength(DWORD * pdwKeyLen) throw()
+inline HRESULT CCryptKey::GetKeyLength(DWORD * pdwKeyLen) noexcept
 {
 	DWORD dwSize = sizeof(DWORD);
 	return GetParam(KP_KEYLEN, (BYTE *)pdwKeyLen, &dwSize);
 }
 
-inline HRESULT CCryptKey::GetSalt(BYTE * pbSalt, DWORD * pdwLength) throw()
+inline HRESULT CCryptKey::GetSalt(BYTE * pbSalt, DWORD * pdwLength) noexcept
 {
 	return GetParam(KP_SALT, pbSalt, pdwLength);
 }
 
-inline HRESULT CCryptKey::SetSalt(BYTE * pbSalt) throw()
+inline HRESULT CCryptKey::SetSalt(BYTE * pbSalt) noexcept
 {
 	return SetParam(KP_SALT, pbSalt);
 }
 
-inline HRESULT CCryptKey::SetSaltEx(_CRYPTOAPI_BLOB * pBlobSalt) throw()
+inline HRESULT CCryptKey::SetSaltEx(_CRYPTOAPI_BLOB * pBlobSalt) noexcept
 {
 	return SetParam(KP_SALT_EX, (BYTE *)pBlobSalt);
 }
 
-inline HRESULT CCryptKey::GetPermissions(DWORD * pdwPerms) throw()
+inline HRESULT CCryptKey::GetPermissions(DWORD * pdwPerms) noexcept
 {
 	DWORD dwSize = sizeof(DWORD);
 	return GetParam(KP_PERMISSIONS, (BYTE *)pdwPerms, &dwSize);
 }
 
-inline HRESULT CCryptKey::SetPermissions(DWORD dwPerms) throw()
+inline HRESULT CCryptKey::SetPermissions(DWORD dwPerms) noexcept
 {
 	return SetParam(KP_PERMISSIONS, (BYTE *)&dwPerms);
 }
 
-inline HRESULT CCryptKey::GetP(BYTE * pbP, DWORD * pdwLength) throw()
+inline HRESULT CCryptKey::GetP(BYTE * pbP, DWORD * pdwLength) noexcept
 {
 	return GetParam(KP_P, (BYTE *)pbP, pdwLength);
 }
 
-inline HRESULT CCryptKey::SetP(_CRYPTOAPI_BLOB * pBlobP) throw()
+inline HRESULT CCryptKey::SetP(_CRYPTOAPI_BLOB * pBlobP) noexcept
 {
 	return SetParam(KP_P, (BYTE *)pBlobP);
 }
 
-inline HRESULT CCryptKey::SetP(BYTE * pbP, DWORD dwLength) throw()
+inline HRESULT CCryptKey::SetP(BYTE * pbP, DWORD dwLength) noexcept
 {
 	_CRYPTOAPI_BLOB blob = { dwLength, pbP };
 	return SetParam(KP_P, (BYTE *)&blob);
 }
 
-inline HRESULT CCryptKey::GetQ(BYTE * pbQ, DWORD * pdwLength) throw()
+inline HRESULT CCryptKey::GetQ(BYTE * pbQ, DWORD * pdwLength) noexcept
 {
 	return GetParam(KP_Q, (BYTE *)pbQ, pdwLength);
 }
 
-inline HRESULT CCryptKey::SetQ(_CRYPTOAPI_BLOB * pBlobQ) throw()
+inline HRESULT CCryptKey::SetQ(_CRYPTOAPI_BLOB * pBlobQ) noexcept
 {
 	return SetParam(KP_Q, (BYTE *)pBlobQ);
 }
 
-inline HRESULT CCryptKey::SetQ(BYTE * pbQ, DWORD dwLength) throw()
+inline HRESULT CCryptKey::SetQ(BYTE * pbQ, DWORD dwLength) noexcept
 {
 	_CRYPTOAPI_BLOB blob = { dwLength, pbQ };
 	return SetParam(KP_Q, (BYTE *)&blob);
 }
 
-inline HRESULT CCryptKey::GetG(BYTE * pbG, DWORD * pdwLength) throw()
+inline HRESULT CCryptKey::GetG(BYTE * pbG, DWORD * pdwLength) noexcept
 {
 	return GetParam(KP_G, (BYTE *)pbG, pdwLength);
 }
 
-inline HRESULT CCryptKey::SetG(_CRYPTOAPI_BLOB * pBlobG) throw()
+inline HRESULT CCryptKey::SetG(_CRYPTOAPI_BLOB * pBlobG) noexcept
 {
 	return SetParam(KP_G, (BYTE *)pBlobG);
 }
 
-inline HRESULT CCryptKey::SetG(BYTE * pbG, DWORD dwLength) throw()
+inline HRESULT CCryptKey::SetG(BYTE * pbG, DWORD dwLength) noexcept
 {
 	_CRYPTOAPI_BLOB blob = { dwLength, pbG };
 	return SetParam(KP_G, (BYTE *)&blob);
 }
 
-inline HRESULT CCryptKey::SetX() throw()
+inline HRESULT CCryptKey::SetX() noexcept
 {
 	return SetParam(KP_X, NULL);
 }
 
-inline HRESULT CCryptKey::GetEffKeyLen(DWORD * pdwEffKeyLen) throw()
+inline HRESULT CCryptKey::GetEffKeyLen(DWORD * pdwEffKeyLen) noexcept
 {
 	DWORD dwSize = sizeof(DWORD);
 	return GetParam(KP_EFFECTIVE_KEYLEN, (BYTE *)pdwEffKeyLen, &dwSize);
 }
 
-inline HRESULT CCryptKey::SetEffKeyLen(DWORD dwEffKeyLen) throw()
+inline HRESULT CCryptKey::SetEffKeyLen(DWORD dwEffKeyLen) noexcept
 {
 	return SetParam(KP_EFFECTIVE_KEYLEN, (BYTE *)&dwEffKeyLen);
 }
 
-inline HRESULT CCryptKey::GetPadding(DWORD * pdwPadding) throw()
+inline HRESULT CCryptKey::GetPadding(DWORD * pdwPadding) noexcept
 {
 	DWORD dwSize = sizeof(DWORD);
 	return GetParam(KP_PADDING, (BYTE *)pdwPadding, &dwSize);
 }
 
-inline HRESULT CCryptKey::SetPadding(DWORD dwPadding) throw()
+inline HRESULT CCryptKey::SetPadding(DWORD dwPadding) noexcept
 {
 	return SetParam(KP_PADDING, (BYTE *)&dwPadding);
 }
 
-inline HRESULT CCryptKey::GetIV(BYTE * pbIV, DWORD * pdwLength) throw()
+inline HRESULT CCryptKey::GetIV(BYTE * pbIV, DWORD * pdwLength) noexcept
 {
 	return GetParam(KP_IV, pbIV, pdwLength);
 }
 
-inline HRESULT CCryptKey::SetIV(BYTE * pbIV) throw()
+inline HRESULT CCryptKey::SetIV(BYTE * pbIV) noexcept
 {
 	return SetParam(KP_IV, pbIV);
 }
 
-inline HRESULT CCryptKey::GetMode(DWORD * pdwMode) throw()
+inline HRESULT CCryptKey::GetMode(DWORD * pdwMode) noexcept
 {
 	DWORD dwSize = sizeof(DWORD);
 	return GetParam(KP_MODE, (BYTE *)pdwMode, &dwSize);
 }
 
-inline HRESULT CCryptKey::SetMode(DWORD dwMode) throw()
+inline HRESULT CCryptKey::SetMode(DWORD dwMode) noexcept
 {
 	return SetParam(KP_MODE, (BYTE *)&dwMode);
 }
 
-inline HRESULT CCryptKey::GetModeBits(DWORD * pdwModeBits) throw()
+inline HRESULT CCryptKey::GetModeBits(DWORD * pdwModeBits) noexcept
 {
 	DWORD dwSize = sizeof(DWORD);
 	return GetParam(KP_MODE_BITS, (BYTE *)pdwModeBits, &dwSize);
 }
 
-inline HRESULT CCryptKey::SetModeBits(DWORD dwModeBits) throw()
+inline HRESULT CCryptKey::SetModeBits(DWORD dwModeBits) noexcept
 {
 	return SetParam(KP_MODE_BITS, (BYTE *)&dwModeBits);
 }
@@ -864,7 +864,7 @@ inline HRESULT CCryptDerivedKey::Initialize(
 											CCryptProv &Prov,
 											CCryptHash &Hash,
 											ALG_ID algid,
-											DWORD dwFlags) throw()
+											DWORD dwFlags) noexcept
 {
 	ATLASSUME(m_hKey == NULL);
 
@@ -875,7 +875,7 @@ inline HRESULT CCryptDerivedKey::Initialize(
 	else return S_OK;
 }
 
-inline HRESULT CCryptRandomKey::Initialize(CCryptProv &Prov, ALG_ID algid, DWORD dwFlags) throw()
+inline HRESULT CCryptRandomKey::Initialize(CCryptProv &Prov, ALG_ID algid, DWORD dwFlags) noexcept
 {
 	ATLASSUME(m_hKey == NULL);
 
@@ -887,7 +887,7 @@ inline HRESULT CCryptRandomKey::Initialize(CCryptProv &Prov, ALG_ID algid, DWORD
 
 }
 
-inline HRESULT CCryptUserExKey::Initialize(CCryptProv &Prov) throw()
+inline HRESULT CCryptUserExKey::Initialize(CCryptProv &Prov) noexcept
 {
 	ATLASSUME(m_hKey == NULL);
 
@@ -898,7 +898,7 @@ inline HRESULT CCryptUserExKey::Initialize(CCryptProv &Prov) throw()
 	else return S_OK;
 }
 
-inline HRESULT CCryptUserExKey::Create(CCryptProv &Prov) throw()
+inline HRESULT CCryptUserExKey::Create(CCryptProv &Prov) noexcept
 {
 	ATLASSUME(m_hKey == NULL);
 
@@ -909,7 +909,7 @@ inline HRESULT CCryptUserExKey::Create(CCryptProv &Prov) throw()
 	else return S_OK;
 }
 
-inline HRESULT CCryptUserSigKey::Initialize(CCryptProv &Prov) throw()
+inline HRESULT CCryptUserSigKey::Initialize(CCryptProv &Prov) noexcept
 {
 	ATLASSUME(m_hKey == NULL);
 
@@ -920,7 +920,7 @@ inline HRESULT CCryptUserSigKey::Initialize(CCryptProv &Prov) throw()
 	else return S_OK;
 }
 
-inline HRESULT CCryptUserSigKey::Create(CCryptProv &Prov) throw()
+inline HRESULT CCryptUserSigKey::Create(CCryptProv &Prov) noexcept
 {
 	ATLASSUME(m_hKey == NULL);
 
@@ -936,7 +936,7 @@ inline HRESULT CCryptImportKey::Initialize(
 											BYTE * pbData,
 											DWORD dwDataLen,
 											CCryptKey &PubKey,
-											DWORD dwFlags) throw()
+											DWORD dwFlags) noexcept
 {
 	ATLASSUME(m_hKey == NULL);
 
@@ -951,7 +951,7 @@ inline HRESULT CCryptKeyedHash::Initialize(
 											CCryptProv &Prov,
 											ALG_ID Algid,
 											CCryptKey &Key,
-											DWORD dwFlags) throw()
+											DWORD dwFlags) noexcept
 {
 	ATLASSUME(m_hHash == NULL);
 
@@ -962,7 +962,7 @@ inline HRESULT CCryptKeyedHash::Initialize(
 	else return S_OK;
 }
 
-inline HRESULT CCryptMD5Hash::Initialize(CCryptProv &Prov, LPCTSTR szText) throw()
+inline HRESULT CCryptMD5Hash::Initialize(CCryptProv &Prov, LPCTSTR szText) noexcept
 {
 	ATLASSUME(m_hHash == NULL);
 
@@ -976,7 +976,7 @@ inline HRESULT CCryptMD5Hash::Initialize(CCryptProv &Prov, LPCTSTR szText) throw
 	else return S_OK;
 }
 
-inline HRESULT CCryptMD4Hash::Initialize(CCryptProv &Prov, LPCTSTR szText) throw()
+inline HRESULT CCryptMD4Hash::Initialize(CCryptProv &Prov, LPCTSTR szText) noexcept
 {
 	ATLASSUME(m_hHash == NULL);
 
@@ -989,7 +989,7 @@ inline HRESULT CCryptMD4Hash::Initialize(CCryptProv &Prov, LPCTSTR szText) throw
 	else return S_OK;
 }
 
-inline HRESULT CCryptMD2Hash::Initialize(CCryptProv &Prov, LPCTSTR szText) throw()
+inline HRESULT CCryptMD2Hash::Initialize(CCryptProv &Prov, LPCTSTR szText) noexcept
 {
 	ATLASSUME(m_hHash == NULL);
 
@@ -1002,7 +1002,7 @@ inline HRESULT CCryptMD2Hash::Initialize(CCryptProv &Prov, LPCTSTR szText) throw
 	else return S_OK;
 }
 
-inline HRESULT CCryptSHAHash::Initialize(CCryptProv &Prov, LPCTSTR szText) throw()
+inline HRESULT CCryptSHAHash::Initialize(CCryptProv &Prov, LPCTSTR szText) noexcept
 {
 	ATLASSUME(m_hHash == NULL);
 
@@ -1015,7 +1015,7 @@ inline HRESULT CCryptSHAHash::Initialize(CCryptProv &Prov, LPCTSTR szText) throw
 	else return S_OK;
 }
 
-inline HRESULT CCryptHMACHash::Initialize(CCryptProv &Prov, CCryptKey &Key, LPCTSTR szText) throw()
+inline HRESULT CCryptHMACHash::Initialize(CCryptProv &Prov, CCryptKey &Key, LPCTSTR szText) noexcept
 {
 	ATLASSUME(m_hHash == NULL);
 
@@ -1029,7 +1029,7 @@ inline HRESULT CCryptHMACHash::Initialize(CCryptProv &Prov, CCryptKey &Key, LPCT
 
 }
 
-inline HRESULT CCryptMACHash::Initialize(CCryptProv &Prov, CCryptKey &Key, LPCTSTR szText) throw()
+inline HRESULT CCryptMACHash::Initialize(CCryptProv &Prov, CCryptKey &Key, LPCTSTR szText) noexcept
 {
 	ATLASSUME(m_hHash == NULL);
 
@@ -1043,7 +1043,7 @@ inline HRESULT CCryptMACHash::Initialize(CCryptProv &Prov, CCryptKey &Key, LPCTS
 
 }
 
-inline HRESULT CCryptSSL3SHAMD5Hash::Initialize(CCryptProv &Prov, CCryptKey &Key, LPCTSTR szText) throw()
+inline HRESULT CCryptSSL3SHAMD5Hash::Initialize(CCryptProv &Prov, CCryptKey &Key, LPCTSTR szText) noexcept
 {
 	ATLASSUME(m_hHash == NULL);
 

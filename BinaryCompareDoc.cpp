@@ -171,7 +171,7 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 	GetApp()->NotifyFilePairChanged(pPair);
 }
 
-LONGLONG CBinaryCompareDoc::GetFileSize() const
+LONGLONG CBinaryCompareDoc::GetFileSize() const noexcept
 {
 	if (NULL == m_pFilePair
 		|| (NULL == m_pFilePair->pFirstFile && NULL == m_pFilePair->pSecondFile))

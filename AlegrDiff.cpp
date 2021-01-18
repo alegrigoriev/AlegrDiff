@@ -1144,8 +1144,6 @@ void CopyFilesToFolder(FileItem **ppFiles, int nCount, bool bAddSubdirToTarget)
 {
 	CThisApp * pApp = GetApp();
 
-	FileItem * pFile;
-
 	CString TargetDir = pApp->m_CopyFilesDir;
 	CString DlgTitle;
 	DlgTitle.LoadString(IDS_COPY_FILES_TITLE);
@@ -1174,12 +1172,12 @@ void CopyFilesToFolder(FileItem **ppFiles, int nCount, bool bAddSubdirToTarget)
 			TargetDir += _T("\\");
 		}
 	}
-	int i;
+
 	int SrcBufLen = 1;
 	int DstBufLen = 1;
-	for (i = 0; i < nCount; i++)
+	for (int i = 0; i < nCount; i++)
 	{
-		pFile = ppFiles[i];
+		FileItem * pFile = ppFiles[i];
 		SrcBufLen += pFile->GetBasedirLength() + pFile->GetNameLength() + pFile->GetSubdirLength() + 1;
 		DstBufLen += TargetDir.GetLength() + pFile->GetNameLength() + 1;
 		if (bAddSubdirToTarget)
@@ -1201,9 +1199,9 @@ void CopyFilesToFolder(FileItem **ppFiles, int nCount, bool bAddSubdirToTarget)
 	int SrcBufIdx = 0;
 	int DstBufIdx = 0;
 
-	for (i = 0; i < nCount; i++)
+	for (int i = 0; i < nCount; i++)
 	{
-		pFile = ppFiles[i];
+		FileItem * pFile = ppFiles[i];
 		_tcsncpy_s(pSrcBuf + SrcBufIdx, SrcBufLen - SrcBufIdx, pFile->GetBasedir(), pFile->GetBasedirLength());
 		SrcBufIdx += pFile->GetBasedirLength();
 

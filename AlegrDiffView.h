@@ -15,7 +15,7 @@ using namespace std;
 class CAlegrDiffView : public CListView
 {
 protected: // create from serialization only
-	CAlegrDiffView();
+	CAlegrDiffView() noexcept;
 	DECLARE_DYNCREATE(CAlegrDiffView)
 
 // Attributes
@@ -41,7 +41,7 @@ protected:
 
 // Implementation
 public:
-	void SetListViewItem(FilePair * pPair, int item, bool bInsert);
+	void SetListViewItem(FilePair const * pPair, int item, bool bInsert);
 	BOOL CopySelectedFiles(bool bSecondDir);
 
 	// keeps order of columns (even those non-visible)
@@ -80,7 +80,7 @@ public:
 		SetSortColumnMouseClick,
 	};
 	void SetSortColumn(eColumns nColumn, eSetSortColumnOrder Order);
-	bool ChangeSortItem(eColumns nColumn, eSetSortColumnOrder Order);
+	bool ChangeSortItem(eColumns nColumn, eSetSortColumnOrder Order) noexcept;
 	// index: column type, result: column position (including hidden columns)
 	int m_ColumnArray[MaxColumns];
 	int m_ColumnWidthArray[MaxColumns];
@@ -90,7 +90,7 @@ public:
 	int m_ColumnPositionToViewItem[MaxColumns];
 	int m_ColumnTypeToViewItem[MaxColumns];
 
-	void ResetColumnsArray();
+	void ResetColumnsArray() noexcept;
 
 	void UpdateAppColumns();
 
@@ -127,8 +127,8 @@ protected:
 	afx_msg void OnUpdateFileEditSecond(CCmdUI* pCmdUI);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnListviewOpen();
-	afx_msg void OnUpdateListviewOpen(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateFileCopyFirstDir(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateListviewOpen(_In_ CCmdUI* pCmdUI);
+	afx_msg void OnUpdateFileCopyFirstDir(_In_ CCmdUI* pCmdUI);
 	afx_msg void OnFileCopyFirstDir();
 	afx_msg void OnUpdateFileCopySecondDir(CCmdUI* pCmdUI);
 	afx_msg void OnFileCopySecondDir();
@@ -138,10 +138,6 @@ protected:
 	afx_msg void OnUpdateViewHideselectedfiles(CCmdUI* pCmdUI);
 	afx_msg void OnViewShowallfiles();
 	afx_msg void OnUpdateViewShowallfiles(CCmdUI* pCmdUI);
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
-public:
-protected:
 	afx_msg void OnListviewFilelength();
 	afx_msg void OnUpdateListviewFilelength(CCmdUI *pCmdUI);
 	afx_msg void OnListviewModificationtime();
@@ -187,7 +183,6 @@ protected:
 	afx_msg void OnUpdateShowSubdirectoriesin1stdironly(CCmdUI *pCmdUI);
 	afx_msg void OnShowSubdirectoriesin2nddir();
 	afx_msg void OnUpdateShowSubdirectoriesin2nddir(CCmdUI *pCmdUI);
-public:
 	afx_msg void OnShowDifferentinspacesonly();
 	afx_msg void OnUpdateShowDifferentinspacesonly(CCmdUI *pCmdUI);
 	afx_msg void OnShowLongerfilesin1stdirectory();
@@ -198,6 +193,8 @@ public:
 	afx_msg void OnUpdateInFirstDirectoryOnlySubdirectoriesContents(CCmdUI *pCmdUI);
 	afx_msg void OnInSecondDirectoryOnlySubdirectoriesContents();
 	afx_msg void OnUpdateInSecondDirectoryOnlySubdirectoriesContents(CCmdUI *pCmdUI);
+	//}}AFX_MSG
+	DECLARE_MESSAGE_MAP()
 protected:
 	virtual void OnActivateFrame(UINT nState, CFrameWnd* pDeactivateFrame);
 };

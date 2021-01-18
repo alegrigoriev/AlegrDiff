@@ -13,11 +13,11 @@ public:
 	CCheckFingerprintDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CCheckFingerprintDlg();
 
-	LPCTSTR GetFingerprintFilename() const
+	LPCTSTR GetFingerprintFilename() const noexcept
 	{
 		return m_sFilename;
 	}
-	LPCTSTR GetDirectory() const
+	LPCTSTR GetDirectory() const noexcept
 	{
 		return m_sDirectory;
 	}

@@ -227,7 +227,7 @@ FileItem::~FileItem()
 	Unload();
 }
 
-void FileItem::Unload()
+void FileItem::Unload() noexcept
 {
 	if (DEBUG_FILE_ITEM) TRACE(_T("FileItem %s Unloaded\n"), LPCTSTR(GetFullName()));
 
@@ -1667,7 +1667,7 @@ void FilePair::Reference()
 	m_RefCount++;
 }
 
-void FilePair::Dereference()
+void FilePair::Dereference() noexcept
 {
 	m_RefCount--;
 	if (0 == m_RefCount)
@@ -2208,7 +2208,7 @@ bool FilePair::LoadFiles()
 	return result;
 }
 
-void FilePair::UnloadFiles(bool ForceUnload)
+void FilePair::UnloadFiles(bool ForceUnload) noexcept
 {
 	m_LoadedCount--;
 	if (m_LoadedCount > 0 && ! ForceUnload)
@@ -2652,14 +2652,13 @@ FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLin
 }
 FilePair::eFileComparisionResult FilePair::CompareBinaryFiles(class CProgressDialog * /*pProgressDialog*/)
 {
-//    CThisApp * pApp = GetApp();
 	return ResultUnknown;
 }
 
 FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalculator * pMd5Calc,
 																class CProgressDialog * pProgressDialog)
 {
-	CThisApp * pApp = GetApp();
+	CThisApp * const pApp = GetApp();
 	// comparison can be done through CRC, or direct comparison
 	// if length is different, return it:
 	if (pFirstFile->GetFileLength() != pSecondFile->GetFileLength())
@@ -2745,7 +2744,7 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 FilePair::eFileComparisionResult FilePair::CompareTextFiles(CProgressDialog * /*pProgressDialog*/)
 {
 	// find similar lines
-	CThisApp * pApp = GetApp();
+	CThisApp const * const pApp = GetApp();
 	FileSection * pSection;
 	FileSection * pFirstSection =
 		BuildSectionList(0, pFirstFile->GetNumLines(),
@@ -3156,7 +3155,7 @@ bool FilePair::NextDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
 	int NewFileScope = 0;
 	if (0 != PosFrom.scope)
 	{
-		int flags = GetAcceptDeclineFlags(pSection->m_Begin, pSection->m_End, IgnoreWhitespaces != FALSE);
+		int const flags = GetAcceptDeclineFlags(pSection->m_Begin, pSection->m_End, IgnoreWhitespaces != FALSE);
 		if (flags & StringSection::Erased)
 		{
 			NewFileScope = 1;
@@ -3213,7 +3212,7 @@ bool FilePair::PrevDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
 	int NewFileScope = 0;
 	if (0 != PosFrom.scope)
 	{
-		int flags = GetAcceptDeclineFlags(pSection->m_Begin, pSection->m_End, IgnoreWhitespaces != FALSE);
+		int const flags = GetAcceptDeclineFlags(pSection->m_Begin, pSection->m_End, IgnoreWhitespaces != FALSE);
 		if (flags & StringSection::Erased)
 		{
 			NewFileScope = 1;
@@ -3526,7 +3525,7 @@ void FileItem::SetMD5(BYTE const md5[16])
 	m_bMd5Calculated = true;
 }
 
-void FileItem::CopyMD5(FileItem *pFileItem)
+void FileItem::CopyMD5(FileItem *pFileItem) noexcept
 {
 	memcpy(m_Md5, pFileItem->m_Md5, sizeof m_Md5);
 	m_bMd5Calculated = true;
@@ -4034,7 +4033,7 @@ ULONGLONG FilePairList::GetTotalDataSize(ULONG FileOpenOverhead)
 	return TotalFilesSize;
 }
 
-void FilePairList::RemovePair(FilePair * pPairToDelete)
+void FilePairList::RemovePair(FilePair * pPairToDelete) noexcept
 {
 	// find it in the list and remove from the list
 	for (FilePair * pPair = First(); NotEnd(pPair); pPair = pPair->Next())
@@ -4049,7 +4048,7 @@ void FilePairList::RemovePair(FilePair * pPairToDelete)
 	}
 }
 
-void FilePairList::RemoveAll()
+void FilePairList::RemoveAll() noexcept
 {
 	while (!IsEmpty())
 	{
@@ -4058,7 +4057,7 @@ void FilePairList::RemoveAll()
 	NumFilePairs = 0;
 }
 
-bool FilePairList::HasFiles() const
+bool FilePairList::HasFiles() const noexcept
 {
 	for (FilePair * pPair = First(); NotEnd(pPair); pPair = pPair->Next())
 	{
@@ -4085,8 +4084,7 @@ FileItem * FilePairList::GetSortedList(FileListIndex index)
 	return pListHead;
 }
 
-
-void FilePairList::RemoveFromDictionary(FileItem *pItem)
+void FilePairList::RemoveFromDictionary(FileItem *pItem) noexcept
 {
 	if (pItem->iFullDirInTree
 		&& 0 == --(pItem->iFullDirInTree->RefCount))

@@ -49,8 +49,8 @@ public:
 	CRect m_VisibleRect;
 	CRect m_PreferredRect;
 
-	int CharWidth() const { return m_FontMetric.tmAveCharWidth; }
-	int LineHeight() const { return m_FontMetric.tmHeight + m_FontMetric.tmExternalLeading; }
+	int CharWidth() const noexcept { return m_FontMetric.tmAveCharWidth; }
+	int LineHeight() const noexcept { return m_FontMetric.tmHeight + m_FontMetric.tmExternalLeading; }
 	int LinesInView() const;
 	int CharsInView() const;
 	void UpdateVisibleRect();

@@ -144,13 +144,13 @@ bool CAlegrDiffDoc::CanCancelComparison(CProgressDialog * /*pDlg*/)
 	return FALSE;
 }
 
-bool operator ==(const FILETIME & time1, const FILETIME & time2)
+bool operator ==(const FILETIME & time1, const FILETIME & time2) noexcept
 {
 	return time1.dwLowDateTime == time2.dwLowDateTime
 			&& time1.dwHighDateTime == time2.dwHighDateTime;
 }
 
-bool operator !=(const FILETIME & time1, const FILETIME & time2)
+bool operator !=(const FILETIME & time1, const FILETIME & time2) noexcept
 {
 	return time1.dwLowDateTime != time2.dwLowDateTime
 			|| time1.dwHighDateTime != time2.dwHighDateTime;
@@ -267,7 +267,7 @@ bool CAlegrDiffDoc::BuildFilePairList(OPTIONAL LPCTSTR FirstDirOrFingerprint, LP
 }
 
 
-void CAlegrDiffDoc::FreeFilePairList()
+void CAlegrDiffDoc::FreeFilePairList() noexcept
 {
 	m_PairList.RemoveAll();
 }
@@ -310,7 +310,7 @@ void CAlegrDiffDoc::Dump(CDumpContext& dc) const
 
 IMPLEMENT_DYNCREATE(CTextFilePairDoc, CFilePairDoc)
 
-CTextFilePairDoc::CTextFilePairDoc()
+CTextFilePairDoc::CTextFilePairDoc() noexcept
 	: m_TotalLines(0),
 	m_CaretPos(0, 0, 0)
 	, m_SelectionAnchor(0, 0, 0)
@@ -2006,7 +2006,7 @@ TextPosLine CTextFilePairDoc::DisplayPosToLinePos(TextPosDisplay position)
 	return m_pFilePair->DisplayPosToLinePos(position, m_bIgnoreWhitespaces);
 }
 
-LinePair * CTextFilePairDoc::GetLinePair(int line) const
+LinePair * CTextFilePairDoc::GetLinePair(int line) const noexcept
 {
 	if (NULL == m_pFilePair
 		|| line >= (int)m_pFilePair->m_LinePairs.size())

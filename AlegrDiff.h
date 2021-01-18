@@ -193,7 +193,7 @@ public:
 };
 
 typedef CAlegrDiffApp CThisApp;
-inline CThisApp * GetApp()
+inline CThisApp * GetApp() noexcept
 {
 	return (CThisApp *) AfxGetApp();
 }

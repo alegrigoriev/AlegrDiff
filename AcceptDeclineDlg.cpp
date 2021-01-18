@@ -14,7 +14,7 @@ static char THIS_FILE[] = __FILE__;
 // CAcceptDeclineDlg dialog
 
 
-CAcceptDeclineDlg::CAcceptDeclineDlg(CWnd* pParent /*=NULL*/)
+CAcceptDeclineDlg::CAcceptDeclineDlg(CWnd* pParent /*=NULL*/) noexcept
 	: CDialog(CAcceptDeclineDlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CAcceptDeclineDlg)

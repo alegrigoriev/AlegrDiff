@@ -136,11 +136,11 @@ inline void CAlegrDiffView::PrintColumnOrder()
 #endif
 }
 
-CAlegrDiffView::CAlegrDiffView()
+CAlegrDiffView::CAlegrDiffView() noexcept
 	: m_ShowFilesMask(~(ULONG)(ShowFileFromSubdirInFirstDirOnly | ShowFileFromSubdirInSecondDirOnly))
 	, m_PresentFilesMask(0)
 {
-	CThisApp * pApp = GetApp();
+	CThisApp const * const pApp = GetApp();
 	m_ShowFilesMask = pApp->m_ShowFilesMask;
 	if (m_ShowFilesMask & ShowIdenticalFiles)
 	{
@@ -161,8 +161,7 @@ CAlegrDiffView::CAlegrDiffView()
 
 CAlegrDiffView::~CAlegrDiffView()
 {
-	CThisApp * pApp = GetApp();
-	pApp->m_ShowFilesMask = m_ShowFilesMask;
+	GetApp()->m_ShowFilesMask = m_ShowFilesMask;
 }
 
 BOOL CAlegrDiffView::PreCreateWindow(CREATESTRUCT& cs)
@@ -298,7 +297,7 @@ void CAlegrDiffView::OnInitialUpdate()
 	CListView::OnInitialUpdate();
 }
 
-void CAlegrDiffView::ResetColumnsArray()
+void CAlegrDiffView::ResetColumnsArray() noexcept
 {
 	m_ColumnArray[ColumnName] = 0;
 	m_ColumnArray[ColumnSubdir] = 1;
@@ -318,7 +317,7 @@ void CAlegrDiffView::ResetColumnsArray()
 
 }
 
-bool CAlegrDiffView::ChangeSortItem(eColumns nColumn, eSetSortColumnOrder Order)
+bool CAlegrDiffView::ChangeSortItem(eColumns nColumn, eSetSortColumnOrder Order) noexcept
 {
 	// if actual sort order changed, return 'true'
 	if (nColumn >= MaxColumns)
@@ -869,7 +868,7 @@ void CAlegrDiffView::OnListviewOpen()
 	}
 }
 
-void CAlegrDiffView::OnUpdateListviewOpen(CCmdUI* pCmdUI)
+void CAlegrDiffView::OnUpdateListviewOpen(_In_ CCmdUI* pCmdUI)
 {
 	CListCtrl * pListCtrl = & GetListCtrl();
 	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
@@ -901,10 +900,10 @@ void CAlegrDiffView::OnUpdateListviewOpen(CCmdUI* pCmdUI)
 	pCmdUI->Enable(FALSE);
 }
 
-void CAlegrDiffView::OnUpdateFileCopyFirstDir(CCmdUI* pCmdUI)
+void CAlegrDiffView::OnUpdateFileCopyFirstDir(_In_ CCmdUI* pCmdUI)
 {
 	// check if there is anything to copy
-	CListCtrl * pListCtrl = & GetListCtrl();
+	CListCtrl * const pListCtrl = &GetListCtrl();
 
 	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
@@ -937,7 +936,7 @@ void CAlegrDiffView::OnFileCopyFirstDir()
 void CAlegrDiffView::OnUpdateFileCopySecondDir(CCmdUI* pCmdUI)
 {
 	// check if there is anything to copy
-	CListCtrl * pListCtrl = & GetListCtrl();
+	CListCtrl * const pListCtrl = &GetListCtrl();
 
 	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
@@ -971,7 +970,7 @@ BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 {
 //    CThisApp * pApp = GetApp();
 
-	CListCtrl * pListCtrl = & GetListCtrl();
+	CListCtrl * const pListCtrl = &GetListCtrl();
 	vector<FileItem *> FilesArray;
 
 	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
@@ -1009,7 +1008,7 @@ BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 	return TRUE;
 }
 
-void CAlegrDiffView::SetListViewItem(FilePair *pPair, int item, bool bInsert)
+void CAlegrDiffView::SetListViewItem(FilePair const *pPair, int item, bool bInsert)
 {
 	CListCtrl * pListCtrl = &GetListCtrl();
 //	CAlegrDiffDoc * pDoc = GetDocument();
@@ -1439,7 +1438,7 @@ void CAlegrDiffView::OnUpdateViewHideselectedfiles(CCmdUI* pCmdUI)
 
 void CAlegrDiffView::OnViewShowallfiles()
 {
-	CAlegrDiffDoc * pDoc = GetDocument();
+	CAlegrDiffDoc* const pDoc = GetDocument();
 	for (FilePair * pPair = pDoc->GetFirstFilePair(); pDoc->FilePairNotEnd(pPair); pPair = pDoc->GetNextFilePair(pPair))
 	{
 		pPair->m_bHideFromListView = false;
@@ -1454,7 +1453,7 @@ void CAlegrDiffView::OnViewShowallfiles()
 
 void CAlegrDiffView::OnUpdateViewShowallfiles(CCmdUI* pCmdUI)
 {
-	CAlegrDiffDoc * pDoc = GetDocument();
+	CAlegrDiffDoc * const pDoc = GetDocument();
 	for (FilePair * pPair = pDoc->GetFirstFilePair(); pDoc->FilePairNotEnd(pPair); pPair = pDoc->GetNextFilePair(pPair))
 	{
 		if (pPair->m_bHideFromListView)

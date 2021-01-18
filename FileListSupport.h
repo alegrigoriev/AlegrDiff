@@ -17,8 +17,9 @@ struct TextPos
 {
 	int line;
 	int pos;
-	TextPos() {}
-	TextPos(int l, int p)
+	TextPos() noexcept
+		: line(0), pos(0) {}
+	TextPos(int l, int p) noexcept
 		: line(l), pos(p)
 	{
 	}
@@ -28,8 +29,9 @@ struct TextPosLine
 {
 	int line;
 	int pos;
-	TextPosLine() {}
-	TextPosLine(int l, int p)
+	TextPosLine() noexcept
+		: line(0), pos(0) {}
+	TextPosLine(int l, int p) noexcept
 		: line(l), pos(p)
 	{
 	}
@@ -40,8 +42,9 @@ struct TextPosDisplay
 	int line;
 	int pos;
 	int scope; // 0 - combined file, 1 - left pane, 2 - right pane
-	TextPosDisplay() {}
-	TextPosDisplay(int l, int p, int s)
+	TextPosDisplay() noexcept
+		: line(0), pos(0), scope(0) {}
+	TextPosDisplay(int l, int p, int s) noexcept
 		: line(l), pos(p), scope(s)
 	{
 	}
@@ -215,12 +218,12 @@ struct StringSection : public ListItem<StringSection>
 		VersionInfo = 0x200,
 	};
 	USHORT Attr;
-	bool IsAccepted() const { return 0 != (Attr & Accepted); }
-	bool IsIncluded() const { return 0 != (Attr & Included); }
-	bool IsFile1Only() const { return 0 != (Attr & File1Only); }
-	bool IsDeclined() const { return 0 != (Attr & Declined); }
-	bool IsDiscarded() const { return 0 != (Attr & Discarded); }
-	bool IsWhitespace() const { return 0 != (Attr & Whitespace); }
+	bool IsAccepted() const noexcept { return 0 != (Attr & Accepted); }
+	bool IsIncluded() const noexcept { return 0 != (Attr & Included); }
+	bool IsFile1Only() const noexcept { return 0 != (Attr & File1Only); }
+	bool IsDeclined() const noexcept { return 0 != (Attr & Declined); }
+	bool IsDiscarded() const noexcept { return 0 != (Attr & Discarded); }
+	bool IsWhitespace() const noexcept { return 0 != (Attr & Whitespace); }
 private:
 	static class CSmallAllocator m_Allocator;
 };
@@ -231,21 +234,21 @@ struct KeyDirectoryEntry
 {
 	ULONG RefCount;     // number of entries referring to this key
 	ULONG SortSequence; // index in sorted sequence
-	KeyDirectoryEntry()
+	KeyDirectoryEntry() noexcept
 		: RefCount(0), SortSequence(0xFFFFFFFF)
 	{}
 };
 struct FileItemListEntry
 {
 	FileItem * pItem;
-	FileItemListEntry(FileItem * item)
+	FileItemListEntry(FileItem * item) noexcept
 		: pItem(item)
 	{}
 };
 
 struct FilenameComparePredicate
 {
-	int operator()(CString const & A, CString const & B) const
+	int operator()(CString const & A, CString const & B) const noexcept
 	{
 		return A.CollateNoCase(B);
 	}
@@ -273,7 +276,7 @@ public:
 
 	~FileItem();
 	bool Load();
-	void Unload();
+	void Unload() noexcept;
 
 	bool m_bMd5Calculated;
 	bool m_bHasExtendedCharacters;
@@ -301,98 +304,98 @@ public:
 	} m_FileType;
 
 	BOOL CalculateHashes(CMd5HashCalculator * pMd5Calc, class CProgressDialog * pProgressDialog);
-	static size_t GetDigestLength() { return 16; }
+	static size_t GetDigestLength() noexcept { return 16; }
 
 	void SetMD5(BYTE const md5[16]);
-	void CopyMD5(FileItem *pFileItem);
+	void CopyMD5(FileItem *pFileItem) noexcept;
 
 	// add line from memory. Assuming the file created dynamically by the program
 	void AddLine(LPCTSTR pLine);
-	bool IsFolder() const
+	bool IsFolder() const noexcept
 	{
 		return m_FileType == FileTypeDirectory;
 	}
 
-	bool IsUnicode() const
+	bool IsUnicode() const noexcept
 	{
 		return m_FileEncoding == FileEncodingUTF8 || m_FileEncoding == FileEncodingUTF16LE || m_FileEncoding == FileEncodingUTF16BE;
 	}
-	bool IsText() const
+	bool IsText() const noexcept
 	{
 		return m_FileType == FileTypeText || m_FileType == FileTypeCCpp;
 	}
-	void SetText()
+	void SetText() noexcept
 	{
 		m_FileType = FileTypeText;
 	}
 
-	bool IsCCpp() const
+	bool IsCCpp() const noexcept
 	{
 		return m_FileType == FileTypeCCpp;
 	}
-	void SetCCpp()
+	void SetCCpp() noexcept
 	{
 		m_FileType = FileTypeCCpp;
 	}
 
-	bool HasExtendedCharacters() const
+	bool HasExtendedCharacters() const noexcept
 	{
 		return m_bHasExtendedCharacters;
 	}
 
-	bool IsBinary() const
+	bool IsBinary() const noexcept
 	{
 		return m_FileType == FileTypeBinary;
 	}
-	void SetBinary()
+	void SetBinary() noexcept
 	{
 		m_FileType = FileTypeBinary;
 		m_FileEncoding = FileEncodingBinary;
 	}
 
-	bool IsPhantomFile() const
+	bool IsPhantomFile() const noexcept
 	{
 		return m_FileType == FileTypeHashOnly;
 	}
 
-	bool IsAlone() const
+	bool IsAlone() const noexcept
 	{
 		return m_bIsAlone;
 	}
 
-	void SetAlone(bool alone)
+	void SetAlone(bool alone) noexcept
 	{
 		m_bIsAlone = alone;
 	}
 
-	bool IsReparsePoint() const
+	bool IsReparsePoint() const noexcept
 	{
 		return 0 != (m_Attributes & FILE_ATTRIBUTE_REPARSE_POINT);
 	}
 
-	bool IsSymbolicLink() const
+	bool IsSymbolicLink() const noexcept
 	{//FIXME
 		return 0 != (m_Attributes & FILE_ATTRIBUTE_REPARSE_POINT);
 	}
 
-	bool IsHardLink() const
+	bool IsHardLink() const noexcept
 	{//FIXME
 		return 0 != (m_Attributes & FILE_ATTRIBUTE_REPARSE_POINT);
 	}
 
 	unsigned GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes);
 
-	const FileLine * GetLine(int LineNum) const
+	const FileLine * GetLine(int LineNum) const noexcept
 	{
 		return m_Lines[LineNum];
 	}
-	unsigned GetNumLines() const
+	unsigned GetNumLines() const noexcept
 	{
 		return (unsigned)m_Lines.size();
 	}
 
 	// get file name ONLY. Empty for a directory
-	CString const & GetFileName() const
+	CString const & GetFileName() const noexcept
 	{
 		if (IsFolder())
 		{
@@ -402,30 +405,30 @@ public:
 		return m_Name;
 	}
 	// get file (or subdirectory) name
-	CString const & GetName() const
+	CString const & GetName() const noexcept
 	{
 		return m_Name;
 	}
-	unsigned GetNameLength() const
+	unsigned GetNameLength() const noexcept
 	{
 		return (unsigned)m_Name.GetLength();
 	}
 
 	// get sibdirectory ONLY, with trailing slash. For a directory does NOT includes its own name
-	CString const & GetSubdir() const
+	CString const & GetSubdir() const noexcept
 	{
 		return m_Subdir;
 	}
-	int GetSubdirLength() const
+	int GetSubdirLength() const noexcept
 	{
 		return m_Subdir.GetLength();
 	}
 
-	CString const & GetBasedir() const
+	CString const & GetBasedir() const noexcept
 	{
 		return m_BaseDir;
 	}
-	int GetBasedirLength() const
+	int GetBasedirLength() const noexcept
 	{
 		return m_BaseDir.GetLength();
 	}
@@ -434,7 +437,7 @@ public:
 	{
 		return m_BaseDir + m_Subdir + m_Name;
 	}
-	int GetFullNameLength() const
+	int GetFullNameLength() const noexcept
 	{
 		return m_BaseDir.GetLength() + m_Subdir.GetLength() + m_Name.GetLength();
 	}
@@ -445,20 +448,20 @@ public:
 		return m_MultiStrDir;
 	}
 
-	ULONGLONG GetLastWriteTime() const
+	ULONGLONG GetLastWriteTime() const noexcept
 	{
 		return m_LastWriteTime;
 	}
 
-	LONGLONG GetFileLength() const
+	LONGLONG GetFileLength() const noexcept
 	{
 		return m_Length;
 	}
-	UINT GetDigest(int idx) const
+	UINT GetDigest(int idx) const noexcept
 	{
 		return m_Md5[idx];
 	}
-	BYTE const * GetDigest() const
+	BYTE const * GetDigest() const noexcept
 	{
 		return m_Md5;
 	}
@@ -557,7 +560,7 @@ class FilePair : public ListItem<FilePair>
 public:
 	FilePair(FileItem* file1, FileItem* file2);
 	void Reference();
-	void Dereference();
+	void Dereference() noexcept;
 private:
 	~FilePair();
 	int m_RefCount;
@@ -566,23 +569,23 @@ private:
 public:
 	FileItem * pFirstFile;
 	FileItem * pSecondFile;
-	void SetMemoryFile()
+	void SetMemoryFile() noexcept
 	{
 		m_LoadedCount = 1;
 		m_ComparisonResult = MemoryFile;
 	}
 
 	bool LoadFiles();
-	void UnloadFiles(bool ForceUnload = false);
+	void UnloadFiles(bool ForceUnload = false) noexcept;
 	void FreeLinePairData();
 
-	bool NeedBinaryComparison() const
+	bool NeedBinaryComparison() const noexcept
 	{
 		return (pFirstFile != NULL && pFirstFile->IsBinary())
 			|| (pSecondFile != NULL && pSecondFile->IsBinary());
 	}
 
-	bool FilesAreDifferent() const
+	bool FilesAreDifferent() const noexcept
 	{
 		return m_ComparisonResult == FilesDifferent
 				|| m_ComparisonResult == DifferentInSpaces
@@ -590,7 +593,7 @@ public:
 				|| m_ComparisonResult == FirstFileLonger
 				|| m_ComparisonResult == SecondFileLonger;
 	}
-	bool FilesAreIdentical() const
+	bool FilesAreIdentical() const noexcept
 	{
 		return m_ComparisonResult == FilesIdentical || m_ComparisonResult == FilesAttributesIdentical;
 	}
@@ -619,26 +622,32 @@ public:
 		FileUnaccessible,
 		FilesIdentical,
 		DifferentInSpaces,
+
 		VersionInfoDifferent,
 		FilesDifferent,
 		OnlyFirstFile,
 		FileInFingerprintFileOnly,
+
 		OnlySecondFile,
 		OnlyFirstDirectory,
 		DirectoryInFingerprintFileOnly,
 		OnlySecondDirectory,
+
 		FirstFileLonger,
 		SecondFileLonger,
 		ErrorReadingFirstFile,
 		ErrorReadingSecondFile,
+
 		ReadingFirstFile,
 		ReadingSecondFile,
 		CalculatingFirstFingerprint,
 		CalculatingSecondFingerprint,
+
 		ComparingFiles,
 		MemoryFile,
 		FileFromSubdirInFirstDirOnly,   // file from a subdirectory that exists only in first directory
 		FileFromSubdirInSecondDirOnly,   // file from a subdirectory that exists only in first directory
+
 		SubdirsParentInFirstDirOnly,   // dir from a subdirectory that exists only in first directory
 		SubdirsParentInSecondDirOnly,   // dir from a subdirectory that exists only in first directory
 		FilesDirectoryInFingerprintFileOnly,
@@ -660,12 +669,12 @@ public:
 		unsigned File2LineEnd;
 	};
 
-	void SetComparisonResult(eFileComparisionResult result)
+	void SetComparisonResult(eFileComparisionResult result) noexcept
 	{
 		m_ComparisonResult = result;
 	}
 	CString GetComparisonResultStr() const;
-	eFileComparisionResult GetComparisonResult() const
+	eFileComparisionResult GetComparisonResult() const noexcept
 	{
 		return m_ComparisonResult;
 	}
@@ -715,7 +724,7 @@ private:
 	static int NameCompareBackward(const FilePair * Pair1, const FilePair * Pair2);
 	static int DirNameCompareBackward(const FilePair * Pair1, const FilePair * Pair2);
 
-	static int NoOp(const FilePair * , const FilePair * )
+	static int NoOp(const FilePair *, const FilePair *) noexcept
 	{
 		return 0;
 	}
@@ -736,7 +745,7 @@ class FileList
 public:
 	FileList();
 	~FileList();
-	FileItem *Detach()
+	FileItem *Detach() noexcept
 	{
 		FileItem * item = m_pList;
 		m_pList = NULL;
@@ -768,7 +777,7 @@ protected:
 class FilePairList : ListHead<FilePair>
 {
 public:
-	FilePairList()
+	FilePairList() noexcept
 		: NumFilePairs(0)
 	{}
 	enum FileListIndex
@@ -782,10 +791,10 @@ public:
 	bool BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, bool DoNotCompareContents);  // returns 'true' if there were changes in it
 
 	unsigned NumFilePairs;
-	bool HasFiles() const;
+	bool HasFiles() const noexcept;
 	ULONGLONG GetTotalDataSize(ULONG FileOpenOverhead = FILE_OPEN_OVERHEAD);
-	void RemovePair(FilePair * pPairToDelete);
-	void RemoveAll();
+	void RemovePair(FilePair * pPairToDelete) noexcept;
+	void RemoveAll() noexcept;
 
 	using ListHead<FilePair>::First;
 	using ListHead<FilePair>::Next;
@@ -795,7 +804,7 @@ public:
 private:
 
 	void AddToDictionary(FileList const *list);
-	void RemoveFromDictionary(FileItem *pItem);
+	void RemoveFromDictionary(FileItem* pItem) noexcept;
 	void MergeFileListToTree(FileList *list, file_item_tree_t &Files);
 
 	name_tree_t NameTree;

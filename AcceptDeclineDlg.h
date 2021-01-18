@@ -15,7 +15,7 @@ class CAcceptDeclineDlg : public CDialog
 {
 // Construction
 public:
-	CAcceptDeclineDlg(CWnd* pParent = NULL);   // standard constructor
+	CAcceptDeclineDlg(CWnd* pParent = NULL) noexcept;   // standard constructor
 
 // Dialog Data
 	//{{AFX_DATA(CAcceptDeclineDlg)

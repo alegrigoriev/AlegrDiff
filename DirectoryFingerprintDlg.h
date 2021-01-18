@@ -23,31 +23,31 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
-	LPCTSTR GetFilenameFilter() const
+	LPCTSTR GetFilenameFilter() const noexcept
 	{
 		return m_sFilenameFilter;
 	}
-	LPCTSTR GetDirectory() const
+	LPCTSTR GetDirectory() const noexcept
 	{
 		return m_sDirectory;
 	}
-	LPCTSTR GetFingerprintName() const
+	LPCTSTR GetFingerprintName() const noexcept
 	{
 		return m_sSaveFilename;
 	}
-	LPCTSTR GetIgnoreFiles() const
+	LPCTSTR GetIgnoreFiles() const noexcept
 	{
 		return m_sIgnoreFiles;
 	}
-	LPCTSTR GetIgnoreFolders() const
+	LPCTSTR GetIgnoreFolders() const noexcept
 	{
 		return m_sIgnoreFolders;
 	}
-	bool DoIncludeSubdirectories() const
+	bool DoIncludeSubdirectories() const noexcept
 	{
 		return m_bIncludeSubdirectories != 0;
 	}
-	bool DoIncludeDirectoryStructure() const
+	bool DoIncludeDirectoryStructure() const noexcept
 	{
 		return m_bIncludeDirectoryStructure != 0;
 	}

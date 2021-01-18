@@ -453,6 +453,11 @@ public:
 		return m_LastWriteTime;
 	}
 
+	ULONGLONG GetCreationTime() const noexcept
+	{
+		return m_CreationTime;
+	}
+
 	LONGLONG GetFileLength() const noexcept
 	{
 		return m_Length;
@@ -533,6 +538,7 @@ private:
 	CString m_MultiStrDir;
 
 	ULONGLONG m_LastWriteTime;
+	ULONGLONG m_CreationTime;
 	LONGLONG m_Length;
 	LONGLONG m_Crc64;   // use x64 + x4 + x3 + x + 1 polynomial TODO
 	BYTE m_Md5[16];

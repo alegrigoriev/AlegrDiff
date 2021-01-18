@@ -182,6 +182,7 @@ FileItem::FileItem(const WIN32_FIND_DATA * pWfd,
 					const CString & BaseDir, const CString & Dir, OPTIONAL FileItem * pParentDir)
 	:m_Length(pWfd->nFileSizeLow + (LONGLONG(pWfd->nFileSizeHigh) << 32))
 	, m_LastWriteTime(pWfd->ftLastWriteTime.dwLowDateTime + (ULONGLONG(pWfd->ftLastWriteTime.dwHighDateTime) << 32))
+	, m_CreationTime(pWfd->ftCreationTime.dwLowDateTime + (ULONGLONG(pWfd->ftCreationTime.dwHighDateTime) << 32))
 	, m_BaseDir(BaseDir)
 	, m_Subdir(Dir)
 	, m_Name(pWfd->cFileName)
@@ -641,18 +642,32 @@ FileCheckResult FileItem::CheckForFileChanged()
 {
 	CString s = GetFullName();
 	WIN32_FIND_DATA wfd;
-	HANDLE hFind = FindFirstFile(s, & wfd);
-	if (INVALID_HANDLE_VALUE == hFind
-		|| NULL == hFind)
+	HANDLE hFind = FindFirstFile(s, &wfd);
+	if (INVALID_HANDLE_VALUE == hFind)
 	{
 		return FileDeleted;
 	}
 	FindClose(hFind);
+	if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	{
+		return FileDeleted;
+	}
+
 	ULARGE_INTEGER wfdLastWriteTime;
 	wfdLastWriteTime.LowPart = wfd.ftLastWriteTime.dwLowDateTime;
 	wfdLastWriteTime.HighPart = wfd.ftLastWriteTime.dwHighDateTime;
 
-	if (wfdLastWriteTime.QuadPart != m_LastWriteTime)
+	ULARGE_INTEGER wfdCreationTime;
+	wfdCreationTime.LowPart = wfd.ftCreationTime.dwLowDateTime;
+	wfdCreationTime.HighPart = wfd.ftCreationTime.dwHighDateTime;
+
+	LARGE_INTEGER wfdLength;
+	wfdLength.LowPart = wfd.nFileSizeLow;
+	wfdLength.HighPart = wfd.nFileSizeHigh;
+
+	if (wfdLastWriteTime.QuadPart != m_LastWriteTime
+		|| wfdCreationTime.QuadPart != m_CreationTime
+		|| wfdLength.QuadPart != m_Length)
 	{
 		return FileTimeChanged;
 	}
@@ -663,42 +678,55 @@ FileCheckResult FileItem::ReloadIfChanged()
 {
 	CString s = GetFullName();
 	WIN32_FIND_DATA wfd;
-	HANDLE hFind = FindFirstFile(s, & wfd);
-	if (INVALID_HANDLE_VALUE == hFind
-		|| NULL == hFind)
+	HANDLE hFind = FindFirstFile(s, &wfd);
+	if (INVALID_HANDLE_VALUE == hFind)
 	{
 		Unload();
 		return FileDeleted;
 	}
 	FindClose(hFind);
+
+	if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	{
+		Unload();
+		return FileDeleted;
+	}
+
 	ULARGE_INTEGER wfdLastWriteTime;
 	wfdLastWriteTime.LowPart = wfd.ftLastWriteTime.dwLowDateTime;
 	wfdLastWriteTime.HighPart = wfd.ftLastWriteTime.dwHighDateTime;
 
-	if (wfdLastWriteTime.QuadPart != m_LastWriteTime)
-	{
-		Unload();
-		m_LastWriteTime = wfdLastWriteTime.QuadPart;
-		m_Length = wfd.nFileSizeLow | ((ULONGLONG)wfd.nFileSizeHigh << 32);
-		m_bMd5Calculated = false;
-		if ((m_Attributes & FILE_ATTRIBUTE_DIRECTORY) !=
-			(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-		{
-			m_Attributes = wfd.dwFileAttributes;
-			return FileDeleted;
-		}
-		m_Attributes = wfd.dwFileAttributes;
+	ULARGE_INTEGER wfdCreationTime;
+	wfdCreationTime.LowPart = wfd.ftCreationTime.dwLowDateTime;
+	wfdCreationTime.HighPart = wfd.ftCreationTime.dwHighDateTime;
 
-		if (Load())
-		{
-			return FileTimeChanged;
-		}
-		else
-		{
-			return FileDeleted;
-		}
+	LARGE_INTEGER wfdLength;
+	wfdLength.LowPart = wfd.nFileSizeLow;
+	wfdLength.HighPart = wfd.nFileSizeHigh;
+
+	if (wfdLastWriteTime.QuadPart == m_LastWriteTime
+		&& wfdCreationTime.QuadPart == m_CreationTime
+		&& wfdLength.QuadPart == m_Length)
+	{
+		return FileUnchanged;
 	}
-	return FileUnchanged;
+
+	Unload();
+	m_LastWriteTime = wfdLastWriteTime.QuadPart;
+	m_CreationTime = wfdCreationTime.QuadPart;
+	m_Length = wfdLength.QuadPart;
+	m_bMd5Calculated = false;
+
+	m_Attributes = wfd.dwFileAttributes;
+
+	if (Load())
+	{
+		return FileTimeChanged;
+	}
+	else
+	{
+		return FileDeleted;
+	}
 }
 
 CSimpleCriticalSection FileItem::m_Cs;
@@ -3830,7 +3858,15 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 					&& (pFile1->GetLastWriteTime() !=
 						pInsertBefore->pFirstFile->GetLastWriteTime()
 						|| pFile2->GetLastWriteTime() !=
-						pInsertBefore->pSecondFile->GetLastWriteTime()))
+						pInsertBefore->pSecondFile->GetLastWriteTime()
+						|| pFile1->GetCreationTime() !=
+						pInsertBefore->pFirstFile->GetCreationTime()
+						|| pFile2->GetCreationTime() !=
+						pInsertBefore->pSecondFile->GetCreationTime()
+						|| pFile1->GetFileLength() !=
+						pInsertBefore->pFirstFile->GetFileLength()
+						|| pFile2->GetFileLength() !=
+						pInsertBefore->pSecondFile->GetFileLength()))
 				{
 					// files times changed only
 					pInsertBefore->m_bChanged = true;
@@ -3845,6 +3881,8 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 					pInsertBefore->pSecondFile = pFile2;
 
 					if (pFile2->GetLastWriteTime() == tmp->GetLastWriteTime()
+						&& pFile2->GetCreationTime() == tmp->GetCreationTime()
+						&& pFile2->GetFileLength() == tmp->GetFileLength()
 						&& tmp->m_bMd5Calculated)
 					{
 						// copy the calculated MD5 over
@@ -3861,6 +3899,8 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 					pInsertBefore->pFirstFile = pFile1;
 
 					if (pFile1->GetLastWriteTime() == tmp->GetLastWriteTime()
+						&& pFile1->GetCreationTime() == tmp->GetCreationTime()
+						&& pFile1->GetFileLength() == tmp->GetFileLength()
 						&& tmp->m_bMd5Calculated)
 					{
 						// copy the calculated MD5 over

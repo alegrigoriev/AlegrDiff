@@ -408,9 +408,7 @@ void CAlegrDiffApp::OnFileComparedirectories()
 
 CDocument * CAlegrDiffApp::OpenFilePairView(FilePair * pPair)
 {
-	if ((pPair->pFirstFile != NULL && pPair->pFirstFile->IsFolder())
-		|| (pPair->pSecondFile != NULL && pPair->pSecondFile->IsFolder())
-		|| (pPair->pSecondFile == NULL && pPair->pFirstFile != NULL && pPair->pFirstFile->IsPhantomFile()))
+	if (!pPair->HasContents())
 	{
 		// the file is not a real file, can't open
 		return NULL;
@@ -682,13 +680,11 @@ void AFXAPI AbbreviateName(LPTSTR lpszCanon, int cchMax, BOOL bAtLeastName)
 
 void ModifyOpenFileMenu(CCmdUI* pCmdUI, class FileItem * pFile, UINT FormatID, UINT DisabledItemID)
 {
-	if (NULL == pFile || pFile->IsFolder() || pFile->IsPhantomFile())
+	if (!pFile->HasContents())
 	{
 		CString s;
 		s.LoadString(DisabledItemID);
 		pCmdUI->SetText(s);
-		// this works, too, but is a bit obscure
-		//pCmdUI->SetText(LPCTSTR(CString().LoadString(DisabledItemID)));
 		pCmdUI->Enable(FALSE);
 		return;
 	}

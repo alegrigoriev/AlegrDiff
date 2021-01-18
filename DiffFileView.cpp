@@ -369,8 +369,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 			pDC->MoveTo(PosX - 1, ur.top);
 			pDC->LineTo(PosX - 1, ur.bottom);
 
-			if (NULL != pFilePair->pFirstFile
-				&& NULL != pFilePair->pSecondFile
+			if (pFilePair->CanCompare()
 				&& 1 == m_NumberOfPanes)
 			{
 				pDC->MoveTo(m_LineNumberMarginWidth / 2 - 1, ur.top);
@@ -469,8 +468,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 					pDC->SetBkColor(pApp->m_TextBackgroundColor);
 					pDC->SelectObject( & pApp->m_NormalFont);
 
-					if (NULL == pFilePair->pFirstFile
-						|| NULL == pFilePair->pSecondFile)
+					if (!pFilePair->CanCompare())
 					{
 						s.Format(_T("%d"), pPair->pFirstLine->GetLineNumber() + 1);
 						pDC->SetTextColor(TextColor);
@@ -1413,8 +1411,7 @@ void CDiffFileView::OnMetricsChange()
 			nNumChars = 7;
 		}
 		m_LineNumberMarginWidth = CharWidth() * nNumChars + 1;
-		if (pFilePair->pFirstFile != NULL
-			&& pFilePair->pSecondFile != NULL
+		if (pFilePair->CanCompare()
 			// two files, one pane
 			&& 1 == m_NumberOfPanes)
 		{
@@ -1822,11 +1819,7 @@ bool CDiffFileView::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvo
 		dlg.m_bWholeWord = pApp->m_bFindWholeWord;
 		dlg.m_SearchScope = SearchScope;
 
-		FilePair * pPair = GetFilePair();
-		if (NULL == pPair->pFirstFile
-			|| pPair->pFirstFile->IsPhantomFile()
-			|| NULL == pPair->pSecondFile
-			|| pPair->pSecondFile->IsPhantomFile())
+		if (!GetFilePair()->CanCompare())
 		{
 			dlg.m_SearchScope = -1;
 		}
@@ -1904,8 +1897,7 @@ void CDiffFileView::OnEditGotoline()
 	dlg.m_CombinedFileNumLines = (UINT)pFilePair->m_LinePairs.size();
 	dlg.m_GoToLineFileSelection = pApp->m_GoToLineFileSelection;
 
-	if (NULL == pFilePair->pFirstFile
-		|| NULL == pFilePair->pSecondFile
+	if (!pFilePair->CanCompare()
 		|| pFilePair->pFirstFile == pFilePair->pSecondFile)
 	{
 		dlg.m_bSingleFile = TRUE;
@@ -2111,10 +2103,8 @@ void CDiffFileView::OnActivateFrame(UINT nState, CFrameWnd* pDeactivateFrame)
 void CDiffFileView::OnViewSideBySide()
 {
 	ThisDoc * pDoc = GetDocument();
-	FilePair * pFilePair = GetFilePair();
 
-	if (pFilePair->pFirstFile != NULL
-		&& pFilePair->pSecondFile != NULL)
+	if (GetFilePair()->CanCompare())
 	{
 		if (2 == m_NumberOfPanes)
 		{
@@ -2134,10 +2124,7 @@ void CDiffFileView::OnViewSideBySide()
 
 void CDiffFileView::OnUpdateViewSideBySide(CCmdUI *pCmdUI)
 {
-	FilePair * pFilePair = GetFilePair();
-
-	if (pFilePair->pFirstFile != NULL
-		&& pFilePair->pSecondFile != NULL)
+	if (GetFilePair()->CanCompare())
 	{
 		pCmdUI->Enable(TRUE);
 		pCmdUI->SetCheck(m_NumberOfPanes > 1);

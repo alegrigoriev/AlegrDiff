@@ -2240,16 +2240,14 @@ void CTextFilePairDoc::OnViewAsBinary()
 	pPair->Reference();
 	OnCloseDocument();
 
-	if (NULL == pPair->pFirstFile
-		|| !pPair->pFirstFile->IsPhantomFile())
+	if (pPair->CanCompare())
 	{
 		pPair->SetComparisonResult(pPair->ResultUnknown);
 	}
 
 	pPair->UnloadFiles(true);
 
-	if (NULL != pPair->pFirstFile
-		&& !pPair->pFirstFile->IsPhantomFile())
+	if (pPair->pFirstFile->HasContents())
 	{
 		pPair->pFirstFile->SetBinary();
 	}

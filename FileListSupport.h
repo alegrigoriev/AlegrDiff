@@ -316,6 +316,12 @@ public:
 		return m_FileType == FileTypeDirectory;
 	}
 
+	bool HasContents() const noexcept
+	{
+		// Return true if refers to a real file
+		return this != nullptr && !IsFolder() && !IsPhantomFile();
+	}
+
 	bool IsUnicode() const noexcept
 	{
 		return m_FileEncoding == FileEncodingUTF8 || m_FileEncoding == FileEncodingUTF16LE || m_FileEncoding == FileEncodingUTF16BE;
@@ -608,6 +614,21 @@ public:
 	{
 		return (pFirstFile != NULL && pFirstFile->IsBinary())
 			|| (pSecondFile != NULL && pSecondFile->IsBinary());
+	}
+
+	bool HasContents() const noexcept
+	{
+		// At least one FileItem refers to a real file
+		return pFirstFile->HasContents()
+				|| pSecondFile->HasContents();
+	}
+
+	bool CanCompare() const noexcept
+	{
+		// Both FileItem refers to a real file
+		return this != nullptr
+				&& pFirstFile->HasContents()
+				&& pSecondFile->HasContents();
 	}
 
 	bool FilesAreDifferent() const noexcept

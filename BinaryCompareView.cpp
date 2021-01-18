@@ -180,13 +180,12 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 
 			if (((1 == m_NumberOfPanes && m_bShowSecondFile)
 					|| (pane >= 1))
-				|| NULL == pFilePair->pFirstFile
-				|| pFilePair->pFirstFile->IsPhantomFile())
+				|| !pFilePair->pFirstFile->HasContents())
 			{
 				pFile = pFilePair->pSecondFile;
 
 				pOtherFile = pFilePair->pFirstFile;
-				if (NULL != pOtherFile && pOtherFile->IsPhantomFile())
+				if (!pOtherFile->HasContents())
 				{
 					pOtherFile = NULL;
 				}
@@ -199,10 +198,6 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 				pFile = pFilePair->pFirstFile;
 
 				pOtherFile = pFilePair->pSecondFile;
-				if (NULL != pOtherFile && pOtherFile->IsPhantomFile())
-				{
-					pOtherFile = NULL;
-				}
 
 				OtherColor = pApp->m_ErasedTextColor;
 				AlternateColor = pApp->m_AddedTextColor;
@@ -1665,9 +1660,7 @@ void CBinaryCompareView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 
 void CBinaryCompareView::OnBindiffShowfirstfile()
 {
-	FilePair * pPair = GetFilePair();
-	if (NULL != pPair->pFirstFile
-		&& NULL != pPair->pSecondFile)
+	if (GetFilePair()->CanCompare())
 	{
 		m_bShowSecondFile = FALSE;
 		Invalidate();
@@ -1679,9 +1672,7 @@ void CBinaryCompareView::OnUpdateBindiffShowfirstfile(CCmdUI *pCmdUI)
 	FilePair * pPair = GetFilePair();
 	if (1 == m_NumberOfPanes)
 	{
-		if (NULL != pPair->pFirstFile
-			&& !pPair->pFirstFile->IsPhantomFile()
-			&& NULL != pPair->pSecondFile)
+		if (pPair->CanCompare())
 		{
 			pCmdUI->Enable(TRUE);
 			pCmdUI->SetRadio( ! m_bShowSecondFile);
@@ -1701,9 +1692,7 @@ void CBinaryCompareView::OnUpdateBindiffShowfirstfile(CCmdUI *pCmdUI)
 
 void CBinaryCompareView::OnBindiffShow2ndfile()
 {
-	FilePair * pPair = GetFilePair();
-	if (NULL != pPair->pFirstFile
-		&& NULL != pPair->pSecondFile)
+	if (GetFilePair()->CanCompare())
 	{
 		m_bShowSecondFile = TRUE;
 		Invalidate();
@@ -1715,9 +1704,7 @@ void CBinaryCompareView::OnUpdateBindiffShow2ndfile(CCmdUI *pCmdUI)
 	FilePair * pPair = GetFilePair();
 	if (1 == m_NumberOfPanes)
 	{
-		if (NULL != pPair->pFirstFile
-			&& !pPair->pSecondFile->IsPhantomFile()
-			&& NULL != pPair->pSecondFile)
+		if (pPair->CanCompare())
 		{
 			pCmdUI->Enable(TRUE);
 			pCmdUI->SetRadio(m_bShowSecondFile);
@@ -1953,10 +1940,7 @@ int CBinaryCompareView::GetPaneWidth()
 
 void CBinaryCompareView::OnViewSideBySide()
 {
-	FilePair * pFilePair = GetFilePair();
-
-	if (pFilePair->pFirstFile != NULL
-		&& pFilePair->pSecondFile != NULL)
+	if (GetFilePair()->CanCompare())
 	{
 		if (2 == m_NumberOfPanes)
 		{
@@ -1977,11 +1961,7 @@ void CBinaryCompareView::OnViewSideBySide()
 
 void CBinaryCompareView::OnUpdateViewSideBySide(CCmdUI *pCmdUI)
 {
-	FilePair * pFilePair = GetFilePair();
-
-	if (pFilePair->pFirstFile != NULL && !pFilePair->pFirstFile->IsPhantomFile()
-		&& pFilePair->pSecondFile != NULL
-		&& !pFilePair->pSecondFile->IsPhantomFile())
+	if (GetFilePair()->CanCompare())
 	{
 		pCmdUI->Enable(TRUE);
 		pCmdUI->SetCheck(m_NumberOfPanes > 1);

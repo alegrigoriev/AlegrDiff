@@ -378,8 +378,7 @@ void CBinaryCompareDoc::OnViewViewastextfiles()
 	pPair->Reference();
 	OnCloseDocument();
 
-	if (NULL == pPair->pFirstFile
-		|| !pPair->pFirstFile->IsPhantomFile())
+	if (pPair->CanCompare())
 	{
 		pPair->SetComparisonResult(pPair->ResultUnknown);
 	}
@@ -388,8 +387,7 @@ void CBinaryCompareDoc::OnViewViewastextfiles()
 
 	CString sCFilesPattern(PatternToMultiCString(GetApp()->m_sCppFilesFilter));
 
-	if (NULL != pPair->pFirstFile
-		&& !pPair->pFirstFile->IsPhantomFile())
+	if (pPair->pFirstFile->HasContents())
 	{
 		if (MultiPatternMatches(pPair->pFirstFile->GetName(), sCFilesPattern))
 		{

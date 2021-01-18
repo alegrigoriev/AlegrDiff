@@ -1724,7 +1724,7 @@ FilePair::~FilePair()
 
 CString FilePair::GetTitle() const
 {
-	if (NULL != pFirstFile && !pFirstFile->IsPhantomFile())
+	if (pFirstFile->HasContents())
 	{
 		CString title = pFirstFile->GetFullName();
 		if (NULL != pSecondFile)
@@ -2245,13 +2245,13 @@ bool FilePair::LoadFiles()
 		return true;
 	}
 	bool result = true;
-	if (NULL != pFirstFile)
+	if (pFirstFile->HasContents())
 	{
-		result = pFirstFile->IsPhantomFile() || (pFirstFile->Load() && result);
+		result = pFirstFile->Load();
 	}
-	if (NULL != pSecondFile)
+	if (result && NULL != pSecondFile)
 	{
-		result = pSecondFile->Load() && result;
+		result = pSecondFile->Load();
 	}
 	if ( ! result)
 	{
@@ -2361,35 +2361,30 @@ FilePair::eFileComparisionResult FilePair::CompareFiles(class CProgressDialog * 
 		return ResultUnknown;
 	}
 	eFileComparisionResult result = ResultUnknown;
-	if (NULL != pFirstFile && !pFirstFile->IsPhantomFile()
-		&& NULL != pSecondFile && !pFirstFile->IsPhantomFile())
+	if (CanCompare())
 	{
 		result = CompareTextFiles(pProgressDialog);
 	}
-	else
+	else if (HasContents())
 	{
 		// just build the line array
-		FileItem * pFile = pFirstFile;
-		result = OnlyFirstFile;
+		FileItem * pFile = pSecondFile;
+		result = OnlySecondFile;
 		if (NULL == pFile)
 		{
-			pFile = pSecondFile;
-			result = OnlySecondFile;
+			pFile = pFirstFile;
+			result = OnlyFirstFile;
 		}
-		else if (pFile->IsPhantomFile())
+		else if (pFirstFile->IsPhantomFile())
 		{
-			pFile = pSecondFile;
 			// keep previous result
 			result = m_ComparisonResult;
 		}
 
-		if (NULL != pFile)
+		m_LinePairs.resize(pFile->GetNumLines());
+		for (unsigned i = 0; i < m_LinePairs.size(); i++)
 		{
-			m_LinePairs.resize(pFile->GetNumLines());
-			for (unsigned i = 0; i < m_LinePairs.size(); i++)
-			{
-				m_LinePairs[i] = new LinePair(pFile->GetLine(i));
-			}
+			m_LinePairs[i] = new LinePair(pFile->GetLine(i));
 		}
 	}
 

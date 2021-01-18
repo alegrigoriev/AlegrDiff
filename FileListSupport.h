@@ -828,11 +828,32 @@ public:
 
 private:
 
+	/*
+	* The pair list uses sorted directories (dictionary) of all filenames and full directory names
+	* for faster sorting of full path lists
+	* First, the file lists are added to the dictionaries by calling AddToDictionary.
+	* Then the nodes in the dictionaries are numbered by callind ::UpdateFileItemTreeNumbering
+	* Before you delete a file list, call RemoveFromDictionary for all its items.
+	*/
 	void AddToDictionary(FileList const *list);
 	void RemoveFromDictionary(FileItem* pItem) noexcept;
-	void MergeFileListToTree(FileList *list, file_item_tree_t &Files);
+	/*
+	* FileListToTree replaces the tree with the contents of the supplied FileList
+	* Old contents of the tree is removed from dictionaries.
+	*/
+	void FileListToTree(FileList *list, file_item_tree_t &Tree);
 
+	/*
+	* NameTree contains directory of all filenames in the first and second directory,
+	* including filenames of directories. Each item contains a count how many times the name appears.
+	*/
 	name_tree_t NameTree;
+	/*
+	* FullDirNameTree contains directory of all full directory names in the first and second directory.
+	* Each item contains a count how many times the name appears.
+	* Use AddToDictionary to add a list to the dictionary.
+	* Use RemoveFromDictionary to remove a list from the dictionary
+	*/
 	full_dirname_tree_t FullDirNameTree;
 
 	file_item_tree_t Files1;

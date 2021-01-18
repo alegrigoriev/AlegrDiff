@@ -3598,10 +3598,18 @@ void FilePairList::AddToDictionary(FileList const *list)
 	}
 }
 
-void FilePairList::MergeFileListToTree(FileList *list, file_item_tree_t &Files)
+void FilePairList::FileListToTree(FileList *list, file_item_tree_t &Tree)
 {
-	// Build a tree from FileList
-	file_item_tree_t ListTree;
+	// Delete the original tree. Remove the items from dictionaries first.
+	// Note that the new items has been added to the dictionary already,
+	// and the sort sequence numbers has been updated
+	for (auto pItem : Tree)
+	{
+		RemoveFromDictionary(pItem);
+	}
+	Tree.reset();
+
+	// Build a new tree from FileList
 	for (FileItem * pItem = list->Detach(); pItem != nullptr; )
 	{
 		// Update the file item with the dictionary numbering
@@ -3617,12 +3625,12 @@ void FilePairList::MergeFileListToTree(FileList *list, file_item_tree_t &Files)
 		}
 
 		pItem->m_NameSortNum = pItem->iNameInTree->SortSequence;
-		auto ii = ListTree.insert(pItem, pItem);
+		auto ii = Tree.insert(pItem, pItem);
 		// delete the item if it's duplicate (if the fingerprint file is malformed)
 		if (*ii != pItem)
 		{
 			// this was a duplicate
-			FileItem * tmp = pItem;
+			FileItem* tmp = pItem;
 			pItem = pItem->m_pNext;
 
 			// put it back to the list, to be deleted by FileList destructor
@@ -3634,58 +3642,6 @@ void FilePairList::MergeFileListToTree(FileList *list, file_item_tree_t &Files)
 		else
 		{
 			pItem = pItem->m_pNext;
-		}
-	}
-
-	// merge the new tree and the original tree
-	for (auto i_new = ListTree.begin(), i_old = Files.begin(); ; )
-	{
-		// Compare: -1 if i_new < i_old, 1 if i_new > i_old
-		int compare = 0;
-		if (i_new == ListTree.end())
-		{
-			if (i_old == Files.end())
-			{
-				break;
-			}
-			compare = 1;
-		}
-		else if (i_old == Files.end())
-		{
-			compare = -1;
-		}
-		else
-		{
-			compare = Files.predicate()(i_new.key(), i_old.key());
-		}
-
-		if (compare < 0)
-		{
-			// 1. New FileItem is inserted into the "old" tree.
-			Files.insert(i_new.key(), *i_new);
-			i_new++;
-		}
-		else if (compare > 0)
-		{
-			// 3. Non - existing FileItem is removed from the old tree, but not deleted. It will be deleted when FilePair list is updated. It's removed from dictionary, though.
-			FileItem * pItem = *i_old;
-			// i_old needs to be post-incremented before it's erased:
-			Files.erase(i_old++);
-
-			RemoveFromDictionary(pItem);
-		}
-		else
-		{
-			// 2. Existing FileItem is removed from old tree, and removed from dictionary.
-			// It will be deleted when the file pair is updated
-			FileItem * pItem = *i_old;
-			Files.erase(i_old);
-			i_old = Files.insert(i_new.key(), *i_new);
-
-			RemoveFromDictionary(pItem);
-
-			++i_old;
-			++i_new;
 		}
 	}
 }
@@ -3713,9 +3669,13 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 {
 	bool NeedUpdateViews = false;
 
-	// we don't call FreeFilePairList, because we could be performing file list refresh
+	/*
+	* First, both lists are added to the dictionary, which maintains reference counts for each name
+	* Then, because new items may have been added to the dictionary, the sort sequence is renumbered.
+	* Since the sort numbering may have been changed, Files1 and Files2 trees are updated with the new numbering.
+	* Then Files1 and Files2 trees are replaced with the new lists
+	*/
 
-	// First, update dictionaries for both lists
 	if (List1 != nullptr)
 	{
 		AddToDictionary(List1);
@@ -3740,10 +3700,10 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 	// List1 is null if the fingerprint comparision is updated
 	if (List1 != nullptr)
 	{
-		MergeFileListToTree(List1, Files1);
+		FileListToTree(List1, Files1);
 	}
 
-	MergeFileListToTree(List2, Files2);
+	FileListToTree(List2, Files2);
 
 	// Lists for left and right files are sorted to 2 trees, and the common dictionary is updated.
 
@@ -4133,11 +4093,13 @@ void FilePairList::RemoveFromDictionary(FileItem *pItem) noexcept
 	{
 		FullDirNameTree.erase(pItem->iFullDirInTree);
 	}
+	pItem->iFullDirInTree = full_dirname_tree_t::iterator();
 
 	if (0 == --(pItem->iNameInTree->RefCount))
 	{
 		NameTree.erase(pItem->iNameInTree);
 	}
+	pItem->iNameInTree = name_tree_t::iterator();
 }
 
 int MultiStrDirComparePredicate::operator()(LPCTSTR pA, LPCTSTR pB) const

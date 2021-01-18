@@ -1392,6 +1392,10 @@ eLoadFolderResult FileList::LoadSubFolder(LPCTSTR Subdir,
 		{
 			pFile->SetCCpp();
 		}
+		else
+		{
+			pFile->SetText();
+		}
 		// add to the list
 		pFile->m_pNext = m_pList;
 		m_pList = pFile;

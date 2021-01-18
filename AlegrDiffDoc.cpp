@@ -360,28 +360,11 @@ void CTextFilePairDoc::SetFilePair(FilePair * pPair)
 	if (NULL != pPair)
 	{
 		pPair->Reference();
-		if (NULL != pPair->pFirstFile && !pPair->pFirstFile->IsPhantomFile())
-		{
-			CString title(pPair->pFirstFile->GetFullName());
-			if (NULL != pPair->pSecondFile)
-			{
-				title += " - ";
-				title += pPair->pSecondFile->GetFullName();
-			}
-			SetTitle(title);
-		}
-		else if (NULL != pPair->pSecondFile)
-		{
-			SetTitle(pPair->pSecondFile->GetFullName());
-		}
-		else
-		{
-			SetTitle(_T(""));
-		}
+
+		SetTitle(pPair->GetTitle());
 
 		if (pPair->m_LinePairs.empty())
 		{
-			//UpdateAllViews(NULL, 0);    // erase the views
 			((CFrameWnd*)AfxGetMainWnd())->SetMessageText(_T("Loading and comparing files..."));
 
 			CWaitCursor WaitCursor;

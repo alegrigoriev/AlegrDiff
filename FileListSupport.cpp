@@ -1690,6 +1690,26 @@ FilePair::~FilePair()
 	}
 }
 
+CString FilePair::GetTitle() const
+{
+	if (NULL != pFirstFile && !pFirstFile->IsPhantomFile())
+	{
+		CString title = pFirstFile->GetFullName();
+		if (NULL != pSecondFile)
+		{
+			title += " - ";
+			title += pSecondFile->GetFullName();
+		}
+		return title;
+	}
+	else if (NULL != pSecondFile)
+	{
+		return pSecondFile->GetFullName();
+	}
+
+	return CString();
+}
+
 int FilePairComparePredicate::Time1SortFunc(const FilePair * Pair1, const FilePair * Pair2)
 {
 	// NULL and directory file items are sorted AFTER non-NULL

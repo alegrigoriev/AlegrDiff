@@ -3847,32 +3847,18 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 			// name and directory is the same
 			// check if file times are the same, and both files exist/not exist
 
-			if ((nullptr != pFile1) == (nullptr != pInsertBefore->pFirstFile)
-				&& (nullptr != pFile2) == (nullptr != pInsertBefore->pSecondFile)
-				// also check to see if file types are the same (binary/text
-				&& ((nullptr == pFile1) || pFile1->IsBinary() == pInsertBefore->pFirstFile->IsBinary())
-				&& ((nullptr == pFile2) || pFile2->IsBinary() == pInsertBefore->pSecondFile->IsBinary()))
+			if (!FileItem::FileTypesChanged(pFile1, pInsertBefore->pFirstFile)
+				&& !FileItem::FileTypesChanged(pFile2, pInsertBefore->pSecondFile))
 			{
 				// This FilePair will be reused
-				if (pFile1 != NULL && pFile2 != NULL
-					&& (pFile1->GetLastWriteTime() !=
-						pInsertBefore->pFirstFile->GetLastWriteTime()
-						|| pFile2->GetLastWriteTime() !=
-						pInsertBefore->pSecondFile->GetLastWriteTime()
-						|| pFile1->GetCreationTime() !=
-						pInsertBefore->pFirstFile->GetCreationTime()
-						|| pFile2->GetCreationTime() !=
-						pInsertBefore->pSecondFile->GetCreationTime()
-						|| pFile1->GetFileLength() !=
-						pInsertBefore->pFirstFile->GetFileLength()
-						|| pFile2->GetFileLength() !=
-						pInsertBefore->pSecondFile->GetFileLength()))
+				bool File1Changed = FileItem::FilesChanged(pFile1, pInsertBefore->pFirstFile);
+				bool File2Changed = FileItem::FilesChanged(pFile2, pInsertBefore->pSecondFile);
+
+				if (File1Changed || File2Changed)
 				{
-					// files times changed only
 					pInsertBefore->m_bChanged = true;
 					pInsertBefore->SetComparisonResult(pInsertBefore->ResultUnknown);
 					NeedUpdateViews = true;
-
 				}
 
 				if (pFile2 != nullptr)
@@ -3880,9 +3866,7 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 					FileItem* tmp = pInsertBefore->pSecondFile;
 					pInsertBefore->pSecondFile = pFile2;
 
-					if (pFile2->GetLastWriteTime() == tmp->GetLastWriteTime()
-						&& pFile2->GetCreationTime() == tmp->GetCreationTime()
-						&& pFile2->GetFileLength() == tmp->GetFileLength()
+					if (!File2Changed
 						&& tmp->m_bMd5Calculated)
 					{
 						// copy the calculated MD5 over
@@ -3898,9 +3882,7 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 					FileItem* tmp = pInsertBefore->pFirstFile;
 					pInsertBefore->pFirstFile = pFile1;
 
-					if (pFile1->GetLastWriteTime() == tmp->GetLastWriteTime()
-						&& pFile1->GetCreationTime() == tmp->GetCreationTime()
-						&& pFile1->GetFileLength() == tmp->GetFileLength()
+					if (!File1Changed
 						&& tmp->m_bMd5Calculated)
 					{
 						// copy the calculated MD5 over

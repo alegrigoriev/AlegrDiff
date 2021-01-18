@@ -3883,8 +3883,7 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 
 			if (pFile2->IsFolder())
 			{
-				if (pParentDir != NULL
-					&& pParentDir->IsAlone())
+				if (pParentDir->IsFolderAlone())
 				{
 					result = FilePair::SubdirsParentInSecondDirOnly;
 				}
@@ -3893,10 +3892,9 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 					result = FilePair::OnlySecondDirectory;
 				}
 
-				pFile2->SetAlone(true);
+				pFile2->SetFolderAlone(true);
 			}
-			else if (pParentDir != NULL
-					&& pParentDir->IsAlone())
+			else if (pParentDir->IsFolderAlone())
 			{
 				result = FilePair::FileFromSubdirInSecondDirOnly;
 			}
@@ -3927,8 +3925,7 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 			}
 			else if (pFile1->IsFolder())
 			{
-				if (pParentDir != NULL
-					&& pParentDir->IsAlone())
+				if (pParentDir->IsFolderAlone())
 				{
 					result = FilePair::SubdirsParentInFirstDirOnly;
 				}
@@ -3937,10 +3934,9 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 					result = FilePair::OnlyFirstDirectory;
 				}
 
-				pFile1->SetAlone(true);
+				pFile1->SetFolderAlone(true);
 			}
-			else if(pParentDir != NULL
-					&& pParentDir->IsAlone())
+			else if(pParentDir->IsFolderAlone())
 			{
 				result = FilePair::FileFromSubdirInFirstDirOnly;
 			}
@@ -3959,8 +3955,9 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 
 			if (pFile1->IsFolder())
 			{
-				result = pPair->FilesIdentical;
-				pFile1->SetAlone(false);
+				result = pPair->DirectoriesBothPresent;
+				pFile1->SetFolderAlone(false);
+				pFile2->SetFolderAlone(false);
 			}
 			else if (DoNotCompareContents
 					&& pFile1->GetFileLength() == pFile2->GetFileLength()

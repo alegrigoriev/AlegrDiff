@@ -82,7 +82,7 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_NumberOfIdenticalLines(5),
 	m_MinPercentWeakIdenticalLines(10),
 	m_PercentsOfLookLikeDifference(30),
-	m_ShowFilesMask(0xFFFFFFFF),
+	m_ShowFilesMask(0xFFFFFFFF & ~(1 << FilePair::DirectoriesBothPresent)),
 
 	m_RecentFolders( & Profile, _T("History"), _T("dir%d"), 20),
 	m_FindHistory( & Profile, _T("History"), _T("find%d"), 15, CStringHistory::CaseSensitive),

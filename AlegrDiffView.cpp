@@ -137,11 +137,11 @@ inline void CAlegrDiffView::PrintColumnOrder()
 }
 
 CAlegrDiffView::CAlegrDiffView() noexcept
-	: m_ShowFilesMask(~(ULONG)(ShowFileFromSubdirInFirstDirOnly | ShowFileFromSubdirInSecondDirOnly))
-	, m_PresentFilesMask(0)
+	: m_PresentFilesMask(0)
 {
 	CThisApp const * const pApp = GetApp();
-	m_ShowFilesMask = pApp->m_ShowFilesMask;
+	m_ShowFilesMask = pApp->m_ShowFilesMask & ~(1 << FilePair::DirectoriesBothPresent);
+
 	if (m_ShowFilesMask & ShowIdenticalFiles)
 	{
 		// add missing bit in this mask
@@ -412,14 +412,6 @@ void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, FilePa
 	{
 		if (pPair->m_bDeleted)
 		{
-			continue;
-		}
-
-		if (NULL != pPair->pFirstFile
-			&& NULL != pPair->pSecondFile
-			&& pPair->pFirstFile->IsFolder())
-		{
-			// skip directories present on both sides
 			continue;
 		}
 

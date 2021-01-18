@@ -485,6 +485,24 @@ public:
 	FileItem * m_pNext;
 	FileItem* m_pParentDir;
 
+	static bool FileTypesChanged(FileItem const* Item1, FileItem const* Item2) noexcept
+	{
+		// returns 'true' if only one of the files is not present,
+		// or both present but file type changed.
+		return (nullptr != Item1 || nullptr != Item2)
+			&& (nullptr == Item1 || nullptr == Item2
+				|| Item1->IsBinary() != Item2->IsBinary());
+	}
+	static bool FilesChanged(FileItem const* Item1, FileItem const* Item2) noexcept
+	{
+		// returns 'true' if either creation or modification time changed,
+		// or filesystem ID changed.
+		return Item1 != nullptr && Item2 != nullptr
+				&& (Item1->GetLastWriteTime() != Item2->GetLastWriteTime()
+					|| Item1->GetCreationTime() != Item2->GetCreationTime()
+					|| Item1->GetFileLength() != Item2->GetFileLength());
+	}
+
 	// These functions return 1 if Item1 is greater than Item2
 	static bool NameSortFunc(FileItem const * Item1, FileItem const * Item2);
 	static bool DirNameSortFunc(FileItem const * Item1, FileItem const * Item2);

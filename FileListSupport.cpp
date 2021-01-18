@@ -3706,44 +3706,33 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 
 	// Lists for left and right files are sorted to 2 trees, and the common dictionary is updated.
 
-	//    ULONG DirectoryNameIndex = 0;
-	//    ULONG FileNameIndex = 0;
 	FilePair * pInsertBefore = First();
 
 	for (auto pf1 = Files1.begin(), pf2 = Files2.begin(); ; )
 	{
-		FileItem * pParentDir;
 		FileItem * pFile1 = nullptr;
 		FileItem * pFile2 = nullptr;
-		FilePair::eFileComparisionResult result;
+		FilePair::eFileComparisionResult result = FilePair::ResultUnknown;
+		FileItem* pItem1 = nullptr;
 
+		// Find pf1 and pf2 pointing to the matching directory/name
 		if (pf1 == Files1.end())
 		{
 			if (pf2 == Files2.end())
 			{
-				if (IsEnd(pInsertBefore))
-				{
-					break;
-				}
-
-				// Mark the rest of the pair list as deleted. The file items are already removed from dictionaries
-				NeedUpdateViews = true;
-				do
-				{
-					pInsertBefore->m_bDeleted = true;
-					NumFilePairs--;
-					pInsertBefore = Next(pInsertBefore);
-				} while (NotEnd(pInsertBefore));
-
 				break;
 			}
 
+			// First list is done, take items from the second list
 			pFile2 = *pf2;
+			pItem1 = pFile2;
 			++pf2;
 		}
 		else if (pf2 == Files2.end())
 		{
+			// Second list is done, take items from the first list
 			pFile1 = *pf1;
+			pItem1 = pFile1;
 			++pf1;
 		}
 		else
@@ -3755,42 +3744,44 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 			{
 				pFile1 = nullptr;
 				++pf2;
+				pItem1 = pFile2;
 			}
 			else if (comparison < 0)
 			{
 				pFile2 = nullptr;
 				++pf1;
+				pItem1 = pFile1;
 			}
 			else
 			{
 				++pf2;
 				++pf1;
+				pItem1 = pFile1;
 			}
 		}
+
+		// if pFile1 and pFile2 both non-NULL, they point to matching elements.
 
 		// see if the next FilePair matches this pair of FileItem
 		// FilePair list goes in ascending order
 		// The source FileItem lists also go in ascending order
-		FileItem * pItem1 = pFile1;
-		if (NULL == pItem1)
-		{
-			pItem1 = pFile2;
-		}
+		FilePair* pPair = NULL;
 
 		while (NotEnd(pInsertBefore))
 		{
 			// check if we insert or remove items, or the item is duplicate
 
-			FileItem * pItem2 = pInsertBefore->pFirstFile;
+			FileItem * pItem2 = pInsertBefore->pSecondFile;
 			if (NULL == pItem2)
 			{
-				pItem2 = pInsertBefore->pSecondFile;
+				pItem2 = pInsertBefore->pFirstFile;
 			}
 
 			int comparison = FileItem::DirNameCompare(pItem1, pItem2);
 			if (comparison > 0)
 			{
 				pInsertBefore->m_bDeleted = true;
+				NumFilePairs--;
 				NeedUpdateViews = true;
 				pInsertBefore = pInsertBefore->Next();
 				continue;
@@ -3815,9 +3806,13 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 
 				if (File1Changed || File2Changed)
 				{
+					// files times changed only
 					pInsertBefore->m_bChanged = true;
-					pInsertBefore->SetComparisonResult(pInsertBefore->ResultUnknown);
 					NeedUpdateViews = true;
+				}
+				else
+				{
+					result = pInsertBefore->GetComparisonResult();
 				}
 
 				if (pFile2 != nullptr)
@@ -3851,8 +3846,7 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 					delete tmp;
 				}
 
-				pFile1 = nullptr;
-				pFile2 = nullptr;
+				pPair = pInsertBefore;
 			}
 			else
 			{
@@ -3873,19 +3867,19 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 			break;
 		}
 
-		if (pFile1 == nullptr
-			&& pFile2 == nullptr)
+		if (pPair == nullptr)
 		{
-			continue;
-		}
+			pPair = new FilePair(pFile1, pFile2);
 
-		FilePair * pPair = new FilePair(pFile1, pFile2);
+			pInsertBefore->InsertAsPrevItem(pPair);
+			NumFilePairs++;
+		}
 
 		if (pFile1 == nullptr)
 		{
 			ASSERT(!pFile2->IsPhantomFile());
 
-			pParentDir = pFile2->m_pParentDir;
+			FileItem* pParentDir = pFile2->m_pParentDir;
 
 			if (pFile2->IsFolder())
 			{
@@ -3917,7 +3911,7 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 		}
 		else if (pFile2 == nullptr)
 		{
-			pParentDir = pFile1->m_pParentDir;
+			FileItem* pParentDir = pFile1->m_pParentDir;
 
 			if (pFile1->IsPhantomFile())
 			{
@@ -3955,7 +3949,6 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 				result = FilePair::OnlyFirstFile;
 			}
 
-
 			if (DEBUG_FILE_PAIR_LIST) TRACE(_T("File \"%s\" exists only in dir \"%s\"\n"),
 											LPCTSTR(pFile1->GetName()),
 											LPCTSTR(pFile1->GetBasedir() + pFile1->GetSubdir()));
@@ -3975,10 +3968,6 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 			{
 				result = pPair->FilesAttributesIdentical;
 			}
-			else
-			{
-				result = pPair->ResultUnknown;
-			}
 
 			if (DEBUG_FILE_PAIR_LIST) TRACE(_T("File \"%s\" exists in both \"%s\" and \"%s\"\n"),
 											LPCTSTR(pFile1->GetName()),
@@ -3987,8 +3976,15 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 		}
 
 		pPair->SetComparisonResult(result);
-		pInsertBefore->InsertAsPrevItem(pPair);
-		NumFilePairs++;
+	}
+
+	// Mark the rest of the pair list as deleted.
+	// The file items are already removed from dictionaries in FileListToTree, but they keep their numbering
+	for ( ; NotEnd(pInsertBefore); pInsertBefore = Next(pInsertBefore))
+	{
+		pInsertBefore->m_bDeleted = true;
+		NumFilePairs--;
+		NeedUpdateViews = true;
 	}
 
 	return NeedUpdateViews;
@@ -4044,6 +4040,7 @@ void FilePairList::RemovePair(FilePair * pPairToDelete) noexcept
 			// First, remove they keys from the tree TODO
 			pPair->RemoveFromList();
 			pPair->Dereference();
+			NumFilePairs--;
 			break;
 		}
 	}

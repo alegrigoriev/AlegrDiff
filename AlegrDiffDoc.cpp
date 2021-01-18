@@ -1833,7 +1833,7 @@ BOOL CTextFilePairDoc::DoSaveMerged(BOOL bOpenResultFile)
 		SetModifiedFlag(FALSE);
 		if (bOpenResultFile)
 		{
-			pApp->OpenSingleFile(FileName);
+			pApp->OpenPairOrFile(FileName);
 		}
 		return TRUE;
 	}

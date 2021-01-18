@@ -728,58 +728,6 @@ void OpenFileForEditing(class FileItem * pFile)
 	ShellExecuteEx( & shex);
 }
 
-void CAlegrDiffApp::OpenSingleFile(LPCTSTR pName)
-{
-	WIN32_FIND_DATA wfd1;
-	HANDLE hFind = FindFirstFile(pName, & wfd1);
-	if (INVALID_HANDLE_VALUE == hFind
-		|| NULL == hFind)
-	{
-		return;
-	}
-	FindClose(hFind);
-
-	TCHAR FileDir1[MAX_PATH];
-	LPTSTR pFileName1 = FileDir1;
-	GetFullPathName(pName, MAX_PATH, FileDir1, & pFileName1);
-	if (NULL != pFileName1)
-	{
-		*pFileName1 = 0;
-	}
-
-	FilePair * pPair = new FilePair(new FileItem(&wfd1, FileDir1, "", NULL), nullptr);
-
-	if (MultiPatternMatches(wfd1.cFileName, PatternToMultiCString(m_sBinaryFilesFilter)))
-	{
-		pPair->pFirstFile->SetBinary();
-
-		CBinaryCompareDoc * pDoc = (CBinaryCompareDoc *)m_pBinaryDiffTemplate->OpenDocumentFile(NULL);
-		if (NULL != pDoc)
-		{
-			pDoc->SetFilePair(pPair);
-		}
-	}
-	else
-	{
-		if (MultiPatternMatches(wfd1.cFileName, PatternToMultiCString(m_sCppFilesFilter)))
-		{
-			pPair->pFirstFile->SetCCpp();
-		}
-		else
-		{
-			pPair->pFirstFile->SetText();
-		}
-
-		CFilePairDoc * pDoc = (CFilePairDoc *)m_pFileDiffTemplate->OpenDocumentFile(NULL);
-		if (NULL != pDoc)
-		{
-			pDoc->SetFilePair(pPair);
-		}
-	}
-	// SetFilePair references the pair
-	pPair->Dereference();
-}
-
 void CAlegrDiffApp::OnUpdateViewIgnoreWhitespaces(CCmdUI* pCmdUI)
 {
 	// if there is no handler, disable and uncheck

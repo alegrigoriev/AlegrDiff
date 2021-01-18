@@ -64,7 +64,6 @@ public:
 	void OpenPairOrFile(LPCTSTR pName1, LPCTSTR OPTIONAL pName2 = NULL);
 	void CompareDirectories(LPCTSTR dir1, LPCTSTR dir2, LPCTSTR filter = NULL);
 	void ParseCommandLine();
-	void OpenSingleFile(LPCTSTR pName);
 	void NotifyFilePairChanged(FilePair * pPair);
 
 	CApplicationProfile Profile;

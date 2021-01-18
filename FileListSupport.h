@@ -808,7 +808,6 @@ private:
 bool MatchWildcard(LPCTSTR name, LPCTSTR pattern);
 // Empty pattern never matches
 bool MultiPatternMatches(LPCTSTR name, LPCTSTR sPattern);
-CString MiltiSzToCString(LPCTSTR pMsz);
 CString PatternToMultiCString(LPCTSTR src);
 
 

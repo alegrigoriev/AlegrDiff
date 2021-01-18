@@ -95,17 +95,6 @@ CString PatternToMultiCString(LPCTSTR src)
 	return dst;
 }
 
-CString MiltiSzToCString(LPCTSTR pMsz)
-{
-	// find string length
-	int len;
-	// limit the string length to 64K
-	for (len = 0; ('\0' != pMsz[len] || '\0' != pMsz[len + 1]) && len < 65536; len++)
-	{
-	}
-	return CString(pMsz, len + 1);
-}
-
 bool MatchWildcard(LPCTSTR name, LPCTSTR pattern)
 {
 	// '?' corresponds to any character or no character,

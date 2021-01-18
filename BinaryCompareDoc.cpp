@@ -106,28 +106,9 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 	{
 		pPair->Reference();
 
-		if (NULL != pPair->pFirstFile && !pPair->pFirstFile->IsPhantomFile())
-		{
-			CString title(pPair->pFirstFile->GetFullName());
-			if (NULL != pPair->pSecondFile)
-			{
-				title += " - ";
-				title += pPair->pSecondFile->GetFullName();
-			}
-			SetTitle(title);
-		}
-		else if (NULL != pPair->pSecondFile)
-		{
-			CString title(pPair->pSecondFile->GetFullName());
-			SetTitle(title);
-		}
-		else
-		{
-			SetTitle(_T(""));
-		}
+		SetTitle(pPair->GetTitle());
 	}
 	m_CaretPos = 0;
-
 
 	SetCaretPosition(0, SetPositionCancelSelection | SetPositionMakeVisible);
 

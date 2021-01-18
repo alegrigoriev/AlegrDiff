@@ -578,6 +578,7 @@ public:
 	bool LoadFiles();
 	void UnloadFiles(bool ForceUnload = false) noexcept;
 	void FreeLinePairData();
+	CString GetTitle() const;
 
 	bool NeedBinaryComparison() const noexcept
 	{

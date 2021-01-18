@@ -1711,16 +1711,8 @@ void FilePair::Dereference() noexcept
 
 FilePair::~FilePair()
 {
-	m_LoadedCount = 0;
-	UnloadFiles(true);
-	if (NULL != pFirstFile)
-	{
-		delete pFirstFile;
-	}
-	if (NULL != pSecondFile)
-	{
-		delete pSecondFile;
-	}
+	delete pFirstFile;
+	delete pSecondFile;
 }
 
 CString FilePair::GetTitle() const
@@ -2271,7 +2263,7 @@ TextFilePair::~TextFilePair()
 	FreeLinePairData();
 }
 
-bool FilePair::UnloadFiles(bool ForceUnload) noexcept
+bool FilePair::CloseFiles(bool ForceUnload) noexcept
 {
 	if (!ForceUnload && --m_LoadedCount > 0)
 	{
@@ -2294,7 +2286,7 @@ bool FilePair::UnloadFiles(bool ForceUnload) noexcept
 
 bool TextFilePair::UnloadFiles(bool ForceUnload) noexcept
 {
-	if (!FilePair::UnloadFiles(ForceUnload))
+	if (!CloseFiles(ForceUnload))
 	{
 		return false;
 	}

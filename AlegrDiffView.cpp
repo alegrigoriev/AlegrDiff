@@ -463,10 +463,9 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 
 		if (ValidateFilePairIndex(pPair))
 		{
-			CString ComparisionResult = pPair->GetComparisonResultStr();
 			pListCtrl->SetItemText(pPair->m_ListSortOrder,
 									m_ColumnArray[ColumnComparisionResult],
-									ComparisionResult);
+									pPair->GetComparisonResultStr());
 		}
 
 		UpdateStatusText(WA_ACTIVE);
@@ -479,18 +478,30 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 		{
 			return;
 		}
-		FilePair const * const pPair = pArg->m_pPair;
+		FilePair * pPair = pArg->m_pPair;
 		if (nullptr == pPair)
 		{
 			return;
 		}
 
+		FilePair* const pNewPair = pArg->m_pNewPair;
+
 		if (ValidateFilePairIndex(pPair))
 		{
+			if (pNewPair != nullptr)
+			{
+				pNewPair->m_ListSortOrder = pPair->m_ListSortOrder;
+				m_PairArray[pPair->m_ListSortOrder] = pNewPair;
+				pPair->m_ListSortOrder = ULONG_MAX;
+
+				pPair = pNewPair;
+			}
 			SetListViewItem(pPair, pPair->m_ListSortOrder, false);
+			UpdateStatusText(WA_ACTIVE);
+
+			pArg->m_pPair = nullptr;
 		}
 
-		UpdateStatusText(WA_ACTIVE);
 		return;
 	}
 	else if (OnUpdateRebuildListView != lHint

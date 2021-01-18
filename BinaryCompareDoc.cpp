@@ -31,6 +31,7 @@ CBinaryCompareDoc::~CBinaryCompareDoc()
 {
 	if (NULL != m_pFilePair)
 	{
+		m_pFilePair->CloseFiles();
 		m_pFilePair->Dereference();
 	}
 }
@@ -51,7 +52,7 @@ void CBinaryCompareDoc::OnUpdateAllViews(CView* pSender,
 	}
 	else if (UpdateViewsCloseOpenFiles == lHint)
 	{
-		m_pFilePair->UnloadFiles(true); // force close
+		m_pFilePair->CloseFiles(true); // force close
 	}
 	else
 	{
@@ -377,42 +378,44 @@ void CBinaryCompareDoc::OnViewViewastextfiles()
 {
 	BinaryFilePair * pPair = GetFilePair();
 
-	pPair->Reference();
-	OnCloseDocument();
+	pPair->CloseFiles(true);
 
-	if (pPair->CanCompare())
-	{
-		pPair->SetComparisonResult(pPair->ResultUnknown);
-	}
-
-	pPair->UnloadFiles(true);
+	FileItem* pFirstFile = pPair->pFirstFile;
+	FileItem* pSecondFile = pPair->pSecondFile;
+	pPair->pFirstFile = nullptr;
+	pPair->pSecondFile = nullptr;
 
 	CString sCFilesPattern(PatternToMultiCString(GetApp()->m_sCppFilesFilter));
 
-	if (pPair->pFirstFile->HasContents())
+	if (pFirstFile->HasContents())
 	{
-		if (MultiPatternMatches(pPair->pFirstFile->GetName(), sCFilesPattern))
+		if (MultiPatternMatches(pFirstFile->GetName(), sCFilesPattern))
 		{
-			pPair->pFirstFile->SetCCpp();
+			pFirstFile->SetCCpp();
 		}
 		else
 		{
-			pPair->pFirstFile->SetText();
+			pFirstFile->SetText();
 		}
 	}
 
-	if (NULL != pPair->pSecondFile)
+	if (NULL != pSecondFile)
 	{
-		if (MultiPatternMatches(pPair->pSecondFile->GetName(), sCFilesPattern))
+		if (MultiPatternMatches(pSecondFile->GetName(), sCFilesPattern))
 		{
-			pPair->pSecondFile->SetCCpp();
+			pSecondFile->SetCCpp();
 		}
 		else
 		{
-			pPair->pSecondFile->SetText();
+			pSecondFile->SetText();
 		}
 	}
 
-	GetApp()->OpenFilePairView(pPair);
-	pPair->Dereference();
+	TextFilePair* pNewPair = new TextFilePair(pFirstFile, pSecondFile);
+
+	GetApp()->OpenFilePairView(pNewPair);
+	GetApp()->NotifyFilePairReplaced(pPair, pNewPair);
+
+	OnCloseDocument();
+	pNewPair->Dereference();
 }

@@ -317,7 +317,6 @@ CTextFilePairDoc::~CTextFilePairDoc()
 	{
 		m_pFilePair->UnloadFiles();
 		m_pFilePair->Dereference();
-		m_pFilePair = NULL;
 	}
 }
 
@@ -2231,25 +2230,27 @@ void CTextFilePairDoc::OnViewAsBinary()
 {
 	TextFilePair* pPair = GetFilePair();
 
-	pPair->Reference();
-	OnCloseDocument();
-
-	if (pPair->CanCompare())
-	{
-		pPair->SetComparisonResult(pPair->ResultUnknown);
-	}
-
 	pPair->UnloadFiles(true);
 
-	if (pPair->pFirstFile->HasContents())
+	FileItem* pFirstFile = pPair->pFirstFile;
+	FileItem* pSecondFile = pPair->pSecondFile;
+	pPair->pFirstFile = nullptr;
+	pPair->pSecondFile = nullptr;
+
+	if (pFirstFile->HasContents())
 	{
-		pPair->pFirstFile->SetBinary();
+		pFirstFile->SetBinary();
 	}
-	if (NULL != pPair->pSecondFile)
+	if (NULL != pSecondFile)
 	{
-		pPair->pSecondFile->SetBinary();
+		pSecondFile->SetBinary();
 	}
 
-	GetApp()->OpenFilePairView(pPair);
-	pPair->Dereference();
+	BinaryFilePair* pNewPair = new BinaryFilePair(pFirstFile, pSecondFile);
+
+	GetApp()->OpenFilePairView(pNewPair);
+	GetApp()->NotifyFilePairReplaced(pPair, pNewPair);
+
+	OnCloseDocument();
+	pNewPair->Dereference();
 }

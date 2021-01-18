@@ -35,9 +35,11 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+"Side by side" missing in binary file menu
 OnViewRefresh not defined for binary files
 "Parent directory exists only in" should only print the name of base directory (or )
 Sort order change needs to keep column sizes
+Problem with scroll of large binary file view
 Line numbers erase the separator line
 Refresh command disabled for fingerprint check
 Directory share name cannot be selected if no '\' appended

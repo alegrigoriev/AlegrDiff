@@ -604,7 +604,7 @@ public:
 
 	// UnloadFiles returns 'true' if load count drops to zero, or ForceUnload speecified.
 	// If the function returns 'false', the files are still loaded
-	virtual bool UnloadFiles(bool ForceUnload = false) noexcept;
+	bool CloseFiles(bool ForceUnload = false) noexcept;
 	CString GetTitle() const;
 
 	virtual bool NeedBinaryComparison() const noexcept = 0;
@@ -716,7 +716,7 @@ private:
 public:
 
 	bool LoadFiles();
-	virtual bool UnloadFiles(bool ForceUnload = false) noexcept;
+	bool UnloadFiles(bool ForceUnload = false) noexcept;
 	void FreeLinePairData();
 
 	bool NeedBinaryComparison() const noexcept override

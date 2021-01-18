@@ -579,7 +579,8 @@ private:
 	std::vector<FileLine *> m_NormalizedHashSortedLines;   // non-blank only
 	std::vector<FileLine *> m_NormalizedHashSortedLineGroups;   // non-blank only
 
-	friend class FilePair;
+	friend class BinaryFilePair;
+	friend class TextFilePair;
 	static CSimpleCriticalSection m_Cs;
 };
 
@@ -592,29 +593,21 @@ public:
 	void Reference();
 	void Dereference() noexcept;
 private:
-	~FilePair();
+protected:
+	virtual ~FilePair();
 	int m_RefCount;
 	int m_LoadedCount;
 
 public:
 	FileItem * pFirstFile;
 	FileItem * pSecondFile;
-	void SetMemoryFile() noexcept
-	{
-		m_LoadedCount = 1;
-		m_ComparisonResult = MemoryFile;
-	}
 
-	bool LoadFiles();
-	void UnloadFiles(bool ForceUnload = false) noexcept;
-	void FreeLinePairData();
+	// UnloadFiles returns 'true' if load count drops to zero, or ForceUnload speecified.
+	// If the function returns 'false', the files are still loaded
+	virtual bool UnloadFiles(bool ForceUnload = false) noexcept;
 	CString GetTitle() const;
 
-	bool NeedBinaryComparison() const noexcept
-	{
-		return (pFirstFile != NULL && pFirstFile->IsBinary())
-			|| (pSecondFile != NULL && pSecondFile->IsBinary());
-	}
+	virtual bool NeedBinaryComparison() const noexcept = 0;
 
 	bool HasContents() const noexcept
 	{
@@ -643,24 +636,6 @@ public:
 	{
 		return m_ComparisonResult == FilesIdentical || m_ComparisonResult == FilesAttributesIdentical;
 	}
-
-	PairCheckResult CheckForFilesChanged();
-	PairCheckResult ReloadIfChanged();
-
-	bool NextDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
-						TextPosDisplay * DiffPos, TextPosDisplay * EndPos);
-	bool PrevDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
-						TextPosDisplay * DiffPos, TextPosDisplay * EndPos);
-	TextPosLine DisplayPosToLinePos(TextPosDisplay position, BOOL IgnoreWhitespaces);
-	TextPosDisplay LinePosToDisplayPos(TextPosLine position, BOOL IgnoreWhitespaces, int FileScope);
-
-	int GetAcceptDeclineFlags(TextPosLine PosFrom, TextPosLine PosTo, bool bIgnoreWhitespaces);
-	BOOL ModifyAcceptDeclineFlags(TextPosLine & PosFrom, TextPosLine & PosTo, int Set, int Reset);
-
-	BOOL EnumStringDiffSections(TextPosLine & PosFrom, TextPosLine & PosTo,
-								void (* Func)(StringSection * pSection, void * Param), void * pParam);
-	static void GetAcceptDeclineFlagsFunc(StringSection * pSection, void * Param);
-	static void ModifyAcceptDeclineFlagsFunc(StringSection * pSection, void * Param);
 
 	enum eFileComparisionResult
 	{
@@ -704,18 +679,7 @@ public:
 
 	int ComparisionResultPriority() const;
 
-	eFileComparisionResult CompareFiles(class CProgressDialog * pProgressDialog);
-	eFileComparisionResult CompareTextFiles(class CProgressDialog * pProgressDialog);
-	eFileComparisionResult CompareBinaryFiles(class CProgressDialog * pProgressDialog);
-	struct FileSection
-	{
-		FileSection * pNext;
-		unsigned File1LineBegin;
-		unsigned File1LineEnd;
-
-		unsigned File2LineBegin;
-		unsigned File2LineEnd;
-	};
+	virtual eFileComparisionResult CompareFiles(class CProgressDialog * pProgressDialog) = 0;
 
 	void SetComparisonResult(eFileComparisionResult result) noexcept
 	{
@@ -726,12 +690,8 @@ public:
 	{
 		return m_ComparisonResult;
 	}
-	FileSection * BuildSectionList(int NumLine1Begin, int NumLine1AfterEnd,
-									int NumLine2Begin, int NumLine2AfterEnd, bool UseLineGroups);
 
-	eFileComparisionResult PreCompareFiles(CMd5HashCalculator * pMd5Calc, class CProgressDialog * pProgressDialog);
-	eFileComparisionResult PreCompareTextFiles(class CProgressDialog * pProgressDialog);
-	eFileComparisionResult PreCompareBinaryFiles(CMd5HashCalculator * pMd5Calc, class CProgressDialog * pProgressDialog);
+	virtual eFileComparisionResult PreCompareFiles(CMd5HashCalculator * pMd5Calc, class CProgressDialog * pProgressDialog) = 0;
 
 	eFileComparisionResult m_ComparisonResult;
 	bool m_bChanged;
@@ -744,9 +704,84 @@ public:
 	ULONG m_FilenameSortOrder;
 	ULONG m_DirectorySortOrder;
 	ULONG m_ListSortOrder;
+};
 
-	std::vector<struct LinePair *> m_LinePairs;
-	std::vector<FileDiffSection *> m_DiffSections;
+class TextFilePair : public FilePair
+{
+public:
+	TextFilePair(FileItem *file1, FileItem* file2);
+private:
+	virtual ~TextFilePair();
+
+public:
+
+	bool LoadFiles();
+	virtual bool UnloadFiles(bool ForceUnload = false) noexcept;
+	void FreeLinePairData();
+
+	bool NeedBinaryComparison() const noexcept override
+	{
+		return false;
+	}
+
+	PairCheckResult CheckForFilesChanged();
+	PairCheckResult ReloadIfChanged();
+
+	bool NextDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
+						TextPosDisplay* DiffPos, TextPosDisplay* EndPos);
+	bool PrevDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
+						TextPosDisplay* DiffPos, TextPosDisplay* EndPos);
+	TextPosLine DisplayPosToLinePos(TextPosDisplay position, BOOL IgnoreWhitespaces);
+	TextPosDisplay LinePosToDisplayPos(TextPosLine position, BOOL IgnoreWhitespaces, int FileScope);
+
+	int GetAcceptDeclineFlags(TextPosLine PosFrom, TextPosLine PosTo, bool bIgnoreWhitespaces);
+	BOOL ModifyAcceptDeclineFlags(TextPosLine& PosFrom, TextPosLine& PosTo, int Set, int Reset);
+
+	BOOL EnumStringDiffSections(TextPosLine& PosFrom, TextPosLine& PosTo,
+								void(*Func)(StringSection* pSection, void* Param), void* pParam);
+	static void GetAcceptDeclineFlagsFunc(StringSection* pSection, void* Param);
+	static void ModifyAcceptDeclineFlagsFunc(StringSection* pSection, void* Param);
+
+	eFileComparisionResult CompareFiles(class CProgressDialog* pProgressDialog);
+	eFileComparisionResult CompareTextFiles(class CProgressDialog* pProgressDialog);
+
+	struct FileSection
+	{
+		FileSection* pNext;
+		unsigned File1LineBegin;
+		unsigned File1LineEnd;
+
+		unsigned File2LineBegin;
+		unsigned File2LineEnd;
+	};
+
+	FileSection* BuildSectionList(int NumLine1Begin, int NumLine1AfterEnd,
+								int NumLine2Begin, int NumLine2AfterEnd, bool UseLineGroups);
+
+	eFileComparisionResult PreCompareFiles(CMd5HashCalculator*, class CProgressDialog* pProgressDialog);
+	eFileComparisionResult PreCompareFiles(class CProgressDialog* pProgressDialog);
+
+	std::vector<struct LinePair*> m_LinePairs;
+	std::vector<FileDiffSection*> m_DiffSections;
+};
+
+class BinaryFilePair : public FilePair
+{
+public:
+	BinaryFilePair(FileItem* file1, FileItem* file2);
+private:
+	~BinaryFilePair();
+
+public:
+
+	bool NeedBinaryComparison() const noexcept override
+	{
+		return true;
+	}
+
+	eFileComparisionResult CompareFiles(class CProgressDialog* pProgressDialog);
+
+	eFileComparisionResult PreCompareFiles(CMd5HashCalculator* pMd5Calc, class CProgressDialog* pProgressDialog);
 };
 
 struct FilePairComparePredicate

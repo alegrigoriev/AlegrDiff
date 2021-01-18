@@ -967,11 +967,12 @@ void CAlegrDiffApp::OpenPairOrFile(LPCTSTR Name1, LPCTSTR OPTIONAL Name2)
 		}
 	}
 
-	FilePair* pPair = new FilePair(FileItem1, FileItem2);
+	FilePair* pPair = nullptr;
 	CDocTemplate* DocTemplate = nullptr;
 
 	if (FileComparisonModeBinary == m_ComparisonMode)
 	{
+		pPair = new BinaryFilePair(FileItem1, FileItem2);
 		FileItem1->SetBinary();
 		if (nullptr != FileItem2) FileItem2->SetBinary();
 
@@ -979,6 +980,8 @@ void CAlegrDiffApp::OpenPairOrFile(LPCTSTR Name1, LPCTSTR OPTIONAL Name2)
 	}
 	else
 	{
+		pPair = new TextFilePair(FileItem1, FileItem2);
+
 		if (MultiPatternMatches(wfd1.cFileName, sCFilesPattern))
 		{
 			FileItem1->SetCCpp();

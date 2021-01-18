@@ -18,7 +18,7 @@ protected:
 	CDiffFileView();           // protected constructor used by dynamic creation
 	DECLARE_DYNCREATE(CDiffFileView)
 
-	FilePair* GetFilePair()
+	TextFilePair* GetFilePair()
 	{
 		return GetDocument()->GetFilePair();
 	}

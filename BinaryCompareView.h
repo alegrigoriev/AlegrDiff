@@ -13,7 +13,7 @@ protected:
 	CBinaryCompareView();           // protected constructor used by dynamic creation
 	virtual ~CBinaryCompareView();
 
-	FilePair* GetFilePair()
+	BinaryFilePair* GetFilePair()
 	{
 		return GetDocument()->GetFilePair();
 	}

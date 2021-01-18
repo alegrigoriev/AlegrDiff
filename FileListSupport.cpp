@@ -915,7 +915,7 @@ unsigned FileItem::GetFileData(LONGLONG FileOffset, void * pBuf, unsigned bytes)
 	return bytes;
 }
 
-PairCheckResult FilePair::CheckForFilesChanged()
+PairCheckResult TextFilePair::CheckForFilesChanged()
 {
 	if (MemoryFile == m_ComparisonResult)
 	{
@@ -947,7 +947,7 @@ PairCheckResult FilePair::CheckForFilesChanged()
 	return FilesUnchanged;
 }
 
-PairCheckResult FilePair::ReloadIfChanged()
+PairCheckResult TextFilePair::ReloadIfChanged()
 {
 	if (MemoryFile == m_ComparisonResult)
 	{
@@ -2238,7 +2238,12 @@ CString FilePair::GetComparisonResultStr() const
 	return s;
 }
 
-bool FilePair::LoadFiles()
+TextFilePair::TextFilePair(FileItem* file1, FileItem* file2)
+	: FilePair(file1, file2)
+{
+}
+
+bool TextFilePair::LoadFiles()
 {
 	m_LoadedCount++;
 	if (m_LoadedCount > 1)
@@ -2261,16 +2266,19 @@ bool FilePair::LoadFiles()
 	return result;
 }
 
-void FilePair::UnloadFiles(bool ForceUnload) noexcept
+TextFilePair::~TextFilePair()
 {
-	m_LoadedCount--;
-	if (m_LoadedCount > 0 && ! ForceUnload)
+	FreeLinePairData();
+}
+
+bool FilePair::UnloadFiles(bool ForceUnload) noexcept
+{
+	if (!ForceUnload && --m_LoadedCount > 0)
 	{
-		return;
+		return false;
 	}
 	m_LoadedCount = 0;
 	if (0) TRACE("Unloading file pair\n");
-	FreeLinePairData();
 
 	if (NULL != pFirstFile)
 	{
@@ -2280,9 +2288,22 @@ void FilePair::UnloadFiles(bool ForceUnload) noexcept
 	{
 		pSecondFile->Unload();
 	}
+
+	return true;
 }
 
-void FilePair::FreeLinePairData()
+bool TextFilePair::UnloadFiles(bool ForceUnload) noexcept
+{
+	if (!FilePair::UnloadFiles(ForceUnload))
+	{
+		return false;
+	}
+	FreeLinePairData();
+
+	return true;
+}
+
+void TextFilePair::FreeLinePairData()
 {
 	unsigned i;
 	for (i = 0; i < m_LinePairs.size(); i++)
@@ -2301,18 +2322,11 @@ void FilePair::FreeLinePairData()
 		delete m_DiffSections[i];
 	}
 	m_DiffSections.clear();
-
 }
 
-FilePair::eFileComparisionResult FilePair::PreCompareFiles(CMd5HashCalculator * pMd5Calc,
-															class CProgressDialog * pProgressDialog)
+FilePair::eFileComparisionResult TextFilePair::PreCompareFiles(CMd5HashCalculator *,
+																class CProgressDialog * pProgressDialog)
 {
-	// different comparision for different modes
-	if (NeedBinaryComparison())
-	{
-		return PreCompareBinaryFiles(pMd5Calc, pProgressDialog);
-	}
-
 	if (NULL != pProgressDialog)
 	{
 		m_ComparisonResult = ComparingFiles;
@@ -2337,7 +2351,7 @@ FilePair::eFileComparisionResult FilePair::PreCompareFiles(CMd5HashCalculator * 
 		if (NULL != pFirstFile
 			&& NULL != pSecondFile)
 		{
-			result = PreCompareTextFiles(pProgressDialog);
+			result = PreCompareFiles(pProgressDialog);
 		}
 #ifdef _DEBUG
 		TRACE("Files compared in %d ms\n", timeGetTime() - BeginTime);
@@ -2354,7 +2368,7 @@ FilePair::eFileComparisionResult FilePair::PreCompareFiles(CMd5HashCalculator * 
 	return result;
 }
 
-FilePair::eFileComparisionResult FilePair::CompareFiles(class CProgressDialog * pProgressDialog)
+FilePair::eFileComparisionResult TextFilePair::CompareFiles(class CProgressDialog * pProgressDialog)
 {
 	// TODO: different function for binary comparision
 	if (! LoadFiles())
@@ -2397,7 +2411,7 @@ FilePair::eFileComparisionResult FilePair::CompareFiles(class CProgressDialog * 
 	return result;
 }
 
-FilePair::eFileComparisionResult FilePair::PreCompareTextFiles(class CProgressDialog * /*pProgressDialog*/)
+FilePair::eFileComparisionResult TextFilePair::PreCompareFiles(class CProgressDialog * /*pProgressDialog*/)
 {
 	int nLine1 = 0;
 	int nLine2 = 0;
@@ -2510,8 +2524,8 @@ FilePair::eFileComparisionResult FilePair::PreCompareTextFiles(class CProgressDi
 }
 
 
-FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLine1AfterEnd,
-													int NumLine2Begin, int NumLine2AfterEnd, bool UseLineGroups)
+TextFilePair::FileSection * TextFilePair::BuildSectionList(int NumLine1Begin, int NumLine1AfterEnd,
+															int NumLine2Begin, int NumLine2AfterEnd, bool UseLineGroups)
 {
 	CThisApp * pApp = GetApp();
 	FileSection * pFirstSection = NULL;
@@ -2698,12 +2712,22 @@ FilePair::FileSection * FilePair::BuildSectionList(int NumLine1Begin, int NumLin
 	}
 	return pFirstSection;
 }
-FilePair::eFileComparisionResult FilePair::CompareBinaryFiles(class CProgressDialog * /*pProgressDialog*/)
+
+BinaryFilePair::BinaryFilePair(FileItem* file1, FileItem* file2)
+	: FilePair(file1, file2)
+{
+}
+
+BinaryFilePair::~BinaryFilePair()
+{
+}
+
+FilePair::eFileComparisionResult BinaryFilePair::CompareFiles(class CProgressDialog * /*pProgressDialog*/)
 {
 	return ResultUnknown;
 }
 
-FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalculator * pMd5Calc,
+FilePair::eFileComparisionResult BinaryFilePair::PreCompareFiles(CMd5HashCalculator * pMd5Calc,
 																class CProgressDialog * pProgressDialog)
 {
 	CThisApp * const pApp = GetApp();
@@ -2789,7 +2813,7 @@ FilePair::eFileComparisionResult FilePair::PreCompareBinaryFiles(CMd5HashCalcula
 	return m_ComparisonResult = ResultUnknown;
 }
 
-FilePair::eFileComparisionResult FilePair::CompareTextFiles(CProgressDialog * /*pProgressDialog*/)
+FilePair::eFileComparisionResult TextFilePair::CompareTextFiles(CProgressDialog * /*pProgressDialog*/)
 {
 	// find similar lines
 	CThisApp const * const pApp = GetApp();
@@ -3168,8 +3192,8 @@ FilePair::eFileComparisionResult FilePair::CompareTextFiles(CProgressDialog * /*
 	return Result;
 }
 
-bool FilePair::NextDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
-							TextPosDisplay * DiffPos, TextPosDisplay * EndPos)
+bool TextFilePair::NextDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
+								TextPosDisplay * DiffPos, TextPosDisplay * EndPos)
 {
 	if (m_DiffSections.empty())
 	{
@@ -3225,8 +3249,8 @@ bool FilePair::NextDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
 	return TRUE;
 }
 
-bool FilePair::PrevDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
-							TextPosDisplay * DiffPos, TextPosDisplay * EndPos)
+bool TextFilePair::PrevDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
+								TextPosDisplay * DiffPos, TextPosDisplay * EndPos)
 {
 	if (m_DiffSections.empty())
 	{
@@ -3282,7 +3306,7 @@ bool FilePair::PrevDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
 	return TRUE;
 }
 
-TextPosLine FilePair::DisplayPosToLinePos(TextPosDisplay position, BOOL IgnoreWhitespaces)
+TextPosLine TextFilePair::DisplayPosToLinePos(TextPosDisplay position, BOOL IgnoreWhitespaces)
 {
 	if (unsigned(position.line) >= m_LinePairs.size())
 	{
@@ -3292,7 +3316,7 @@ TextPosLine FilePair::DisplayPosToLinePos(TextPosDisplay position, BOOL IgnoreWh
 						m_LinePairs[position.line]->DisplayPosToLinePos(position.pos, IgnoreWhitespaces, position.scope));
 }
 
-TextPosDisplay FilePair::LinePosToDisplayPos(TextPosLine position, BOOL IgnoreWhitespaces, int FileScope)
+TextPosDisplay TextFilePair::LinePosToDisplayPos(TextPosLine position, BOOL IgnoreWhitespaces, int FileScope)
 {
 	if (unsigned(position.line) >= m_LinePairs.size())
 	{
@@ -3309,14 +3333,14 @@ struct ModifyFlagsStruct
 	int Reset;
 };
 
-void FilePair::ModifyAcceptDeclineFlagsFunc(StringSection * pSection, void * Param)
+void TextFilePair::ModifyAcceptDeclineFlagsFunc(StringSection * pSection, void * Param)
 {
 	ModifyFlagsStruct * pmfs = (ModifyFlagsStruct *) Param;
 	pSection->Attr &= ~pmfs->Reset;
 	pSection->Attr |= pmfs->Set;
 }
 
-BOOL FilePair::ModifyAcceptDeclineFlags(TextPosLine & PosFrom, TextPosLine & PosTo, int Set, int Reset)
+BOOL TextFilePair::ModifyAcceptDeclineFlags(TextPosLine & PosFrom, TextPosLine & PosTo, int Set, int Reset)
 {
 	ModifyFlagsStruct mfs;
 	mfs.Set = Set;
@@ -3331,7 +3355,7 @@ struct GetFlagsStruct
 	BOOL bIgnoreWhitespace;
 };
 
-void FilePair::GetAcceptDeclineFlagsFunc(StringSection * pSection, void * Param)
+void TextFilePair::GetAcceptDeclineFlagsFunc(StringSection * pSection, void * Param)
 {
 	GetFlagsStruct * gfs = (GetFlagsStruct *) Param;
 	if (pSection->IsWhitespace() && gfs->bIgnoreWhitespace)
@@ -3342,7 +3366,7 @@ void FilePair::GetAcceptDeclineFlagsFunc(StringSection * pSection, void * Param)
 	gfs->Reset &= pSection->Attr;
 }
 
-int FilePair::GetAcceptDeclineFlags(TextPosLine PosFrom, TextPosLine PosTo, bool bIgnoreWhitespaces)
+int TextFilePair::GetAcceptDeclineFlags(TextPosLine PosFrom, TextPosLine PosTo, bool bIgnoreWhitespaces)
 {
 	GetFlagsStruct gfs;
 	gfs.bIgnoreWhitespace = bIgnoreWhitespaces;
@@ -3356,8 +3380,8 @@ int FilePair::GetAcceptDeclineFlags(TextPosLine PosFrom, TextPosLine PosTo, bool
 	return gfs.Set;
 }
 
-BOOL FilePair::EnumStringDiffSections(TextPosLine & PosFrom, TextPosLine & PosTo,
-									void (* Func)(StringSection * pSection, void * Param), void * pParam)
+BOOL TextFilePair::EnumStringDiffSections(TextPosLine & PosFrom, TextPosLine & PosTo,
+										void(*Func)(StringSection * pSection, void * Param), void * pParam)
 {
 	TextPosLine begin = PosFrom, end = PosTo;
 	if (begin == end)
@@ -3715,6 +3739,7 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 		FileItem * pFile2 = nullptr;
 		FilePair::eFileComparisionResult result = FilePair::ResultUnknown;
 		FileItem* pItem1 = nullptr;
+		FileItem::eFileType FileType = FileItem::FileTypeUnknown;
 
 		// Find pf1 and pf2 pointing to the matching directory/name
 		if (pf1 == Files1.end())
@@ -3727,6 +3752,7 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 			// First list is done, take items from the second list
 			pFile2 = *pf2;
 			pItem1 = pFile2;
+			FileType = pFile2->m_FileType;
 			++pf2;
 		}
 		else if (pf2 == Files2.end())
@@ -3734,6 +3760,7 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 			// Second list is done, take items from the first list
 			pFile1 = *pf1;
 			pItem1 = pFile1;
+			FileType = pFile1->m_FileType;
 			++pf1;
 		}
 		else
@@ -3746,17 +3773,20 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 				pFile1 = nullptr;
 				++pf2;
 				pItem1 = pFile2;
+				FileType = pFile2->m_FileType;
 			}
 			else if (comparison < 0)
 			{
 				pFile2 = nullptr;
 				++pf1;
 				pItem1 = pFile1;
+				FileType = pFile1->m_FileType;
 			}
 			else
 			{
 				++pf2;
 				++pf1;
+				FileType = pFile2->m_FileType;
 				pItem1 = pFile1;
 			}
 		}
@@ -3871,7 +3901,14 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 
 		if (pPair == nullptr)
 		{
-			pPair = new FilePair(pFile1, pFile2);
+			if (FileType == FileItem::FileTypeBinary)
+			{
+				pPair = new BinaryFilePair(pFile1, pFile2);
+			}
+			else
+			{
+				pPair = new TextFilePair(pFile1, pFile2);
+			}
 
 			pInsertBefore->InsertAsPrevItem(pPair);
 			NumFilePairs++;

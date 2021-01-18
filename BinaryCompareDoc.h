@@ -24,13 +24,18 @@ public:
 		UpdateMakeCaretCentered,
 		UpdateMakeCaretVisible,
 	};
+	BinaryFilePair* GetFilePair() const noexcept
+	{
+		return m_pFilePair;
+	}
 
 	TCHAR m_ComparisonResult[MAX_PATH];
 	LONGLONG m_CaretPos;
 	LONGLONG m_SelectionAnchor;
 	LONGLONG m_OriginalSelectionAnchor;
+	BinaryFilePair* m_pFilePair;
 
-	virtual void SetFilePair(FilePair * pPair);
+	virtual void SetFilePair(FilePair * pPair) override;
 	LONGLONG GetFileSize() const noexcept;
 
 	//void SetSelection(TextPos CaretPos, TextPos AnchorPos, int flags = SetPositionMakeCentered);

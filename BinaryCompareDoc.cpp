@@ -11,6 +11,7 @@ IMPLEMENT_DYNCREATE(CBinaryCompareDoc, CFilePairDoc)
 
 CBinaryCompareDoc::CBinaryCompareDoc()
 	: m_CaretPos(0)
+	, m_pFilePair(nullptr)
 	, m_SelectionAnchor(0)
 	, m_OriginalSelectionAnchor(0)
 {
@@ -101,7 +102,8 @@ void CBinaryCompareDoc::SetFilePair(FilePair * pPair)
 	{
 		m_pFilePair->Dereference();
 	}
-	m_pFilePair = pPair;
+
+	m_pFilePair = static_cast<BinaryFilePair*>(pPair);
 	if (NULL != pPair)
 	{
 		pPair->Reference();
@@ -214,7 +216,7 @@ void CBinaryCompareDoc::OnUpdateCaretPosIndicator(CCmdUI* pCmdUI)
 
 unsigned CBinaryCompareDoc::FindDataProc(CDifferenceProgressDialog * pDlg)
 {
-	FilePair * pFilePair = GetFilePair();
+	BinaryFilePair * pFilePair = GetFilePair();
 	if (NULL == pFilePair
 		|| NULL == pFilePair->pFirstFile
 		|| NULL == pFilePair->pSecondFile)
@@ -373,7 +375,7 @@ unsigned CBinaryCompareDoc::FindDataProc(CDifferenceProgressDialog * pDlg)
 
 void CBinaryCompareDoc::OnViewViewastextfiles()
 {
-	FilePair * pPair = GetFilePair();
+	BinaryFilePair * pPair = GetFilePair();
 
 	pPair->Reference();
 	OnCloseDocument();

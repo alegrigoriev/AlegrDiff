@@ -35,6 +35,7 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+OnViewRefresh not defined for binary files
 "Parent directory exists only in" should only print the name of base directory (or )
 Sort order change needs to keep column sizes
 Line numbers erase the separator line

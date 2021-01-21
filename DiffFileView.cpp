@@ -49,7 +49,6 @@ CDiffFileView::CDiffFileView()
 
 CDiffFileView::~CDiffFileView()
 {
-	GetApp()->m_NumberOfPanes = m_NumberOfPanes;
 }
 
 
@@ -1400,6 +1399,12 @@ void CDiffFileView::OnMetricsChange()
 
 	m_LineNumberMarginWidth = 0;
 	FilePair * pFilePair = GetFilePair();
+
+	if (pFilePair != nullptr && !pFilePair->CanCompare())
+	{
+		m_NumberOfPanes = 1;
+	}
+
 	if (m_ShowLineNumbers && pFilePair != NULL)
 	{
 		int nNumChars = 5;
@@ -2118,6 +2123,7 @@ void CDiffFileView::OnViewSideBySide()
 			pDoc->m_CaretPos.scope = m_PaneWithFocus + 1;
 			// TODO: convert the address
 		}
+		GetApp()->m_NumberOfPanes = m_NumberOfPanes;
 		OnMetricsChange();
 	}
 }

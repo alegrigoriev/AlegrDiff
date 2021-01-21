@@ -44,7 +44,6 @@ CBinaryCompareView::CBinaryCompareView()
 
 CBinaryCompareView::~CBinaryCompareView()
 {
-	GetApp()->m_NumberOfPanes = m_NumberOfPanes;
 }
 
 BEGIN_MESSAGE_MAP(CBinaryCompareView, BaseClass)
@@ -485,6 +484,12 @@ void CBinaryCompareView::OnMetricsChange()
 		pFont = & font;
 	}
 
+	BinaryFilePair* pFilePair = GetFilePair();
+
+	if (pFilePair != nullptr && !pFilePair->CanCompare())
+	{
+		m_NumberOfPanes = 1;
+	}
 
 	CRect cr;
 	GetClientRect( & cr);
@@ -1955,6 +1960,7 @@ void CBinaryCompareView::OnViewSideBySide()
 //            pDoc->m_CaretPos.scope = m_PaneWithFocus + 1;
 			// TODO: convert the address
 		}
+		GetApp()->m_NumberOfPanes = m_NumberOfPanes;
 		OnMetricsChange();
 	}
 }

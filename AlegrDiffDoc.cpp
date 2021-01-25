@@ -276,15 +276,6 @@ void CAlegrDiffDoc::OnUpdateAllViews(CView* pSender,
 									LPARAM lHint, CObject* pHint)
 {
 	CAlegrDiffBaseDoc::OnUpdateAllViews(pSender, lHint, pHint);
-
-	if (UpdateViewsFilePairDeleteFromList == lHint)
-	{
-		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
-		if (NULL != pArg)
-		{
-			m_PairList.RemovePair(pArg->m_pPair);
-		}
-	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -904,7 +895,8 @@ void CTextFilePairDoc::OnViewRefresh()
 	{
 		// close this document
 		FilePairChangedArg arg(m_pFilePair);
-		GetApp()->UpdateAllViews(UpdateViewsFilePairDeleteFromList, & arg);
+		m_pFilePair->m_bDeleted = true;
+		GetApp()->UpdateAllViews(UpdateViewsFilePairDeleteFromList, &arg);
 		return;
 	}
 

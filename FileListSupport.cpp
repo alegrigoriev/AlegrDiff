@@ -1689,6 +1689,7 @@ FilePair::FilePair(FileItem* file1, FileItem* file2)
 
 	m_FilenameSortOrder(0),
 	m_DirectorySortOrder(0),
+	m_ListSortOrder(ULONG_MAX),
 
 	m_ComparisonResult(ResultUnknown)
 {
@@ -3780,8 +3781,8 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 			int comparison = FileItem::DirNameCompare(pItem1, pItem2);
 			if (comparison > 0)
 			{
+				NumFilePairs -= !pInsertBefore->m_bDeleted;
 				pInsertBefore->m_bDeleted = true;
-				NumFilePairs--;
 				NeedUpdateViews = true;
 				pInsertBefore = pInsertBefore->Next();
 				continue;
@@ -3859,8 +3860,9 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 					pInsertBefore->pFirstFile = nullptr;
 				}
 
+				NumFilePairs -= !pInsertBefore->m_bDeleted;
 				pInsertBefore->m_bDeleted = true;
-				NumFilePairs--;
+				NeedUpdateViews = true;
 			}
 
 			pInsertBefore = Next(pInsertBefore);
@@ -3873,6 +3875,7 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 
 			pInsertBefore->InsertAsPrevItem(pPair);
 			NumFilePairs++;
+			NeedUpdateViews = true;
 		}
 
 		if (pFile1 == nullptr)
@@ -3979,8 +3982,8 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 	// The file items are already removed from dictionaries in FileListToTree, but they keep their numbering
 	for ( ; NotEnd(pInsertBefore); pInsertBefore = Next(pInsertBefore))
 	{
+		NumFilePairs -= !pInsertBefore->m_bDeleted;
 		pInsertBefore->m_bDeleted = true;
-		NumFilePairs--;
 		NeedUpdateViews = true;
 	}
 
@@ -4027,27 +4030,22 @@ ULONGLONG FilePairList::GetTotalDataSize(ULONG FileOpenOverhead)
 	return TotalFilesSize;
 }
 
-void FilePairList::RemovePair(FilePair * pPairToDelete) noexcept
+void FilePairList::RemovePair(FilePair * pPair) noexcept
 {
-	// find it in the list and remove from the list
-	for (FilePair * pPair = First(); NotEnd(pPair); pPair = pPair->Next())
-	{
-		if (pPairToDelete == pPair)
-		{
-			// First, remove they keys from the tree TODO
-			pPair->RemoveFromList();
-			pPair->Dereference();
-			NumFilePairs--;
-			break;
-		}
-	}
+	// The pair must belong to the list
+	// First, remove they keys from the tree TODO
+	RemoveFromDictionary(pPair);
+	pPair->RemoveFromList();
+	pPair->Dereference();
 }
 
 void FilePairList::RemoveAll() noexcept
 {
 	while (!IsEmpty())
 	{
-		RemoveHead()->Dereference();
+		FilePair* const pPair = RemoveHead();
+		RemoveFromDictionary(pPair);
+		pPair->Dereference();
 	}
 	NumFilePairs = 0;
 }
@@ -4066,19 +4064,6 @@ bool FilePairList::HasFiles() const noexcept
 	return false;
 }
 
-FileItem * FilePairList::GetSortedList(FileListIndex index)
-{
-	FileItem * pListHead = nullptr;
-	file_item_tree_t & tree = (index == LeftFileList) ? Files1 : Files2;
-	for (auto ii = tree.rbegin(); ii != tree.rend(); ii++)
-	{
-		(*ii)->m_pNext = pListHead;
-		pListHead = (*ii);
-	}
-
-	return pListHead;
-}
-
 void FilePairList::RemoveFromDictionary(FileItem *pItem) noexcept
 {
 	if (pItem->iFullDirInTree
@@ -4093,6 +4078,18 @@ void FilePairList::RemoveFromDictionary(FileItem *pItem) noexcept
 		NameTree.erase(pItem->iNameInTree);
 	}
 	pItem->iNameInTree = name_tree_t::iterator();
+}
+
+void FilePairList::RemoveFromDictionary(FilePair* pPair) noexcept
+{
+	if (pPair->pFirstFile != nullptr)
+	{
+		RemoveFromDictionary(pPair->pFirstFile);
+	}
+	if (pPair->pSecondFile != nullptr)
+	{
+		RemoveFromDictionary(pPair->pSecondFile);
+	}
 }
 
 int MultiStrDirComparePredicate::operator()(LPCTSTR pA, LPCTSTR pB) const

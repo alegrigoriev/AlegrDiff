@@ -110,12 +110,6 @@ public:
 /////////////////////////////////////////////////////////////////////////////
 // CTextFilePairDoc document
 
-class AddListViewItemStruct : public CObject
-{
-public:
-	FilePair * pPair;
-};
-
 class CFilePairDoc : public CAlegrDiffBaseDoc
 {
 protected:

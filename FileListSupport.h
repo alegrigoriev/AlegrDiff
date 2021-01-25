@@ -743,6 +743,7 @@ public:
 	// used to speed up file list sort
 	ULONG m_FilenameSortOrder;
 	ULONG m_DirectorySortOrder;
+	ULONG m_ListSortOrder;
 
 	std::vector<struct LinePair *> m_LinePairs;
 	std::vector<FileDiffSection *> m_DiffSections;
@@ -834,8 +835,6 @@ public:
 		RightFileList = 2,
 	};
 
-	FileItem * GetSortedList(FileListIndex index);
-
 	bool BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, bool DoNotCompareContents);  // returns 'true' if there were changes in it
 
 	unsigned NumFilePairs;
@@ -860,6 +859,7 @@ private:
 	*/
 	void AddToDictionary(FileList const *list);
 	void RemoveFromDictionary(FileItem* pItem) noexcept;
+	void RemoveFromDictionary(FilePair* pPair) noexcept;
 	/*
 	* FileListToTree replaces the tree with the contents of the supplied FileList
 	* Old contents of the tree is removed from dictionaries.

@@ -115,7 +115,11 @@ protected:
 	CString GetNumberOfFilesString();
 	void UpdateStatusText(UINT nState);
 
-// Generated message map functions
+	// Return a FilePair from the array by the index, but only if it doesn't have "deleted" flag set
+	FilePair* GetValidFilePair(size_t index) const noexcept;
+	// Return pPair if its index in the array matches
+	FilePair* ValidateFilePairIndex(FilePair const *pPair) const noexcept;
+	// Generated message map functions
 protected:
 	//{{AFX_MSG(CAlegrDiffView)
 	afx_msg void OnColumnclick(NMHDR* pNMHDR, LRESULT* pResult);

@@ -407,11 +407,17 @@ void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, FilePa
 	FilePair * pPair = pPairList->First();
 
 	m_PresentFilesMask = 0;
+	unsigned PairCount = 0;
 
-	for (int i = 0; pPairList->NotEnd(pPair); i++, pPair = pPairList->Next(pPair))
+	while (pPairList->NotEnd(pPair))
 	{
+		pPair->m_ListSortOrder = ULONG_MAX;
 		if (pPair->m_bDeleted)
 		{
+			FilePair* tmp = pPair;
+			pPair = pPair->Next();
+
+			pPairList->RemovePair(tmp);
 			continue;
 		}
 
@@ -422,74 +428,68 @@ void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, FilePa
 			&& (m_ShowFilesMask & (1 << pPair->GetComparisonResult())))
 		{
 			PairArray.push_back(pPair);
+			PairCount++;
 		}
+
+		pPair = pPairList->Next(pPair);
 	}
 
 	std::sort(PairArray.begin(), PairArray.end(),
-			FilePairComparePredicate(m_SortColumns, m_AscendingSortOrder, countof (m_SortColumns)));
+			FilePairComparePredicate(m_SortColumns, m_AscendingSortOrder, countof(m_SortColumns)));
+
+	for (unsigned i = 0; i < PairCount; i++)
+	{
+		PairArray[i]->m_ListSortOrder = i;
+	}
 }
 
 void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 {
 	CListCtrl * pListCtrl = &GetListCtrl();
 	CAlegrDiffDoc * pDoc = GetDocument();
-	if (OnUpdateListViewItem == lHint)
-	{
-		AddListViewItemStruct * alvi = static_cast<AddListViewItemStruct *>(pHint);
-		if (NULL != alvi)
-		{
-			for (unsigned i = 0; i < m_PairArray.size(); i++)
-			{
-				if (m_PairArray[i] == alvi->pPair)
-				{
-					CString ComparisionResult = alvi->pPair->GetComparisonResultStr();
-					pListCtrl->SetItemText(i,
-											m_ColumnArray[ColumnComparisionResult],
-											ComparisionResult);
-					break;
-				}
-			}
-			UpdateStatusText(WA_ACTIVE);
-		}
-		return;
-	}
-	else if (UpdateViewsFilePairDeleteFromList == lHint)
+	if (UpdateViewsFilePairDeleteFromList == lHint
+		|| OnUpdateListViewItem == lHint)
 	{
 		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
-		if (NULL == pArg)
+		if (nullptr == pArg)
 		{
 			return;
 		}
-		FilePair * const pFindPair = pArg->m_pPair;
-
-		for (unsigned item = 0; item < m_PairArray.size(); item++)
+		FilePair const * const pPair = pArg->m_pPair;
+		if (nullptr == pPair)
 		{
-			if (pFindPair == m_PairArray[item])
-			{
-				pListCtrl->DeleteItem(item);
-				m_PairArray.erase(m_PairArray.begin() + item);
-				break;
-			}
+			return;
 		}
+
+		if (ValidateFilePairIndex(pPair))
+		{
+			CString ComparisionResult = pPair->GetComparisonResultStr();
+			pListCtrl->SetItemText(pPair->m_ListSortOrder,
+									m_ColumnArray[ColumnComparisionResult],
+									ComparisionResult);
+		}
+
 		UpdateStatusText(WA_ACTIVE);
 		return;
 	}
 	else if (UpdateViewsFilePairChanged == lHint)
 	{
 		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
-		if (NULL == pArg)
+		if (nullptr == pArg)
 		{
 			return;
 		}
-		FilePair * const pFindPair = pArg->m_pPair;
-
-		for (unsigned item = 0; item < m_PairArray.size(); item++)
+		FilePair const * const pPair = pArg->m_pPair;
+		if (nullptr == pPair)
 		{
-			if (pFindPair == m_PairArray[item])
-			{
-				SetListViewItem(pFindPair, item, false);
-			}
+			return;
 		}
+
+		if (ValidateFilePairIndex(pPair))
+		{
+			SetListViewItem(pPair, pPair->m_ListSortOrder, false);
+		}
+
 		UpdateStatusText(WA_ACTIVE);
 		return;
 	}
@@ -701,77 +701,97 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 	UpdateStatusText(WA_ACTIVE);
 }
 
+FilePair* CAlegrDiffView::GetValidFilePair(size_t index) const noexcept
+{
+	if (index >= m_PairArray.size())
+	{
+		return nullptr;
+	}
+	FilePair* pPair = m_PairArray[index];
+	if (pPair->m_bDeleted)
+	{
+		return nullptr;
+	}
+	return pPair;
+}
+
+FilePair* CAlegrDiffView::ValidateFilePairIndex(FilePair const* pPair) const noexcept
+{
+	if (pPair != nullptr
+		&& pPair->m_ListSortOrder < m_PairArray.size())
+	{
+		FilePair* tmp = m_PairArray[pPair->m_ListSortOrder];
+		if (tmp == pPair)
+		{
+			return tmp;
+		}
+	}
+	return nullptr;
+}
+
 void CAlegrDiffView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 {
-//    CListCtrl * pListCtrl = & GetListCtrl();
-	NMLISTVIEW * pNmlv = (NMLISTVIEW *) pNMHDR;
+	NMLISTVIEW * pNmlv = (NMLISTVIEW *)pNMHDR;
 	// open new view for the files
 	// compare two files
-	if (_AfxGetComCtlVersion() >= 0x00040070)
+	FilePair* pPair = GetValidFilePair(unsigned(pNmlv->iItem));
+	if (pPair != nullptr)
 	{
-		if (unsigned(pNmlv->iItem) < m_PairArray.size())
-		{
-			// try to find if a view is already open
-			// view not found, create a new
-			GetApp()->OpenFilePairView(m_PairArray[pNmlv->iItem]);
-		}
+		GetApp()->OpenFilePairView(pPair);
 	}
 
 //    int nItem = p;
 	*pResult = 0;
 }
 
-
 void CAlegrDiffView::OnReturn(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
-	CListCtrl * pListCtrl = & GetListCtrl();
-	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	CListCtrl * pListCtrl = &GetListCtrl();
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
 	}
 	while(-1 != nItem)
 	{
-		if (nItem < m_PairArray.size())
+		FilePair* pPair = GetValidFilePair(nItem);
+		if (pPair != nullptr)
 		{
-			GetApp()->OpenFilePairView(m_PairArray[nItem]);
+			GetApp()->OpenFilePairView(pPair);
 		}
 		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
 	}
 	*pResult = 0;
 }
 
-
 void CAlegrDiffView::OnFileEditFirst()
 {
-	CListCtrl * pListCtrl = & GetListCtrl();
-	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	CListCtrl * pListCtrl = &GetListCtrl();
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
 	}
-	if (-1 != nItem
-		&& nItem < m_PairArray.size()
-		&& NULL != m_PairArray[nItem])
+	FilePair* pPair = GetValidFilePair(nItem);
+	if (pPair != nullptr)
 	{
-		OpenFileForEditing(m_PairArray[nItem]->pFirstFile);
+		OpenFileForEditing(pPair->pFirstFile);
 	}
 }
 
 void CAlegrDiffView::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
 {
-	CListCtrl * pListCtrl = & GetListCtrl();
-	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	CListCtrl * pListCtrl = &GetListCtrl();
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
 	}
 	FileItem * pFile = NULL;
-	if (-1 != nItem
-		&& nItem < m_PairArray.size()
-		&& NULL != m_PairArray[nItem])
+	FilePair* pPair = GetValidFilePair(nItem);
+	if (pPair != nullptr)
 	{
-		pFile = m_PairArray[nItem]->pFirstFile;
+		pFile = pPair->pFirstFile;
 	}
 	ModifyOpenFileMenu(pCmdUI, pFile,
 						IDS_OPEN_FIRST_FILE_MENU, IDS_OPEN_FIRST_FILE_MENU_DISABLED);
@@ -779,34 +799,32 @@ void CAlegrDiffView::OnUpdateFileEditFirst(CCmdUI* pCmdUI)
 
 void CAlegrDiffView::OnFileEditSecond()
 {
-	CListCtrl * pListCtrl = & GetListCtrl();
-	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	CListCtrl * pListCtrl = &GetListCtrl();
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
 	}
-	if (-1 != nItem
-		&& nItem < m_PairArray.size()
-		&& NULL != m_PairArray[nItem])
+	FilePair* pPair = GetValidFilePair(nItem);
+	if (pPair != nullptr)
 	{
-		OpenFileForEditing(m_PairArray[nItem]->pSecondFile);
+		OpenFileForEditing(pPair->pSecondFile);
 	}
 }
 
 void CAlegrDiffView::OnUpdateFileEditSecond(CCmdUI* pCmdUI)
 {
-	CListCtrl * pListCtrl = & GetListCtrl();
-	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	CListCtrl * pListCtrl = &GetListCtrl();
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
 	}
-	FileItem * pFile = NULL;
-	if (-1 != nItem
-		&& nItem < m_PairArray.size()
-		&& NULL != m_PairArray[nItem])
+	FileItem* pFile = NULL;
+	FilePair* pPair = GetValidFilePair(nItem);
+	if (pPair != nullptr)
 	{
-		pFile = m_PairArray[nItem]->pSecondFile;
+		pFile = pPair->pSecondFile;
 	}
 	ModifyOpenFileMenu(pCmdUI, pFile,
 						IDS_OPEN_SECOND_FILE_MENU, IDS_OPEN_SECOND_FILE_MENU_DISABLED);
@@ -843,18 +861,22 @@ void CAlegrDiffView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 									AfxGetMainWnd()); // use main window for cmds
 		}
 	}
-
 }
 
 void CAlegrDiffView::OnListviewOpen()
 {
-	CListCtrl * pListCtrl = & GetListCtrl();
-	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
-	while(-1 != nItem)
+	CListCtrl * const pListCtrl = &GetListCtrl();
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	if (-1 == nItem)
 	{
-		if (nItem < m_PairArray.size())
+		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
+	}
+	while (-1 != nItem)
+	{
+		FilePair* const pPair = GetValidFilePair(nItem);
+		if (pPair != nullptr)
 		{
-			GetApp()->OpenFilePairView(m_PairArray[nItem]);
+			GetApp()->OpenFilePairView(pPair);
 		}
 		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
 	}
@@ -862,19 +884,15 @@ void CAlegrDiffView::OnListviewOpen()
 
 void CAlegrDiffView::OnUpdateListviewOpen(_In_ CCmdUI* pCmdUI)
 {
-	CListCtrl * pListCtrl = & GetListCtrl();
-	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	CListCtrl * const pListCtrl = &GetListCtrl();
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
 	}
 	while (-1 != nItem)
 	{
-		if (nItem >= m_PairArray.size())
-		{
-			break;
-		}
-		FilePair * pPair = m_PairArray[nItem];
+		FilePair* const pPair = GetValidFilePair(nItem);
 		if (!pPair->HasContents())
 		{
 			nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
@@ -895,23 +913,20 @@ void CAlegrDiffView::OnUpdateFileCopyFirstDir(_In_ CCmdUI* pCmdUI)
 	// check if there is anything to copy
 	CListCtrl * const pListCtrl = &GetListCtrl();
 
-	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
 	}
 	while(-1 != nItem)
 	{
-		if (nItem < m_PairArray.size())
+		FilePair* const pPair = GetValidFilePair(nItem);
+		if (nullptr != pPair && pPair->pFirstFile->HasContents())
 		{
-			FileItem * pFile = m_PairArray[nItem]->pFirstFile;
-			if (pFile->HasContents())
-			{
-				CString s;
-				s.Format(IDS_COPY_FROM_DIR_FORMAT, LPCTSTR(GetDocument()->m_sFirstDir));
-				pCmdUI->SetText(s);
-				return;
-			}
+			CString s;
+			s.Format(IDS_COPY_FROM_DIR_FORMAT, LPCTSTR(GetDocument()->m_sFirstDir));
+			pCmdUI->SetText(s);
+			return;
 		}
 		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
 	}
@@ -928,23 +943,20 @@ void CAlegrDiffView::OnUpdateFileCopySecondDir(CCmdUI* pCmdUI)
 	// check if there is anything to copy
 	CListCtrl * const pListCtrl = &GetListCtrl();
 
-	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
 	}
 	while(-1 != nItem)
 	{
-		if (nItem < m_PairArray.size())
+		FilePair* const pPair = GetValidFilePair(nItem);
+		if (nullptr != pPair && pPair->pSecondFile->HasContents())
 		{
-			FileItem * pFile = m_PairArray[nItem]->pSecondFile;
-			if (pFile->HasContents())
-			{
-				CString s;
-				s.Format(IDS_COPY_FROM_DIR_FORMAT, LPCTSTR(GetDocument()->m_sSecondDir));
-				pCmdUI->SetText(s);
-				return;
-			}
+			CString s;
+			s.Format(IDS_COPY_FROM_DIR_FORMAT, LPCTSTR(GetDocument()->m_sSecondDir));
+			pCmdUI->SetText(s);
+			return;
 		}
 		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
 	}
@@ -963,16 +975,16 @@ BOOL CAlegrDiffView::CopySelectedFiles(int DirIndex)
 	CListCtrl * const pListCtrl = &GetListCtrl();
 	vector<FileItem *> FilesArray;
 
-	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 	if (-1 == nItem)
 	{
 		nItem = pListCtrl->GetNextItem(-1, LVNI_FOCUSED);
 	}
 	while(-1 != nItem)
 	{
-		if (nItem < m_PairArray.size())
+		FilePair* const pPair = GetValidFilePair(nItem);
+		if (pPair != nullptr)
 		{
-			FilePair * pPair = m_PairArray[nItem];
 			FileItem * pFile;
 			if (DirIndex == 2)
 			{
@@ -1019,7 +1031,12 @@ void CAlegrDiffView::SetListViewItem(FilePair const *pPair, int item, bool bInse
 
 	lvi.lParam = LPARAM(pFileItem);
 
-	if (pPair->m_bSelected)
+	if (pPair->m_bDeleted)
+	{
+		lvi.state = LVIS_CUT;
+		lvi.stateMask = LVIS_CUT;
+	}
+	else if (pPair->m_bSelected)
 	{
 		lvi.state = LVIS_SELECTED;
 		lvi.stateMask = LVIS_SELECTED;
@@ -1374,26 +1391,40 @@ void CAlegrDiffView::OnUpdateFileSaveList(CCmdUI* pCmdUI)
 void CAlegrDiffView::OnViewHideselectedfiles()
 {
 	CListCtrl * pListCtrl = &GetListCtrl();
-	unsigned nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
+	int nItem = pListCtrl->GetNextItem(-1, LVNI_SELECTED);
 
 	if (-1 == nItem)
 	{
 		return;
 	}
 
-	while(-1 != nItem)
+	for ( ; -1 != nItem; nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED))
 	{
-		if (nItem < m_PairArray.size())
+		FilePair* pPair = GetValidFilePair(nItem);
+		if (nullptr == pPair)
 		{
-			FilePair * pPair = m_PairArray[nItem];
-			pPair->m_bHideFromListView = true;
-			if (pPair->m_bFocused)
+			continue;
+		}
+		pPair->m_bHideFromListView = true;
+		if (pPair->m_bFocused)
+		{
+			// move focus on a next item
+			pPair->m_bFocused = false;
+			FilePairVectorIterator ii;
+			for (ii = m_PairArray.begin() + (nItem + 1); ii != m_PairArray.end(); ++ii)
 			{
-				// move focus on a next item
-				pPair->m_bFocused = false;
-				FilePairVectorIterator ii;
-				for (ii = m_PairArray.begin() + (nItem + 1); ii != m_PairArray.end(); ++ii)
+				if ( ! (*ii)->m_bHideFromListView)
 				{
+					(*ii)->m_bFocused = true;
+					(*ii)->m_bSelected = true;
+					break;
+				}
+			}
+			if (ii == m_PairArray.end())
+			{
+				for (ii = m_PairArray.begin() + nItem; ii != m_PairArray.begin(); )
+				{
+					--ii;
 					if ( ! (*ii)->m_bHideFromListView)
 					{
 						(*ii)->m_bFocused = true;
@@ -1401,22 +1432,8 @@ void CAlegrDiffView::OnViewHideselectedfiles()
 						break;
 					}
 				}
-				if (ii == m_PairArray.end())
-				{
-					for (ii = m_PairArray.begin() + nItem; ii != m_PairArray.begin(); )
-					{
-						--ii;
-						if ( ! (*ii)->m_bHideFromListView)
-						{
-							(*ii)->m_bFocused = true;
-							(*ii)->m_bSelected = true;
-							break;
-						}
-					}
-				}
 			}
 		}
-		nItem = pListCtrl->GetNextItem(nItem, LVNI_SELECTED);
 	}
 	GetDocument()->UpdateAllViews(NULL);
 }

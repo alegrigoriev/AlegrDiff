@@ -928,7 +928,7 @@ void CAlegrDiffView::OnUpdateFileCopyFirstDir(_In_ CCmdUI* pCmdUI)
 
 void CAlegrDiffView::OnFileCopyFirstDir()
 {
-	CopySelectedFiles(false);
+	CopySelectedFiles(1);
 }
 
 void CAlegrDiffView::OnUpdateFileCopySecondDir(CCmdUI* pCmdUI)
@@ -961,10 +961,10 @@ void CAlegrDiffView::OnUpdateFileCopySecondDir(CCmdUI* pCmdUI)
 
 void CAlegrDiffView::OnFileCopySecondDir()
 {
-	CopySelectedFiles(true);
+	CopySelectedFiles(2);
 }
 
-BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
+BOOL CAlegrDiffView::CopySelectedFiles(int DirIndex)
 {
 //    CThisApp * pApp = GetApp();
 
@@ -982,7 +982,7 @@ BOOL CAlegrDiffView::CopySelectedFiles(bool bSecondDir)
 		{
 			FilePair * pPair = m_PairArray[nItem];
 			FileItem * pFile;
-			if (bSecondDir)
+			if (DirIndex == 2)
 			{
 				pFile = pPair->pSecondFile;
 			}

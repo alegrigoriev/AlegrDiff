@@ -354,14 +354,14 @@ void CDiffFileView::OnDraw(CDC* pDC)
 
 			PosX += m_LineNumberMarginWidth;
 
-			pDC->MoveTo(PosX - 1, ur.top);
-			pDC->LineTo(PosX - 1, ur.bottom);
+			pDC->MoveTo(PosX - CharWidth() / 2, ur.top);
+			pDC->LineTo(PosX - CharWidth() / 2, ur.bottom);
 
 			if (pFilePair->CanCompare()
 				&& 1 == m_NumberOfPanes)
 			{
-				pDC->MoveTo(m_LineNumberMarginWidth / 2 - 1, ur.top);
-				pDC->LineTo(m_LineNumberMarginWidth / 2 - 1, ur.bottom);
+				pDC->MoveTo(m_LineNumberMarginWidth / 2 - CharWidth() / 2, ur.top);
+				pDC->LineTo(m_LineNumberMarginWidth / 2 - CharWidth() / 2, ur.bottom);
 			}
 		}
 
@@ -460,7 +460,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 					{
 						s.Format(_T("%d"), pPair->pFirstLine->GetLineNumber() + 1);
 						pDC->SetTextColor(TextColor);
-						pDC->TextOut(m_LineNumberMarginWidth - 1, PosY, s);
+						pDC->TextOut(m_LineNumberMarginWidth - CharWidth(), PosY, s);
 					}
 					else
 					{
@@ -474,10 +474,10 @@ void CDiffFileView::OnDraw(CDC* pDC)
 							}
 							pDC->SetTextColor(TextColor);
 
-							int pos = PosX - 1;
+							int pos = PosX - CharWidth();
 							if (m_NumberOfPanes == 1)
 							{
-								pos = m_LineNumberMarginWidth / 2 - 1;
+								pos = m_LineNumberMarginWidth / 2 - CharWidth();
 							}
 							pDC->TextOut(pos, PosY, s);
 						}
@@ -490,10 +490,10 @@ void CDiffFileView::OnDraw(CDC* pDC)
 								TextColor = pApp->m_AddedTextColor;
 							}
 							pDC->SetTextColor(TextColor);
-							int pos = PosX - 1;
+							int pos = PosX - CharWidth();
 							if (m_NumberOfPanes == 1)
 							{
-								pos = m_LineNumberMarginWidth - 1;
+								pos = m_LineNumberMarginWidth - CharWidth();
 							}
 							pDC->TextOut(pos, PosY, s);
 						}
@@ -1432,7 +1432,7 @@ void CDiffFileView::OnMetricsChange()
 		{
 			nNumChars = 7;
 		}
-		m_LineNumberMarginWidth = CharWidth() * nNumChars + 1;
+		m_LineNumberMarginWidth = CharWidth() * (nNumChars + 1);
 		if (pFilePair->CanCompare()
 			// two files, one pane
 			&& 1 == m_NumberOfPanes)

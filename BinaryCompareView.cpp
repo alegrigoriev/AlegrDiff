@@ -101,9 +101,6 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 		return;
 	}
 
-	//TEXTMETRIC tm;
-	//pDC->GetTextMetrics( & tm);
-
 	RECT cr;
 	GetClientRect( & cr);
 	RECT ur;    // update rect
@@ -143,13 +140,6 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 	int const PaneWidth = GetPaneWidth();
 
 	CGdiObjectSave OldPen(pDC, pDC->SelectStockObject(BLACK_PEN));
-
-	for (int pane = 0, x = m_AddressMarginWidth - 1; pane < m_NumberOfPanes;
-		pane++, x += PaneWidth)
-	{
-		pDC->MoveTo(x, ur.top);
-		pDC->LineTo(x, ur.bottom);
-	}
 
 	FileItem::Lock();
 
@@ -433,6 +423,20 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 
 	FileItem::Unlock();
 
+	for (int pane = 0; pane < m_NumberOfPanes; pane++)
+	{
+		int x = m_AddressMarginWidth;
+		if (pane == 0)
+		{
+			x -= CharWidth() / 2;
+		}
+		else
+		{
+			x += pane * PaneWidth;
+		}
+		pDC->MoveTo(x, ur.top);
+		pDC->LineTo(x, ur.bottom);
+	}
 }
 
 

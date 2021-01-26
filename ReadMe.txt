@@ -37,7 +37,6 @@ F8 - hold anchor
 Problems:
 OnViewRefresh not defined for binary files
 "Parent directory exists only in" should only print the name of base directory (or )
-Sort order change needs to keep column sizes
 Problem with scroll of large binary file view
 Line numbers erase the separator line
 Refresh command disabled for fingerprint check
@@ -50,6 +49,7 @@ Directory dialog allows to select network host. It won't return anything then.
 Estimated time left is not shown while calculating a fingerpring of a big file  (???)
 
 Done:
+Sort order change needs to keep column sizes
 "Side by side" missing in binary file menu
 Column resize leaves marks
 Compare after refresh doesn't show progress. If compare was aborted and refresh clicked, estimated time is not shown. The files get read again for an MD5.

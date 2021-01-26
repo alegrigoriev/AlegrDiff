@@ -49,14 +49,11 @@ BEGIN_MESSAGE_MAP(CAlegrDiffView, CListView)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_HIDESELECTEDFILES, OnUpdateViewHideselectedfiles)
 	ON_COMMAND(ID_VIEW_SHOWALLFILES, OnViewShowallfiles)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOWALLFILES, OnUpdateViewShowallfiles)
-	//}}AFX_MSG_MAP
-	// Standard printing commands
 	ON_UPDATE_COMMAND_UI(ID_LISTVIEW_OPEN1, OnUpdateListviewOpen)
 	ON_COMMAND(ID_LISTVIEW_OPEN1, OnListviewOpen)
 	ON_COMMAND(ID_FILE_PRINT, CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, CView::OnFilePrintPreview)
-	//    ON_COMMAND(ID_LISTVIEW__FILELENGTH, OnListview)
 	ON_COMMAND(ID_LISTVIEW_FILELENGTH, OnListviewFilelength)
 	ON_UPDATE_COMMAND_UI(ID_LISTVIEW_FILELENGTH, OnUpdateListviewFilelength)
 	ON_COMMAND(ID_LISTVIEW_MODIFICATIONTIME, OnListviewModificationtime)
@@ -79,9 +76,9 @@ BEGIN_MESSAGE_MAP(CAlegrDiffView, CListView)
 	ON_UPDATE_COMMAND_UI(ID_LISTVIEW_SORTBY_2NDMODIFICATIONDATE, OnUpdateListviewSortby2ndmodificationdate)
 	ON_NOTIFY(HDN_BEGINDRAG, 0, OnHdnBegindrag)
 	ON_NOTIFY(HDN_ENDDRAG, 0, OnHdnEnddrag)
-	ON_NOTIFY_REFLECT(HDN_TRACK, OnHdnTrack)
-	ON_NOTIFY_REFLECT(HDN_BEGINTRACK, OnHdnBeginTrack)
-	ON_NOTIFY_REFLECT(HDN_ENDTRACK, OnHdnEndTrack)
+	ON_NOTIFY(HDN_TRACK, 0, OnHdnTrack)
+	ON_NOTIFY(HDN_BEGINTRACK, 0, OnHdnBeginTrack)
+	ON_NOTIFY(HDN_ENDTRACK, 0, OnHdnEndTrack)
 	ON_COMMAND(ID_VIEW_RESETCOLUMNS, OnViewResetcolumns)
 	//ON_NOTIFY_REFLECT(LVN_GETINFOTIP, OnLvnGetInfoTip)
 	ON_COMMAND(ID_FILE_PROPERTIES, OnFileProperties)
@@ -112,6 +109,8 @@ BEGIN_MESSAGE_MAP(CAlegrDiffView, CListView)
 	ON_UPDATE_COMMAND_UI(ID_INFIRSTDIRECTORYONLY_SUBDIRECTORIESCONTENTS, OnUpdateInFirstDirectoryOnlySubdirectoriesContents)
 	ON_COMMAND(ID_INSECONDDIRECTORY_SUBDIRECTORIESCONTENTS, OnInSecondDirectoryOnlySubdirectoriesContents)
 	ON_UPDATE_COMMAND_UI(ID_INSECONDDIRECTORY_SUBDIRECTORIESCONTENTS, OnUpdateInSecondDirectoryOnlySubdirectoriesContents)
+	//}}AFX_MSG_MAP
+	// Standard printing commands
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1755,6 +1754,7 @@ void CAlegrDiffView::OnUpdateFileProperties(CCmdUI *pCmdUI)
 void CAlegrDiffView::OnLvnItemchanged(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	TRACE("CAlegrDiffView::OnLvnItemchanged: uChanged=%#X\n", pNMLV->uChanged);
 
 	if ((pNMLV->uChanged & LVIF_STATE)
 		&& unsigned(pNMLV->iItem) < m_PairArray.size())

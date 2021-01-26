@@ -35,7 +35,6 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-"Side by side" missing in binary file menu
 OnViewRefresh not defined for binary files
 "Parent directory exists only in" should only print the name of base directory (or )
 Sort order change needs to keep column sizes
@@ -51,6 +50,7 @@ Directory dialog allows to select network host. It won't return anything then.
 Estimated time left is not shown while calculating a fingerpring of a big file  (???)
 
 Done:
+"Side by side" missing in binary file menu
 Column resize leaves marks
 Compare after refresh doesn't show progress. If compare was aborted and refresh clicked, estimated time is not shown. The files get read again for an MD5.
 Assign an index to the files during original sort (for faster sorting)

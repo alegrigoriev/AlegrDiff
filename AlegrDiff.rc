@@ -438,6 +438,7 @@ BEGIN
         MENUITEM "Show &1st File",              ID_BINDIFF_SHOWFIRSTFILE
         MENUITEM "Show &2nd File",              ID_BINDIFF_SHOW2NDFILE
         MENUITEM "View As Text Files",          ID_VIEW_VIEWASTEXTFILES
+        MENUITEM "Side By Side",                IDC_VIEW_SIDE_BY_SIDE
     END
     POPUP "&Window"
     BEGIN
@@ -1237,6 +1238,19 @@ BEGIN
                             "Show contents of subdirectories of first directory"
     ID_INSECONDDIRECTORY_SUBDIRECTORIESCONTENTS 
                             "Show contents of subdirectories of second directory"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UNABLE_TO_CREATE_FILE "Unable to create file ""%s"""
+    IDS_NUMBER_OF_FILES_FORMAT "%d DIFFERENT files out of %d"
+    IDS_WRONG_BINARY_OFFSET_FORMAT 
+                            "Offset string ""%s"" is not a valid hexadecimal number"
+    IDS_OUT_OF_BOUNDS_OFFSET_FORMAT "Offset ""%s"" is out of bounds"
+    IDS_VALID_RANGE_COMMENT_FORMAT 
+                            "Offset can be from 0 to %I64X\r\nor from -%I64X to +%I64X"
+    IDS_STRING_FILES_ATTRIBUTES_IDENTICAL 
+                            "Files length and last modification timestamp are identical"
     IDS_FINGERPRINT_FILE_NOT_FOUND "Fingerprint file ""%s"" not found"
     IDS_FINGERPRINT_FILE_ACCESS_DENIED 
                             "Unable to open fingerprint file ""%s"" for reading"
@@ -1269,19 +1283,6 @@ BEGIN
     ID_FILE_PRINT_SETUP     "Change the printer and printing options\nPrint Setup"
     ID_FILE_PRINT           "Print the active document\nPrint"
     ID_FILE_PRINT_PREVIEW   "Display full pages\nPrint Preview"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_UNABLE_TO_CREATE_FILE "Unable to create file ""%s"""
-    IDS_NUMBER_OF_FILES_FORMAT "%d DIFFERENT files out of %d"
-    IDS_WRONG_BINARY_OFFSET_FORMAT 
-                            "Offset string ""%s"" is not a valid hexadecimal number"
-    IDS_OUT_OF_BOUNDS_OFFSET_FORMAT "Offset ""%s"" is out of bounds"
-    IDS_VALID_RANGE_COMMENT_FORMAT 
-                            "Offset can be from 0 to %I64X\r\nor from -%I64X to +%I64X"
-    IDS_STRING_FILES_ATTRIBUTES_IDENTICAL 
-                            "Files length and last modification timestamp are identical"
 END
 
 STRINGTABLE

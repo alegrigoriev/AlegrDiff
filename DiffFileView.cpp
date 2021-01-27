@@ -361,10 +361,6 @@ void CDiffFileView::OnDraw(CDC* pDC)
 
 			PosX += m_LineNumberMarginWidth;
 
-			CPoint p(PosX - 1, 0);
-			ClientToScreen( & p);
-			TRACE("Line X = %d\n", p.x);
-
 			pDC->MoveTo(PosX - 1, ur.top);
 			pDC->LineTo(PosX - 1, ur.bottom);
 
@@ -520,6 +516,23 @@ void CDiffFileView::OnDraw(CDC* pDC)
 								nSelBegin, nSelEnd, nPaneToDraw);
 		}
 	}
+}
+
+TextPosDisplay CDiffFileView::PointToTextPos(POINT point, int pane)
+{
+	if (pane == -1)
+	{
+		pane = PointToPaneNumber(point.x);
+	}
+
+	int pos = PointToPaneOffset(point.x) - m_LineNumberMarginWidth;
+	if (pos >= 0)
+	{
+		pos = m_FirstPosSeen + (pos + CharWidth() / 2) / CharWidth();
+	}
+
+	int nLine = point.y / LineHeight() + m_FirstLineSeen;
+	return TextPosDisplay(nLine, pos, pane);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1238,14 +1251,9 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 	m_LButtonDown = true;
 	int flags = SetPositionMakeVisible;
 
-	int nPane = PointToPaneNumber(point.x);
-	point.x = PointToPaneOffset(point.x) - m_LineNumberMarginWidth;
+	TextPosDisplay ClickPos = PointToTextPos(point);
 
-	int nLine = point.y / LineHeight() + m_FirstLineSeen;
-
-	TextPosDisplay ClickPos(0, 0, 0);
-
-	if (nPane != m_PaneWithFocus)
+	if (ClickPos.scope != m_PaneWithFocus)
 	{
 		// Pane changes, ignore Shift
 		nFlags &= ~MK_SHIFT;
@@ -1255,24 +1263,21 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 
 	if (m_NumberOfPanes > 1)
 	{
-		ClickPos.scope = nPane + 1;
+		ClickPos.scope++;
 	}
 	else
 	{
 		ClickPos.scope = 0;
 	}
 
-	ClickPos.line = nLine;
-	//m_PaneWithFocus = nPane;
-
 	// if the left margin is clicked, the whole line is selected
-	if (point.x < 0)
+	if (ClickPos.pos < 0)
 	{
 		if (0 == (nFlags & MK_SHIFT))
 		{
 			SetCaretPosition(ClickPos, SetPositionCancelSelection);
 		}
-		if (GetDocument()->m_SelectionAnchor.line <= nLine)
+		if (GetDocument()->m_SelectionAnchor.line <= ClickPos.line)
 		{
 			ClickPos.line++;
 		}
@@ -1280,7 +1285,6 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 	}
 	else
 	{
-		ClickPos.pos = (m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth());
 		if (0 == (nFlags & MK_SHIFT))
 		{
 			flags |= SetPositionCancelSelection;
@@ -1314,22 +1318,17 @@ void CDiffFileView::OnMouseMove(UINT nFlags, CPoint point)
 	}
 	if (m_TrackingSelection)
 	{
-		point.x = PointToPaneOffset(point.x, m_PaneWithFocus) - m_LineNumberMarginWidth;
+		TextPosDisplay ClickPos = PointToTextPos(point, m_PaneWithFocus);
 
-		int nLine = point.y / LineHeight() + m_FirstLineSeen;
-
-		if (point.x < 0)
+		if (ClickPos.pos < 0)
 		{
-			if (GetDocument()->m_SelectionAnchor.line <= nLine)
+			if (GetDocument()->m_SelectionAnchor.line <= ClickPos.line)
 			{
-				nLine++;
+				ClickPos.line++;
 			}
-			SetCaretPosition(0, nLine, SetPositionMakeVisible);
+			ClickPos.pos = 0;
 		}
-		else
-		{
-			SetCaretPosition(m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth(), nLine, SetPositionMakeVisible);
-		}
+		SetCaretPosition(ClickPos.pos, ClickPos.line, SetPositionMakeVisible);
 	}
 	CView::OnMouseMove(nFlags, point);
 }
@@ -1463,9 +1462,8 @@ BOOL CDiffFileView::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 	{
 		CPoint p;
 
-		GetCursorPos( & p);
-		ScreenToClient( & p);
-//        int nPane = PointToPaneNumber(p.x);
+		GetCursorPos(&p);
+		ScreenToClient(&p);
 		p.x = PointToPaneOffset(p.x);
 
 		if (p.x >= m_LineNumberMarginWidth)
@@ -1856,15 +1854,14 @@ void CDiffFileView::OnLButtonDblClk(UINT nFlags, CPoint point)
 	TRACE("CDiffFileView::OnLButtonDblClk\n");
 	// select a word
 	m_LButtonDown = true;
-	point.x = PointToPaneOffset(point.x) - m_LineNumberMarginWidth;
+	TextPosDisplay pos = PointToTextPos(point);
 
-	if (point.x < 0)
+	if (pos.pos < 0)
 	{
 		return;
 	}
-	// TODO!!!
-	SetCaretPosition(m_FirstPosSeen + (point.x + CharWidth() / 2) / CharWidth(),
-					point.y / LineHeight() + m_FirstLineSeen,
+
+	SetCaretPosition(pos.pos, pos.line,
 					SetWordSelectionMode | SetPositionMakeVisible);
 }
 
@@ -2022,29 +2019,25 @@ void CDiffFileView::OnEditGotoline()
 void CDiffFileView::OnRButtonDown(UINT nFlags, CPoint point)
 {
 	CPoint point1 = point;
-//    int nPane = PointToPaneNumber(point.x);
-	point1.x = PointToPaneOffset(point1.x) - m_LineNumberMarginWidth;
+	TextPosDisplay NewPos = PointToTextPos(point);
 
 	int flags = SetPositionMakeVisible | SetPositionCancelSelection;
-	// if the left margin is clicked, the whole line is selected
-	int nLine = point1.y / LineHeight() + m_FirstLineSeen;
 
-	if (point1.x < 0)
+	// if the left margin is clicked, the whole line is selected
+	if (NewPos.pos < 0)
 	{
-		SetCaretPosition(0, nLine, flags);
+		SetCaretPosition(0, NewPos.line, flags);
 	}
 	else
 	{
 		ThisDoc * pDoc = GetDocument();
-
-		TextPosDisplay NewPos(nLine, (m_FirstPosSeen + (point1.x + CharWidth() / 2) / CharWidth()),
-							pDoc->m_CaretPos.scope);
+		NewPos.scope = pDoc->m_CaretPos.scope;
 		if (pDoc->m_CaretPos <= pDoc->m_SelectionAnchor
 			&& (NewPos < pDoc->m_CaretPos || NewPos > pDoc->m_SelectionAnchor)
 			|| pDoc->m_CaretPos > pDoc->m_SelectionAnchor
 			&& (NewPos > pDoc->m_CaretPos || NewPos < pDoc->m_SelectionAnchor))
 		{
-			SetCaretPosition(NewPos.pos, nLine, flags);
+			SetCaretPosition(NewPos.pos, NewPos.line, flags);
 		}
 	}
 

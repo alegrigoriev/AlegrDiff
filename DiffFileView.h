@@ -99,6 +99,7 @@ public:
 	void SetCaretPosition(int pos, int line, int flags = SetPositionCancelSelection);
 	void SetCaretPosition(TextPosDisplay pos, int flags = SetPositionCancelSelection);
 	void SetCaretPosition(TextPosLine pos, int FileScope, int flags = SetPositionCancelSelection);
+	TextPosDisplay PointToTextPos(POINT point, int pane = -1);
 
 	void CreateAndShowCaret();
 	void UpdateVScrollBar();

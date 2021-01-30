@@ -326,12 +326,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 		pDC->GetClipBox( & ur);
 	}
 
-	int nPaneWidth = cr.Width()
-					- m_LineNumberMarginWidth * m_NumberOfPanes
-					- (m_NumberOfPanes - 1);
-
-	nPaneWidth = nPaneWidth / CharWidth() / m_NumberOfPanes * CharWidth()
-				+ m_LineNumberMarginWidth + 1;
+	int nPaneWidth = GetPaneWidth(cr);
 
 	CString s;
 
@@ -2184,11 +2179,17 @@ int CDiffFileView::PointToPaneOffset(int x, int nPane)
 	return x - nPane * nPaneWidth;
 }
 
-int CDiffFileView::GetPaneWidth()
+int CDiffFileView::GetPaneWidth(RECT const* client_rect)
 {
-
 	CRect cr;
-	GetClientRect( & cr);
+	if (client_rect != nullptr)
+	{
+		cr = *client_rect;
+	}
+	else
+	{
+		GetClientRect(&cr);
+	}
 
 	if (1 == m_NumberOfPanes)
 	{

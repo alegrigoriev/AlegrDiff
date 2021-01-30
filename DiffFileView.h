@@ -117,7 +117,7 @@ public:
 
 	int PointToPaneNumber(int x);
 	int PointToPaneOffset(int x, int nPane = -1);
-	int GetPaneWidth();
+	int GetPaneWidth(RECT const *client_rect = nullptr);
 	bool OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvokeDialog);
 
 protected:

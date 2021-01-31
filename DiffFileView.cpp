@@ -119,6 +119,7 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 	}
 
 	pDC->MoveTo(point);
+	CRect ClipRect(point.x, point.y, point.x, point.y + LineHeight());
 	int ExpandedLinePos = 0;    // position with expanded tabs
 	StringSection * pSection = SectionEntry->First();
 
@@ -248,8 +249,9 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 			pDC->SetBkColor(BackgroundColor);
 			pDC->SetTextColor(Color);
 			pDC->SelectObject(pFont);
-			// text is drawn from the current position
-			pDC->TextOut(0, 0, pText, nCharsToDraw);
+			ClipRect.right = ClipRect.left + nCharsToDraw * CharWidth();
+			pDC->ExtTextOut(ClipRect.left, ClipRect.top, ETO_CLIPPED|ETO_OPAQUE, ClipRect, pText, nCharsToDraw, NULL);
+			ClipRect.left = ClipRect.right;
 			nDrawnChars += nCharsToDraw;
 			pText += nCharsToDraw;
 			Length -= nCharsToDraw;
@@ -259,32 +261,24 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 	int nBeforeSelection = SelBegin - nDrawnChars;
 	if (nBeforeSelection > 0)
 	{
-		for (int i = 0; i < nBeforeSelection; i++)
-		{
-			buf[i] = ' ';
-		}
-		buf[nBeforeSelection] = 0;
 		pDC->SetBkColor(pApp->m_TextBackgroundColor);
 		pDC->SetTextColor(pApp->m_NormalTextColor);
-		pDC->SelectObject(& pApp->m_NormalFont);
-		// text is drawn from the current position
-		pDC->TextOut(0, 0, buf, nBeforeSelection);
+		pDC->SelectObject(&pApp->m_NormalFont);
+		ClipRect.right = ClipRect.left + nBeforeSelection * CharWidth();
+		pDC->ExtTextOut(ClipRect.left, ClipRect.top, ETO_CLIPPED|ETO_OPAQUE, ClipRect, L" ", 1, NULL);
+		ClipRect.left = ClipRect.right;
 		nDrawnChars += nBeforeSelection;
 	}
 
 	int nMoreSelection = SelEnd - nDrawnChars;
 	if (nMoreSelection > 0)
 	{
-		for (int i = 0; i < nMoreSelection; i++)
-		{
-			buf[i] = ' ';
-		}
-		buf[nMoreSelection] = 0;
 		pDC->SetBkColor(0x000000);
 		pDC->SetTextColor(pApp->m_SelectedTextColor);
-		pDC->SelectObject(& pApp->m_NormalFont);
-		// text is drawn from the current position
-		pDC->TextOut(0, 0, buf, nMoreSelection);
+		pDC->SelectObject(&pApp->m_NormalFont);
+		ClipRect.right = ClipRect.left + nMoreSelection * CharWidth();
+		pDC->ExtTextOut(ClipRect.left, ClipRect.top, ETO_CLIPPED|ETO_OPAQUE, ClipRect, L" ", 1, NULL);
+		ClipRect.left = ClipRect.right;
 	}
 }
 
@@ -369,8 +363,6 @@ void CDiffFileView::OnDraw(CDC* pDC)
 
 		int nTabIndent = GetApp()->m_TabIndent;
 
-		pDC->SetTextAlign(pDC->GetTextAlign() | TA_UPDATECP);
-
 		eFileScope nPaneToDraw = eFileScope(nPane + 1);
 
 		if (1 == m_NumberOfPanes)
@@ -452,15 +444,16 @@ void CDiffFileView::OnDraw(CDC* pDC)
 				{
 					DWORD TextColor = pApp->m_NormalTextColor;
 
-					pDC->SetTextAlign(TA_RIGHT | TA_TOP | TA_NOUPDATECP);
+					pDC->SetTextAlign(TA_RIGHT | TA_TOP);
 					pDC->SetBkColor(pApp->m_TextBackgroundColor);
-					pDC->SelectObject( & pApp->m_NormalFont);
+					pDC->SelectObject(&pApp->m_NormalFont);
+					CRect r(0, PosY, m_LineNumberMarginWidth - 1, PosY + nLineHeight);
 
 					if (!pFilePair->CanCompare())
 					{
 						s.Format(_T("%d"), pPair->pFirstLine->GetLineNumber() + 1);
 						pDC->SetTextColor(TextColor);
-						pDC->TextOut(m_LineNumberMarginWidth - CharWidth(), PosY, s);
+						pDC->ExtTextOutW(m_LineNumberMarginWidth - 1, PosY, ETO_CLIPPED, r, s, NULL);
 					}
 					else
 					{
@@ -479,7 +472,8 @@ void CDiffFileView::OnDraw(CDC* pDC)
 							{
 								pos = m_LineNumberMarginWidth / 2 - CharWidth();
 							}
-							pDC->TextOut(pos, PosY, s);
+							r.right = pos;
+							pDC->ExtTextOutW(pos, PosY, ETO_CLIPPED, r, s, NULL);
 						}
 						if (NULL != pPair->pSecondLine
 							&& (m_NumberOfPanes == 1 || nPane == 1))
@@ -495,12 +489,16 @@ void CDiffFileView::OnDraw(CDC* pDC)
 							{
 								pos = m_LineNumberMarginWidth - CharWidth();
 							}
-							pDC->TextOut(pos, PosY, s);
+							else
+							{
+								r.left = PosX - m_LineNumberMarginWidth;
+							}
+							r.right = pos;
+							pDC->ExtTextOutW(pos, PosY, ETO_CLIPPED, r, s, NULL);
 						}
 					}
 
-					pDC->SetTextAlign(TA_LEFT | TA_TOP |TA_UPDATECP);
-
+					pDC->SetTextAlign(TA_LEFT | TA_TOP);
 				}
 			}
 
@@ -746,7 +744,6 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 				end = pDoc->m_CaretPos;
 			}
 
-			// TODO
 			InvalidateRange(begin, end);
 
 			TextPosLine CaretPosLine = pDoc->DisplayPosToLinePos(pDoc->m_CaretPos);

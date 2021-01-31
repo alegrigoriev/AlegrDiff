@@ -120,7 +120,7 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 
 	CGdiObjectSaveT<CFont> OldFont(pDC, pDC->SelectObject( & pApp->m_NormalFont));
 
-	pDC->SetTextAlign(pDC->GetTextAlign() | TA_UPDATECP);
+	pDC->SetTextAlign(TA_TOP|TA_LEFT);
 
 	DWORD TextColor = pApp->m_NormalTextColor;
 	DWORD OtherColor, AlternateColor;
@@ -152,20 +152,19 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 		}
 
 		TCHAR buf[256];
+		CRect clip_rect(0, CurrentY, m_AddressMarginWidth-1, CurrentY + LineHeight());
 
 		int len = _stprintf_s(buf, countof(buf), _T("%0*I64X "), m_MaxAddressChars, CurrentAddr);
 
 		pDC->MoveTo(0, CurrentY);
 		pDC->SetBkColor(pApp->m_TextBackgroundColor);
 		pDC->SetTextColor(pApp->m_NormalTextColor);
-		pDC->TextOut(0, CurrentY, buf, len);
+		pDC->ExtTextOut(0, CurrentY, ETO_CLIPPED|ETO_OPAQUE, clip_rect, buf, len, NULL);
 
 		for (int pane = 0; pane < m_NumberOfPanes; pane++)
 		{
 			FileItem * pFile;
 			FileItem * pOtherFile;
-
-			pDC->MoveTo(m_AddressMarginWidth + pane * PaneWidth, CurrentY);
 
 			if (((1 == m_NumberOfPanes && m_bShowSecondFile)
 					|| (pane >= 1))
@@ -205,7 +204,7 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 				MaxPosToDraw++;
 			}
 
-			pDC->MoveTo(m_AddressMarginWidth + PaneWidth * pane, CurrentY);
+			clip_rect.left = m_AddressMarginWidth + PaneWidth * pane;
 
 			for (unsigned offset = 0;
 				offset < m_BytesPerLine;
@@ -312,7 +311,9 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 					{
 						pDC->SetBkColor(BackgroundColor);
 						pDC->SetTextColor(color);
-						pDC->TextOut(0, 0, pDrawnBuf, len);
+						clip_rect.right = clip_rect.left + len * CharWidth();
+						pDC->ExtTextOut(clip_rect.left, CurrentY, ETO_CLIPPED|ETO_OPAQUE, clip_rect, pDrawnBuf, len, NULL);
+						clip_rect.left = clip_rect.right;
 					}
 				}
 			}
@@ -414,7 +415,9 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 				{
 					pDC->SetBkColor(BackgroundColor);
 					pDC->SetTextColor(color);
-					pDC->TextOut(0, 0, buf, chars);
+					clip_rect.right = clip_rect.left + chars * CharWidth();
+					pDC->ExtTextOut(clip_rect.left, CurrentY, ETO_CLIPPED | ETO_OPAQUE, clip_rect, buf, chars, NULL);
+					clip_rect.left = clip_rect.right;
 				}
 			}
 		}

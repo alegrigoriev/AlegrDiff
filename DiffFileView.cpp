@@ -515,19 +515,44 @@ void CDiffFileView::OnDraw(CDC* pDC)
 
 TextPosDisplay CDiffFileView::PointToTextPos(POINT point, int pane)
 {
+	ULONG hit_test = HitTest(point, pane, true);
+	int pos = -1;
+	if (!(hit_test & HitTestNumberMargin))
+	{
+		pos = (hit_test & HitTestPositionMask) >> HitTestPositionShift;
+	}
+
+	int nLine = (hit_test & HitTestLineNumberMask) >> HitTestLineNumberShift;
+	return TextPosDisplay(nLine, pos, (hit_test & HitTestPaneMask) >> HitTestPaneShift);
+}
+
+// if NeedCharIndex, the precise index of the hit character is calculated
+ULONG CDiffFileView::HitTest(POINT p, int pane, bool NeedCharIndex)
+{
 	if (pane == -1)
 	{
-		pane = PointToPaneNumber(point.x);
+		pane = PointToPaneNumber(p.x);
 	}
+	ULONG result = pane << HitTestPaneShift;
 
-	int pos = PointToPaneOffset(point.x) - m_LineNumberMarginWidth;
-	if (pos >= 0)
+	int const pos = PointToPaneOffset(p.x) - m_LineNumberMarginWidth;
+	if (pos < 0)
 	{
-		pos = m_FirstPosSeen + (pos + CharWidth() / 2) / CharWidth();
+		result |= HitTestNumberMargin;
+	}
+	else if (NeedCharIndex)
+	{
+		// TODO: Use GetTextExtentPoint function
+		result |= ((m_FirstPosSeen + (pos + CharWidth() / 2) / CharWidth()) << HitTestPositionShift) & HitTestPositionMask;
+	}
+	else
+	{
+		result |= (pos << HitTestPositionShift) & HitTestPositionMask;
 	}
 
-	int nLine = point.y / LineHeight() + m_FirstLineSeen;
-	return TextPosDisplay(nLine, pos, pane);
+	result |= ((p.y / LineHeight() + m_FirstLineSeen) << HitTestLineNumberShift) & HitTestLineNumberMask;
+
+	return result;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1592,7 +1617,6 @@ void CDiffFileView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 		{
 			m_PaneWithFocus = 0;
 		}
-		TRACE("m_PaneWithFocus=%d\n", m_PaneWithFocus);
 	}
 	else if (lHint == ThisDoc::InvalidateRange)
 	{

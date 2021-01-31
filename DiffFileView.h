@@ -118,6 +118,18 @@ public:
 	int PointToPaneNumber(int x);
 	int PointToPaneOffset(int x, int nPane = -1);
 	int GetPaneWidth(RECT const *client_rect = nullptr);
+	ULONG HitTest(POINT p, int pane = -1, bool NeedCharIndex = false); // if NeedCharIndex, the precise index of the hit character is calculated
+	enum
+	{
+		HitTestLineNumberMask = 0xFFF,  // lines on screen
+		HitTestLineNumberShift = 0,
+		HitTestPaneMask = 0x3000,
+		HitTestPaneShift = 12,
+		HitTestPositionMask = 0x7FFF0000, // if NeedCharIndex, this is character index, rounded to closest inter-char gap
+		HitTestPositionShift = 16,
+		// if !NeedCharIndex, this is pixel relative to the beginning of the text area of the pane
+		HitTestNumberMargin = 0x80000000,
+	};
 	bool OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvokeDialog);
 
 protected:

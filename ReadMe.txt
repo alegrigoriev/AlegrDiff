@@ -35,9 +35,9 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+Properly set caret on EOL.
 Column to sort is not getting saved in config
-Horizontal scrill bar is not using the actual width
-Text and bytes selection change leaves white lines
+Horizontal scroll bar is not using the actual width
 OnViewRefresh not defined for binary files
 "Parent directory exists only in" should only print the name of base directory (or )
 Problem with scroll of large binary file view
@@ -51,6 +51,9 @@ Directory dialog allows to select network host. It won't return anything then.
 Estimated time left is not shown while calculating a fingerpring of a big file  (???)
 
 Done:
+Show EOL selection.
+Need to fill the whole line with diff line color, unless it's a single file view and it has
+Text and bytes selection change leaves white and black lines
 Line numbers and file offsets erase the separator line
 Binary word selection need to select a word as soon the cursor is after it
 Sort order change needs to keep column sizes
@@ -69,15 +72,8 @@ New state codes:
 Reading first file
 Reading second file
 
-When list view is created, subitems are numbered in contiguous order (1, 2, 3, 4,5) as the columns are added
-When a column is removed, subitem numbers are changed.
-When a column is moved, subitems are reordered.
-When a column is added, its subitem number is the last.
-When a header item is clicked, use subitem number to convert to the column type
 
-
-BuildFilePairList builds new sorted trees for left and right, then merges them with the old trees:
-Lists for left and right files are sorted to 2 trees, and the common dictionary is updated.
-1. New FileItem is inserted into the "old" tree.
-2. Existing FileItem is left from old tree, and new one is deleted (inserted back to list-to-delete).
-3. Non-existing FileItem is removed from the tree, but not deleted. It will be deleted when FilePair list is updated. It's removed from dictionary, though.
+For text output:
+1. Call GetTextExtentExPoint to get text extent array.
+2. If this is the line with caret, save the result in m_LineExtentCache
+3. Call ExtTextOut to draw the text. The function uses widths of each character, while GetTextExtentExPoint returns the accumulated extent.

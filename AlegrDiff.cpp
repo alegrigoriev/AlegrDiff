@@ -70,12 +70,6 @@ CAlegrDiffApp::CAlegrDiffApp()
 	m_pListDiffTemplate(NULL),
 	m_pBinaryDiffTemplate(NULL),
 	m_TabIndent(4),
-	m_NormalTextColor(0),
-	m_ErasedTextColor(0x000000FF),  // red
-	m_AddedTextColor(0x00FF0000),   // blue
-	m_AcceptedTextBackgroundColor(0x0000FFFF),  // yellow
-	m_DiscardedTextBackgroundColor(0x00C0C0C0),  // dark gray
-	m_TextBackgroundColor(0xFFFFFF),
 	m_FontPointSize(100),
 	m_MinimalLineLength(2),
 	m_MinMatchingChars(3),
@@ -126,10 +120,9 @@ CAlegrDiffApp::CAlegrDiffApp()
 	_tcsncpy_s(m_NormalLogFont.lfFaceName, countof(m_NormalLogFont.lfFaceName), _T("Courier New"), LF_FACESIZE);
 
 	m_AddedLogFont = m_NormalLogFont;
-	m_AddedLogFont.lfUnderline = TRUE;
 
 	m_ErasedLogFont = m_NormalLogFont;
-	m_ErasedLogFont.lfStrikeOut = TRUE;
+
 	EnableHtmlHelp();
 }
 
@@ -162,11 +155,35 @@ BOOL CAlegrDiffApp::InitInstance()
 
 	//LoadStdProfileSettings();  // Load standard INI file options (including MRU)
 
-	Profile.AddItem(_T("Settings"), _T("NormalTextColor"), m_NormalTextColor, 0, 0, 0xFFFFFF);
-	Profile.AddItem(_T("Settings"), _T("AddedTextColor"), m_AddedTextColor, 0x00FF0000, 0, 0xFFFFFF);
-	Profile.AddItem(_T("Settings"), _T("ErasedTextColor"), m_ErasedTextColor, 0x000000FF, 0, 0xFFFFFF);
-	Profile.AddItem(_T("Settings"), _T("AcceptedTextBackgroundColor"), m_AcceptedTextBackgroundColor, 0x0000FF00, 0, 0xFFFFFF);
-	Profile.AddItem(_T("Settings"), _T("DiscardedTextBackgroundColor"), m_DiscardedTextBackgroundColor, 0x00C0C0C0, 0, 0xFFFFFF);
+	Profile.AddItem(_T("Settings\\Color"), _T("NormalText"), m_TextColor.Normal.Text, m_TextColor.Normal.Text, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("NormalBackground"), m_TextColor.Normal.BG, m_TextColor.Normal.BG, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("SelectedText"), m_TextColor.Selected.Text, m_TextColor.Selected.Text, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("SelectedBackground"), m_TextColor.Selected.BG, m_TextColor.Selected.BG, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("ErasedLineText"), m_ErasedLineColor.Normal.Text, m_ErasedLineColor.Normal.Text, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("ErasedLineBackground"), m_ErasedLineColor.Normal.BG, m_ErasedLineColor.Normal.BG, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("ErasedText"), m_ErasedColor.Normal.Text, m_ErasedColor.Normal.Text, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("ErasedBackground"), m_ErasedColor.Normal.BG, m_ErasedColor.Normal.BG, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("ErasedSelLineText"), m_ErasedLineColor.Selected.Text, m_ErasedLineColor.Selected.Text, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("ErasedSelLineBackground"), m_ErasedLineColor.Selected.BG, m_ErasedLineColor.Selected.BG, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("ErasedSelText"), m_ErasedColor.Selected.Text, m_ErasedColor.Selected.Text, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("ErasedSelBackground"), m_ErasedColor.Selected.BG, m_ErasedColor.Selected.BG, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("AddedLineText"), m_AddedLineColor.Normal.Text, m_AddedLineColor.Normal.Text, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("AddedLineBackground"), m_AddedLineColor.Normal.BG, m_AddedLineColor.Normal.BG, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("AddedText"), m_AddedColor.Normal.Text, m_AddedColor.Normal.Text, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("AddedBackground"), m_AddedColor.Normal.BG, m_AddedColor.Normal.BG, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("AddedSelLineText"), m_AddedLineColor.Selected.Text, m_AddedLineColor.Selected.Text, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("AddedSelLineBackground"), m_AddedLineColor.Selected.BG, m_AddedLineColor.Selected.BG, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("AddedSelText"), m_AddedColor.Selected.Text, m_AddedColor.Selected.Text, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("AddedSelBackground"), m_AddedColor.Selected.BG, m_AddedColor.Selected.BG, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("AcceptedText"), m_AcceptedColor.Normal.Text, m_AcceptedColor.Normal.Text, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("AcceptedBackground"), m_AcceptedColor.Normal.BG, m_AcceptedColor.Normal.BG, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("AcceptedText"), m_AcceptedColor.Selected.Text, m_AcceptedColor.Selected.Text, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("AcceptedBackground"), m_AcceptedColor.Selected.BG, m_AcceptedColor.Selected.BG, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("DiscardedText"), m_DiscardedColor.Normal.Text, m_DiscardedColor.Normal.Text, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("DiscardedBackground"), m_DiscardedColor.Normal.BG, m_DiscardedColor.Normal.BG, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("DiscardedText"), m_DiscardedColor.Selected.Text, m_DiscardedColor.Selected.Text, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("DiscardedBackground"), m_DiscardedColor.Selected.BG, m_DiscardedColor.Selected.BG, RGB(0, 0, 0), RGB(255, 255, 255));
+	Profile.AddItem(_T("Settings\\Color"), _T("LineNumbers"), m_LineNumberTextColor, m_LineNumberTextColor, RGB(0, 0, 0), RGB(255, 255, 255));
 
 	Profile.AddItem(_T("Settings"), _T("NormalFont"), m_NormalLogFont, m_NormalLogFont);
 	Profile.AddItem(_T("Settings"), _T("AddedFont"), m_AddedLogFont, m_AddedLogFont);
@@ -284,8 +301,7 @@ BOOL CAlegrDiffApp::InitInstance()
 		}
 	}
 
-	m_TextBackgroundColor = GetSysColor(COLOR_WINDOW);
-	m_SelectedTextColor = 0xFFFFFF;
+	m_TextColor.Normal.BG = GetSysColor(COLOR_WINDOW);
 	// Register the application's document templates.  Document templates
 	//  serve as the connection between documents, frame windows and views.
 
@@ -476,15 +492,15 @@ void CAlegrDiffApp::OnFilePreferences()
 	dlg.m_ViewPage.m_nTabIndent = m_TabIndent;
 
 	dlg.m_ViewPage.m_NormalLogFont = m_NormalLogFont;
-	dlg.m_ViewPage.m_NormalTextColor = m_NormalTextColor;
+	dlg.m_ViewPage.m_NormalTextColor = m_TextColor.Normal.Text;
 	dlg.m_ViewPage.m_AddedLogFont = m_AddedLogFont;
-	dlg.m_ViewPage.m_AddedTextColor = m_AddedTextColor;
+	dlg.m_ViewPage.m_AddedTextColor = m_AddedColor.Normal.Text;
 	dlg.m_ViewPage.m_ErasedLogFont = m_ErasedLogFont;
-	dlg.m_ViewPage.m_ErasedTextColor = m_ErasedTextColor;
+	dlg.m_ViewPage.m_ErasedTextColor = m_ErasedColor.Normal.Text;
 	dlg.m_ViewPage.m_FontPointSize = m_FontPointSize;
-	dlg.m_ViewPage.m_NormalTextBackground = m_TextBackgroundColor;
-	dlg.m_ViewPage.m_AddedTextBackground = m_AcceptedTextBackgroundColor;
-	dlg.m_ViewPage.m_ErasedTextBackground = m_DiscardedTextBackgroundColor;
+	dlg.m_ViewPage.m_NormalTextBackground = m_TextColor.Normal.BG;
+	dlg.m_ViewPage.m_AddedTextBackground = m_AcceptedColor.Normal.BG;
+	dlg.m_ViewPage.m_ErasedTextBackground = m_DiscardedColor.Normal.BG;
 	dlg.m_ViewPage.m_bCancelSelectionOnMerge = m_bCancelSelectionOnMerge;
 
 	dlg.m_ComparisionPage.m_MinimalLineLength = m_MinimalLineLength;
@@ -515,22 +531,22 @@ void CAlegrDiffApp::OnFilePreferences()
 		if (dlg.m_ViewPage.m_bFontChanged)
 		{
 			m_NormalLogFont = dlg.m_ViewPage.m_NormalLogFont;
-			m_NormalTextColor = dlg.m_ViewPage.m_NormalTextColor;
+			m_TextColor.Normal.Text = dlg.m_ViewPage.m_NormalTextColor;
 
 			m_AddedLogFont = dlg.m_ViewPage.m_AddedLogFont;
-			m_AddedTextColor = dlg.m_ViewPage.m_AddedTextColor;
+			m_AddedColor.Normal.Text = dlg.m_ViewPage.m_AddedTextColor;
 
 			m_ErasedLogFont = dlg.m_ViewPage.m_ErasedLogFont;
-			m_ErasedTextColor = dlg.m_ViewPage.m_ErasedTextColor;
+			m_ErasedColor.Normal.Text = dlg.m_ViewPage.m_ErasedTextColor;
 
 			m_FontPointSize = dlg.m_ViewPage.m_FontPointSize;
 			OnFontChanged();
 		}
 		else if (dlg.m_ViewPage.m_bColorChanged)
 		{
-			m_TextBackgroundColor = dlg.m_ViewPage.m_NormalTextBackground;
-			m_AcceptedTextBackgroundColor = dlg.m_ViewPage.m_AddedTextBackground;
-			m_DiscardedTextBackgroundColor = dlg.m_ViewPage.m_ErasedTextBackground;
+			m_TextColor.Normal.BG = dlg.m_ViewPage.m_NormalTextBackground;
+			m_AcceptedColor.Normal.BG = dlg.m_ViewPage.m_AddedTextBackground;
+			m_DiscardedColor.Normal.BG = dlg.m_ViewPage.m_ErasedTextBackground;
 
 			UpdateAllViews(UpdateViewsColorsChanged);
 		}

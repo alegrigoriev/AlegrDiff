@@ -72,13 +72,54 @@ public:
 
 	CApplicationProfile Profile;
 
-	DWORD m_NormalTextColor;
-	DWORD m_ErasedTextColor;
-	DWORD m_AddedTextColor;
-	DWORD m_TextBackgroundColor;
-	DWORD m_AcceptedTextBackgroundColor;
-	DWORD m_DiscardedTextBackgroundColor;
-	DWORD m_SelectedTextColor;
+	struct COLOR_PAIR
+	{
+		COLORREF Text;
+		COLORREF BG;
+	};
+	struct NORMAL_OR_SELECTED_COLOR
+	{
+		COLOR_PAIR Normal;
+		COLOR_PAIR Selected;
+	};
+
+	NORMAL_OR_SELECTED_COLOR m_TextColor =
+	{
+		{ RGB(0, 0, 0), RGB(255, 255, 255) },
+		{ RGB(0, 0, 0), RGB(153, 201, 239) },
+	};
+	NORMAL_OR_SELECTED_COLOR m_ErasedLineColor =
+	{
+		{ RGB(0, 0, 0), RGB(235, 153, 153) },
+		{ RGB(0, 0, 0), RGB(153, 140, 208) },
+	};
+	NORMAL_OR_SELECTED_COLOR m_ErasedColor =
+	{
+		{ RGB(0, 0, 0), RGB(255, 204, 204) },
+		{ RGB(0, 0, 0), RGB(153, 170, 208) },
+	};
+	NORMAL_OR_SELECTED_COLOR m_AddedLineColor =
+	{
+		{ RGB(0, 0, 0), RGB(215, 227, 188) },
+		{ RGB(0, 0, 0), RGB(129, 184, 199) },
+	};
+	NORMAL_OR_SELECTED_COLOR m_AddedColor =
+	{
+		{ RGB(0, 0, 0), RGB(235, 241, 221) },
+		{ RGB(0, 0, 0), RGB(141, 193, 219) },
+	};
+	NORMAL_OR_SELECTED_COLOR m_AcceptedColor =
+	{
+		{ RGB(0, 0, 0), RGB(240, 240, 0) },
+		{ RGB(0, 0, 0), RGB(141, 141, 0) },
+	};
+	NORMAL_OR_SELECTED_COLOR m_DiscardedColor =
+	{
+		{ RGB(0, 0, 0), RGB(192, 192, 192) },
+		{ RGB(0, 0, 0), RGB(128, 128, 128) },
+	};
+
+	COLORREF   m_LineNumberTextColor = RGB(43, 145, 175);
 
 	union
 	{

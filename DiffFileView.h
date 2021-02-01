@@ -136,7 +136,8 @@ protected:
 	void DrawStringSections(CDC* pDC, CPoint point,
 							ListHead<StringSection> const * pSection,
 							int nSkipChars, int nVisibleChars, int nTabIndent,
-							int SelBegin, int SelEnd, eFileScope nFileSelect);
+							int SelBegin, int SelEnd, eFileScope nFileSelect,
+							CThisApp::NORMAL_OR_SELECTED_COLOR const* DefaultColor);
 
 	virtual ~CDiffFileView();
 #ifdef _DEBUG

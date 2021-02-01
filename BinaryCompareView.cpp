@@ -84,8 +84,106 @@ BEGIN_MESSAGE_MAP(CBinaryCompareView, BaseClass)
 	ON_COMMAND(ID_EDIT_GOTOLINE, OnEditGoto)
 END_MESSAGE_MAP()
 
+struct BufferedDraw
+{
+	BufferedDraw(CDC* dc, const RECT* clip_rect, unsigned hide_chars, INT char_width)
+		: pDC(dc), ClipRect(*clip_rect), HideChars(hide_chars), CharWidth(char_width)
+	{}
+	~BufferedDraw()
+	{
+		Flush();
+	}
+	void Draw(LPCTSTR str, unsigned char_position,
+			COLORREF text_color, COLORREF BG);
+	void Flush();
 
-// CBinaryCompareView drawing
+	CDC* pDC;
+	const RECT ClipRect;
+	unsigned const HideChars;
+	INT CharWidth;
+
+	TCHAR Buffer[256];
+	unsigned BufFilled = 0;
+	unsigned BufBeginPos = 0;
+	COLORREF BufTextColor = 0;
+	COLORREF BufBgColor = 0;
+};
+
+void BufferedDraw::Draw(LPCTSTR str, unsigned char_position,
+						COLORREF text_color, COLORREF BG)
+{
+	unsigned len = (unsigned) _tcslen(str);
+	if (BufFilled != 0
+		&& (text_color != BufTextColor
+			|| BG != BufBgColor
+			|| char_position != BufBeginPos + BufFilled)
+		|| BufFilled + len > sizeof Buffer / sizeof Buffer[0])
+	{
+		Flush();
+	}
+	if (BufFilled == 0)
+	{
+		BufTextColor = text_color;
+		BufBgColor = BG;
+		BufBeginPos = char_position;
+	}
+	while (len != 0)
+	{
+		unsigned to_copy = len;
+		if (to_copy > sizeof Buffer / sizeof Buffer[0] - BufFilled)
+		{
+			to_copy = sizeof Buffer / sizeof Buffer[0] - BufFilled;
+		}
+		memcpy(Buffer + BufFilled, str, to_copy * sizeof Buffer[0]);
+		str += to_copy;
+		BufFilled += to_copy;
+		char_position += to_copy;
+		len -= to_copy;
+		if (BufFilled == sizeof Buffer / sizeof Buffer[0])
+		{
+			Flush();
+		}
+	}
+}
+
+void BufferedDraw::Flush()
+{
+	if (BufFilled == 0)
+	{
+		return;
+	}
+	int to_draw = BufFilled;
+	unsigned pos_to_draw = BufBeginPos;
+	LPCTSTR buf_to_draw = Buffer;
+	if (pos_to_draw < HideChars)
+	{
+		unsigned const adjust_by = HideChars - pos_to_draw;
+		buf_to_draw += adjust_by;
+		pos_to_draw += adjust_by;
+		to_draw -= adjust_by;
+	}
+
+	if (to_draw > 0)
+	{
+		CRect out_rect(ClipRect);
+		out_rect.left += (pos_to_draw - HideChars) * CharWidth;
+		out_rect.right = out_rect.left + to_draw * CharWidth;
+		if (out_rect.right > ClipRect.right)
+		{
+			out_rect.right = ClipRect.right;
+		}
+		if (out_rect.right > out_rect.left)
+		{
+			pDC->SetBkColor(BufBgColor);
+			pDC->SetTextColor(BufTextColor);
+			pDC->ExtTextOut(out_rect.left, ClipRect.top, ETO_CLIPPED | ETO_OPAQUE, out_rect,
+							buf_to_draw, to_draw, NULL);
+		}
+	}
+
+	BufBeginPos += BufFilled;
+	BufFilled = 0;
+}
 
 void CBinaryCompareView::OnDraw(CDC* pDC)
 {
@@ -122,8 +220,6 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 
 	pDC->SetTextAlign(TA_TOP|TA_LEFT);
 
-	DWORD TextColor = pApp->m_NormalTextColor;
-	DWORD OtherColor, AlternateColor;
 	// draw inside update rectangle
 	LONGLONG SelBegin, SelEnd;
 	if (pDoc->m_CaretPos <= pDoc->m_SelectionAnchor)
@@ -157,14 +253,16 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 		int len = _stprintf_s(buf, countof(buf), _T("%0*I64X "), m_MaxAddressChars, CurrentAddr);
 
 		pDC->MoveTo(0, CurrentY);
-		pDC->SetBkColor(pApp->m_TextBackgroundColor);
-		pDC->SetTextColor(pApp->m_NormalTextColor);
+		pDC->SetBkColor(pApp->m_TextColor.Normal.BG);
+		pDC->SetTextColor(pApp->m_LineNumberTextColor);
 		pDC->ExtTextOut(0, CurrentY, ETO_CLIPPED|ETO_OPAQUE, clip_rect, buf, len, NULL);
 
 		for (int pane = 0; pane < m_NumberOfPanes; pane++)
 		{
 			FileItem * pFile;
 			FileItem * pOtherFile;
+			CThisApp::NORMAL_OR_SELECTED_COLOR const* OtherColor = &pApp->m_TextColor;
+			CThisApp::NORMAL_OR_SELECTED_COLOR const* AlternateColor = &pApp->m_TextColor;
 
 			if (((1 == m_NumberOfPanes && m_bShowSecondFile)
 					|| (pane >= 1))
@@ -178,8 +276,8 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 					pOtherFile = NULL;
 				}
 
-				OtherColor = pApp->m_AddedTextColor;
-				AlternateColor = pApp->m_ErasedTextColor;
+				OtherColor = &pApp->m_AddedColor;
+				AlternateColor = &pApp->m_ErasedColor;
 			}
 			else
 			{
@@ -187,24 +285,41 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 
 				pOtherFile = pFilePair->pSecondFile;
 
-				OtherColor = pApp->m_ErasedTextColor;
-				AlternateColor = pApp->m_AddedTextColor;
+				OtherColor = &pApp->m_ErasedColor;
+				AlternateColor = &pApp->m_AddedColor;
 			}
 
-			if ((NULL == pFile || CurrentAddr >= pFile->GetFileLength())
-				&& (NULL == pOtherFile || CurrentAddr >= pOtherFile->GetFileLength()))
+			BYTE data_buf1[128];
+			BYTE data_buf2[128];
+			ULONG data_buf1_len = 0;
+			ULONG data_buf2_len = 0;
+
+			if (NULL != pFile)
+			{
+				data_buf1_len = pFile->GetFileData(CurrentAddr, &data_buf1, m_BytesPerLine);
+			}
+
+			if (NULL != pOtherFile)
+			{
+				data_buf2_len = pOtherFile->GetFileData(CurrentAddr, &data_buf2, m_BytesPerLine);
+			}
+
+			if (data_buf1_len == 0
+				&& data_buf2_len == 0)
 			{
 				break;
 			}
 
-			int PosDrawn = - m_FirstPosSeen;
-			int MaxPosToDraw = PaneWidth / CharWidth();
-			if (pane == m_NumberOfPanes - 1)
-			{
-				MaxPosToDraw++;
-			}
+			int PosDrawn = -m_FirstPosSeen;
 
 			clip_rect.left = m_AddressMarginWidth + PaneWidth * pane;
+			clip_rect.right = clip_rect.left + PaneWidth - 1;
+			if (pane == m_NumberOfPanes - 1)
+			{
+				clip_rect.right = cr.right;
+			}
+
+			BufferedDraw buf_draw(pDC, clip_rect, m_FirstPosSeen, CharWidth());
 
 			for (unsigned offset = 0;
 				offset < m_BytesPerLine;
@@ -212,213 +327,111 @@ void CBinaryCompareView::OnDraw(CDC* pDC)
 			{
 				for (int ByteNum = m_WordSize - 1; ByteNum >= 0; ByteNum--)
 				{
-					LONGLONG ByteOffset = CurrentAddr + offset + ByteNum;
-					UCHAR byte1 = 0;
-					UCHAR byte2 = 0;
+					unsigned ByteOffset = offset + ByteNum;
+					UCHAR CurrByte = data_buf1[ByteOffset];
 
-					BOOL Byte1Valid = FALSE;
+					CThisApp::NORMAL_OR_SELECTED_COLOR const* Colors = &pApp->m_TextColor;
 
-					if (NULL != pFile
-						&& 1 == pFile->GetFileData(ByteOffset, & byte1, 1))
+					if (ByteOffset < data_buf1_len)
 					{
-						Byte1Valid = TRUE;
-					}
 
-					BOOL Byte2Valid = FALSE;
-
-					if (NULL != pOtherFile
-						&& 1 == pOtherFile->GetFileData(ByteOffset, & byte2, 1))
-					{
-						Byte2Valid = TRUE;
-					}
-
-					DWORD color = TextColor;
-
-					if (Byte1Valid)
-					{
-						len = _stprintf_s(buf, countof(buf), _T("%02X"), byte1);
-
-						if (NULL != pOtherFile && (! Byte2Valid
-								|| byte1 != byte2))
+						if (NULL != pOtherFile && (ByteOffset >= data_buf2_len
+								|| CurrByte != data_buf2[ByteOffset]))
 						{
-							color = OtherColor;
+							Colors = OtherColor;
 						}
 					}
 					else if (1 == m_NumberOfPanes
-							&& NULL != pOtherFile && Byte2Valid)
+							&& NULL != pOtherFile && ByteOffset < data_buf2_len)
 					{
-						len = _stprintf_s(buf, countof(buf), _T("%02X"), byte2);
-						color = AlternateColor;
+						CurrByte = data_buf2[ByteOffset];
+						Colors = AlternateColor;
 					}
 					else
 					{
-						buf[0] = ' ';
-						buf[1] = ' ';
-						buf[2] = 0;
-						len = 2;
+						continue;
 					}
 
-					DWORD BackgroundColor = pApp->m_TextBackgroundColor;
-
+					CThisApp::COLOR_PAIR const* color;
 					if ((1 == m_NumberOfPanes
 							|| pane == m_PaneWithFocus)
-						&& ByteOffset < SelEnd
-						&& ByteOffset >= SelBegin)
+						&& ByteOffset + CurrentAddr < SelEnd
+						&& ByteOffset + CurrentAddr >= SelBegin)
 					{
-						color = pApp->m_SelectedTextColor;
-						BackgroundColor = 0x000000;
-					}
-
-					if (ByteNum == 0)
-					{
-						buf[2] = ' ';
-						buf[3] = 0;
-						len++;
-
-						if (offset + m_WordSize == m_BytesPerLine)
-						{
-							_tcscat_s(buf, countof(buf), _T("  "));
-							len += 2;
-						}
-					}
-
-					TCHAR const * pDrawnBuf = buf;
-					if (PosDrawn < 0)
-					{
-						if (PosDrawn + len > 0)
-						{
-							pDrawnBuf += -PosDrawn;
-							len = PosDrawn + len;
-							PosDrawn = len;
-						}
-						else
-						{
-							PosDrawn += len;
-							len = 0;
-						}
+						color = &Colors->Selected;
 					}
 					else
 					{
-						PosDrawn += len;
+						color = &Colors->Normal;
 					}
 
-					if (PosDrawn > MaxPosToDraw)
-					{
-						len -= PosDrawn - MaxPosToDraw;
-					}
+					len = _stprintf_s(buf, countof(buf) - len, _T("%02X"), CurrByte);
+					buf_draw.Draw(buf, PosDrawn, color->Text, color->BG);
+					PosDrawn += len;
 
-					if (len > 0)
+					if (ByteNum == 0
+						&& offset + m_WordSize < m_BytesPerLine)
 					{
-						pDC->SetBkColor(BackgroundColor);
-						pDC->SetTextColor(color);
-						clip_rect.right = clip_rect.left + len * CharWidth();
-						pDC->ExtTextOut(clip_rect.left, CurrentY, ETO_CLIPPED|ETO_OPAQUE, clip_rect, pDrawnBuf, len, NULL);
-						clip_rect.left = clip_rect.right;
+						buf_draw.Draw(_T(" "), PosDrawn, color->Text, color->BG);
+						PosDrawn++;
 					}
 				}
 			}
 
+			PosDrawn += 3;
 			for (unsigned offset = 0;
 				offset < m_BytesPerLine;
 				offset ++)
 			{
-				LONGLONG ByteOffset = CurrentAddr + offset;
-				UCHAR byte1 = 0;
-				UCHAR byte2 = 0;
+				CThisApp::NORMAL_OR_SELECTED_COLOR const* Colors = &pApp->m_TextColor;
+				UCHAR CurrByte = 0;
 
-				BOOL Byte1Valid = FALSE;
-
-				if (NULL != pFile
-					&& 1 == pFile->GetFileData(ByteOffset, & byte1, 1))
+				if (offset < data_buf1_len)
 				{
-					Byte1Valid = TRUE;
-				}
+					CurrByte = data_buf1[offset];
 
-				BOOL Byte2Valid = FALSE;
-
-				if (NULL != pOtherFile
-					&& 1 == pOtherFile->GetFileData(ByteOffset, & byte2, 1))
-				{
-					Byte2Valid = TRUE;
-				}
-
-				UCHAR CurrChar = 0;
-
-				DWORD color = TextColor;
-				if (Byte1Valid)
-				{
-					CurrChar = byte1;
-
-					if (NULL != pOtherFile && (! Byte2Valid
-							|| byte1 != byte2))
+					if (NULL != pOtherFile && (offset >= data_buf2_len
+							|| CurrByte != data_buf2[offset]))
 					{
-						color = OtherColor;
+						Colors = OtherColor;
 					}
 				}
 				else if (1 == m_NumberOfPanes
-						&& NULL != pOtherFile && Byte2Valid)
+						&& NULL != pOtherFile && offset < data_buf2_len)
 				{
-					CurrChar = byte2;
+					CurrByte = data_buf2[offset];
 
-					color = AlternateColor;
+					Colors = AlternateColor;
 				}
 				else
 				{
-					CurrChar = ' ';
+					break;
 				}
 
-				DWORD BackgroundColor = pApp->m_TextBackgroundColor;
+				CThisApp::COLOR_PAIR const* color;
 				if ((1 == m_NumberOfPanes
 						|| pane == m_PaneWithFocus)
-					&& ByteOffset < SelEnd
-					&& ByteOffset >= SelBegin)
+					&& offset + CurrentAddr < SelEnd
+					&& offset + CurrentAddr >= SelBegin)
 				{
-					color = pApp->m_SelectedTextColor;
-					BackgroundColor = 0x000000;
+					color = &Colors->Selected;
+				}
+				else
+				{
+					color = &Colors->Normal;
 				}
 
 				// convert the byte to unicode
-				char tmp = CurrChar;
-				if ( ! isprint(CurrChar)
-					|| 1 != mbtowc(buf, & tmp, 1))
+				char tmp = CurrByte;
+				if (!isprint(CurrByte)
+					|| 1 != mbtowc(buf, &tmp, 1))
 				{
-					buf[0] = '.';
-					buf[1] = 0;
+					CurrByte = '.';
 				}
-
-				int chars = 1;
-
-				if (PosDrawn < 0)
-				{
-					if (PosDrawn + chars > 0)
-					{
-						PosDrawn += chars;
-						chars = PosDrawn;
-					}
-					else
-					{
-						PosDrawn += chars;
-						chars = 0;
-					}
-				}
-				else
-				{
-					PosDrawn += chars;
-				}
-
-				if (PosDrawn > MaxPosToDraw)
-				{
-					chars -= PosDrawn - MaxPosToDraw;
-				}
-
-				if (chars > 0)
-				{
-					pDC->SetBkColor(BackgroundColor);
-					pDC->SetTextColor(color);
-					clip_rect.right = clip_rect.left + chars * CharWidth();
-					pDC->ExtTextOut(clip_rect.left, CurrentY, ETO_CLIPPED | ETO_OPAQUE, clip_rect, buf, chars, NULL);
-					clip_rect.left = clip_rect.right;
-				}
+				buf[0] = CurrByte;
+				buf[1] = 0;
+				buf_draw.Draw(buf, PosDrawn, color->Text, color->BG);
+				PosDrawn ++;
 			}
 		}
 		CurrentAddr += m_BytesPerLine;

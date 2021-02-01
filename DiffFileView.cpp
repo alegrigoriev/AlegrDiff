@@ -93,7 +93,8 @@ END_MESSAGE_MAP()
 void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 										ListHead<StringSection> const * SectionEntry,
 										int nSkipChars, int nVisibleChars, int nTabIndent,
-										int SelBegin, int SelEnd, eFileScope nFileSelect)
+										int SelBegin, int SelEnd, eFileScope nFileSelect,
+										CThisApp::NORMAL_OR_SELECTED_COLOR const* DefaultColor)
 {
 	TCHAR buf[2048];
 	ThisDoc* pDoc = GetDocument();
@@ -121,8 +122,24 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 	pDC->MoveTo(point);
 	CRect ClipRect(point.x, point.y, point.x, point.y + LineHeight());
 	int ExpandedLinePos = 0;    // position with expanded tabs
-	StringSection * pSection = SectionEntry->First();
 
+	CThisApp::NORMAL_OR_SELECTED_COLOR const* UnchangedColor = DefaultColor;
+	// If the whole line is just a single section, use AddedLineColor
+	// If the line has diff sections, use AddedColor for unchanged parts and AddedLineColor for diffs
+	if (eFileScope::Both == nFileSelect
+		|| SectionEntry->First() == SectionEntry->Last())
+	{
+	}
+	else if (eFileScope::Left == nFileSelect)
+	{
+		UnchangedColor = &pApp->m_ErasedColor;
+	}
+	else
+	{
+		UnchangedColor = &pApp->m_AddedColor;
+	}
+
+	StringSection * pSection = SectionEntry->First();
 	int nDrawnChars;
 	for (nDrawnChars = 0; SectionEntry->NotEnd(pSection) && nDrawnChars < nVisibleChars; pSection = pSection->Next())
 	{
@@ -192,44 +209,50 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 		while (Length > 0)
 		{
 			CFont * pFont;
-			DWORD Color;
-			DWORD BackgroundColor = pApp->m_TextBackgroundColor;
+			CThisApp::NORMAL_OR_SELECTED_COLOR const* NormalOrSelectedColor;
 			int nCharsToDraw = Length;
 
 			if ((pSection->Attr & pSection->Inserted)
 				&& !((pSection->Attr & pSection->Whitespace)
 					&& pDoc->m_bIgnoreWhitespaces && eFileScope::Both == nFileSelect))
 			{
-				Color = pApp->m_AddedTextColor;
-				pFont = & pApp->m_AddedFont;
+				pFont = &pApp->m_AddedFont;
 				if (pSection->IsAccepted() || pSection->IsIncluded())
 				{
-					BackgroundColor = pApp->m_AcceptedTextBackgroundColor;
+					NormalOrSelectedColor = &pApp->m_AcceptedColor;
 				}
 				else if (pSection->IsDeclined() || pSection->IsDiscarded())
 				{
-					BackgroundColor = pApp->m_DiscardedTextBackgroundColor;
+					NormalOrSelectedColor = &pApp->m_DiscardedColor;
+				}
+				else
+				{
+					NormalOrSelectedColor = &pApp->m_AddedLineColor;
 				}
 			}
 			else if (pSection->Attr & pSection->Erased)
 			{
-				Color = pApp->m_ErasedTextColor;
-				pFont = & pApp->m_ErasedFont;
+				pFont = &pApp->m_ErasedFont;
 				if (pSection->IsAccepted() || pSection->IsDiscarded())
 				{
-					BackgroundColor = pApp->m_DiscardedTextBackgroundColor;
+					NormalOrSelectedColor = &pApp->m_DiscardedColor;
 				}
 				else if (pSection->IsDeclined() || pSection->IsIncluded())
 				{
-					BackgroundColor = pApp->m_AcceptedTextBackgroundColor;
+					NormalOrSelectedColor = &pApp->m_AcceptedColor;
+				}
+				else
+				{
+					NormalOrSelectedColor = &pApp->m_ErasedLineColor;
 				}
 			}
 			else
 			{
-				Color = pApp->m_NormalTextColor;
-				pFont = & pApp->m_NormalFont;
+				pFont = &pApp->m_NormalFont;
+				NormalOrSelectedColor = UnchangedColor;
 			}
 
+			CThisApp::COLOR_PAIR const* Color = &NormalOrSelectedColor->Normal;
 			if (nDrawnChars < SelEnd
 				&& nDrawnChars >= SelBegin)
 			{
@@ -237,8 +260,7 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 				{
 					nCharsToDraw = SelEnd - nDrawnChars;
 				}
-				Color = pApp->m_SelectedTextColor;
-				BackgroundColor = 0x000000;
+				Color = &NormalOrSelectedColor->Selected;
 			}
 			else if (nDrawnChars < SelBegin
 					&& nDrawnChars + nCharsToDraw > SelBegin)
@@ -246,8 +268,8 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 				nCharsToDraw = SelBegin - nDrawnChars;
 			}
 
-			pDC->SetBkColor(BackgroundColor);
-			pDC->SetTextColor(Color);
+			pDC->SetBkColor(Color->BG);
+			pDC->SetTextColor(Color->Text);
 			pDC->SelectObject(pFont);
 			ClipRect.right = ClipRect.left + nCharsToDraw * CharWidth();
 			pDC->ExtTextOut(ClipRect.left, ClipRect.top, ETO_CLIPPED|ETO_OPAQUE, ClipRect, pText, nCharsToDraw, NULL);
@@ -258,27 +280,21 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 		}
 	}
 
-	int nBeforeSelection = SelBegin - nDrawnChars;
-	if (nBeforeSelection > 0)
+	if (SelEnd > nDrawnChars
+		&& nVisibleChars > nDrawnChars + 1)
 	{
-		pDC->SetBkColor(pApp->m_TextBackgroundColor);
-		pDC->SetTextColor(pApp->m_NormalTextColor);
-		pDC->SelectObject(&pApp->m_NormalFont);
-		ClipRect.right = ClipRect.left + nBeforeSelection * CharWidth();
-		pDC->ExtTextOut(ClipRect.left, ClipRect.top, ETO_CLIPPED|ETO_OPAQUE, ClipRect, L" ", 1, NULL);
+		ClipRect.right = ClipRect.left + CharWidth();
+		CBrush brush(UnchangedColor->Selected.BG);
+		pDC->FillRect(ClipRect, &brush);
+		nDrawnChars++;
 		ClipRect.left = ClipRect.right;
-		nDrawnChars += nBeforeSelection;
 	}
-
-	int nMoreSelection = SelEnd - nDrawnChars;
-	if (nMoreSelection > 0)
+	if (UnchangedColor->Normal.BG != GetSysColor(COLOR_WINDOW)
+		&& nVisibleChars > nDrawnChars)
 	{
-		pDC->SetBkColor(0x000000);
-		pDC->SetTextColor(pApp->m_SelectedTextColor);
-		pDC->SelectObject(&pApp->m_NormalFont);
-		ClipRect.right = ClipRect.left + nMoreSelection * CharWidth();
-		pDC->ExtTextOut(ClipRect.left, ClipRect.top, ETO_CLIPPED|ETO_OPAQUE, ClipRect, L" ", 1, NULL);
-		ClipRect.left = ClipRect.right;
+		ClipRect.right = ClipRect.left + (nVisibleChars - nDrawnChars) * CharWidth();
+		CBrush brush(UnchangedColor->Normal.BG);
+		pDC->FillRect(ClipRect, &brush);
 	}
 }
 
@@ -363,13 +379,6 @@ void CDiffFileView::OnDraw(CDC* pDC)
 
 		int nTabIndent = GetApp()->m_TabIndent;
 
-		eFileScope nPaneToDraw = eFileScope(nPane + 1);
-
-		if (1 == m_NumberOfPanes)
-		{
-			nPaneToDraw = eFileScope::Both;
-		}
-
 		for (int nLine = m_FirstLineSeen, PosY = cr.top; PosY < cr.bottom; nLine++, PosY += nLineHeight)
 		{
 			TextPosDisplay SelBegin, SelEnd;
@@ -436,24 +445,32 @@ void CDiffFileView::OnDraw(CDC* pDC)
 			const LinePair * pPair = pFilePair->m_LinePairs[nLine];
 			ASSERT(NULL != pPair);
 
+			eFileScope nPaneToDraw = eFileScope(nPane + (int)eFileScope::Left);
+
+			CThisApp::NORMAL_OR_SELECTED_COLOR const* DefaultColor = &pApp->m_TextColor;
+			if (1 == m_NumberOfPanes)
+			{
+				nPaneToDraw = eFileScope::Both;
+			}
+
 			if (NULL != pPair)
 			{
 				pSectionEntry = & pPair->StrSections;
 				// draw line number
 				if (m_ShowLineNumbers)
 				{
-					DWORD TextColor = pApp->m_NormalTextColor;
+					DWORD BackgroundColor = pApp->m_TextColor.Normal.BG;
 
 					pDC->SetTextAlign(TA_RIGHT | TA_TOP);
-					pDC->SetBkColor(pApp->m_TextBackgroundColor);
 					pDC->SelectObject(&pApp->m_NormalFont);
-					CRect r(0, PosY, m_LineNumberMarginWidth - 1, PosY + nLineHeight);
+					pDC->SetTextColor(pApp->m_LineNumberTextColor);
+					CRect r(0, PosY, m_LineNumberMarginWidth - CharWidth(), PosY + nLineHeight);
 
 					if (!pFilePair->CanCompare())
 					{
 						s.Format(_T("%d"), pPair->pFirstLine->GetLineNumber() + 1);
-						pDC->SetTextColor(TextColor);
-						pDC->ExtTextOutW(m_LineNumberMarginWidth - 1, PosY, ETO_CLIPPED, r, s, NULL);
+						pDC->SetBkColor(BackgroundColor);
+						pDC->ExtTextOutW(m_LineNumberMarginWidth - CharWidth(), PosY, ETO_CLIPPED, r, s, NULL);
 					}
 					else
 					{
@@ -463,9 +480,11 @@ void CDiffFileView::OnDraw(CDC* pDC)
 							s.Format(_T("%d"), pPair->pFirstLine->GetLineNumber() + 1);
 							if (NULL == pPair->pSecondLine)
 							{
-								TextColor = pApp->m_ErasedTextColor;
+								BackgroundColor = pApp->m_ErasedColor.Normal.BG;
+								DefaultColor = &pApp->m_ErasedLineColor;
+								nPaneToDraw = eFileScope::Left;
 							}
-							pDC->SetTextColor(TextColor);
+							pDC->SetBkColor(BackgroundColor);
 
 							int pos = PosX - CharWidth();
 							if (m_NumberOfPanes == 1)
@@ -481,9 +500,12 @@ void CDiffFileView::OnDraw(CDC* pDC)
 							s.Format(_T("%d"), pPair->pSecondLine->GetLineNumber() + 1);
 							if (NULL == pPair->pFirstLine)
 							{
-								TextColor = pApp->m_AddedTextColor;
+								BackgroundColor = pApp->m_AddedColor.Normal.BG;
+								DefaultColor = &pApp->m_AddedLineColor;
+								nPaneToDraw = eFileScope::Right;
 							}
-							pDC->SetTextColor(TextColor);
+							pDC->SetBkColor(BackgroundColor);
+
 							int pos = PosX - CharWidth();
 							if (m_NumberOfPanes == 1)
 							{
@@ -504,7 +526,7 @@ void CDiffFileView::OnDraw(CDC* pDC)
 
 			DrawStringSections(pDC, CPoint(PosX, PosY),
 								pSectionEntry, m_FirstPosSeen, nCharsInView, nTabIndent,
-								nSelBegin, nSelEnd, nPaneToDraw);
+								nSelBegin, nSelEnd, nPaneToDraw, DefaultColor);
 		}
 	}
 }

@@ -391,28 +391,33 @@ void CTextFilePairDoc::SetCaretPosition(TextPosLine pos, eFileScope FileScope, i
 
 void CTextFilePairDoc::SetCaretPosition(TextPosDisplay pos, int flags)
 {
-	if (pos.line > GetTotalLines())
-	{
-		pos.line = GetTotalLines();
-	}
 	if (pos.line < 0)
 	{
 		pos.line = 0;
 	}
-	m_CaretPos.line = pos.line;
-
 	if (pos.pos < 0)
 	{
 		pos.pos = 0;
 	}
-	if (pos.pos > 2048)
+	if (pos.line > GetTotalLines())
 	{
-		pos.pos = 2048;
+		pos.line = GetTotalLines();
+		pos.pos = 0;
 	}
-	m_CaretPos.pos = pos.pos;
-	m_CaretPos.scope = pos.scope;
+	else
+	{
+		int StringLength = 0;
+		GetLineText(pos.line, NULL, 0, &StringLength, pos.scope);
+		if (pos.pos > StringLength)
+		{
+			// Limit the caret position to actual line length
+			pos.pos = StringLength;
+		}
+	}
 
-	if (0 != (flags & SetPositionCancelSelection))
+	m_CaretPos = pos;
+
+	if (flags & SetPositionCancelSelection)
 	{
 		m_SelectionAnchor = m_CaretPos;
 		m_OriginalSelectionAnchor = m_CaretPos;  // for word mode selection
@@ -1394,16 +1399,14 @@ LPCTSTR CTextFilePairDoc::GetLineText(int nLineNum, LPTSTR buf, size_t BufChars,
 	if (NULL == m_pFilePair
 		|| nLineNum >= (int)m_pFilePair->m_LinePairs.size())
 	{
-		buf[0] = 0;
-		* pStrLen = 0;
-		return buf;
+		*pStrLen = 0;
+		return _T("");
 	}
 	LinePair * pPair = m_pFilePair->m_LinePairs[nLineNum];
 	if (NULL == pPair)
 	{
-		buf[0] = 0;
-		* pStrLen = 0;
-		return buf;
+		*pStrLen = 0;
+		return _T("");
 	}
 	return pPair->GetText(buf, BufChars, pStrLen, m_bIgnoreWhitespaces, Scope);
 }

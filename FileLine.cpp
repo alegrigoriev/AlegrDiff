@@ -688,8 +688,7 @@ LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen,
 		else
 		{
 			*pStrLen = 0;
-			buf[0] = 0;
-			return buf;
+			return _T("");
 		}
 	}
 	if (eFileScope::Right == SelectFile)
@@ -702,8 +701,7 @@ LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen,
 		else
 		{
 			*pStrLen = 0;
-			buf[0] = 0;
-			return buf;
+			return _T("");
 		}
 	}
 
@@ -719,9 +717,10 @@ LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen,
 		return pFirstLine->GetText();
 	}
 	// make a string of string sections
-	size_t StrLen = 0;
+	size_t StrLen = 0;  // returned string length
+	size_t ActualLen = 0;   // actual length
 	for (StringSection * pSection = StrSections.First();
-		StrSections.NotEnd(pSection) && StrLen + 1u < nBufChars; pSection = pSection->Next())
+		StrSections.NotEnd(pSection); pSection = pSection->Next())
 	{
 		if ((pSection->Attr & pSection->Whitespace)
 			&& (pSection->Attr & pSection->Erased)
@@ -730,15 +729,22 @@ LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen,
 			continue;   // don't show the section
 		}
 		size_t len = pSection->Length;
-		if (StrLen + len + 1u > nBufChars)
+		ActualLen += len;
+		if (buf != nullptr && StrLen < nBufChars)
 		{
-			len = nBufChars - StrLen - 1;
+			if (StrLen + len + 1u > nBufChars)
+			{
+				len = nBufChars - StrLen - 1;
+			}
+			_tcsncpy_s(buf + StrLen, nBufChars-StrLen, pSection->pBegin, len);
+			StrLen += len;
 		}
-		_tcsncpy_s(buf + StrLen, nBufChars-StrLen, pSection->pBegin, len);
-		StrLen += len;
 	}
-	buf[StrLen] = 0;
-	*pStrLen = (unsigned)StrLen;
+	if (buf != nullptr)
+	{
+		buf[StrLen] = 0;
+	}
+	*pStrLen = (unsigned)ActualLen;
 	return buf;
 }
 

@@ -1886,34 +1886,38 @@ int CBinaryCompareView::PointToPaneNumber(int x)
 int CBinaryCompareView::PointToPaneOffset(int x, int nPane)
 {
 	x -= m_AddressMarginWidth;
-
-	if (1 == m_NumberOfPanes)
+	if (x < 0)
 	{
-		return x;
+		return -1;
 	}
 
-	int nPaneWidth = GetPaneWidth();
-
-	if (nPaneWidth <= 0)
+	if (m_NumberOfPanes > 1)
 	{
-		return 0;
-	}
+		int nPaneWidth = GetPaneWidth();
 
-	if (-1 == nPane)
-	{
-		nPane = x / nPaneWidth;
-		if (nPane < 0)
+		if (nPaneWidth <= 0)
 		{
-			nPane = 0;
+			return 0;
 		}
+
+		if (-1 == nPane)
+		{
+			nPane = x / nPaneWidth;
+			if (nPane < 0)
+			{
+				nPane = 0;
+			}
+		}
+
+		if (nPane >= m_NumberOfPanes)
+		{
+			nPane = m_NumberOfPanes - 1;
+		}
+
+		x -= nPane * nPaneWidth;
 	}
 
-	if (nPane >= m_NumberOfPanes)
-	{
-		nPane = m_NumberOfPanes - 1;
-	}
-
-	x -= nPane * nPaneWidth + CharWidth() * m_FirstPosSeen;
+	x += CharWidth() * m_FirstPosSeen;
 
 	if (x < 0)
 	{

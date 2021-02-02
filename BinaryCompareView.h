@@ -101,6 +101,7 @@ public:
 
 	int PointToPaneNumber(int x);
 	int PointToPaneOffset(int x, int nPane = -1);
+	ULONGLONG PointToPaneAddr(POINT point, int &nPane, BOOL &CharsSelected, BOOL& WholeLine);
 	int GetPaneWidth();
 
 	virtual void OnDraw(CDC* pDC);      // overridden to draw this view

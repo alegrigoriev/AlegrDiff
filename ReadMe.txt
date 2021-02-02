@@ -35,7 +35,6 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-Properly set caret on EOL.
 Column to sort is not getting saved in config
 Horizontal scroll bar is not using the actual width
 OnViewRefresh not defined for binary files
@@ -51,6 +50,7 @@ Directory dialog allows to select network host. It won't return anything then.
 Estimated time left is not shown while calculating a fingerpring of a big file  (???)
 
 Done:
+Properly set caret on EOL.
 Show EOL selection.
 Need to fill the whole line with diff line color, unless it's a single file view and it has
 Text and bytes selection change leaves white and black lines

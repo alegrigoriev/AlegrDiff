@@ -98,7 +98,7 @@ public:
 	void MoveCaretBy(int dx, int dy, int flags = SetPositionCancelSelection);
 	void SetCaretPosition(int pos, int line, int flags = SetPositionCancelSelection);
 	void SetCaretPosition(TextPosDisplay pos, int flags = SetPositionCancelSelection);
-	void SetCaretPosition(TextPosLine pos, int FileScope, int flags = SetPositionCancelSelection);
+	void SetCaretPosition(TextPosLine pos, eFileScope FileScope, int flags = SetPositionCancelSelection);
 	TextPosDisplay PointToTextPos(POINT point, int pane = -1);
 
 	void CreateAndShowCaret();
@@ -136,8 +136,7 @@ protected:
 	void DrawStringSections(CDC* pDC, CPoint point,
 							ListHead<StringSection> const * pSection,
 							int nSkipChars, int nVisibleChars, int nTabIndent,
-							// nFileSelect: 1 - first only, 2 - second only, 0 - both
-							int SelBegin, int SelEnd, int nFileSelect);
+							int SelBegin, int SelEnd, eFileScope nFileSelect);
 
 	virtual ~CDiffFileView();
 #ifdef _DEBUG

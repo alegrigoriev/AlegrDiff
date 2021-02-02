@@ -86,6 +86,13 @@ private:
 	static class CSmallAllocator m_Allocator;
 };
 
+enum class eFileScope
+{
+	Both = 0,
+	Left = 1,
+	Right = 2,
+};
+
 struct LinePair
 {
 	static void * operator new(size_t size);
@@ -101,10 +108,10 @@ public:
 	LinePair(const FileLine * pLine1, const FileLine * pLine2, class FileDiffSection * pDiffSection = NULL);
 	void BuildDiffSectionsList(int nLineIndex, std::vector<class FileDiffSection*> & DiffSections, int MinMatchingChars);
 	// recalculates offset in the raw line to offset in the line with or without whitespaces shown
-	int LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces, int FileScope);
+	int LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces, eFileScope FileScope);
 	// recalculates offset in the line with or without whitespaces shown to offset in the raw line
-	int DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces, int FileScope);
-	LPCTSTR GetText(LPTSTR buf, size_t nBufChars, int * pStrLen, BOOL IgnoreWhitespaces, int SelectFile);
+	int DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces, eFileScope FileScope);
+	LPCTSTR GetText(LPTSTR buf, size_t nBufChars, int * pStrLen, BOOL IgnoreWhitespaces, eFileScope SelectFile);
 };
 
 int MatchStrings(const FileLine * pStr1, const FileLine * pStr2, ListHead<StringSection> * ppSections, unsigned nMinMatchingChars);

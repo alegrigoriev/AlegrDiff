@@ -636,50 +636,49 @@ LinePair::LinePair(const FileLine * pLine1, const FileLine * pLine2, FileDiffSec
 	: pFirstLine(pLine1)
 	, pSecondLine(pLine2)
 {
-	if (NULL == pLine1 || NULL == pLine2 || pLine1 == pLine2)
+	if (pLine1 != nullptr && pLine2 != nullptr && pLine1 != pLine2)
 	{
-		StringSection * pSection = new StringSection;
-		const FileLine * pLine = pLine1;
+		return;
+	}
 
-		if (pLine1 == pLine2)
-		{
-			pSection->Attr = StringSection::Identical;
-		}
-		else if (NULL == pLine1)
-		{
-			pSection->Attr = StringSection::Inserted | StringSection::Undefined;
-			pLine = pLine2;
-		}
-		else
-		{
-			pSection->Attr = StringSection::Erased | StringSection::Undefined;
-		}
+	StringSection * pSection = new StringSection;
+	const FileLine * pLine = pLine1;
 
-		pSection->pBegin = pLine->GetText();
-		pSection->Length = (USHORT)pLine->GetLength();
-		pSection->pDiffSection = pDiffSection;
-
-		if (pLine1 != pLine2 && pLine->IsBlank())
-		{
-			pSection->Attr |= StringSection::Whitespace;
-		}
-		else if (NULL != pDiffSection)
-		{
-			pDiffSection->m_Flags &= ~FileDiffSection::FlagWhitespace;
-		}
-
-		StrSections.InsertTail(pSection);
+	if (pLine1 == pLine2)
+	{
+		pSection->Attr = StringSection::Identical;
+	}
+	else if (NULL == pLine1)
+	{
+		pSection->Attr = StringSection::Inserted | StringSection::Undefined;
+		pLine = pLine2;
 	}
 	else
 	{
+		pSection->Attr = StringSection::Erased | StringSection::Undefined;
 	}
+
+	pSection->pBegin = pLine->GetText();
+	pSection->Length = (USHORT)pLine->GetLength();
+	pSection->pDiffSection = pDiffSection;
+
+	if (pLine1 != pLine2 && pLine->IsBlank())
+	{
+		pSection->Attr |= StringSection::Whitespace;
+	}
+	else if (NULL != pDiffSection)
+	{
+		pDiffSection->m_Flags &= ~FileDiffSection::FlagWhitespace;
+	}
+
+	StrSections.InsertTail(pSection);
 }
 
 LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen,
-						BOOL IgnoreWhitespaces, int SelectFile)
+						BOOL IgnoreWhitespaces, eFileScope SelectFile)
 {
 	// SelectFile: 1 - first file, 2 - second file, any other: both files
-	if (1 == SelectFile)
+	if (eFileScope::Left == SelectFile)
 	{
 		if (NULL != pFirstLine)
 		{
@@ -693,7 +692,7 @@ LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen,
 			return buf;
 		}
 	}
-	if (2 == SelectFile)
+	if (eFileScope::Right == SelectFile)
 	{
 		if (NULL != pSecondLine)
 		{
@@ -743,9 +742,9 @@ LPCTSTR LinePair::GetText(LPTSTR buf, const size_t nBufChars, int * pStrLen,
 	return buf;
 }
 
-int LinePair::LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces, int FileScope)
+int LinePair::LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces, eFileScope FileScope)
 {
-	if ( ! bIgnoreWhitespaces && 0 == FileScope)
+	if (!bIgnoreWhitespaces && eFileScope::Both == FileScope)
 	{
 		return position;
 	}
@@ -758,8 +757,8 @@ int LinePair::LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces, int Fil
 		pos += pSection->Length;
 		if ((pSection->Attr & pSection->Erased)
 			&& (((pSection->Attr & pSection->Whitespace)
-					&& bIgnoreWhitespaces && 0 == FileScope)
-				|| 2 == FileScope))
+					&& bIgnoreWhitespaces && eFileScope::Both == FileScope)
+				|| eFileScope::Right == FileScope))
 		{
 			adj += pSection->Length;
 			if (pos >= position)
@@ -768,7 +767,7 @@ int LinePair::LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces, int Fil
 				return pos - adj;
 			}
 		}
-		else if (1 == FileScope
+		else if (eFileScope::Left == FileScope
 				&& (pSection->Attr & pSection->File2Only))
 		{
 			adj += pSection->Length;
@@ -789,9 +788,9 @@ int LinePair::LinePosToDisplayPos(int position, BOOL bIgnoreWhitespaces, int Fil
 	return position - adj;
 }
 
-int LinePair::DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces, int FileScope)
+int LinePair::DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces, eFileScope FileScope)
 {
-	if ( ! bIgnoreWhitespaces && 0 == FileScope)
+	if (!bIgnoreWhitespaces && eFileScope::Both == FileScope)
 	{
 		return position;
 	}
@@ -803,13 +802,13 @@ int LinePair::DisplayPosToLinePos(int position, BOOL bIgnoreWhitespaces, int Fil
 	{
 		if ((pSection->Attr & pSection->Erased)
 			&& (((pSection->Attr & pSection->Whitespace)
-					&& bIgnoreWhitespaces && 0 == FileScope)
-				|| 2 == FileScope))
+					&& bIgnoreWhitespaces && eFileScope::Both == FileScope)
+				|| eFileScope::Right == FileScope))
 		{
 			adj += pSection->Length;
 		}
 		else if ((pSection->Attr & pSection->File2Only)
-				&& 1 == FileScope)
+				&& eFileScope::Left == FileScope)
 		{
 			adj += pSection->Length;
 		}

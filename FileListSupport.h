@@ -10,6 +10,7 @@
 #include "SmallAllocator.h"
 #include "AdelsonVelskyLandisTree.h"
 #include "PathEx.h"
+#include "FileLine.h"
 
 #define FILE_OPEN_OVERHEAD 0x2000
 
@@ -41,10 +42,10 @@ struct TextPosDisplay
 {
 	int line;
 	int pos;
-	int scope; // 0 - combined file, 1 - left pane, 2 - right pane
+	eFileScope scope; // 0 - combined file, 1 - left pane, 2 - right pane
 	TextPosDisplay() noexcept
-		: line(0), pos(0), scope(0) {}
-	TextPosDisplay(int l, int p, int s) noexcept
+		: line(0), pos(0), scope(eFileScope::Both) {}
+	TextPosDisplay(int l, int p, eFileScope s) noexcept
 		: line(l), pos(p), scope(s)
 	{
 	}
@@ -732,7 +733,7 @@ public:
 	bool PrevDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces,
 						TextPosDisplay* DiffPos, TextPosDisplay* EndPos);
 	TextPosLine DisplayPosToLinePos(TextPosDisplay position, BOOL IgnoreWhitespaces);
-	TextPosDisplay LinePosToDisplayPos(TextPosLine position, BOOL IgnoreWhitespaces, int FileScope);
+	TextPosDisplay LinePosToDisplayPos(TextPosLine position, BOOL IgnoreWhitespaces, eFileScope FileScope);
 
 	int GetAcceptDeclineFlags(TextPosLine PosFrom, TextPosLine PosTo, bool bIgnoreWhitespaces);
 	BOOL ModifyAcceptDeclineFlags(TextPosLine& PosFrom, TextPosLine& PosTo, int Set, int Reset);

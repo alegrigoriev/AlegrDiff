@@ -35,6 +35,8 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
+Column to sort is not getting saved in config
+Horizontal scrill bar is not using the actual width
 OnViewRefresh not defined for binary files
 "Parent directory exists only in" should only print the name of base directory (or )
 Problem with scroll of large binary file view
@@ -49,6 +51,7 @@ Directory dialog allows to select network host. It won't return anything then.
 Estimated time left is not shown while calculating a fingerpring of a big file  (???)
 
 Done:
+Binary word selection need to select a word as soon the cursor is after it
 Sort order change needs to keep column sizes
 "Side by side" missing in binary file menu
 Column resize leaves marks

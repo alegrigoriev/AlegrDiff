@@ -1464,13 +1464,14 @@ void CBinaryCompareView::OnLButtonDown(UINT nFlags, CPoint point)
 	BaseClass::OnLButtonDown(nFlags, point);
 	m_LButtonDown = true;
 
-	int pane = PointToPaneNumber(point.x);
-
-	point.x = PointToPaneOffset(point.x);
-	LONGLONG Addr = point.y / LineHeight() * m_BytesPerLine + m_ScreenFilePos;
+	int pane = -1;
+	BOOL CaretOnChars = -1;
+	BOOL WholeLine = FALSE;
+	LONGLONG Addr = PointToPaneAddr(point, pane, CaretOnChars, WholeLine);
+	m_bCaretOnChars = CaretOnChars;
 
 	int flags = SetPositionMakeVisible;
-	if (point.x < 0)
+	if (WholeLine)
 	{
 		if (0 == (nFlags & MK_SHIFT))
 		{
@@ -1483,34 +1484,6 @@ void CBinaryCompareView::OnLButtonDown(UINT nFlags, CPoint point)
 	}
 	else
 	{
-		int x = point.x / CharWidth();
-		x = (x / (m_WordSize * 2 + 1)) * m_WordSize;
-
-		// TODO:if the address margin is clicked, the whole line is selected
-		if (x >= int(m_BytesPerLine))
-		{
-			x = (point.x + CharWidth() / 2) / CharWidth() -
-				(m_BytesPerLine * 2 + m_BytesPerLine / m_WordSize + 2);
-
-			if (x >= int(m_BytesPerLine))
-			{
-				x = m_BytesPerLine - 1;
-			}
-
-			m_bCaretOnChars = TRUE;
-		}
-		else
-		{
-			m_bCaretOnChars = FALSE;
-			x &= -m_WordSize;
-		}
-		if (x < 0)
-		{
-			x = 0;
-		}
-
-		Addr += x;
-
 		if (0 == (nFlags & MK_SHIFT))
 		{
 			flags |= SetPositionCancelSelection;
@@ -1520,6 +1493,7 @@ void CBinaryCompareView::OnLButtonDown(UINT nFlags, CPoint point)
 			flags |= SetWordSelectionMode;
 		}
 	}
+
 	SetCaretPosition(Addr, flags);
 	SetFocusPane(pane);
 }
@@ -1545,42 +1519,14 @@ void CBinaryCompareView::OnMouseMove(UINT nFlags, CPoint point)
 	BaseClass::OnMouseMove(nFlags, point);
 	if (m_TrackingSelection)
 	{
-		point.x = PointToPaneOffset(point.x);
+		BOOL WholeLine = FALSE;
+		LONGLONG Addr = PointToPaneAddr(point, m_PaneWithFocus, m_bCaretOnChars, WholeLine);
 
-		LONGLONG Addr = point.y / LineHeight() * m_BytesPerLine + m_ScreenFilePos;
-
-		if (point.x < 0)
+		if (WholeLine && GetDocument()->m_SelectionAnchor <= Addr)
 		{
-			if (GetDocument()->m_SelectionAnchor <= Addr)
-			{
-				Addr += m_BytesPerLine;
-			}
+			Addr += m_BytesPerLine;
 		}
-		else
-		{
-			int x = point.x / CharWidth();
 
-			if (m_bCaretOnChars)
-			{
-				x = x - (m_BytesPerLine * 2 + m_BytesPerLine / m_WordSize + 2);
-			}
-			else
-			{
-				x = (x / (m_WordSize * 2 + 1)) * m_WordSize;
-			}
-
-			if (x < 0)
-			{
-				x = 0;
-			}
-
-			if (unsigned(x) > m_BytesPerLine)
-			{
-				x = m_BytesPerLine;
-			}
-
-			Addr += x;
-		}
 		SetCaretPosition(Addr, SetPositionMakeVisible);
 	}
 }
@@ -1925,6 +1871,53 @@ int CBinaryCompareView::PointToPaneOffset(int x, int nPane)
 	}
 
 	return x;
+}
+
+ULONGLONG CBinaryCompareView::PointToPaneAddr(POINT point, int& nPane, BOOL& CharsSelected, BOOL& WholeLine)
+{
+	if (nPane == -1)
+	{
+		nPane = PointToPaneNumber(point.x);
+	}
+
+	int pane_offset = PointToPaneOffset(point.x, nPane);
+
+	ULONGLONG Addr = point.y / LineHeight() * m_BytesPerLine + m_ScreenFilePos;
+	int char_strip_position = (m_BytesPerLine * 2 + m_BytesPerLine / m_WordSize + 2) * CharWidth();
+
+	if (CharsSelected != TRUE && CharsSelected != FALSE)
+	{
+		CharsSelected = pane_offset >= char_strip_position;
+	}
+
+	if (CharsSelected)
+	{
+		pane_offset -= char_strip_position;
+	}
+
+	if (pane_offset < 0)
+	{
+		WholeLine = TRUE;
+		return Addr;
+	}
+
+	WholeLine = FALSE;
+	unsigned x;
+	if (CharsSelected)
+	{
+		x = -m_WordSize & ((pane_offset + CharWidth() / 2) / CharWidth());
+	}
+	else
+	{
+		x = ((pane_offset / CharWidth() + 1) / (m_WordSize * 2 + 1)) * m_WordSize;
+	}
+
+	if (x > m_BytesPerLine)
+	{
+		x = m_BytesPerLine;
+	}
+
+	return Addr + x;
 }
 
 int CBinaryCompareView::GetPaneWidth()

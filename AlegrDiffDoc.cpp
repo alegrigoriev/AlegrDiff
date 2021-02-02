@@ -303,9 +303,7 @@ IMPLEMENT_DYNCREATE(CTextFilePairDoc, CFilePairDoc)
 
 CTextFilePairDoc::CTextFilePairDoc() noexcept
 	: m_TotalLines(0),
-	m_pFilePair(nullptr),
-	m_CaretPos(0, 0, 0),
-	m_SelectionAnchor(0, 0, 0)
+	m_pFilePair(nullptr)
 {
 	m_ComparisonResult[0] = 0;
 	m_bIgnoreWhitespaces = GetApp()->m_bIgnoreWhitespaces;
@@ -386,7 +384,7 @@ void CTextFilePairDoc::SetCaretPosition(int pos, int line, int flags)
 	SetCaretPosition(TextPosDisplay(line, pos, m_CaretPos.scope), flags);
 }
 
-void CTextFilePairDoc::SetCaretPosition(TextPosLine pos, int FileScope, int flags)
+void CTextFilePairDoc::SetCaretPosition(TextPosLine pos, eFileScope FileScope, int flags)
 {
 	SetCaretPosition(LinePosToDisplayPos(pos, FileScope), flags);
 }
@@ -955,7 +953,7 @@ void CTextFilePairDoc::OnFileEditSecond()
 	}
 }
 
-bool CTextFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive, bool WholeWord, int SearchScope)
+bool CTextFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive, bool WholeWord, eFileScope SearchScope)
 {
 	// find from the current position
 	if (NULL == m_pFilePair
@@ -972,7 +970,7 @@ bool CTextFilePairDoc::FindTextString(LPCTSTR pStrToFind, bool bBackward, bool b
 	int nSearchPos;
 	size_t nSearchLine;
 
-	if (0 == SearchScope)
+	if (eFileScope::Both == SearchScope)
 	{
 		WholeWord = false;
 	}
@@ -1204,7 +1202,7 @@ bool CTextFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start,
 	StringSection Section;
 	ListHead<StringSection> * pStrSections;
 
-	if (0 == OnPos.scope)
+	if (eFileScope::Both == OnPos.scope)
 	{
 		pStrSections = & pPair->StrSections;
 	}
@@ -1213,7 +1211,7 @@ bool CTextFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start,
 		pStrSections = & StrSections;
 		Section.Attr = 0;
 		Section.pDiffSection = NULL;
-		if (1 == OnPos.scope)
+		if (eFileScope::Left == OnPos.scope)
 		{
 			if (NULL == pPair->pFirstLine)
 			{
@@ -1239,17 +1237,17 @@ bool CTextFilePairDoc::GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay &Start,
 	{
 		if ((pSection->Attr & pSection->Whitespace)
 			&& (pSection->Attr & pSection->Erased)
-			&& m_bIgnoreWhitespaces && 0 == OnPos.scope)
+			&& m_bIgnoreWhitespaces && eFileScope::Both == OnPos.scope)
 		{
 			continue;   // don't copy the section
 		}
 		if ((pSection->Attr & pSection->Erased)
-			&& 2 == OnPos.scope)
+			&& eFileScope::Right == OnPos.scope)
 		{
 			continue;   // don't copy the section
 		}
 		if ((pSection->Attr & pSection->Inserted)
-			&& 1 == OnPos.scope)
+			&& eFileScope::Left == OnPos.scope)
 		{
 			continue;   // don't copy the section
 		}
@@ -1391,7 +1389,7 @@ void CTextFilePairDoc::GetWordUnderCursor(CString & Str)
 
 // returns a pointer to a line text
 // buf is used to assembly the string if it is fragmented
-LPCTSTR CTextFilePairDoc::GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int *pStrLen, int Scope)
+LPCTSTR CTextFilePairDoc::GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int *pStrLen, eFileScope Scope)
 {
 	if (NULL == m_pFilePair
 		|| nLineNum >= (int)m_pFilePair->m_LinePairs.size())
@@ -1964,7 +1962,7 @@ void CTextFilePairDoc::OnViewIgnoreWhitespaces()
 	UpdateAllViews(NULL);
 }
 
-TextPosDisplay CTextFilePairDoc::LinePosToDisplayPos(TextPosLine position, int FileScope)
+TextPosDisplay CTextFilePairDoc::LinePosToDisplayPos(TextPosLine position, eFileScope FileScope)
 {
 	if (NULL == m_pFilePair)
 	{

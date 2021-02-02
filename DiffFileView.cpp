@@ -34,9 +34,7 @@ CDiffFileView::CDiffFileView()
 	m_CharOverhang(0),
 	m_ShownFileVersion(ShownAllText),
 	m_WheelAccumulator(0),
-	m_PaneWithFocus(0),
-	m_DrawnSelBegin(0, 0, 0),
-	m_DrawnSelEnd(0, 0, 0)
+	m_PaneWithFocus(0)
 {
 	// init font size, to avoid zero divide
 	m_FontMetric.tmAveCharWidth = 1;
@@ -95,7 +93,7 @@ END_MESSAGE_MAP()
 void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 										ListHead<StringSection> const * SectionEntry,
 										int nSkipChars, int nVisibleChars, int nTabIndent,
-										int SelBegin, int SelEnd, int nFileSelect)
+										int SelBegin, int SelEnd, eFileScope nFileSelect)
 {
 	TCHAR buf[2048];
 	ThisDoc* pDoc = GetDocument();
@@ -128,20 +126,20 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 	for (nDrawnChars = 0; SectionEntry->NotEnd(pSection) && nDrawnChars < nVisibleChars; pSection = pSection->Next())
 	{
 		if ((pSection->Attr & pSection->Erased)
-			&& 2 == nFileSelect)
+			&& eFileScope::Right == nFileSelect)
 		{
 			continue;
 		}
 
 		if ((pSection->Attr & pSection->Inserted)
-			&& 1 == nFileSelect)
+			&& eFileScope::Left == nFileSelect)
 		{
 			continue;
 		}
 
 		if ((pSection->Attr & pSection->Whitespace)
 			&& (pSection->Attr & pSection->Erased)
-			&& pDoc->m_bIgnoreWhitespaces && 0 == nFileSelect)
+			&& pDoc->m_bIgnoreWhitespaces && eFileScope::Both == nFileSelect)
 		{
 			// the whitespaces are only hidden in single-pane mode
 			continue;   // don't show the section
@@ -198,8 +196,8 @@ void CDiffFileView::DrawStringSections(CDC* pDC, CPoint point,
 			int nCharsToDraw = Length;
 
 			if ((pSection->Attr & pSection->Inserted)
-				&& ! ((pSection->Attr & pSection->Whitespace)
-					&& pDoc->m_bIgnoreWhitespaces && 0 == nFileSelect))
+				&& !((pSection->Attr & pSection->Whitespace)
+					&& pDoc->m_bIgnoreWhitespaces && eFileScope::Both == nFileSelect))
 			{
 				Color = pApp->m_AddedTextColor;
 				pFont = & pApp->m_AddedFont;
@@ -373,11 +371,11 @@ void CDiffFileView::OnDraw(CDC* pDC)
 
 		pDC->SetTextAlign(pDC->GetTextAlign() | TA_UPDATECP);
 
-		int nPaneToDraw = nPane + 1;
+		eFileScope nPaneToDraw = eFileScope(nPane + 1);
 
 		if (1 == m_NumberOfPanes)
 		{
-			nPaneToDraw = 0;
+			nPaneToDraw = eFileScope::Both;
 		}
 
 		for (int nLine = m_FirstLineSeen, PosY = cr.top; PosY < cr.bottom; nLine++, PosY += nLineHeight)
@@ -523,7 +521,7 @@ TextPosDisplay CDiffFileView::PointToTextPos(POINT point, int pane)
 	}
 
 	int nLine = (hit_test & HitTestLineNumberMask) >> HitTestLineNumberShift;
-	return TextPosDisplay(nLine, pos, (hit_test & HitTestPaneMask) >> HitTestPaneShift);
+	return TextPosDisplay(nLine, pos, eFileScope((hit_test & HitTestPaneMask) >> HitTestPaneShift));
 }
 
 // if NeedCharIndex, the precise index of the hit character is calculated
@@ -763,8 +761,8 @@ void CDiffFileView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 				m_PaneWithFocus = 0;
 			}
 
-			pDoc->m_CaretPos = pDoc->LinePosToDisplayPos(CaretPosLine, m_PaneWithFocus + 1);
-			pDoc->m_SelectionAnchor = pDoc->LinePosToDisplayPos(AnchorPosLine, m_PaneWithFocus + 1);
+			pDoc->m_CaretPos = pDoc->LinePosToDisplayPos(CaretPosLine, eFileScope(m_PaneWithFocus + 1));
+			pDoc->m_SelectionAnchor = pDoc->LinePosToDisplayPos(AnchorPosLine, eFileScope(m_PaneWithFocus + 1));
 
 			if (pDoc->m_CaretPos < pDoc->m_SelectionAnchor)
 			{
@@ -1064,13 +1062,13 @@ void CDiffFileView::InvalidateRangeLine(TextPosLine begin, TextPosLine end)
 
 	if (1 == m_NumberOfPanes)
 	{
-		InvalidateRange(pDoc->LinePosToDisplayPos(begin, 0), pDoc->LinePosToDisplayPos(end, 0));
+		InvalidateRange(pDoc->LinePosToDisplayPos(begin, eFileScope::Both), pDoc->LinePosToDisplayPos(end, eFileScope::Both));
 		return;
 	}
 	else
 	{
-		InvalidateRange(pDoc->LinePosToDisplayPos(begin, 1), pDoc->LinePosToDisplayPos(end, 1));
-		InvalidateRange(pDoc->LinePosToDisplayPos(begin, 2), pDoc->LinePosToDisplayPos(end, 2));
+		InvalidateRange(pDoc->LinePosToDisplayPos(begin, eFileScope::Left), pDoc->LinePosToDisplayPos(end, eFileScope::Left));
+		InvalidateRange(pDoc->LinePosToDisplayPos(begin, eFileScope::Right), pDoc->LinePosToDisplayPos(end, eFileScope::Right));
 	}
 }
 
@@ -1085,9 +1083,9 @@ void CDiffFileView::InvalidateRange(TextPosDisplay begin, TextPosDisplay end)
 	int nCharsInView = CharsInView() + 1;
 
 	int pane = 0;
-	if (m_NumberOfPanes > 1 && begin.scope > 0)
+	if (m_NumberOfPanes > 1 && begin.scope != eFileScope::Both)
 	{
-		pane = begin.scope - 1;
+		pane = int(begin.scope) - 1;
 	}
 
 	int nViewOffset = m_LineNumberMarginWidth + pane * GetPaneWidth();
@@ -1195,7 +1193,7 @@ void CDiffFileView::SetCaretPosition(TextPosDisplay pos, int flags)
 	}
 }
 
-void CDiffFileView::SetCaretPosition(TextPosLine pos, int FileScope, int flags)
+void CDiffFileView::SetCaretPosition(TextPosLine pos, eFileScope FileScope, int flags)
 {
 	ThisDoc* pDoc = GetDocument();
 	pDoc->SetCaretPosition(pos, FileScope, flags);
@@ -1273,7 +1271,7 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 
 	TextPosDisplay ClickPos = PointToTextPos(point);
 
-	if (ClickPos.scope != m_PaneWithFocus)
+	if (int(ClickPos.scope) != m_PaneWithFocus)
 	{
 		// Pane changes, ignore Shift
 		nFlags &= ~MK_SHIFT;
@@ -1283,11 +1281,11 @@ void CDiffFileView::OnLButtonDown(UINT nFlags, CPoint point)
 
 	if (m_NumberOfPanes > 1)
 	{
-		ClickPos.scope++;
+		ClickPos.scope = eFileScope(int(ClickPos.scope) + 1);
 	}
 	else
 	{
-		ClickPos.scope = 0;
+		ClickPos.scope = eFileScope::Both;
 	}
 
 	// if the left margin is clicked, the whole line is selected
@@ -1609,9 +1607,9 @@ void CDiffFileView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 		InvalidateRange(Sel[0], Sel[1]);
 		InvalidateRange(Sel[2], Sel[3]);
 
-		if (m_NumberOfPanes > 1 && pDoc->m_CaretPos.scope > 0)
+		if (m_NumberOfPanes > 1 && pDoc->m_CaretPos.scope != eFileScope::Both)
 		{
-			m_PaneWithFocus = pDoc->m_CaretPos.scope - 1;
+			m_PaneWithFocus = int(pDoc->m_CaretPos.scope) - 1;
 		}
 		else
 		{
@@ -1853,6 +1851,12 @@ bool CDiffFileView::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvo
 			return FALSE;
 		}
 
+		SearchScope = dlg.m_SearchScope;
+		if (SearchScope < 0)
+		{
+			SearchScope = 0;
+		}
+
 		FindString = dlg.m_sFindCombo;
 		pApp->m_bCaseSensitive = ( 0 != dlg.m_bCaseSensitive);
 		pApp->m_bFindBackward = ! dlg.m_FindDown;
@@ -1864,7 +1868,7 @@ bool CDiffFileView::OnFind(bool PickWordOrSelection, bool bBackwards, bool bInvo
 	pApp->m_FindHistory.AddString(FindString);
 
 	return pDoc->FindTextString(FindString, bBackwards,
-								pApp->m_bCaseSensitive, pApp->m_bFindWholeWord, SearchScope);
+								pApp->m_bCaseSensitive, pApp->m_bFindWholeWord, eFileScope(SearchScope));
 }
 
 void CDiffFileView::OnLButtonDblClk(UINT nFlags, CPoint point)
@@ -2127,12 +2131,12 @@ void CDiffFileView::OnViewSideBySide()
 		{
 			m_NumberOfPanes = 1;
 			m_PaneWithFocus = 0;
-			pDoc->m_CaretPos.scope = 0;
+			pDoc->m_CaretPos.scope = eFileScope::Both;
 		}
 		else
 		{
 			m_NumberOfPanes = 2;
-			pDoc->m_CaretPos.scope = m_PaneWithFocus + 1;
+			pDoc->m_CaretPos.scope = eFileScope(m_PaneWithFocus + 1);
 			// TODO: convert the address
 		}
 		GetApp()->m_NumberOfPanes = m_NumberOfPanes;

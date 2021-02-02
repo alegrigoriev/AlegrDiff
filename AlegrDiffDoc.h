@@ -150,7 +150,7 @@ public:
 	int GetTotalLines() const noexcept { return m_TotalLines; }
 	void SetCaretPosition(int pos, int line, int flags);
 	void SetCaretPosition(TextPosDisplay pos, int flags);
-	void SetCaretPosition(TextPosLine pos, int FileScope, int flags);
+	void SetCaretPosition(TextPosLine pos, eFileScope FileScope, int flags);
 
 	enum {
 		CaretPositionChanged = 1,
@@ -192,23 +192,19 @@ public:
 	BOOL SaveMergedFile(LPCTSTR Name, int DefaultFlags, BOOL bUnicode);
 
 	// FileScope: 0 - combined file shown, 1 - first file shown, 2 - second file shown
-	LPCTSTR GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int * pStrLen, int FileScope);
+	LPCTSTR GetLineText(int nLineNum, LPTSTR buf, size_t BufChars, int * pStrLen, eFileScope FileScope);
 
 	// recalculates offset in the raw line to offset in the line with or without whitespaces shown
-	TextPosDisplay LinePosToDisplayPos(TextPosLine position, int FileScope);
+	TextPosDisplay LinePosToDisplayPos(TextPosLine position, eFileScope FileScope);
 	// recalculates offset in the line with or without whitespaces shown to offset in the raw line
 	TextPosLine DisplayPosToLinePos(TextPosDisplay position);
-	// recalculates offset in the raw line to the offset in the file line
-	TextPosLine LinePosToFilePos(TextPosLine position, int FileScope = 0);
-	// recalculates offset in the file line to the offset in the raw line
-	TextPosLine FilePosToLinePos(TextPosLine position, int FileScope = 0);
 
 	bool GetWordOnPos(TextPosDisplay OnPos, TextPosDisplay & Start, TextPosDisplay & End);
 	void GetWordUnderCursor(CString & Str);
 	void CaretLeftToWord(int SelectionFlags);
 	void CaretRightToWord(int SelectionFlags);
 
-	bool FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive, bool WholeWord, int SearchScope);
+	bool FindTextString(LPCTSTR pStrToFind, bool bBackward, bool bCaseSensitive, bool WholeWord, eFileScope SearchScope);
 
 	void OnEditCopy(int FileSelect);
 	afx_msg void OnUpdateCaretPosIndicator(CCmdUI* pCmdUI);

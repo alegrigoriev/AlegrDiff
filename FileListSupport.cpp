@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "FileListSupport.h"
 #include "AlegrDiff.h"
-#include "FileLine.h"
 #include <io.h>
 #include <fcntl.h>
 #include "SmallAllocator.h"
@@ -3216,17 +3215,17 @@ bool TextFilePair::NextDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces
 		}
 	}
 
-	int NewFileScope = 0;
-	if (0 != PosFrom.scope)
+	eFileScope NewFileScope = eFileScope::Both;
+	if (eFileScope::Both != PosFrom.scope)
 	{
 		int const flags = GetAcceptDeclineFlags(pSection->m_Begin, pSection->m_End, IgnoreWhitespaces != FALSE);
 		if (flags & StringSection::Erased)
 		{
-			NewFileScope = 1;
+			NewFileScope = eFileScope::Left;
 		}
 		else
 		{
-			NewFileScope = 2;
+			NewFileScope = eFileScope::Right;
 		}
 	}
 
@@ -3273,17 +3272,17 @@ bool TextFilePair::PrevDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces
 		}
 	}
 
-	int NewFileScope = 0;
-	if (0 != PosFrom.scope)
+	eFileScope NewFileScope = eFileScope::Both;
+	if (eFileScope::Both != PosFrom.scope)
 	{
 		int const flags = GetAcceptDeclineFlags(pSection->m_Begin, pSection->m_End, IgnoreWhitespaces != FALSE);
 		if (flags & StringSection::Erased)
 		{
-			NewFileScope = 1;
+			NewFileScope = eFileScope::Left;
 		}
 		else
 		{
-			NewFileScope = 2;
+			NewFileScope = eFileScope::Right;
 		}
 	}
 
@@ -3308,7 +3307,7 @@ TextPosLine TextFilePair::DisplayPosToLinePos(TextPosDisplay position, BOOL Igno
 						m_LinePairs[position.line]->DisplayPosToLinePos(position.pos, IgnoreWhitespaces, position.scope));
 }
 
-TextPosDisplay TextFilePair::LinePosToDisplayPos(TextPosLine position, BOOL IgnoreWhitespaces, int FileScope)
+TextPosDisplay TextFilePair::LinePosToDisplayPos(TextPosLine position, BOOL IgnoreWhitespaces, eFileScope FileScope)
 {
 	if (unsigned(position.line) >= m_LinePairs.size())
 	{

@@ -1541,7 +1541,7 @@ void CAlegrDiffApp::OnFileCheckDirectoryFingerprint()
 		pDoc->OnCloseDocument();
 		return;
 	}
-	pDoc->UpdateAllViews(NULL);
+	pDoc->UpdateAllViews(NULL, OnUpdateRebuildListView);
 }
 
 CString UlonglongToStr(ULONGLONG Num, LCID locale)

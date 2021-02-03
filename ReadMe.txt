@@ -35,7 +35,6 @@ Ctrl+F8 - hold anchor, select lines
 F8 - hold anchor
 
 Problems:
-Horizontal scroll bar is not using the actual width
 OnViewRefresh not defined for binary files
 "Parent directory exists only in" should only print the name of base directory (or )
 Problem with scroll of large binary file view
@@ -49,6 +48,7 @@ Directory dialog allows to select network host. It won't return anything then.
 Estimated time left is not shown while calculating a fingerpring of a big file  (???)
 
 Done:
+Horizontal scroll bar is not using the actual width
 Column to sort is not getting saved in config
 Properly set caret on EOL.
 Show EOL selection.

@@ -1052,9 +1052,29 @@ void CDiffFileView::UpdateHScrollBar()
 	SCROLLINFO sci;
 	sci.cbSize = sizeof sci;
 	sci.nMin = 0;
-	sci.nMax = 2048;
+	if (m_NumberOfPanes > 1)
+	{
+		sci.nMax = m_MaxLineWidth[1];
+		if (sci.nMax < m_MaxLineWidth[2])
+		{
+			sci.nMax = m_MaxLineWidth[2];
+		}
+	}
+	else
+	{
+		sci.nMax = m_MaxLineWidth[0];
+	}
+
 	sci.nPage = CharsInView();
 	sci.nPos = m_FirstPosSeen;
+	if (sci.nPos + (int)sci.nPage > sci.nMax)
+	{
+		sci.nPos = sci.nMax - sci.nPage;
+		if (sci.nPos < 0)
+		{
+			sci.nPos = 0;
+		}
+	}
 	sci.nTrackPos = 0;
 	sci.fMask = SIF_ALL | SIF_DISABLENOSCROLL;
 
@@ -1403,6 +1423,40 @@ void CDiffFileView::OnSize(UINT nType, int cx, int cy)
 	UpdateHScrollBar();
 }
 
+void CDiffFileView::UpdateFileLineWidth()
+{
+	TextFilePair *pPair = GetFilePair();
+
+	if (pPair == nullptr)
+	{
+		return;
+	}
+
+	m_MaxLineWidth[0] = 0;
+	m_MaxLineWidth[1] = 0;
+	m_MaxLineWidth[2] = 0;
+
+	for (auto pLinePair : pPair->m_LinePairs)
+	{
+		int len = 0;
+		pLinePair->GetText(NULL, 0, &len, FALSE, eFileScope::Both);
+		if (len > m_MaxLineWidth[0])
+		{
+			m_MaxLineWidth[0] = len;
+		}
+		pLinePair->GetText(NULL, 0, &len, FALSE, eFileScope::Left);
+		if (len > m_MaxLineWidth[1])
+		{
+			m_MaxLineWidth[1] = len;
+		}
+		pLinePair->GetText(NULL, 0, &len, FALSE, eFileScope::Right);
+		if (len > m_MaxLineWidth[2])
+		{
+			m_MaxLineWidth[2] = len;
+		}
+	}
+}
+
 void CDiffFileView::OnMetricsChange()
 {
 	TRACE("CDiffFileView::OnMetricsChange\n");
@@ -1661,6 +1715,7 @@ void CDiffFileView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 		if (NULL != pArg
 			&& pArg->m_pPair == GetFilePair())
 		{
+			UpdateFileLineWidth();
 			OnMetricsChange();
 		}
 	}

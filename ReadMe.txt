@@ -1,8 +1,5 @@
 TODO:
 
-Open and read several files (up to one directory) at once
-In binary two-pane mode: show selection only on one side
-
 Copy binary dump as text (if cursor on hex)
 Add option for file size format (in kilobytes or in bytes) or a tooltip.
 Customizable number of MRU items
@@ -37,7 +34,6 @@ F8 - hold anchor
 Problems:
 OnViewRefresh not defined for binary files
 "Parent directory exists only in" should only print the name of base directory (or )
-Problem with scroll of large binary file view
 Refresh command disabled for fingerprint check
 Directory share name cannot be selected if no '\' appended
 If the text comparison got aborted because of read error, this is not shown
@@ -46,24 +42,6 @@ Blank line immediately following difference block is considered separate
 Blank lines prevent from proper line matching inside difference blocks
 Directory dialog allows to select network host. It won't return anything then.
 Estimated time left is not shown while calculating a fingerpring of a big file  (???)
-
-Done:
-Horizontal scroll bar is not using the actual width
-Column to sort is not getting saved in config
-Properly set caret on EOL.
-Show EOL selection.
-Need to fill the whole line with diff line color, unless it's a single file view and it has
-Text and bytes selection change leaves white and black lines
-Line numbers and file offsets erase the separator line
-Binary word selection need to select a word as soon the cursor is after it
-Sort order change needs to keep column sizes
-"Side by side" missing in binary file menu
-Column resize leaves marks
-Compare after refresh doesn't show progress. If compare was aborted and refresh clicked, estimated time is not shown. The files get read again for an MD5.
-Assign an index to the files during original sort (for faster sorting)
-GetTitle() incorrect (no backslash before filename) -  backslash missing in BaseDir and SubDir
-Compare files History saved incorrectly
-Open two files doesn't work
 
 Retracted:
 screen move in two directions may corrupt the image (??)

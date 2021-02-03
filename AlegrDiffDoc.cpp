@@ -128,7 +128,7 @@ bool CAlegrDiffDoc::RunDirectoriesComparison(LPCTSTR dir1, LPCTSTR dir2,
 			return false;
 		}
 
-		UpdateAllViews(NULL);
+		UpdateAllViews(NULL, OnUpdateRebuildListView);
 		return true;
 	}
 

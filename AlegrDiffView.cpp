@@ -503,8 +503,7 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 
 		return;
 	}
-	else if (OnUpdateRebuildListView != lHint
-			&& 0 != lHint)
+	else if (OnUpdateRebuildListView != lHint)
 	{
 		return;
 	}
@@ -1445,7 +1444,7 @@ void CAlegrDiffView::OnViewHideselectedfiles()
 			}
 		}
 	}
-	GetDocument()->UpdateAllViews(NULL);
+	GetDocument()->UpdateAllViews(NULL, OnUpdateRebuildListView);
 }
 
 void CAlegrDiffView::OnUpdateViewHideselectedfiles(CCmdUI* pCmdUI)
@@ -1461,7 +1460,7 @@ void CAlegrDiffView::OnViewShowallfiles()
 		pPair->m_bHideFromListView = false;
 		pPair->m_bSelected = true;
 	}
-	pDoc->UpdateAllViews(NULL);
+	pDoc->UpdateAllViews(NULL, OnUpdateRebuildListView);
 	for (FilePair * pPair = pDoc->GetFirstFilePair(); pDoc->FilePairNotEnd(pPair); pPair = pDoc->GetNextFilePair(pPair))
 	{
 		pPair->m_bSelected = false;

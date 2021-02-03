@@ -50,6 +50,7 @@ public:
 	int m_NumberMarginWidth;
 	int m_NumberOfPanes;
 	int m_PaneWithFocus;
+	int m_MaxLineWidth[3] = { 0,0,0 };  // combined file, left file, right file
 	// visible rectangle (0-relative)
 	CRect m_VisibleRect;
 	// rectangle for BringCaretToBounds.
@@ -112,6 +113,7 @@ public:
 	void HScrollToThePos(int nPos);
 	void UpdateHScrollBar();
 	void OnMetricsChange();
+	void UpdateFileLineWidth();
 	void CaretToHome(int flags);
 	void CaretToEnd(int flags);
 

@@ -1046,10 +1046,11 @@ BOOL CAlegrDiffView::CopySelectedFiles(int DirIndex)
 void CAlegrDiffView::SetListViewItem(FilePair const *pPair, int item, bool bInsert)
 {
 	CListCtrl * pListCtrl = &GetListCtrl();
-//	CAlegrDiffDoc * pDoc = GetDocument();
+	TCHAR buf[1024];
+	buf[0] = 0;
 
 	FileItem * pFileItem = pPair->pFirstFile;
-	if (NULL == pFileItem)
+	if (nullptr == pFileItem)
 	{
 		pFileItem = pPair->pSecondFile;
 	}
@@ -1091,37 +1092,35 @@ void CAlegrDiffView::SetListViewItem(FilePair const *pPair, int item, bool bInse
 	// set modified time/date
 	if (m_ColumnWidthArray[ColumnDate1] >= 0)
 	{
-		CString datetime;
-		if (NULL != pPair->pFirstFile && ! pPair->pFirstFile->IsFolder())
+		if (NULL != pPair->pFirstFile && !pPair->pFirstFile->IsFolder())
 		{
-			datetime = FileTimeToStr(pPair->pFirstFile->GetLastWriteTime());
-			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnDate1], datetime);
+			FileTimeToStr(pPair->pFirstFile->GetLastWriteTime(), buf);
+			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnDate1], buf);
 		}
 
 		if (NULL != pPair->pSecondFile && ! pPair->pSecondFile->IsFolder())
 		{
-			datetime = FileTimeToStr(pPair->pSecondFile->GetLastWriteTime());
-			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnDate2], datetime);
+			FileTimeToStr(pPair->pSecondFile->GetLastWriteTime(), buf);
+			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnDate2], buf);
 		}
 	}
 	if (m_ColumnWidthArray[ColumnLength1] >= 0)
 	{
-		CString Length;
-		if (NULL != pPair->pFirstFile && ! pPair->pFirstFile->IsFolder())
+		if (NULL != pPair->pFirstFile && !pPair->pFirstFile->IsFolder())
 		{
-			Length = FileLengthToStrKb(pPair->pFirstFile->GetFileLength());
-			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength1], Length);
+			FileLengthToStrKb(pPair->pFirstFile->GetFileLength(), buf);
+			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength1], buf);
 		}
 
 		if (NULL != pPair->pSecondFile && ! pPair->pSecondFile->IsFolder())
 		{
-			Length = FileLengthToStrKb(pPair->pSecondFile->GetFileLength());
-			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength2], Length);
+			FileLengthToStrKb(pPair->pSecondFile->GetFileLength(), buf);
+			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength2], buf);
 		}
 	}
 
-	CString ComparisionResult = pPair->GetComparisonResultStr();
-	pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnComparisionResult], ComparisionResult);
+	pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnComparisionResult],
+							pPair->GetComparisonResultStr(buf, sizeof buf / sizeof buf[0]));
 }
 
 void CAlegrDiffView::OnFileSaveList()

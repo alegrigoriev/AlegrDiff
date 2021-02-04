@@ -678,6 +678,7 @@ public:
 		m_ComparisonResult = result;
 	}
 	CString GetComparisonResultStr() const;
+	LPCTSTR GetComparisonResultStr(TCHAR s[], size_t buf_size) const;
 	eFileComparisionResult GetComparisonResult() const noexcept
 	{
 		return m_ComparisonResult;

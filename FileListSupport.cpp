@@ -2042,6 +2042,12 @@ int FilePairComparePredicate::ComparisionSortBackwardsFunc(const FilePair * Pair
 
 CString FilePair::GetComparisonResultStr() const
 {
+	TCHAR buf[1024];
+	return CString(GetComparisonResultStr(buf, sizeof buf / sizeof buf[0]));
+}
+
+LPCTSTR FilePair::GetComparisonResultStr(TCHAR s[], size_t buf_size) const
+{
 	static CString sFilesUnaccessible(MAKEINTRESOURCE(IDS_STRING_FILES_UNACCESSIBLE));
 	static CString sFilesIdentical(MAKEINTRESOURCE(IDS_STRING_FILES_IDENTICAL));
 	static CString sFilesAttributesIdentical(MAKEINTRESOURCE(IDS_STRING_FILES_ATTRIBUTES_IDENTICAL));
@@ -2061,10 +2067,8 @@ CString FilePair::GetComparisonResultStr() const
 	static CString sOnlyOneFilesSubdirExists(MAKEINTRESOURCE(IDS_STRING_FILES_ONE_SUBDIR_EXISTS));
 	static CString sOnlyOneSubdirsParentExists(MAKEINTRESOURCE(IDS_STRING_FILES_ONE_SUBDIR_PARENT_EXISTS));
 
-	CString s;
-	TCHAR buf1[MAX_PATH], buf2[MAX_PATH];
-
-	switch(m_ComparisonResult)
+	s[0] = 0;
+	switch (m_ComparisonResult)
 	{
 	case ResultUnknown:
 		break;
@@ -2090,25 +2094,25 @@ CString FilePair::GetComparisonResultStr() const
 		return sOnlyFingerprintExists;
 		break;
 	case OnlyFirstFile:
-		s.Format(sOnlyOneExists,
-				(LPCTSTR)pFirstFile->GetBasedir(), (LPCTSTR)pFirstFile->GetSubdir());
+		_stprintf_s(s, buf_size, sOnlyOneExists,
+					(LPCTSTR)pFirstFile->GetBasedir(), (LPCTSTR)pFirstFile->GetSubdir());
 		break;
 	case FileFromSubdirInFirstDirOnly:
-		s.Format(sOnlyOneFilesSubdirExists,
-				(LPCTSTR)pFirstFile->GetBasedir(), (LPCTSTR)pFirstFile->GetSubdir());
+		_stprintf_s(s, buf_size, sOnlyOneFilesSubdirExists,
+					(LPCTSTR)pFirstFile->GetBasedir(), (LPCTSTR)pFirstFile->GetSubdir());
 		break;
 	case SubdirsParentInFirstDirOnly:
-		s.Format(sOnlyOneSubdirsParentExists,
-				(LPCTSTR)pFirstFile->GetBasedir(), (LPCTSTR)pFirstFile->GetSubdir());
+		_stprintf_s(s, buf_size, sOnlyOneSubdirsParentExists,
+					(LPCTSTR)pFirstFile->GetBasedir(), (LPCTSTR)pFirstFile->GetSubdir());
 		break;
 
 	case OnlySecondFile:
-		s.Format(sOnlyOneExists,
-				(LPCTSTR)pSecondFile->GetBasedir(), (LPCTSTR)pSecondFile->GetSubdir());
+		_stprintf_s(s, buf_size, sOnlyOneExists,
+					(LPCTSTR)pSecondFile->GetBasedir(), (LPCTSTR)pSecondFile->GetSubdir());
 		break;
 	case OnlyFirstDirectory:
-		s.Format(sOnlyOneSubdirExists,
-				(LPCTSTR)pFirstFile->GetBasedir(), (LPCTSTR)pFirstFile->GetSubdir());
+		_stprintf_s(s, buf_size, sOnlyOneSubdirExists,
+					(LPCTSTR)pFirstFile->GetBasedir(), (LPCTSTR)pFirstFile->GetSubdir());
 		break;
 	case DirectoryInFingerprintFileOnly:
 		return sOnlyFingerprintSubdirExists;
@@ -2117,35 +2121,27 @@ CString FilePair::GetComparisonResultStr() const
 		return sOnlyFingerprintFilesSubdirExists;
 		break;
 	case OnlySecondDirectory:
-		s.Format(sOnlyOneSubdirExists,
-				(LPCTSTR)pSecondFile->GetBasedir(), (LPCTSTR)pSecondFile->GetSubdir());
+		_stprintf_s(s, buf_size, sOnlyOneSubdirExists,
+					(LPCTSTR)pSecondFile->GetBasedir(), (LPCTSTR)pSecondFile->GetSubdir());
 		break;
 	case FileFromSubdirInSecondDirOnly:
-		s.Format(sOnlyOneFilesSubdirExists,
-				(LPCTSTR)pSecondFile->GetBasedir(), (LPCTSTR)pSecondFile->GetSubdir());
+		_stprintf_s(s, buf_size, sOnlyOneFilesSubdirExists,
+					(LPCTSTR)pSecondFile->GetBasedir(), (LPCTSTR)pSecondFile->GetSubdir());
 		break;
 	case SubdirsParentInSecondDirOnly:
-		s.Format(sOnlyOneSubdirsParentExists,
-				(LPCTSTR)pSecondFile->GetBasedir(), (LPCTSTR)pSecondFile->GetSubdir());
+		_stprintf_s(s, buf_size, sOnlyOneSubdirsParentExists,
+					(LPCTSTR)pSecondFile->GetBasedir(), (LPCTSTR)pSecondFile->GetSubdir());
 		break;
 
 	case FirstFileLonger:
-		s.Format(sOneFileLonger,
-				(LPCTSTR)pFirstFile->GetBasedir(), (LPCTSTR)pFirstFile->GetSubdir(),
-				pFirstFile->GetFileLength() - pSecondFile->GetFileLength());
+		_stprintf_s(s, buf_size, sOneFileLonger,
+					(LPCTSTR)pFirstFile->GetBasedir(), (LPCTSTR)pFirstFile->GetSubdir(),
+					pFirstFile->GetFileLength() - pSecondFile->GetFileLength());
 		break;
 	case SecondFileLonger:
-		s.Format(sOneFileLonger,
-				(LPCTSTR)pSecondFile->GetBasedir(), (LPCTSTR)pSecondFile->GetSubdir(),
-				pSecondFile->GetFileLength() - pFirstFile->GetFileLength());
-		break;
-	case ErrorReadingFirstFile:
-		s.Format(sErrorReadingFile,
-				LPCTSTR(pFirstFile->GetFullName()));
-		break;
-	case ErrorReadingSecondFile:
-		s.Format(sErrorReadingFile,
-				LPCTSTR(pSecondFile->GetFullName()));
+		_stprintf_s(s, buf_size, sOneFileLonger,
+					(LPCTSTR)pSecondFile->GetBasedir(), (LPCTSTR)pSecondFile->GetSubdir(),
+					pSecondFile->GetFileLength() - pFirstFile->GetFileLength());
 		break;
 	case ReadingFirstFile:
 		return sReadingFile;
@@ -2153,22 +2149,48 @@ CString FilePair::GetComparisonResultStr() const
 	case ReadingSecondFile:
 		return sReadingFile;
 		break;
-	case CalculatingFirstFingerprint:
-		s.Format(sCalculatingFingerprint, LPCTSTR(pFirstFile->GetFullName()));
-		break;
-	case CalculatingSecondFingerprint:
-		s.Format(sCalculatingFingerprint, LPCTSTR(pSecondFile->GetFullName()));
-		break;
-	case ComparingFiles:
-		_tcsncpy_s(buf1, MAX_PATH, pFirstFile->GetFullName(), countof(buf1));
-		buf1[countof(buf1) - 1] = 0;
-		AbbreviateName(buf1, 50, TRUE);
+	default:
+	{
 
-		_tcsncpy_s(buf2, MAX_PATH, pSecondFile->GetFullName(), countof(buf2));
-		buf2[countof(buf2) - 1] = 0;
-		AbbreviateName(buf2, 50, TRUE);
+		TCHAR buf1[MAX_PATH], buf2[MAX_PATH];
+		buf1[0] = 0;
+		buf2[0] = 0;
+		if (pFirstFile)
+		{
+			_stprintf_s(buf1, MAX_PATH, _T("%s%s%s"),
+						LPCTSTR(pFirstFile->GetBasedir()), LPCTSTR(pFirstFile->GetSubdir()), LPCTSTR(pFirstFile->GetName()));
+		}
 
-		s.Format(sComparingFiles, buf1, buf2);
+		if (pSecondFile)
+		{
+			_stprintf_s(buf2, MAX_PATH, _T("%s%s%s"),
+						LPCTSTR(pSecondFile->GetBasedir()), LPCTSTR(pSecondFile->GetSubdir()), LPCTSTR(pSecondFile->GetName()));
+		}
+		switch (m_ComparisonResult)
+		{
+		case ErrorReadingFirstFile:
+			_stprintf_s(s, buf_size, sErrorReadingFile, buf1);
+			break;
+		case ErrorReadingSecondFile:
+			_stprintf_s(s, buf_size, sErrorReadingFile, buf2);
+			break;
+		case CalculatingFirstFingerprint:
+			_stprintf_s(s, buf_size, sCalculatingFingerprint, buf1);
+			break;
+		case CalculatingSecondFingerprint:
+			_stprintf_s(s, buf_size, sCalculatingFingerprint, buf2);
+			break;
+		case ComparingFiles:
+		{
+			AbbreviateName(buf1, 50, TRUE);
+
+			AbbreviateName(buf2, 50, TRUE);
+
+			_stprintf_s(s, buf_size, sComparingFiles, buf1, buf2);
+		}
+			break;
+		}
+	}
 		break;
 	}
 	return s;

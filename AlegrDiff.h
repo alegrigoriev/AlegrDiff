@@ -266,8 +266,14 @@ inline CString FileTimeToStr(ULONGLONG const &FileTime, LCID locale = LOCALE_USE
 {
 	return FileTimeToStr(reinterpret_cast<FILETIME const&>(FileTime), locale);
 }
+void FileTimeToStr(FILETIME FileTime, TCHAR str[256], LCID locale);
+inline void FileTimeToStr(ULONGLONG const& FileTime, TCHAR str[256], LCID locale = LOCALE_USER_DEFAULT)
+{
+	FileTimeToStr(reinterpret_cast<FILETIME const&>(FileTime), str, locale);
+}
 CString UlonglongToStr(ULONGLONG Length, LCID locale = LOCALE_USER_DEFAULT);
 CString FileLengthToStrKb(ULONGLONG Length);
+void FileLengthToStrKb(ULONGLONG Length, TCHAR buf[64]);
 void AFXAPI AbbreviateName(LPTSTR lpszCanon, int cchMax, BOOL bAtLeastName);
 
 CString CreateCustomFilter(LPCTSTR Extension);

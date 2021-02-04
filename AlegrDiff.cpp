@@ -1248,6 +1248,29 @@ CString FileTimeToStr(FILETIME FileTime, LCID locale)
 	return result;
 }
 
+void FileTimeToStr(FILETIME FileTime, TCHAR str[256], LCID locale)
+{
+	int const TimeBufSize = 256;
+	SYSTEMTIME SystemTime;
+	SYSTEMTIME LocalTime;
+	memzero(LocalTime);
+
+	FileTimeToSystemTime(&FileTime, &SystemTime);
+	if (!SystemTimeToTzSpecificLocalTime(NULL, &SystemTime, &LocalTime))
+	{
+		FILETIME LocalFileTime;
+		FileTimeToLocalFileTime(&FileTime, &LocalFileTime);
+		FileTimeToSystemTime(&LocalFileTime, &LocalTime);
+	}
+
+	int len = GetDateFormat(locale, DATE_SHORTDATE, &LocalTime, NULL, str, TimeBufSize - 1);
+	if (len)
+	{
+		str[len-1] = ' ';
+
+		GetTimeFormat(locale, TIME_NOSECONDS, &LocalTime, NULL, str + len, TimeBufSize - (len + 1));
+	}
+}
 
 void CAboutDlg::OnButtonMailto()
 {
@@ -1568,6 +1591,11 @@ CString FileLengthToStrKb(ULONGLONG Length)
 	TCHAR buf[32]={0};
 	StrFormatByteSize(Length, buf, countof(buf));
 	return CString(buf);
+}
+
+void FileLengthToStrKb(ULONGLONG Length, TCHAR buf[64])
+{
+	StrFormatByteSize(Length, buf, 64);
 }
 
 void CAlegrDiffApp::OnWindowCloseall()

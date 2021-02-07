@@ -41,7 +41,7 @@ protected:
 
 // Implementation
 public:
-	void SetListViewItem(FilePair const * pPair, int item, bool bInsert);
+	void SetItemsState(size_t from, size_t to, UINT OldState, UINT NewState);
 	BOOL CopySelectedFiles(int DirIndex);
 
 	// keeps order of columns (even those non-visible)
@@ -118,6 +118,8 @@ protected:
 	CString GetNumberOfFilesString();
 	void UpdateStatusText(UINT nState);
 
+	// Return a FilePair from the array by the index, only if the index is inside range
+	FilePair* GetFilePair(size_t index) const noexcept;
 	// Return a FilePair from the array by the index, but only if it doesn't have "deleted" flag set
 	FilePair* GetValidFilePair(size_t index) const noexcept;
 	// Return pPair if its index in the array matches
@@ -168,13 +170,14 @@ protected:
 	afx_msg void OnHdnBegindrag(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnHdnEnddrag(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnHdnEndTrack(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnHdnTrack(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnHdnBeginTrack(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnHdnTrack(NMHDR * /*pNMHDR*/, LRESULT *pResult);
+	afx_msg void OnHdnBeginTrack(NMHDR * /*pNMHDR*/, LRESULT *pResult);
 	afx_msg void OnViewResetcolumns();
-	afx_msg void OnLvnGetInfoTip(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnLvnGetDispInfo(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnFileProperties();
 	afx_msg void OnUpdateFileProperties(CCmdUI *pCmdUI);
 	afx_msg void OnLvnItemchanged(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnLvnOdItemchanged(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnEditSelectAll();
 	afx_msg void OnShowDifferentfiles();
 	afx_msg void OnUpdateShowDifferentfiles(CCmdUI *pCmdUI);

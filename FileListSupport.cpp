@@ -490,17 +490,6 @@ bool FileItem::Load()
 	return true;
 }
 
-// sort directories first then names
-bool FileItem::DirNameSortFunc(FileItem const * Item1, FileItem const * Item2)
-{
-	return DirNameCompare(Item1, Item2) > 0;
-}
-
-bool FileItem::DirNameSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2)
-{
-	return DirNameCompare(Item1, Item2) < 0;
-}
-
 // These functions return 1 if Item1 is greater than Item2, -1 if Item1 is less than Item2,
 int FileItem::DirNameCompare(FileItem const * Item1, FileItem const * Item2)
 {
@@ -546,17 +535,6 @@ int FileItem::DirNameCompare(FileItem const * Item1, FileItem const * Item2)
 	return 1;
 }
 
-// sort names first then directories
-bool FileItem::NameSortFunc(FileItem const * Item1, FileItem const * Item2)
-{
-	return NameCompare(Item1, Item2) > 0;
-}
-
-bool FileItem::NameSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2)
-{
-	return NameCompare(Item1, Item2) < 0;
-}
-
 int FileItem::NameCompare(FileItem const * Item1, FileItem const * Item2)
 {
 	if (nullptr == Item2)
@@ -598,17 +576,6 @@ int FileItem::NameCompare(FileItem const * Item1, FileItem const * Item2)
 	}
 
 	return 0;
-}
-
-
-bool FileItem::TimeSortFunc(FileItem const * Item1, FileItem const * Item2)
-{
-	return TimeCompare(Item1, Item2) > 0;
-}
-
-bool FileItem::TimeSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2)
-{
-	return TimeCompare(Item1, Item2) < 0;
 }
 
 int FileItem::TimeCompare(FileItem const * Item1, FileItem const * Item2)
@@ -3758,7 +3725,7 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 		{
 			pFile1 = *pf1;
 			pFile2 = *pf2;
-			int comparison = FileItem::DirNameCompare(pFile1, pFile2);
+			int comparison = Files1.predicate()(pFile1, pFile2);
 			if (comparison > 0)
 			{
 				pFile1 = nullptr;
@@ -3799,7 +3766,7 @@ bool FilePairList::BuildFilePairList(OPTIONAL FileList *List1, FileList *List2, 
 				pItem2 = pInsertBefore->pFirstFile;
 			}
 
-			int comparison = FileItem::DirNameCompare(pItem1, pItem2);
+			int comparison = Files1.predicate()(pItem1, pItem2);
 			if (comparison > 0)
 			{
 				NumFilePairs -= !pInsertBefore->m_bDeleted;
@@ -4140,29 +4107,7 @@ int MultiStrDirComparePredicate::operator()(LPCTSTR pA, LPCTSTR pB) const
 
 int FullPathnameComparePredicate::operator()(FileItem const* A, FileItem const* B) const
 {
-	ASSERT(A->m_FullDirSortNum != ULONG_MAX);
-	ASSERT(B->m_FullDirSortNum != ULONG_MAX);
-	ASSERT(A->m_NameSortNum != ULONG_MAX);
-	ASSERT(B->m_NameSortNum != ULONG_MAX);
-
-	if (A->m_FullDirSortNum < B->m_FullDirSortNum)
-	{
-		return -1;
-	}
-	if (A->m_FullDirSortNum > B->m_FullDirSortNum)
-	{
-		return 1;
-
-	}
-	if (A->m_NameSortNum < B->m_NameSortNum)
-	{
-		return -1;
-	}
-	if (A->m_NameSortNum > B->m_NameSortNum)
-	{
-		return 1;
-	}
-	return 0;
+	return FileItem::DirNameCompare(A, B);
 }
 
 

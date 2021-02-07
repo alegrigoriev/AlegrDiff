@@ -80,10 +80,12 @@ BEGIN_MESSAGE_MAP(CAlegrDiffView, CListView)
 	ON_NOTIFY(HDN_BEGINTRACK, 0, OnHdnBeginTrack)
 	ON_NOTIFY(HDN_ENDTRACK, 0, OnHdnEndTrack)
 	ON_COMMAND(ID_VIEW_RESETCOLUMNS, OnViewResetcolumns)
-	//ON_NOTIFY_REFLECT(LVN_GETINFOTIP, OnLvnGetInfoTip)
+	ON_NOTIFY_REFLECT(LVN_GETDISPINFO, OnLvnGetDispInfo)
 	ON_COMMAND(ID_FILE_PROPERTIES, OnFileProperties)
 	ON_UPDATE_COMMAND_UI(ID_FILE_PROPERTIES, OnUpdateFileProperties)
 	ON_NOTIFY_REFLECT(LVN_ITEMCHANGED, OnLvnItemchanged)
+	ON_NOTIFY_REFLECT(LVN_ODSTATECHANGED, OnLvnOdItemchanged)
+	ON_NOTIFY(LVN_ODSTATECHANGED, 0, OnLvnOdItemchanged)
 	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
 	ON_COMMAND(ID_SHOW_DIFFERENTFILES, OnShowDifferentfiles)
 	ON_UPDATE_COMMAND_UI(ID_SHOW_DIFFERENTFILES, OnUpdateShowDifferentfiles)
@@ -160,6 +162,10 @@ CAlegrDiffView::CAlegrDiffView() noexcept
 
 CAlegrDiffView::~CAlegrDiffView()
 {
+	for (FilePair* pPair : m_PairArray)
+	{
+		pPair->m_ListSortOrder = ULONG_MAX;
+	}
 	GetApp()->m_ShowFilesMask = m_ShowFilesMask;
 }
 
@@ -168,7 +174,7 @@ BOOL CAlegrDiffView::PreCreateWindow(CREATESTRUCT& cs)
 	// Modify the Window class or styles here by modifying
 	//  the CREATESTRUCT cs
 
-	cs.style |= LVS_SHOWSELALWAYS | LVS_REPORT;
+	cs.style |= LVS_SHOWSELALWAYS | LVS_REPORT | LVS_OWNERDATA;
 	return CListView::PreCreateWindow(cs);
 }
 
@@ -620,15 +626,12 @@ void CAlegrDiffView::ReBuildListView()
 	CAlegrDiffDoc * pDoc = GetDocument();
 
 	// fill the list control
-	CWaitCursor WaitCursor;
-
-	LockWindowUpdate();
-
 	pListCtrl->DeleteAllItems();
 
 	BuildListViewHeader();
 
 	BuildSortedPairArray(m_PairArray, &pDoc->m_PairList);
+	pListCtrl->SetCallbackMask(LVIS_CUT);
 
 	pListCtrl->SetItemCount((int)m_PairArray.size());
 
@@ -648,7 +651,6 @@ void CAlegrDiffView::ReBuildListView()
 				pPair->m_bFocused = false;
 			}
 		}
-		SetListViewItem(pPair, item, true);
 		item++;
 	}
 
@@ -661,6 +663,7 @@ void CAlegrDiffView::ReBuildListView()
 		}
 		pListCtrl->SetItemState(nSel, LVIS_FOCUSED, LVIS_FOCUSED);
 		pListCtrl->EnsureVisible(nSel, false);
+		pListCtrl->RedrawItems(0, item - 1);
 	}
 	UnlockWindowUpdate();
 }
@@ -683,9 +686,7 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 
 		if (ValidateFilePairIndex(pPair))
 		{
-			GetListCtrl().SetItemText(pPair->m_ListSortOrder,
-									m_ColumnArray[ColumnComparisionResult],
-									pPair->GetComparisonResultStr());
+			GetListCtrl().RedrawItems(pPair->m_ListSortOrder, pPair->m_ListSortOrder);
 		}
 
 		UpdateStatusText(WA_ACTIVE);
@@ -716,7 +717,8 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 
 				pPair = pNewPair;
 			}
-			SetListViewItem(pPair, pPair->m_ListSortOrder, false);
+
+			GetListCtrl().RedrawItems(pPair->m_ListSortOrder, pPair->m_ListSortOrder);
 			UpdateStatusText(WA_ACTIVE);
 
 			pArg->m_pPair = nullptr;
@@ -732,6 +734,15 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 	ReBuildListView();
 
 	UpdateStatusText(WA_ACTIVE);
+}
+
+FilePair* CAlegrDiffView::GetFilePair(size_t index) const noexcept
+{
+	if (index >= m_PairArray.size())
+	{
+		return nullptr;
+	}
+	return m_PairArray[index];
 }
 
 FilePair* CAlegrDiffView::GetValidFilePair(size_t index) const noexcept
@@ -1041,86 +1052,6 @@ BOOL CAlegrDiffView::CopySelectedFiles(int DirIndex)
 
 	CopyFilesToFolder(& FilesArray.front(), (int)FilesArray.size(), true);
 	return TRUE;
-}
-
-void CAlegrDiffView::SetListViewItem(FilePair const *pPair, int item, bool bInsert)
-{
-	CListCtrl * pListCtrl = &GetListCtrl();
-	TCHAR buf[1024];
-	buf[0] = 0;
-
-	FileItem * pFileItem = pPair->pFirstFile;
-	if (nullptr == pFileItem)
-	{
-		pFileItem = pPair->pSecondFile;
-	}
-	LVITEM lvi;
-	lvi.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
-	lvi.iItem = item;
-	lvi.iSubItem = 0;
-	lvi.state = 0;
-	lvi.stateMask = 0;
-
-	lvi.pszText = (LPTSTR)(LPCTSTR)pFileItem->GetName();
-
-	lvi.lParam = LPARAM(pFileItem);
-
-	if (pPair->m_bDeleted)
-	{
-		lvi.state = LVIS_CUT;
-		lvi.stateMask = LVIS_CUT;
-	}
-	else if (pPair->m_bSelected)
-	{
-		lvi.state = LVIS_SELECTED;
-		lvi.stateMask = LVIS_SELECTED;
-	}
-
-	if (bInsert)
-	{
-		pListCtrl->InsertItem(& lvi);
-	}
-	else
-	{
-		pListCtrl->SetItem(& lvi);
-	}
-
-	if (m_ColumnWidthArray[ColumnSubdir] >= 0)
-	{
-		pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnSubdir], pFileItem->GetSubdir());
-	}
-	// set modified time/date
-	if (m_ColumnWidthArray[ColumnDate1] >= 0)
-	{
-		if (NULL != pPair->pFirstFile && !pPair->pFirstFile->IsFolder())
-		{
-			FileTimeToStr(pPair->pFirstFile->GetLastWriteTime(), buf);
-			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnDate1], buf);
-		}
-
-		if (NULL != pPair->pSecondFile && ! pPair->pSecondFile->IsFolder())
-		{
-			FileTimeToStr(pPair->pSecondFile->GetLastWriteTime(), buf);
-			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnDate2], buf);
-		}
-	}
-	if (m_ColumnWidthArray[ColumnLength1] >= 0)
-	{
-		if (NULL != pPair->pFirstFile && !pPair->pFirstFile->IsFolder())
-		{
-			FileLengthToStrKb(pPair->pFirstFile->GetFileLength(), buf);
-			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength1], buf);
-		}
-
-		if (NULL != pPair->pSecondFile && ! pPair->pSecondFile->IsFolder())
-		{
-			FileLengthToStrKb(pPair->pSecondFile->GetFileLength(), buf);
-			pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnLength2], buf);
-		}
-	}
-
-	pListCtrl->SetItemText(item, m_ColumnTypeToViewItem[ColumnComparisionResult],
-							pPair->GetComparisonResultStr(buf, sizeof buf / sizeof buf[0]));
 }
 
 void CAlegrDiffView::OnFileSaveList()
@@ -1724,12 +1655,12 @@ void CAlegrDiffView::OnHdnEnddrag(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-void CAlegrDiffView::OnHdnTrack(LPNMHDR /*pNMHDR*/, LRESULT * pResult)
+void CAlegrDiffView::OnHdnTrack(NMHDR * /*pNMHDR*/, LRESULT * pResult)
 {
 	*pResult = 0;
 }
 
-void CAlegrDiffView::OnHdnBeginTrack(LPNMHDR /*pNMHDR*/, LRESULT * pResult)
+void CAlegrDiffView::OnHdnBeginTrack(NMHDR * /*pNMHDR*/, LRESULT * pResult)
 {
 	*pResult = 0;
 }
@@ -1773,32 +1704,156 @@ void CAlegrDiffView::OnUpdateFileProperties(CCmdUI *pCmdUI)
 	pCmdUI->Enable(GetListCtrl().GetNextItem(-1, LVNI_SELECTED) != -1);
 }
 
+static const char* LvStateString(UINT state)
+{
+	switch (state & (LVIS_SELECTED | LVIS_FOCUSED))
+	{
+	case LVIS_SELECTED | LVIS_FOCUSED:
+		return "SELECTED+FOCUSED";
+	case LVIS_SELECTED:
+		return "SELECTED";
+	case LVIS_FOCUSED:
+		return "FOCUSED";
+	case 0:
+	default:
+		return "NONE";
+	}
+}
+
+void CAlegrDiffView::SetItemsState(size_t from, size_t to, UINT OldState, UINT NewState)
+{
+	if (to < m_PairArray.size())
+	{
+		for (size_t i = from; i <= to; i++)
+		{
+			if (OldState & LVIS_SELECTED)
+			{
+				m_PairArray[i]->m_bSelected = false;
+			}
+			if (NewState & LVIS_SELECTED)
+			{
+				m_PairArray[i]->m_bSelected = true;
+			}
+			if (OldState & LVIS_FOCUSED)
+			{
+				m_PairArray[i]->m_bFocused = false;
+			}
+			if (NewState & LVIS_FOCUSED)
+			{
+				m_PairArray[i]->m_bFocused = true;
+			}
+		}
+	}
+}
+
 void CAlegrDiffView::OnLvnItemchanged(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
-	TRACE("CAlegrDiffView::OnLvnItemchanged: uChanged=%#X\n", pNMLV->uChanged);
+	if (0) TRACE("CAlegrDiffView::OnLvnItemchanged: Item %d, uChanged=%#X, old=%s, new=%s\n",
+				pNMLV->iItem, pNMLV->uChanged, LvStateString(pNMLV->uOldState),
+				LvStateString(pNMLV->uNewState));
 
-	if ((pNMLV->uChanged & LVIF_STATE)
-		&& unsigned(pNMLV->iItem) < m_PairArray.size())
+	if (pNMLV->uChanged & LVIF_STATE)
 	{
-		if (pNMLV->uOldState & LVIS_SELECTED)
+		size_t from = size_t(pNMLV->iItem);
+		size_t to = from;
+		if (pNMLV->iItem == -1)
 		{
-			m_PairArray[pNMLV->iItem]->m_bSelected = false;
+			// all items
+			from = 0;
+			to = m_PairArray.size() - 1;
 		}
-		if (pNMLV->uNewState & LVIS_SELECTED)
+		SetItemsState(from, to, pNMLV->uOldState, pNMLV->uNewState);
+	}
+
+	*pResult = 0;
+}
+
+void CAlegrDiffView::OnLvnOdItemchanged(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	NMLVODSTATECHANGE *pNMLV = reinterpret_cast<NMLVODSTATECHANGE*>(pNMHDR);
+	if (0) TRACE("CAlegrDiffView::OnLvnOdItemchanged: From=%d, to=%d, old=%s, new=%s\n",
+				pNMLV->iFrom, pNMLV->iTo, LvStateString(pNMLV->uOldState),
+				LvStateString(pNMLV->uNewState));
+
+	SetItemsState(size_t(pNMLV->iFrom), size_t(pNMLV->iTo), pNMLV->uOldState, pNMLV->uNewState);
+
+	*pResult = 0;
+}
+
+void CAlegrDiffView::OnLvnGetDispInfo(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	NMLVDISPINFO * plvdi = reinterpret_cast<NMLVDISPINFO*>(pNMHDR);
+
+	FilePair* pPair = GetFilePair(plvdi->item.iItem);
+	if (pPair == nullptr)
+	{
+		*pResult = 1;
+		return;
+	}
+	FileItem* pFileItem = pPair->pFirstFile;
+	if (nullptr == pFileItem)
+	{
+		pFileItem = pPair->pSecondFile;
+	}
+
+	*pResult = 0;
+	if (plvdi->item.mask & LVIF_STATE)
+	{
+		plvdi->item.state = pPair->m_bDeleted ? LVIS_CUT : 0;
+	}
+	if (plvdi->item.mask & LVIF_TEXT)
+	{
+		unsigned nColumn = plvdi->item.iSubItem;
+		if (nColumn >= countof(m_ViewItemToColumnType))
 		{
-			m_PairArray[pNMLV->iItem]->m_bSelected = true;
+			return;
 		}
-		if (pNMLV->uOldState & LVIS_FOCUSED)
+
+		eColumns ColumnType = m_ViewItemToColumnType[nColumn];
+		static TCHAR TextBuffer[1024];
+		plvdi->item.pszText = TextBuffer;
+		TextBuffer[0] = 0;
+
+		switch (ColumnType)
 		{
-			m_PairArray[pNMLV->iItem]->m_bFocused = false;
-		}
-		if (pNMLV->uNewState & LVIS_FOCUSED)
-		{
-			m_PairArray[pNMLV->iItem]->m_bFocused = true;
+		case ColumnName:
+			plvdi->item.pszText = (LPTSTR)(LPCTSTR)pFileItem->GetName();
+			break;
+		case ColumnSubdir:
+			plvdi->item.pszText = (LPTSTR)(LPCTSTR)pFileItem->GetSubdir();
+			break;
+		case ColumnDate1:
+			if (NULL != pPair->pFirstFile && !pPair->pFirstFile->IsFolder())
+			{
+				FileTimeToStr(pPair->pFirstFile->GetLastWriteTime(), TextBuffer);
+			}
+			break;
+		case ColumnDate2:
+			if (NULL != pPair->pSecondFile && !pPair->pSecondFile->IsFolder())
+			{
+				FileTimeToStr(pPair->pSecondFile->GetLastWriteTime(), TextBuffer);
+			}
+			break;
+		case ColumnLength1:
+			if (NULL != pPair->pFirstFile && !pPair->pFirstFile->IsFolder())
+			{
+				FileLengthToStrKb(pPair->pFirstFile->GetFileLength(), TextBuffer);
+			}
+			break;
+		case ColumnLength2:
+			if (NULL != pPair->pSecondFile && !pPair->pSecondFile->IsFolder())
+			{
+				FileLengthToStrKb(pPair->pSecondFile->GetFileLength(), TextBuffer);
+			}
+			break;
+		case ColumnComparisionResult:
+			plvdi->item.pszText = (LPTSTR)pPair->GetComparisonResultStr(TextBuffer, sizeof TextBuffer / sizeof TextBuffer[0]);
+			break;
+		default:
+			break;
 		}
 	}
-	*pResult = 0;
 }
 
 void CAlegrDiffView::OnEditSelectAll()

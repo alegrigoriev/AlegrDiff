@@ -442,80 +442,61 @@ void CAlegrDiffView::BuildSortedPairArray(vector<FilePair *> & PairArray, FilePa
 	}
 }
 
-void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
+void CAlegrDiffView::BuildArrowBitmaps()
 {
-	CListCtrl * pListCtrl = &GetListCtrl();
-	CAlegrDiffDoc * pDoc = GetDocument();
-	if (UpdateViewsFilePairDeleteFromList == lHint
-		|| OnUpdateListViewItem == lHint)
+	if (_AfxGetComCtlVersion() >= 0x00060000)
 	{
-		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
-		if (nullptr == pArg)
-		{
-			return;
-		}
-		FilePair const * const pPair = pArg->m_pPair;
-		if (nullptr == pPair)
-		{
-			return;
-		}
-
-		if (ValidateFilePairIndex(pPair))
-		{
-			pListCtrl->SetItemText(pPair->m_ListSortOrder,
-									m_ColumnArray[ColumnComparisionResult],
-									pPair->GetComparisonResultStr());
-		}
-
-		UpdateStatusText(WA_ACTIVE);
 		return;
 	}
-	else if (UpdateViewsFilePairChanged == lHint)
+
+	CHeaderCtrl* pHeader = GetListCtrl().GetHeaderCtrl();
+	CFont* pFont = pHeader->GetFont();
+	CDC* pDC = GetWindowDC();
+	CDC cdc;
+	cdc.CreateCompatibleDC(pDC);
+
+	CFont * pOldFont = pDC->SelectObject(pFont);
+
+	TEXTMETRIC tm;
+	pDC->GetTextMetrics( & tm);
+	pDC->SelectObject(pOldFont);
+	ReleaseDC(pDC);
+
+	unsigned const ArrowWidth = (tm.tmAscent - tm.tmInternalLeading) | 1;
+	unsigned const ArrowHeight = ArrowWidth / 2 + 1;
+
+	int const ArrayWidth = ((ArrowWidth / 8) + 1) & ~1;
+	int const ArraySize = ArrowHeight * 2 * ArrayWidth;
+
+	UCHAR * pBmp = new UCHAR[ArraySize];
+	if (pBmp)
 	{
-		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
-		if (nullptr == pArg)
-		{
-			return;
-		}
-		FilePair * pPair = pArg->m_pPair;
-		if (nullptr == pPair)
-		{
-			return;
-		}
+		memset(pBmp, 0xFF, ArraySize);
 
-		FilePair* const pNewPair = pArg->m_pNewPair;
-
-		if (ValidateFilePairIndex(pPair))
+		for (unsigned y = 0; y < ArrowHeight; y++)
 		{
-			if (pNewPair != nullptr)
+			for (unsigned x = y; x < ArrowWidth - y; x++)
 			{
-				pNewPair->m_ListSortOrder = pPair->m_ListSortOrder;
-				m_PairArray[pPair->m_ListSortOrder] = pNewPair;
-				pPair->m_ListSortOrder = ULONG_MAX;
-
-				pPair = pNewPair;
+				pBmp[y * ArrayWidth + x / 8] &= 0xFF7F >> (x & 7);
+				pBmp[(ArrowHeight * 2 - 1 - y) * ArrayWidth + x / 8] &= 0xFF7F >> (x & 7);
 			}
-			SetListViewItem(pPair, pPair->m_ListSortOrder, false);
-			UpdateStatusText(WA_ACTIVE);
-
-			pArg->m_pPair = nullptr;
 		}
 
-		return;
+		m_ArrowDownBitmap.DeleteObject();
+		m_ArrowUpBitmap.DeleteObject();
+
+		m_ArrowDownBitmap.CreateBitmap(ArrowWidth, ArrowHeight, 1, 1, pBmp);
+		m_ArrowUpBitmap.CreateBitmap(ArrowWidth, ArrowHeight, 1, 1, pBmp + ArrowHeight * ArrayWidth);
+
+		delete[] pBmp;
 	}
-	else if (OnUpdateRebuildListView != lHint)
-	{
-		return;
-	}
+}
 
-	// TODO: keep focus on the same item
-	// fill the list control
-	CWaitCursor WaitCursor;
-
-	LockWindowUpdate();
-	pListCtrl->DeleteAllItems();
-
-	CHeaderCtrl * pHeader = pListCtrl->GetHeaderCtrl();
+void CAlegrDiffView::BuildListViewHeader()
+{
+	CAlegrDiffDoc* pDoc = GetDocument();
+	CListCtrl* pListCtrl = &GetListCtrl();
+	CHeaderCtrl* pHeader = pListCtrl->GetHeaderCtrl();
 	// Delete all of the items.
 	int i;
 	for (i = pHeader->GetItemCount(); i > 0; i--)
@@ -523,49 +504,8 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 		pListCtrl->DeleteColumn(i - 1);
 	}
 
-	{
-		CFont * pFont = pHeader->GetFont();
-		CDC * pDC = GetWindowDC();
-		CDC cdc;
-		cdc.CreateCompatibleDC(pDC);
+	BuildArrowBitmaps();
 
-		CFont * pOldFont = pDC->SelectObject(pFont);
-
-		TEXTMETRIC tm;
-		pDC->GetTextMetrics( & tm);
-		pDC->SelectObject(pOldFont);
-		ReleaseDC(pDC);
-
-		unsigned const ArrowWidth = (tm.tmAscent - tm.tmInternalLeading) | 1;
-		unsigned const ArrowHeight = ArrowWidth / 2 + 1;
-
-		int const ArrayWidth = ((ArrowWidth / 8) + 1) & ~1;
-		int const ArraySize = ArrowHeight * 2 * ArrayWidth;
-
-		UCHAR * pBmp = new UCHAR[ArraySize];
-		if (pBmp)
-		{
-			memset(pBmp, 0xFF, ArraySize);
-
-			for (unsigned y = 0; y < ArrowHeight; y++)
-			{
-				for (unsigned x = y; x < ArrowWidth - y; x++)
-				{
-					pBmp[y * ArrayWidth + x / 8] &= 0xFF7F >> (x & 7);
-					pBmp[(ArrowHeight * 2 - 1 - y) * ArrayWidth + x / 8] &= 0xFF7F >> (x & 7);
-				}
-			}
-
-			m_ArrowDownBitmap.DeleteObject();
-			m_ArrowUpBitmap.DeleteObject();
-
-			m_ArrowDownBitmap.CreateBitmap(ArrowWidth, ArrowHeight, 1, 1, pBmp);
-			m_ArrowUpBitmap.CreateBitmap(ArrowWidth, ArrowHeight, 1, 1, pBmp + ArrowHeight * ArrayWidth);
-
-			delete[] pBmp;
-		}
-
-	}
 	CString titles[MaxColumns];
 
 	titles[ColumnName].LoadString(IDS_STRING_COLUMN_FILENAME);
@@ -672,6 +612,21 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 		}
 		m_ColumnPositionToViewItem[j] = j;
 	}
+}
+
+void CAlegrDiffView::ReBuildListView()
+{
+	CListCtrl * pListCtrl = &GetListCtrl();
+	CAlegrDiffDoc * pDoc = GetDocument();
+
+	// fill the list control
+	CWaitCursor WaitCursor;
+
+	LockWindowUpdate();
+
+	pListCtrl->DeleteAllItems();
+
+	BuildListViewHeader();
 
 	BuildSortedPairArray(m_PairArray, &pDoc->m_PairList);
 
@@ -679,10 +634,9 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 
 	int nSel = -1;
 
-	for (unsigned item = 0; item < m_PairArray.size(); item++)
+	unsigned item = 0;
+	for (FilePair* pPair : m_PairArray)
 	{
-		FilePair * pPair = m_PairArray[item];
-
 		if (pPair->m_bFocused)
 		{
 			if (-1 == nSel)
@@ -695,8 +649,10 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 			}
 		}
 		SetListViewItem(pPair, item, true);
+		item++;
 	}
-	if ( 0 != m_PairArray.size())
+
+	if (!m_PairArray.empty())
 	{
 		if (-1 == nSel)
 		{
@@ -707,6 +663,74 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 		pListCtrl->EnsureVisible(nSel, false);
 	}
 	UnlockWindowUpdate();
+}
+
+void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
+{
+	if (UpdateViewsFilePairDeleteFromList == lHint
+		|| OnUpdateListViewItem == lHint)
+	{
+		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
+		if (nullptr == pArg)
+		{
+			return;
+		}
+		FilePair const * const pPair = pArg->m_pPair;
+		if (nullptr == pPair)
+		{
+			return;
+		}
+
+		if (ValidateFilePairIndex(pPair))
+		{
+			GetListCtrl().SetItemText(pPair->m_ListSortOrder,
+									m_ColumnArray[ColumnComparisionResult],
+									pPair->GetComparisonResultStr());
+		}
+
+		UpdateStatusText(WA_ACTIVE);
+		return;
+	}
+	else if (UpdateViewsFilePairChanged == lHint)
+	{
+		FilePairChangedArg * pArg = dynamic_cast<FilePairChangedArg *>(pHint);
+		if (nullptr == pArg)
+		{
+			return;
+		}
+		FilePair * pPair = pArg->m_pPair;
+		if (nullptr == pPair)
+		{
+			return;
+		}
+
+		FilePair* const pNewPair = pArg->m_pNewPair;
+
+		if (ValidateFilePairIndex(pPair))
+		{
+			if (pNewPair != nullptr)
+			{
+				pNewPair->m_ListSortOrder = pPair->m_ListSortOrder;
+				m_PairArray[pPair->m_ListSortOrder] = pNewPair;
+				pPair->m_ListSortOrder = ULONG_MAX;
+
+				pPair = pNewPair;
+			}
+			SetListViewItem(pPair, pPair->m_ListSortOrder, false);
+			UpdateStatusText(WA_ACTIVE);
+
+			pArg->m_pPair = nullptr;
+		}
+
+		return;
+	}
+	else if (OnUpdateRebuildListView != lHint)
+	{
+		return;
+	}
+
+	ReBuildListView();
+
 	UpdateStatusText(WA_ACTIVE);
 }
 

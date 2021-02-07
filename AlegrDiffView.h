@@ -93,6 +93,9 @@ public:
 	void ResetColumnsArray() noexcept;
 
 	void UpdateAppColumns();
+	void BuildListViewHeader();
+	void BuildArrowBitmaps();
+	void ReBuildListView();
 
 	void PrintColumnOrder();
 

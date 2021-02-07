@@ -510,15 +510,6 @@ public:
 					|| Item1->GetFileLength() != Item2->GetFileLength());
 	}
 
-	// These functions return 1 if Item1 is greater than Item2
-	static bool NameSortFunc(FileItem const * Item1, FileItem const * Item2);
-	static bool DirNameSortFunc(FileItem const * Item1, FileItem const * Item2);
-	static bool TimeSortFunc(FileItem const * Item1, FileItem const * Item2);
-	// These functions return 1 if Item1 is less than Item2
-	static bool NameSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2);
-	static bool DirNameSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2);
-	static bool TimeSortBackwardsFunc(FileItem const * Item1, FileItem const * Item2);
-
 	// These functions return 1 if Item1 is greater than Item2, -1 if Item1 is less than Item2,
 	// and zero if they are equal
 	static int NameCompare(FileItem const * Item1, FileItem const * Item2);

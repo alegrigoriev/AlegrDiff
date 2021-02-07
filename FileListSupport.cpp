@@ -1196,15 +1196,24 @@ eLoadFolderResult FileList::LoadFolder(LPCTSTR BaseDir, bool bRecurseSubdirs,
 						sC_CPPMask, sBinaryMask, sIgnoreDirs, NULL);
 }
 
-eLoadFolderResult ReadSubfolder(FileItem ** ppFiles, FileItem ** ppDirs,
-								CString const & SubDirectory, CString const & BaseDirectory,
+eLoadFolderResult ReadSubfolder(FileItem ** ppItems,
+								CString const& BaseDirectory, LPCTSTR SubDirectory,
 								LPCTSTR sInclusionMask, LPCTSTR sExclusionMask,
 								LPCTSTR sIgnoreDirs, FileItem * pParentDir)
 {
-	if (DEBUG_LOAD_FOLDER) TRACE(_T("LoadSubFolder: scanning %s\n"), LPCTSTR(BaseDirectory + SubDirectory));
+	CString FullSubDirectory;
+	if (pParentDir != nullptr)
+	{
+		FullSubDirectory = pParentDir->GetSubdir() + SubDirectory;
+	}
+	else
+	{
+		FullSubDirectory = SubDirectory;
+	}
+	if (DEBUG_LOAD_FOLDER) TRACE(_T("LoadSubFolder: scanning %s\n"), LPCTSTR(BaseDirectory + FullSubDirectory));
 
 	WIN32_FIND_DATA wfd;
-	HANDLE hFind = FindFirstFile(BaseDirectory + SubDirectory + _T("*"), & wfd);
+	HANDLE hFind = FindFirstFile(BaseDirectory + FullSubDirectory + _T("*"), &wfd);
 
 	if (INVALID_HANDLE_VALUE == hFind
 		|| NULL == hFind)
@@ -1222,8 +1231,6 @@ eLoadFolderResult ReadSubfolder(FileItem ** ppFiles, FileItem ** ppDirs,
 
 	do
 	{
-		FileItem * pFile = NULL;
-
 		if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
 			if (DEBUG_LOAD_FOLDER) TRACE(_T("Found the subdirectory %s\n"), wfd.cFileName);
@@ -1233,18 +1240,6 @@ eLoadFolderResult ReadSubfolder(FileItem ** ppFiles, FileItem ** ppDirs,
 				)
 			{
 				continue;
-			}
-			// add the directory item
-			// scan the subdirectory
-
-			wfd.cFileName[countof(wfd.cFileName) - 1] = 0;
-
-			pFile = new FileItem(&wfd, BaseDirectory, SubDirectory, pParentDir);
-			if (NULL != pFile)
-			{
-				// add to the list
-				pFile->m_pNext = *ppDirs;
-				*ppDirs = pFile;
 			}
 		}
 		else
@@ -1260,15 +1255,14 @@ eLoadFolderResult ReadSubfolder(FileItem ** ppFiles, FileItem ** ppDirs,
 			}
 
 			if (DEBUG_LOAD_FOLDER) TRACE(_T("New file item: Name=\"%s\", base dir=%s, subdir=%s\n"),
-										wfd.cFileName, (LPCTSTR)BaseDirectory, (LPCTSTR)SubDirectory);
-
-			pFile = new FileItem(&wfd, BaseDirectory, SubDirectory, pParentDir);
-			if (NULL != pFile)
-			{
-				// add to the list
-				pFile->m_pNext = *ppFiles;
-				*ppFiles = pFile;
-			}
+										wfd.cFileName, (LPCTSTR)BaseDirectory, (LPCTSTR)(FullSubDirectory));
+		}
+		FileItem * pFile = new FileItem(&wfd, BaseDirectory, FullSubDirectory, pParentDir);
+		if (NULL != pFile)
+		{
+			// add to the list
+			pFile->m_pNext = *ppItems;
+			*ppItems = pFile;
 		}
 	} while (FindNextFile(hFind, &wfd));
 
@@ -1290,11 +1284,11 @@ eLoadFolderResult FileList::LoadSubFolder(LPCTSTR Subdir,
 										LPCTSTR sIgnoreDirs, FileItem * pParentDir)
 {
 	if (DEBUG_LOAD_FOLDER) TRACE(_T("LoadSubFolder: scanning %s\n"), Subdir);
-	FileItem * pFilesList = NULL;
-	FileItem * pDirsList = NULL;
+	FileItem * pItemsList = NULL;
 
-	eLoadFolderResult result = ReadSubfolder(&pFilesList, &pDirsList,
-											Subdir, m_BaseDir,
+	// The current directory here is m_BaseDir+BaseSubdir
+	eLoadFolderResult result = ReadSubfolder(&pItemsList,
+											m_BaseDir, Subdir,
 											sInclusionMask, sExclusionMask, sIgnoreDirs, pParentDir);
 
 	if (result != eLoadFolderResultSuccess
@@ -1303,68 +1297,52 @@ eLoadFolderResult FileList::LoadSubFolder(LPCTSTR Subdir,
 		return result;
 	}
 
-	// The list goes in the following order:
-	// Files first, then subdirectories. Files (and subdirectories) for a subdirectory follow the subdirectory
-	// The names are sorted
-
-	// The names are returned in the lists in the reverse sort order
-	// The loop reorders them back into direct sort order
-	// Process directories first, so they will go after files in the result list
-	while (pDirsList)
+	while (pItemsList)
 	{
-		FileItem * pDir = pDirsList;
-		pDirsList = pDir->m_pNext;
+		FileItem * pItem = pItemsList;
+		pItemsList = pItem->m_pNext;
 
 		// scan the subdirectory
 		// but don't recurse down reparse point
-
-		if (!pDir->IsReparsePoint())
+		if (!pItem->IsFolder())
 		{
-			eLoadFolderResult SubdirResult = LoadSubFolder(CString(Subdir) + pDir->GetName(),
-												sInclusionMask, sExclusionMask, sC_CPPMask, sBinaryMask, sIgnoreDirs, pDir);
+			if (MultiPatternMatches(pItem->GetName(), sBinaryMask))
+			{
+				pItem->SetBinary();
+			}
+			else if (MultiPatternMatches(pItem->GetName(), sC_CPPMask))
+			{
+				pItem->SetCCpp();
+			}
+			else
+			{
+				pItem->SetText();
+			}
+		}
+		else if (!pItem->IsReparsePoint())
+		{
+			eLoadFolderResult SubdirResult = LoadSubFolder(pItem->GetName(),
+												sInclusionMask, sExclusionMask, sC_CPPMask, sBinaryMask, sIgnoreDirs, pItem);
 			if (SubdirResult == eLoadFolderResultAccessDenied
 				&& result == eLoadFolderResultSuccess)
 			{
 				result = eLoadFolderResultSubdirAccessDenied;
 			}
-			if (SubdirResult == eLoadFolderResultSubdirReadError
-				&& result == eLoadFolderResultSuccess)
+			else if (SubdirResult == eLoadFolderResultSubdirReadError
+					&& result == eLoadFolderResultSuccess)
 			{
 				result = eLoadFolderResultSubdirReadError;
 			}
-			if (SubdirResult == eLoadFolderResultFailure
-				&& result == eLoadFolderResultSuccess)
+			else if (SubdirResult == eLoadFolderResultFailure
+					&& result == eLoadFolderResultSuccess)
 			{
 				result = eLoadFolderResultFailure;
 			}
 		}
 
 		// add to the list now, so it will go before the subdir members
-		pDir->m_pNext = m_pList;
-		m_pList = pDir;
-		m_NumFiles++;
-	}
-
-	while (pFilesList)
-	{
-		FileItem * pFile = pFilesList;
-		pFilesList = pFile->m_pNext;
-
-		if (MultiPatternMatches(pFile->GetName(), sBinaryMask))
-		{
-			pFile->SetBinary();
-		}
-		else if (MultiPatternMatches(pFile->GetName(), sC_CPPMask))
-		{
-			pFile->SetCCpp();
-		}
-		else
-		{
-			pFile->SetText();
-		}
-		// add to the list
-		pFile->m_pNext = m_pList;
-		m_pList = pFile;
+		pItem->m_pNext = m_pList;
+		m_pList = pItem;
 		m_NumFiles++;
 	}
 

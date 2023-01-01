@@ -67,6 +67,8 @@ void CFilesCompareDialog::DoDataExchange(CDataExchange* pDX)
 	{
 		pApp->m_RecentFiles.AddString(m_sFirstFileName);
 		pApp->m_RecentFiles.AddString(m_sSecondFileName, 1);
+
+		pApp->m_RecentFiles.Flush();
 	}
 	DDX_Radio(pDX, IDC_RADIO3, m_ComparisonMode);
 }

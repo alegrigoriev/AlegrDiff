@@ -24,8 +24,7 @@
 #undef tolower
 #undef toupper
 typedef FileDiffSection * FileDiffSectionPtr;
-constexpr bool std::less<FileDiffSectionPtr>::operator()
-	(FileDiffSectionPtr const & pS1, FileDiffSectionPtr const & pS2) const
+static bool FileDiffSectionPtrLess(FileDiffSectionPtr const & pS1, FileDiffSectionPtr const & pS2)
 {
 	return pS1->m_Begin < pS2->m_Begin;
 }
@@ -3161,7 +3160,7 @@ bool TextFilePair::NextDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces
 	diff.m_Begin = DisplayPosToLinePos(PosFrom, IgnoreWhitespaces);
 
 	std::vector<FileDiffSection *>::iterator pFound = upper_bound(m_DiffSections.begin(),
-																m_DiffSections.end(), &diff, std::less<FileDiffSection *>());
+																m_DiffSections.end(), &diff, FileDiffSectionPtrLess);
 
 	if (pFound >= m_DiffSections.end())
 	{
@@ -3218,7 +3217,7 @@ bool TextFilePair::PrevDifference(TextPosDisplay PosFrom, BOOL IgnoreWhitespaces
 	diff.m_Begin = DisplayPosToLinePos(PosFrom, IgnoreWhitespaces);
 
 	std::vector<FileDiffSection *>::iterator pFound = lower_bound(m_DiffSections.begin(),
-																m_DiffSections.end(), &diff, std::less<FileDiffSection *>());
+																m_DiffSections.end(), &diff, FileDiffSectionPtrLess);
 
 	if (pFound == m_DiffSections.begin())
 	{

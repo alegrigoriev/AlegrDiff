@@ -792,7 +792,7 @@ void CBinaryCompareView::MoveCaretBy(int dx, int dy, int flags)
 }
 
 
-void CBinaryCompareView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+void CBinaryCompareView::OnVScroll(UINT nSBCode, UINT /*nPos*/, CScrollBar* pScrollBar)
 {
 	if (pScrollBar != NULL && pScrollBar->SendChildNotifyLastMsg())
 		return;     // eat it
@@ -801,51 +801,55 @@ void CBinaryCompareView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollB
 	if (pScrollBar != GetScrollBarCtrl(SB_VERT))
 		return;
 
+	// nPos is limited to 16 bits only
+	SCROLLINFO scrollinfo = { 0 };
+	GetScrollInfo(SB_VERT, &scrollinfo, SIF_TRACKPOS | SIF_POS);
+
 	int nLinesInView = LinesInView();
 	switch (nSBCode)
 	{
 		// not actually generated with standard scrollbar
 	case SB_TOP:
-		TRACE("OnVScroll SB_TOP, nPos=%d\n", nPos);
+		TRACE("OnVScroll SB_TOP, nPos=%d\n", scrollinfo.nPos);
 		VScrollToTheAddr(0);
 		break;
 
 		// not actually generated with standard scrollbar
 	case SB_BOTTOM:
-		TRACE("OnVScroll SB_BOTTOM, nPos=%d\n", nPos);
+		TRACE("OnVScroll SB_BOTTOM, nPos=%d\n", scrollinfo.nPos);
 		VScrollToTheAddr(GetDocument()->GetFileSize() - nLinesInView * int(m_BytesPerLine));
 		break;
 
 	case SB_LINEUP:
-		TRACE("OnVScroll SB_LINEUP, nPos=%d\n", nPos);
+		TRACE("OnVScroll SB_LINEUP, nPos=%d\n", scrollinfo.nPos);
 		DoVScroll( -1);
 		break;
 
 	case SB_LINEDOWN:
-		TRACE("OnVScroll SB_LINEDOWN, nPos=%d\n", nPos);
+		TRACE("OnVScroll SB_LINEDOWN, nPos=%d\n", scrollinfo.nPos);
 		DoVScroll( +1);
 		break;
 
 	case SB_PAGEUP:
-		TRACE("OnVScroll SB_PAGEUP, nPos=%d\n", nPos);
+		TRACE("OnVScroll SB_PAGEUP, nPos=%d\n", scrollinfo.nPos);
 		DoVScroll( - (nLinesInView - 1));
 		break;
 
 	case SB_PAGEDOWN:
-		TRACE("OnVScroll SB_PAGEDOWN, nPos=%d\n", nPos);
+		TRACE("OnVScroll SB_PAGEDOWN, nPos=%d\n", scrollinfo.nPos);
 		DoVScroll( + nLinesInView - 1);
 		break;
 
 	case SB_THUMBTRACK:
-		TRACE("OnVScroll SB_THUMBTRACK, nPos=%d\n", nPos);
-		if (nPos == m_VScrollInfo.nMax - (m_VScrollInfo.nPage - 1))
+		TRACE("OnVScroll SB_THUMBTRACK, nPos=%d\n", scrollinfo.nTrackPos);
+		if (scrollinfo.nTrackPos == m_VScrollInfo.nMax - int(m_VScrollInfo.nPage - 1))
 		{
 			// scroll to the end of file
 			VScrollToTheAddr(GetDocument()->GetFileSize() - nLinesInView * int(m_BytesPerLine));
 		}
 		else
 		{
-			VScrollToTheAddr(nPos * m_ScrollDataScale * LONGLONG(m_BytesPerLine));
+			VScrollToTheAddr(scrollinfo.nTrackPos * m_ScrollDataScale * LONGLONG(m_BytesPerLine));
 		}
 		break;
 	default:

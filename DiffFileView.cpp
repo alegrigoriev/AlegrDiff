@@ -972,7 +972,7 @@ void CDiffFileView::VScrollToTheLine(int nLine)
 	CreateAndShowCaret();
 }
 
-void CDiffFileView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+void CDiffFileView::OnVScroll(UINT nSBCode, UINT /*nPos*/, CScrollBar* pScrollBar)
 {
 	if (pScrollBar != NULL && pScrollBar->SendChildNotifyLastMsg())
 		return;     // eat it
@@ -981,42 +981,46 @@ void CDiffFileView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	if (pScrollBar != GetScrollBarCtrl(SB_VERT))
 		return;
 
+	// nPos is limited to 16 bits only
+	SCROLLINFO scrollinfo = { 0 };
+	GetScrollInfo(SB_VERT, &scrollinfo, SIF_TRACKPOS | SIF_POS);
+
 	int nLinesInView = LinesInView();
 	switch (nSBCode)
 	{
 	case SB_TOP:
-		TRACE("OnVScroll SB_TOP, nPos=%d\n", nPos);
+		TRACE("OnVScroll SB_TOP, nPos=%d\n", scrollinfo.nPos);
 		VScrollToTheLine(0);
 		break;
 
 	case SB_BOTTOM:
-		TRACE("OnVScroll SB_BOTTOM, nPos=%d\n", nPos);
+		TRACE("OnVScroll SB_BOTTOM, nPos=%d\n", scrollinfo.nPos);
 		VScrollToTheLine(GetDocument()->GetTotalLines() - nLinesInView);
 		break;
 
 	case SB_LINEUP:
-		TRACE("OnVScroll SB_LINEUP, nPos=%d\n", nPos);
+		TRACE("OnVScroll SB_LINEUP, nPos=%d\n", scrollinfo.nPos);
 		DoVScroll( -1);
 		break;
 
 	case SB_LINEDOWN:
-		TRACE("OnVScroll SB_LINEDOWN, nPos=%d\n", nPos);
+		TRACE("OnVScroll SB_LINEDOWN, nPos=%d\n", scrollinfo.nPos);
 		DoVScroll( +1);
 		break;
 
 	case SB_PAGEUP:
-		TRACE("OnVScroll SB_PAGEUP, nPos=%d\n", nPos);
+		TRACE("OnVScroll SB_PAGEUP, nPos=%d\n", scrollinfo.nPos);
 		DoVScroll( - (nLinesInView - 1));
 		break;
 
 	case SB_PAGEDOWN:
-		TRACE("OnVScroll SB_PAGEDOWN, nPos=%d\n", nPos);
+		TRACE("OnVScroll SB_PAGEDOWN, nPos=%d\n", scrollinfo.nPos);
 		DoVScroll( + nLinesInView - 1);
 		break;
 
 	case SB_THUMBTRACK:
-		TRACE("OnVScroll SB_THUMBTRACK, nPos=%d\n", nPos);
-		VScrollToTheLine(nPos);
+		TRACE("OnVScroll SB_THUMBTRACK, nPos=%d\n", scrollinfo.nTrackPos);
+		VScrollToTheLine(scrollinfo.nTrackPos);
 		break;
 	default:
 		break;

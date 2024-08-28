@@ -361,7 +361,6 @@ public:
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CAboutDlg)
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -371,28 +370,12 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 public:
-	CStatic m_sVersion;
 };
 
 CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
 {
 	//{{AFX_DATA_INIT(CAboutDlg)
 	//}}AFX_DATA_INIT
-}
-
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-//{{AFX_DATA_MAP(CAboutDlg)
-//}}AFX_DATA_MAP
-	DDX_Control(pDX, IDC_STATIC_VERSION, m_sVersion);
-	if ( ! pDX->m_bSaveAndValidate)
-	{
-		CString format, s;
-		m_sVersion.GetWindowText(format);
-		s.Format(format, ALEGR_DIFF_VERSION);
-		m_sVersion.SetWindowText(s);
-	}
 }
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)

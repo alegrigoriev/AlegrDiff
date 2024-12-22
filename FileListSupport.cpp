@@ -2342,12 +2342,12 @@ FilePair::eFileComparisionResult TextFilePair::CompareFiles(class CProgressDialo
 		// just build the line array
 		FileItem * pFile = pSecondFile;
 		result = OnlySecondFile;
-		if (NULL == pFile)
+		if (nullptr == pFile)
 		{
 			pFile = pFirstFile;
 			result = OnlyFirstFile;
 		}
-		else if (pFirstFile->IsPhantomFile())
+		else if (nullptr != pFirstFile && pFirstFile->IsPhantomFile())
 		{
 			// keep previous result
 			result = m_ComparisonResult;

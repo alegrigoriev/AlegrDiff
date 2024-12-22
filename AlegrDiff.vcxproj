@@ -346,8 +346,8 @@
     <ClInclude Include="CommonSources\UI\ProgressDialog.h" />
     <ClInclude Include="CommonSources\UI\ResizableDialog.h" />
     <CustomBuild Include="resource.h">
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Making help include file...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">makehm /h ID_,HID_,0x10000 IDM_,HIDM_,0x10000 "%(Filename)%(Extension)" &gt; "hlp\HTMLDefines.h"
+      <Message>Making help include file...</Message>
+      <Command>makehm /h ID_,HID_,0x10000 IDM_,HIDM_,0x10000 "%(Filename)%(Extension)" &gt; "hlp\HTMLDefines.h"
 echo. &gt;&gt; "hlp\HTMLDefines.h"
 echo // Prompts (IDP_*) &gt;&gt; "hlp\HTMLDefines.h"
 makehm /h IDP_,HIDP_,0x30000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
@@ -361,55 +361,7 @@ echo. &gt;&gt; "hlp\HTMLDefines.h"
 echo // Frame Controls (IDW_*) &gt;&gt; "hlp\HTMLDefines.h"
 makehm /h /a afxhh.h IDW_,HIDW_,0x50000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
 </Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlp\HTMLDefines.h;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Making help include file...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">makehm /h ID_,HID_,0x10000 IDM_,HIDM_,0x10000 "%(Filename)%(Extension)" &gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Prompts (IDP_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDP_,HIDP_,0x30000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Resources (IDR_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDR_,HIDR_,0x20000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Dialogs (IDD_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDD_,HIDD_,0x20000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Frame Controls (IDW_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h /a afxhh.h IDW_,HIDW_,0x50000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">hlp\HTMLDefines.h;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Making help include file...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">makehm /h ID_,HID_,0x10000 IDM_,HIDM_,0x10000 "%(Filename)%(Extension)" &gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Prompts (IDP_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDP_,HIDP_,0x30000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Resources (IDR_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDR_,HIDR_,0x20000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Dialogs (IDD_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDD_,HIDD_,0x20000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Frame Controls (IDW_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h /a afxhh.h IDW_,HIDW_,0x50000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Making help include file...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">makehm /h ID_,HID_,0x10000 IDM_,HIDM_,0x10000 "%(Filename)%(Extension)" &gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Prompts (IDP_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDP_,HIDP_,0x30000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Resources (IDR_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDR_,HIDR_,0x20000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Dialogs (IDD_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h IDD_,HIDD_,0x20000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-echo. &gt;&gt; "hlp\HTMLDefines.h"
-echo // Frame Controls (IDW_*) &gt;&gt; "hlp\HTMLDefines.h"
-makehm /h /a afxhh.h IDW_,HIDW_,0x50000 "%(Filename)%(Extension)" &gt;&gt; "hlp\HTMLDefines.h"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">hlp\HTMLDefines.h;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlp\HTMLDefines.h;%(Outputs)</Outputs>
+      <Outputs>hlp\HTMLDefines.h;%(Outputs)</Outputs>
     </CustomBuild>
     <ClInclude Include="SaveFileListDlg.h" />
     <ClInclude Include="CommonSources\Utils\SimpleCriticalSection.h" />
@@ -431,11 +383,10 @@ makehm /h /a afxhh.h IDW_,HIDW_,0x50000 "%(Filename)%(Extension)" &gt;&gt; "hlp\
     <None Include="res\icon1.ico" />
     <None Include="res\idr_aleg.ico" />
     <None Include="res\Toolbar.bmp" />
-    <None Include="hlp\AlegrDiff.hhc" />
     <None Include="hlp\AlegrDiff.hhk" />
     <CustomBuild Include="hlp\AlegrDiff.hhp">
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Making help file...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">start /wait hhc "hlp\AlegrDiff.hhp"
+      <Message>Making help file...</Message>
+      <Command>start /wait hhc "hlp\AlegrDiff.hhp"
 if not exist "hlp\AlegrDiff.chm" goto :HelpError
 copy "hlp\AlegrDiff.chm" "$(OutDir)AlegrDiff.chm"
 goto :HelpDone
@@ -445,47 +396,8 @@ echo.
 :HelpDone
 echo.
 </Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlp\HTMLDefines.h;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)$(ProjectName).chm;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Making help file...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">start /wait hhc "hlp\AlegrDiff.hhp"
-if not exist "hlp\AlegrDiff.chm" goto :HelpError
-copy "hlp\AlegrDiff.chm" "$(OutDir)AlegrDiff.chm"
-goto :HelpDone
-:HelpError
-echo hlp\AlegrDiff.hhp(1) : error:Problem encountered creating help file
-echo.
-:HelpDone
-echo.
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">hlp\HTMLDefines.h;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)$(ProjectName).chm;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Making help file...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">start /wait hhc "hlp\AlegrDiff.hhp"
-if not exist "hlp\AlegrDiff.chm" goto :HelpError
-copy "hlp\AlegrDiff.chm" "$(OutDir)AlegrDiff.chm"
-goto :HelpDone
-:HelpError
-echo hlp\AlegrDiff.hhp(1) : error:Problem encountered creating help file
-echo.
-:HelpDone
-echo.
-</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Making help file...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">start /wait hhc "hlp\AlegrDiff.hhp"
-if not exist "hlp\AlegrDiff.chm" goto :HelpError
-copy "hlp\AlegrDiff.chm" "$(OutDir)AlegrDiff.chm"
-goto :HelpDone
-:HelpError
-echo hlp\AlegrDiff.hhp(1) : error:Problem encountered creating help file
-echo.
-:HelpDone
-echo.
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">hlp\HTMLDefines.h;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)$(ProjectName).chm;%(Outputs)</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlp\HTMLDefines.h;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)$(ProjectName).chm;%(Outputs)</Outputs>
+      <AdditionalInputs>hlp\HTMLDefines.h;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs>$(OutDir)$(ProjectName).chm;%(Outputs)</Outputs>
     </CustomBuild>
     <None Include="hlp\afx_hidd_fileopen.htm">
       <DeploymentContent>true</DeploymentContent>

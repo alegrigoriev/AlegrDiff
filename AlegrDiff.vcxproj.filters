@@ -297,9 +297,6 @@
     <None Include="res\Toolbar.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="hlp\AlegrDiff.hhc">
-      <Filter>HTML Help Files</Filter>
-    </None>
     <None Include="hlp\AlegrDiff.hhk">
       <Filter>HTML Help Files</Filter>
     </None>

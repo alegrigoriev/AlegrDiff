@@ -40,6 +40,28 @@ template<typename T> inline void memzero(T & obj) noexcept
 #define EnableDlgItem(id, Enable) \
 	::EnableWindow(GetDlgItem(id)->GetSafeHwnd(), Enable)
 
+#ifdef _DEBUG
+#undef TRACE
+
+inline int TRACE(LPCSTR format, ...) noexcept
+{
+	va_list arglist;
+	va_start(arglist, format);
+	int const result = _VCrtDbgReportA(_CRT_WARN, _ReturnAddress(), NULL, 0, NULL, format, arglist);
+	va_end(arglist);
+	return result;
+}
+
+inline int TRACE(LPCWSTR format, ...) noexcept
+{
+	va_list arglist;
+	va_start(arglist, format);
+	int const result = _VCrtDbgReportW(_CRT_WARN, _ReturnAddress(), NULL, 0, NULL, format, arglist);
+	va_end(arglist);
+	return result;
+}
+#endif
+
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 

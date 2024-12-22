@@ -1719,6 +1719,14 @@ void CDiffFileView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 		if (NULL != pArg
 			&& pArg->m_pPair == GetFilePair())
 		{
+			if (pArg->m_pPair->CanCompare())
+			{
+				m_NumberOfPanes = 2;
+			}
+			else
+			{
+				m_NumberOfPanes = 1;
+			}
 			UpdateFileLineWidth();
 			OnMetricsChange();
 		}

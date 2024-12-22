@@ -709,19 +709,18 @@ void CAlegrDiffView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
 
 		if (ValidateFilePairIndex(pPair))
 		{
-			if (pNewPair != nullptr)
+			if (pNewPair != nullptr && pPair != pNewPair)
 			{
 				pNewPair->m_ListSortOrder = pPair->m_ListSortOrder;
 				m_PairArray[pPair->m_ListSortOrder] = pNewPair;
 				pPair->m_ListSortOrder = ULONG_MAX;
 
 				pPair = pNewPair;
+				pArg->m_pPair = nullptr;
 			}
 
 			GetListCtrl().RedrawItems(pPair->m_ListSortOrder, pPair->m_ListSortOrder);
 			UpdateStatusText(WA_ACTIVE);
-
-			pArg->m_pPair = nullptr;
 		}
 
 		return;
